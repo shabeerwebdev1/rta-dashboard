@@ -23,7 +23,7 @@ const AppHeader = () => {
     <Header
       style={{
         padding: "0 24px",
-        background: "var(--ant-color-bg-container)",
+        // background: "var(--ant-color-bg-container)",
         position: "sticky",
         top: 0,
         zIndex: 999,
