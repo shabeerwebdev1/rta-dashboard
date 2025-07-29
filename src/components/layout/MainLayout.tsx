@@ -5,10 +5,15 @@ import AppHeader from "./AppHeader";
 
 const { Content } = Layout;
 
-const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface MainLayoutProps {
+  children: React.ReactNode;
+  isDarkTheme: boolean;
+}
+
+const MainLayout: React.FC<MainLayoutProps> = ({ children, isDarkTheme }) => {
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      <AppSidebar />
+      <AppSidebar isDarkTheme={isDarkTheme} />
       <Layout>
         <AppHeader />
         <Content

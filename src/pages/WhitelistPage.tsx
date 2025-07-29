@@ -109,7 +109,6 @@ const dataSource: WhitelistRecord[] = [
 
 const WhitelistPage: React.FC = () => {
   const { t } = useTranslation();
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"plate" | "trade" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -127,31 +126,48 @@ const WhitelistPage: React.FC = () => {
   const columns: ColumnsType<WhitelistRecord> = [
     {
       title: t("whitelist.tradeLicenseName"),
+      width: "auto",
+      align: "center",
       dataIndex: "tradeLicenseName",
       key: "tradeLicenseName",
       sorter: (a, b) => a.tradeLicenseName.localeCompare(b.tradeLicenseName),
     },
     {
       title: t("whitelist.licenseNumber"),
+      width: "auto",
+      align: "center",
       dataIndex: "licenseNumber",
       key: "licenseNumber",
     },
     {
       title: t("whitelist.photo"),
+      width: 80,
+      align: "center",
       dataIndex: "photo",
       key: "photo",
       render: (photoUrl) => <Avatar icon={<UserOutlined />} />,
     },
-    { title: t("whitelist.date"), dataIndex: "date", key: "date" },
+    {
+      title: t("whitelist.date"),
+      dataIndex: "date",
+      key: "date",
+      width: "auto",
+      align: "center",
+    },
     {
       title: t("whitelist.location"),
       key: "location",
-      render: () => <Button type="link">{t("whitelist.viewMap")}</Button>,
+      align: "center",
+      render: () => (
+        <Button style={{ padding: 0 }} type="link">
+          {t("whitelist.viewMap")}
+        </Button>
+      ),
     },
     {
-      title: t(""),
+      title: "",
       key: "action",
-      width: 80,
+      width: 60,
       render: () => (
         <Dropdown
           menu={{
@@ -229,7 +245,6 @@ const WhitelistPage: React.FC = () => {
               type="primary"
               icon={<PlusOutlined />}
               menu={{ items: addMenuItems }}
-              onClick={() => showModal("plate")}
             >
               Add New Whitelist
             </Dropdown.Button>
@@ -256,6 +271,7 @@ const WhitelistPage: React.FC = () => {
         <Table
           rowSelection={{ type: "checkbox" }}
           columns={columns}
+          sticky={{ offsetHeader: 64 }}
           dataSource={dataSource}
           pagination={{
             defaultPageSize: 5,

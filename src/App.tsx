@@ -22,7 +22,7 @@ const AppContent = () => {
           : { algorithm: theme.darkAlgorithm }
       }
     >
-      <MainLayout>
+      <MainLayout isDarkTheme={currentTheme !== "light"}>
         <WhitelistPage />
       </MainLayout>
     </ConfigProvider>

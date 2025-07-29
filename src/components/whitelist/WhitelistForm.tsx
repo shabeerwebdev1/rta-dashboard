@@ -113,7 +113,7 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
             <Col xs={24} sm={12} md={8}>
               <Form.Item
                 name="tradeLicenseName"
-                label="Trade License Name"
+                label="Trade License"
                 rules={[
                   { required: true, message: "License Name is required" },
                 ]}

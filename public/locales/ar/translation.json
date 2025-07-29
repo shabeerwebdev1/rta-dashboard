@@ -15,7 +15,7 @@
   "whitelist": {
     "title": "إدارة القائمة البيضاء",
     "addNew": "إضافة إلى القائمة البيضاء",
-    "downloadCsv": "تنزيل CSV",
+    "downloadCsv": "CSV",
     "searchPlaceholder": "بحث...",
     "tradeLicenseName": "اسم الرخصة التجارية",
     "licenseNumber": "رقم الرخصة",

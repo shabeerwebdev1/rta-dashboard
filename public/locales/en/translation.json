@@ -15,9 +15,9 @@
   "whitelist": {
     "title": "Whitelist Management",
     "addNew": "Add New Whitelist",
-    "downloadCsv": "Download CSV",
+    "downloadCsv": "CSV",
     "searchPlaceholder": "Search...",
-    "tradeLicenseName": "Trade License Name",
+    "tradeLicenseName": "Trade License",
     "licenseNumber": "License Number",
     "photo": "Photo",
     "date": "Date",

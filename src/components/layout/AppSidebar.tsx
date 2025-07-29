@@ -16,7 +16,11 @@ import { useTranslation } from "react-i18next";
 
 const { Sider } = Layout;
 
-const AppSidebar = () => {
+interface AppSidebarProps {
+  isDarkTheme: boolean;
+}
+
+const AppSidebar: React.FC<AppSidebarProps> = ({ isDarkTheme }) => {
   const [collapsed, setCollapsed] = useState(false);
   const { t } = useTranslation();
 
@@ -58,6 +62,11 @@ const AppSidebar = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          borderBottom: "1px solid #fdfdfd1f",
+          backgroundColor: isDarkTheme ? "#141414" : "initial", // this is not a scalable way, dont use theme status
+          borderInlineEnd: isDarkTheme // this is not a scalable way, dont use theme status
+            ? "1px solid #fdfdfd1f"
+            : "",
         }}
       >
         <img
