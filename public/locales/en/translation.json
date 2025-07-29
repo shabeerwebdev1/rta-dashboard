@@ -1,0 +1,31 @@
+{
+  "sidebar": {
+    "parking": "Parking Management",
+    "fleet": "Fleet Management",
+    "pledges": "Pledges Management",
+    "permits": "Permits",
+    "hrms": "HRMS",
+    "inspections": "Inspections",
+    "fines": "Fines Management",
+    "dispute": "Dispute Management",
+    "towing": "Towing",
+    "team": "Team Assessment",
+    "analytics": "Analytics & Insights"
+  },
+  "whitelist": {
+    "title": "Whitelist Management",
+    "addNew": "Add New Whitelist",
+    "downloadCsv": "Download CSV",
+    "searchPlaceholder": "Search...",
+    "tradeLicenseName": "Trade License Name",
+    "licenseNumber": "License Number",
+    "photo": "Photo",
+    "date": "Date",
+    "location": "Location",
+    "action": "Action",
+    "viewMap": "View Map",
+    "edit": "Edit",
+    "delete": "Delete",
+    "view": "View"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "sidebar": {
+    "parking": "إدارة المواقف",
+    "fleet": "إدارة الأسطول",
+    "pledges": "إدارة التعهدات",
+    "permits": "التصاريح",
+    "hrms": "إدارة الموارد البشرية",
+    "inspections": "التفتيش",
+    "fines": "إدارة الغرامات",
+    "dispute": "إدارة النزاعات",
+    "towing": "سحب المركبات",
+    "team": "تقييم الفريق",
+    "analytics": "التحليلات والرؤى"
+  },
+  "whitelist": {
+    "title": "إدارة القائمة البيضاء",
+    "addNew": "إضافة إلى القائمة البيضاء",
+    "downloadCsv": "تنزيل CSV",
+    "searchPlaceholder": "بحث...",
+    "tradeLicenseName": "اسم الرخصة التجارية",
+    "licenseNumber": "رقم الرخصة",
+    "photo": "صورة",
+    "date": "التاريخ",
+    "location": "الموقع",
+    "action": "إجراء",
+    "viewMap": "عرض الخريطة"
+  }
+}

@@ -1,0 +1,19 @@
+# Build output
+/build
+/dist
+/.vite
+
+# Dependencies
+/node_modules
+
+# Lockfiles
+package-lock.json
+yarn.lock
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Optional: Configuration files you don't want touched
+# .eslintrc.cjs
