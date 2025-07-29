@@ -7,7 +7,7 @@ const baseConfig: ThemeConfig = {
   },
 };
 
-const paletteCorporate = {
+const paletteCorporateLight = {
   brightRed: "#EB2D2F",
   darkRed: "#B92324",
   vibrantGreen: "#017B4A",
@@ -26,52 +26,23 @@ export const corporateLightThemeConfig: ThemeConfig = {
   ...baseConfig,
   token: {
     ...baseConfig.token,
-    colorPrimary: paletteCorporate.vibrantGreen,
-    colorError: paletteCorporate.brightRed,
-    colorWarning: paletteCorporate.goldYellow,
-    colorInfo: paletteCorporate.royalBlue,
-    colorBgLayout: paletteCorporate.white,
-    colorBgContainer: paletteCorporate.white,
+    colorPrimary: paletteCorporateLight.vibrantGreen,
+    colorError: paletteCorporateLight.brightRed,
+    colorWarning: paletteCorporateLight.goldYellow,
+    colorInfo: paletteCorporateLight.royalBlue,
+    colorBgLayout: paletteCorporateLight.white,
+    colorBgContainer: paletteCorporateLight.white,
   },
   components: {
     Layout: {
-      headerBg: paletteCorporate.white,
-      siderBg: paletteCorporate.darkGreen,
+      headerBg: paletteCorporateLight.white,
+      siderBg: paletteCorporateLight.darkGreen,
     },
     Menu: {
       colorItemBg: "transparent",
-      colorItemText: paletteCorporate.stoneBeige,
-      colorItemTextHover: paletteCorporate.white,
-      colorItemTextSelected: paletteCorporate.goldYellow,
-      colorItemBgSelected: "rgba(252, 181, 0, 0.15)",
-    },
-    Button: {
-      primaryShadow: "none",
-    },
-  },
-};
-
-export const corporateDarkThemeConfig: ThemeConfig = {
-  ...baseConfig,
-  token: {
-    ...baseConfig.token,
-    colorPrimary: paletteCorporate.goldYellow,
-    colorError: paletteCorporate.brightRed,
-    colorWarning: paletteCorporate.goldYellow,
-    colorInfo: paletteCorporate.royalBlue,
-    colorBgContainer: paletteCorporate.darkGreen,
-    colorBgLayout: paletteCorporate.black,
-  },
-  components: {
-    Layout: {
-      headerBg: paletteCorporate.darkGreen,
-      siderBg: paletteCorporate.black,
-    },
-    Menu: {
-      colorItemBg: "transparent",
-      colorItemText: paletteCorporate.stoneBeige,
-      colorItemTextHover: paletteCorporate.white,
-      colorItemTextSelected: paletteCorporate.goldYellow,
+      colorItemText: paletteCorporateLight.stoneBeige,
+      colorItemTextHover: paletteCorporateLight.white,
+      colorItemTextSelected: paletteCorporateLight.goldYellow,
       colorItemBgSelected: "rgba(252, 181, 0, 0.15)",
     },
     Button: {

@@ -13,7 +13,7 @@ const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <AppHeader />
         <Content
           style={{
-            margin: "24px 16px",
+            margin: "0 16px 24px 16px",
             padding: 24,
             // background: "var(--ant-color-bg-layout)",
             borderRadius: "8px",

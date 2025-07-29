@@ -61,12 +61,22 @@ const AppSidebar = () => {
         }}
       >
         <img
-          src="/rta-logo.svg"
+          // src="/rta-logo.svg"
+          src="https://upload.wikimedia.org/wikipedia/en/d/dd/RTA_Dubai_logo.png"
           alt="RTA Logo"
-          style={{ height: "32px", transition: "all 0.2s" }}
+          style={{
+            height: "32px",
+            transition: "all 0.2s",
+            background: "white",
+          }}
         />
       </div>
-      <Menu defaultSelectedKeys={["3"]} mode="inline" items={menuItems} />
+      <Menu
+        style={{ height: "100%" }}
+        defaultSelectedKeys={["3"]}
+        mode="inline"
+        items={menuItems}
+      />
     </Sider>
   );
 };

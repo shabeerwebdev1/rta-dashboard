@@ -3,14 +3,9 @@ import { useTranslation } from "react-i18next";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
 import MainLayout from "./components/layout/MainLayout";
 import WhitelistPage from "./pages/WhitelistPage";
-
+import { corporateLightThemeConfig } from "./config/antdTheme";
 import "./config/i18n";
 import "./styles/global.css";
-
-import {
-  corporateDarkThemeConfig,
-  corporateLightThemeConfig,
-} from "./config/antdTheme";
 
 const AppContent = () => {
   const { theme: currentTheme } = useTheme();
@@ -24,7 +19,7 @@ const AppContent = () => {
       theme={
         currentTheme === "light"
           ? corporateLightThemeConfig
-          : corporateDarkThemeConfig
+          : { algorithm: theme.darkAlgorithm }
       }
     >
       <MainLayout>
