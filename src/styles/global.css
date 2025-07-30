@@ -41,3 +41,7 @@ body {
 .ant-space-gap-col-middle .ant-space-item:last-child {
   margin-left: auto !important;
 }
+
+.ant-layout-sider .ant-layout-sider-trigger {
+  background-color: transparent;
+}
