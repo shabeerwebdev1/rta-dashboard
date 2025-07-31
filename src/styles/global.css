@@ -45,3 +45,8 @@ body {
 .ant-layout-sider .ant-layout-sider-trigger {
   background-color: transparent;
 }
+
+.ant-pagination-total-text {
+  margin-right: auto;
+  padding-left: 10px;
+}

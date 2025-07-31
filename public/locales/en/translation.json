@@ -1,8 +1,9 @@
 {
   "sidebar": {
+    "dashboard": "Dashboard",
     "parking": "Parking Management",
     "fleet": "Fleet Management",
-    "pledges": "Pledges Management",
+    "pledges": "Whitelist Management",
     "permits": "Permits",
     "hrms": "HRMS",
     "inspections": "Inspections",
@@ -12,20 +13,90 @@
     "team": "Team Assessment",
     "analytics": "Analytics & Insights"
   },
+  "header": {
+    "compactMode": "Compact Mode",
+    "standardMode": "Standard Mode"
+  },
+  "dashboard": {
+    "totalVehicles": "Total Vehicles",
+    "activePledges": "Active Whitelists",
+    "finesIssued": "Fines Issued (Month)",
+    "openDisputes": "Open Disputes",
+    "activityTitle": "Recent Activity",
+    "activityPlaceholder": "Activity feed will be displayed here."
+  },
   "whitelist": {
     "title": "Whitelist Management",
-    "addNew": "Add New Whitelist",
-    "downloadCsv": "CSV",
-    "searchPlaceholder": "Search...",
-    "tradeLicenseName": "Trade License",
+    "addNew": "Add New",
+    "downloadCsv": "Download CSV",
+    "searchPlaceholder": "Search across all fields...",
+    "tradeLicenseName": "Trade License Name",
     "licenseNumber": "License Number",
     "photo": "Photo",
-    "date": "Date",
+    "date": "Expiry Date",
     "location": "Location",
-    "action": "Action",
-    "viewMap": "View Map",
+    "status": "Status",
+    "type": "Type",
+    "addedBy": "Added By",
+    "priority": "Priority",
+    "viewMap": "View on Map",
+    "locationDetails": "Location & Details",
+    "expiryDate": "Expiry Date",
     "edit": "Edit",
     "delete": "Delete",
-    "view": "View"
+    "view": "View",
+    "compactView": "Compact View",
+    "standardView": "Standard View"
+  },
+  "form": {
+    "plateNumber": "Plate Number",
+    "plateSource": "Plate Source",
+    "plateType": "Plate Type",
+    "plateColor": "Plate Color",
+    "tradeLicenseNumber": "Trade License Number",
+    "tradeLicenseName": "Trade License Name",
+    "plotNumber": "Plot Number",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "plateStatus": "Plate Status",
+    "exceptionReason": "Exception Reason",
+    "highPriority": "High Priority",
+    "highPriorityHint": "Priority entries are processed first.",
+    "tradeLicenseDocument": "Trade License Document",
+    "uploadHint": "Upload (PDF, PNG, JPG)",
+    "zone": "Zone",
+    "freezone": "Freezone",
+    "mainland": "Mainland",
+    "notes": "Notes / Remarks"
+  },
+  "status": {
+    "active": "Active",
+    "expired": "Expired",
+    "pending": "Pending",
+    "trade": "Trade",
+    "plate": "Plate"
+  },
+  "common": {
+    "action": "Action",
+    "items": "items",
+    "search": "Search",
+    "filter": "Filter",
+    "reset": "Reset",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "download": "Download"
+  },
+  "messages": {
+    "csvDownloaded": "CSV file downloaded successfully!",
+    "whitelistAdded": "Whitelist added successfully!",
+    "confirmDeleteTitle": "Confirm Deletion",
+    "confirmDeleteContent": "Are you sure you want to delete",
+    "deletedSuccess": "deleted successfully.",
+    "csvConfirmTitle": "Confirm CSV Download",
+    "csvConfirmContent": "You are about to download a CSV file with the following data:",
+    "totalEntries": "Total Entries",
+    "active": "Active",
+    "expired": "Expired",
+    "pending": "Pending"
   }
 }

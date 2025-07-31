@@ -1,20 +1,37 @@
 import React from "react";
-import { Form, Input, DatePicker, Select, Button, Space, Row, Col } from "antd";
+import {
+  Form,
+  Input,
+  DatePicker,
+  Select,
+  Button,
+  Space,
+  Row,
+  Col,
+  Checkbox,
+  Upload,
+  Radio,
+  Tooltip,
+} from "antd";
+import { UploadOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
 
 export interface WhitelistFormValues {
   plateNumber?: string;
   plateSource?: string;
   plateType?: string;
   plateColor?: string;
-
   tradeLicenseNumber?: string;
   tradeLicenseName?: string;
   plotNumber?: string;
-
   startDate: string;
   endDate: string;
   plateStatus: string;
   exceptionReason: string;
+  priority?: boolean;
+  document?: any;
+  zone?: "freezone" | "mainland";
+  notes?: string;
 }
 
 interface WhitelistFormProps {
@@ -31,63 +48,66 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
   isSubmitting,
 }) => {
   const [form] = Form.useForm();
+  const { t } = useTranslation();
 
   const onFinish = (values: any) => {
     const formattedValues = {
       ...values,
-      startDate: values.startDate.format("DD/MM/YYYY"),
-      endDate: values.endDate.format("DD/MM/YYYY"),
+      startDate: values.startDate?.format("DD/MM/YYYY"),
+      endDate: values.endDate?.format("DD/MM/YYYY"),
     };
     onSubmit(formattedValues);
+    console.log("Form Values:", formattedValues);
   };
 
-  const handleClear = () => {
-    form.resetFields();
+  const normFile = (e: any) => {
+    if (Array.isArray(e)) {
+      return e;
+    }
+    return e?.fileList;
   };
 
   return (
     <Form form={form} layout="vertical" onFinish={onFinish}>
-      <Row gutter={[16, 0]}>
+      <Row gutter={[24, 0]}>
         {type === "plate" && (
           <>
-            <Col xs={24} sm={12} md={12}>
+            <Col xs={24} sm={12}>
               <Form.Item
                 name="plateNumber"
-                label="Plate Number"
-                rules={[
-                  { required: true, message: "Plate Number is required" },
-                ]}
+                label={t("form.plateNumber")}
+                rules={[{ required: true }]}
               >
-                <Input placeholder="Enter plate number" />
+                <Input placeholder="e.g. A 12345" />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} md={12}>
+            <Col xs={24} sm={12}>
               <Form.Item
                 name="plateSource"
-                label="Plate Source"
-                rules={[{ required: true, message: "Please select a source" }]}
+                label={t("form.plateSource")}
+                rules={[{ required: true }]}
               >
                 <Select placeholder="Select source">
                   <Select.Option value="DXB">Dubai</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} md={12}>
+            <Col xs={24} sm={12}>
               <Form.Item
                 name="plateType"
-                label="Plate Type"
-                rules={[{ required: true, message: "Please select a type" }]}
+                label={t("form.plateType")}
+                rules={[{ required: true }]}
               >
                 <Select placeholder="Select type">
                   <Select.Option value="private">Private</Select.Option>
                 </Select>
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} md={12}>
+            <Col xs={24} sm={12}>
               <Form.Item
                 name="plateColor"
-                label="Plate Color"
-                rules={[{ required: true, message: "Please select a color" }]}
+                label={t("form.plateColor")}
+                rules={[{ required: true }]}
               >
                 <Select placeholder="Select color">
                   <Select.Option value="white">White</Select.Option>
@@ -99,88 +119,108 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
 
         {type === "trade" && (
           <>
-            <Col xs={24} sm={12} md={8}>
+            <Col xs={24} sm={12} md={12}>
               <Form.Item
                 name="tradeLicenseNumber"
-                label="Trade License Number"
-                rules={[
-                  { required: true, message: "License Number is required" },
-                ]}
+                label={t("form.tradeLicenseNumber")}
+                rules={[{ required: true }]}
               >
-                <Input placeholder="Enter trade license number" />
+                <Input />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} md={8}>
+            <Col xs={24} sm={12} md={12}>
               <Form.Item
                 name="tradeLicenseName"
-                label="Trade License"
-                rules={[
-                  { required: true, message: "License Name is required" },
-                ]}
+                label={t("form.tradeLicenseName")}
+                rules={[{ required: true }]}
               >
-                <Input placeholder="Enter trade license name" />
+                <Input />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} md={8}>
+            <Col xs={24} sm={12} md={12}>
               <Form.Item
-                name="plotNumber"
-                label="Plot Number"
-                rules={[{ required: true, message: "Plot Number is required" }]}
+                name="zone"
+                label={t("form.zone")}
+                initialValue="mainland"
+                rules={[{ required: true }]}
               >
-                <Input placeholder="Enter plot number" />
+                <Radio.Group>
+                  <Radio.Button value="mainland">
+                    {t("form.mainland")}
+                  </Radio.Button>
+                  <Radio.Button value="freezone">
+                    {t("form.freezone")}
+                  </Radio.Button>
+                </Radio.Group>
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={12}>
+              <Form.Item
+                name="document"
+                label={t("form.tradeLicenseDocument")}
+                valuePropName="fileList"
+                getValueFromEvent={normFile}
+              >
+                <Upload
+                  name="logo"
+                  listType="picture"
+                  maxCount={1}
+                  beforeUpload={() => false}
+                >
+                  <Button icon={<UploadOutlined />}>
+                    {t("form.uploadHint")}
+                  </Button>
+                </Upload>
               </Form.Item>
             </Col>
           </>
         )}
 
-        <Col xs={24} sm={12} md={12}>
+        <Col xs={24} sm={12}>
           <Form.Item
             name="startDate"
-            label="Start Date"
-            rules={[{ required: true, message: "Start date is required" }]}
+            label={t("form.startDate")}
+            rules={[{ required: true }]}
           >
             <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
           </Form.Item>
         </Col>
-        <Col xs={24} sm={12} md={12}>
+        <Col xs={24} sm={12}>
           <Form.Item
             name="endDate"
-            label="End Date"
-            rules={[{ required: true, message: "End date is required" }]}
+            label={t("form.endDate")}
+            rules={[{ required: true }]}
           >
             <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
           </Form.Item>
         </Col>
-        <Col xs={24} sm={12} md={12}>
-          <Form.Item
-            name="plateStatus"
-            label="Plate Status"
-            rules={[{ required: true, message: "Please select a status" }]}
-          >
-            <Select placeholder="Select status">
-              <Select.Option value="active">Active</Select.Option>
-            </Select>
+        <Col xs={24}>
+          <Form.Item name="notes" label={t("form.notes")}>
+            <Input.TextArea rows={3} placeholder="Add any relevant notes..." />
           </Form.Item>
         </Col>
-        <Col xs={24} sm={12} md={12}>
-          <Form.Item
-            name="exceptionReason"
-            label="Exception Reason"
-            rules={[{ required: true, message: "Please select a reason" }]}
-          >
-            <Select placeholder="Select reason">
-              <Select.Option value="gov">Government</Select.Option>
-            </Select>
+        <Col xs={24}>
+          <Form.Item name="priority" valuePropName="checked">
+            <Checkbox>
+              {t("form.highPriority")}
+              <Tooltip title={t("form.highPriorityHint")}>
+                <InfoCircleOutlined
+                  style={{ marginLeft: 8, color: "rgba(0,0,0,0.45)" }}
+                />
+              </Tooltip>
+            </Checkbox>
           </Form.Item>
         </Col>
       </Row>
 
       <Row justify="end" style={{ marginTop: "24px" }}>
         <Space>
-          <Button onClick={onCancel}>Cancel</Button>
-          <Button onClick={handleClear}>Clear</Button>
+          <Button onClick={onCancel}>{t("common.cancel")}</Button>
+          <Button onClick={() => form.resetFields()}>
+            {t("common.reset")}
+          </Button>
           <Button type="primary" htmlType="submit" loading={isSubmitting}>
-            Submit
+            {t("common.submit")}
           </Button>
         </Space>
       </Row>

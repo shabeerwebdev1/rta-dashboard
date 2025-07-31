@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Layout, Menu, type MenuProps } from "antd";
+import { Layout, Menu, theme, type MenuProps } from "antd";
 import {
   CarOutlined,
   FileTextOutlined,
@@ -11,36 +11,58 @@ import {
   UsergroupAddOutlined,
   IdcardOutlined,
   PushpinOutlined,
+  DashboardOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
+import { Link, useLocation } from "react-router-dom";
 
 const { Sider } = Layout;
+const { useToken } = theme;
 
-interface AppSidebarProps {
-  isDarkTheme: boolean;
-}
-
-const AppSidebar: React.FC<AppSidebarProps> = ({ isDarkTheme }) => {
+const AppSidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { t } = useTranslation();
+  const location = useLocation();
+  const { token } = useToken();
 
   const menuItems: MenuProps["items"] = [
-    { key: "1", icon: <PushpinOutlined />, label: t("sidebar.parking") },
-    { key: "2", icon: <CarOutlined />, label: t("sidebar.fleet") },
-    { key: "3", icon: <FileTextOutlined />, label: t("sidebar.pledges") },
-    { key: "4", icon: <IdcardOutlined />, label: t("sidebar.permits") },
-    { key: "5", icon: <TeamOutlined />, label: t("sidebar.hrms") },
-    { key: "6", icon: <SearchOutlined />, label: t("sidebar.inspections") },
-    { key: "7", icon: <DollarOutlined />, label: t("sidebar.fines") },
     {
-      key: "8",
+      key: "/dashboard",
+      icon: <DashboardOutlined />,
+      label: <Link to="/dashboard">{t("sidebar.dashboard")}</Link>,
+    },
+    {
+      key: "/pledges",
+      icon: <FileTextOutlined />,
+      label: <Link to="/pledges">{t("sidebar.pledges")}</Link>,
+    },
+    { key: "/parking", icon: <PushpinOutlined />, label: t("sidebar.parking") },
+    { key: "/fleet", icon: <CarOutlined />, label: t("sidebar.fleet") },
+    { key: "/permits", icon: <IdcardOutlined />, label: t("sidebar.permits") },
+    { key: "/hrms", icon: <TeamOutlined />, label: t("sidebar.hrms") },
+    {
+      key: "/inspections",
+      icon: <SearchOutlined />,
+      label: t("sidebar.inspections"),
+    },
+    { key: "/fines", icon: <DollarOutlined />, label: t("sidebar.fines") },
+    {
+      key: "/dispute",
       icon: <ExclamationCircleOutlined />,
       label: t("sidebar.dispute"),
     },
-    { key: "9", icon: <CarOutlined />, label: t("sidebar.towing") },
-    { key: "10", icon: <UsergroupAddOutlined />, label: t("sidebar.team") },
-    { key: "11", icon: <BarChartOutlined />, label: t("sidebar.analytics") },
+    { key: "/towing", icon: <CarOutlined />, label: t("sidebar.towing") },
+    { key: "/team", icon: <UsergroupAddOutlined />, label: t("sidebar.team") },
+    {
+      key: "/analytics",
+      icon: <BarChartOutlined />,
+      label: t("sidebar.analytics"),
+    },
   ];
+
+  const selectedKey =
+    menuItems.find((item) => location.pathname.startsWith(item?.key as string))
+      ?.key || "/dashboard";
 
   return (
     <Sider
@@ -62,27 +84,25 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ isDarkTheme }) => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          borderBottom: "1px solid #fdfdfd1f",
-          backgroundColor: isDarkTheme ? "#141414" : "initial", // this is not a scalable way, dont use theme status
-          borderInlineEnd: isDarkTheme // this is not a scalable way, dont use theme status
-            ? "1px solid #fdfdfd1f"
-            : "",
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
+          // backgroundColor: token.components.Layout.siderBg,
         }}
       >
         <img
-          // src="/rta-logo.svg"
           src="https://upload.wikimedia.org/wikipedia/en/d/dd/RTA_Dubai_logo.png"
           alt="RTA Logo"
           style={{
             height: "32px",
             transition: "all 0.2s",
-            background: "white",
+            backgroundColor: "white",
+            padding: "2px",
+            borderRadius: "4px",
           }}
         />
       </div>
       <Menu
-        style={{ height: "100%" }}
-        defaultSelectedKeys={["3"]}
+        style={{ height: "calc(100% - 64px)", borderRight: 0 }}
+        selectedKeys={[selectedKey as string]}
         mode="inline"
         items={menuItems}
       />

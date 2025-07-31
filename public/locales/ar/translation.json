@@ -1,8 +1,9 @@
 {
   "sidebar": {
+    "dashboard": "لوحة التحكم",
     "parking": "إدارة المواقف",
     "fleet": "إدارة الأسطول",
-    "pledges": "إدارة التعهدات",
+    "pledges": "إدارة القائمة البيضاء",
     "permits": "التصاريح",
     "hrms": "إدارة الموارد البشرية",
     "inspections": "التفتيش",
@@ -12,17 +13,90 @@
     "team": "تقييم الفريق",
     "analytics": "التحليلات والرؤى"
   },
-  "whitelist": {
+  "header": {
+    "compactMode": "الوضع المضغوط",
+    "standardMode": "الوضع القياسي"
+  },
+  "dashboard": {
+    "totalVehicles": "إجمالي المركبات",
+    "activePledges": "القوائم البيضاء النشطة",
+    "finesIssued": "الغرامات الصادرة (شهريًا)",
+    "openDisputes": "النزاعات المفتوحة",
+    "activityTitle": "النشاط الأخير",
+    "activityPlaceholder": "سيتم عرض موجز النشاط هنا."
+  },
+    "whitelist": {
     "title": "إدارة القائمة البيضاء",
-    "addNew": "إضافة إلى القائمة البيضاء",
-    "downloadCsv": "CSV",
-    "searchPlaceholder": "بحث...",
+    "addNew": "إضافة جديدة",
+    "downloadCsv": "تنزيل CSV",
+    "searchPlaceholder": "بحث في جميع الحقول...",
     "tradeLicenseName": "اسم الرخصة التجارية",
     "licenseNumber": "رقم الرخصة",
     "photo": "صورة",
-    "date": "التاريخ",
+    "date": "تاريخ الانتهاء",
     "location": "الموقع",
+    "status": "الحالة",
+    "type": "النوع",
+    "addedBy": "أضيف بواسطة",
+    "priority": "أولوية",
+    "viewMap": "عرض على الخريطة",
+    "locationDetails": "تفاصيل الموقع",
+    "expiryDate": "تاريخ الانتهاء",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "view": "عرض",
+    "compactView": "عرض مضغوط",
+    "standardView": "عرض قياسي"
+  },
+  "form": {
+    "plateNumber": "رقم اللوحة",
+    "plateSource": "مصدر اللوحة",
+    "plateType": "نوع اللوحة",
+    "plateColor": "لون اللوحة",
+    "tradeLicenseNumber": "رقم الرخصة التجارية",
+    "tradeLicenseName": "اسم الرخصة التجارية",
+    "plotNumber": "رقم قطعة الأرض",
+    "startDate": "تاريخ البدء",
+    "endDate": "تاريخ الانتهاء",
+    "plateStatus": "حالة اللوحة",
+    "exceptionReason": "سبب الاستثناء",
+    "highPriority": "أولوية عالية",
+    "highPriorityHint": "تتم معالجة الإدخالات ذات الأولوية أولاً.",
+    "tradeLicenseDocument": "مستند الرخصة التجارية",
+    "uploadHint": "انقر أو اسحب الملف إلى هذه المنطقة للتحميل (PDF, PNG, JPG)",
+    "zone": "المنطقة",
+    "freezone": "منطقة حرة",
+    "mainland": "البر الرئيسي",
+    "notes": "ملاحظات"
+  },
+  "status": {
+    "active": "نشط",
+    "expired": "منتهي الصلاحية",
+    "pending": "قيد الانتظار",
+    "trade": "رخصة تجارية",
+    "plate": "لوحة مركبة"
+  },
+  "common": {
     "action": "إجراء",
-    "viewMap": "عرض الخريطة"
+    "items": "عناصر",
+    "search": "بحث",
+    "filter": "تصفية",
+    "reset": "إعادة تعيين",
+    "delete": "حذف",
+    "cancel": "إلغاء",
+    "download": "تنزيل"
+  },
+  "messages": {
+    "csvDownloaded": "تم تنزيل ملف CSV بنجاح!",
+    "whitelistAdded": "تمت إضافة القائمة البيضاء بنجاح!",
+    "confirmDeleteTitle": "تأكيد الحذف",
+    "confirmDeleteContent": "هل أنت متأكد أنك تريد حذف",
+    "deletedSuccess": "تم الحذف بنجاح.",
+    "csvConfirmTitle": "تأكيد تنزيل CSV",
+    "csvConfirmContent": "أنت على وشك تنزيل ملف CSV بالبيانات التالية:",
+    "totalEntries": "إجمالي الإدخالات",
+    "active": "نشط",
+    "expired": "منتهي الصلاحية",
+    "pending": "قيد الانتظار"
   }
 }

@@ -31,11 +31,11 @@ export const corporateLightThemeConfig: ThemeConfig = {
       siderBg: palette.offBlack,
     },
     Menu: {
-      colorItemBg: "transparent",
-      colorItemText: palette.lightGray,
-      colorItemTextHover: palette.offWhite,
-      colorItemTextSelected: palette.offWhite,
-      colorItemBgSelected: palette.deepIndigo,
+      itemBg: "transparent",
+      itemColor: palette.lightGray,
+      itemHoverColor: palette.offWhite,
+      itemSelectedColor: palette.offWhite,
+      itemSelectedBg: palette.deepIndigo,
     },
     Button: {
       primaryShadow: "none",
