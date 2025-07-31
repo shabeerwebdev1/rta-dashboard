@@ -1,40 +1,42 @@
-import { App, ConfigProvider } from "antd";
+import { App, ConfigProvider, theme } from "antd";
 import { useTranslation } from "react-i18next";
 import { ThemeProvider, useTheme } from "./contexts/ThemeContext";
-import { CompactModeProvider } from "./contexts/CompactModeContext";
+import {
+  CompactModeProvider,
+  useCompactMode,
+} from "./contexts/CompactModeContext";
 import { PageProvider } from "./contexts/PageContext";
 import AppRoutes from "./router";
-import {
-  corporateDarkThemeConfig,
-  corporateLightThemeConfig,
-} from "./config/antdTheme";
+import { availableThemes } from "./config/antdTheme";
 import "./config/i18n";
 import "./styles/global.css";
 
 const AppContent = () => {
-  const { theme: currentTheme } = useTheme();
+  const { themeName } = useTheme();
+  const { isCompact } = useCompactMode();
   const { i18n } = useTranslation();
+
   const isRtl = i18n.dir() === "rtl";
 
-  const activeTheme =
-    currentTheme === "light"
-      ? corporateLightThemeConfig
-      : corporateDarkThemeConfig;
+  const activeThemeConfig = availableThemes[themeName];
 
-  // const { isCompact } = useCompactMode();
-  // if (isCompact) {
-  //   activeTheme.algorithm = [
-  //     ...(Array.isArray(activeTheme.algorithm)
-  //       ? activeTheme.algorithm
-  //       : activeTheme.algorithm
-  //         ? [activeTheme.algorithm]
-  //         : []),
-  //     ...(theme.compactAlgorithm ? [theme.compactAlgorithm] : []),
-  //   ] as MappingAlgorithm[];
-  // }
+  let algorithms = [];
+
+  if (activeThemeConfig.algorithm) {
+    algorithms.push(activeThemeConfig.algorithm);
+  }
+
+  if (isCompact) {
+    algorithms.push(theme.compactAlgorithm);
+  }
+
+  const finalTheme = {
+    ...activeThemeConfig,
+    algorithm: algorithms.length > 0 ? algorithms : undefined,
+  };
 
   return (
-    <ConfigProvider direction={isRtl ? "rtl" : "ltr"} theme={activeTheme}>
+    <ConfigProvider direction={isRtl ? "rtl" : "ltr"} theme={finalTheme}>
       <App>
         <AppRoutes />
       </App>

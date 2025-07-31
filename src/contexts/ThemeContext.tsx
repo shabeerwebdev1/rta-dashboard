@@ -1,23 +1,27 @@
-import React, { createContext, useState, useMemo, useContext } from "react";
+import React, {
+  createContext,
+  useState,
+  useMemo,
+  useContext,
+  ReactNode,
+} from "react";
+import { availableThemes } from "../config/antdTheme";
 
-type Theme = "light" | "dark";
+export type ThemeName = keyof typeof availableThemes | "dark";
+
 interface ThemeContextType {
-  theme: Theme;
-  toggleTheme: () => void;
+  themeName: ThemeName;
+  setThemeName: (name: ThemeName) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
+export const ThemeProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [themeName, setThemeName] = useState<ThemeName>("corporateRed");
 
-  const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
-  };
-
-  const value = useMemo(() => ({ theme, toggleTheme }), [theme]);
+  const value = useMemo(() => ({ themeName, setThemeName }), [themeName]);
 
   return (
     <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
