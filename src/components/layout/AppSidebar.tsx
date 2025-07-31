@@ -92,16 +92,18 @@ const AppSidebar: React.FC = () => {
           src="https://upload.wikimedia.org/wikipedia/en/d/dd/RTA_Dubai_logo.png"
           alt="RTA Logo"
           style={{
-            height: "32px",
+            // height: "100%",
+            width: "100%",
             transition: "all 0.2s",
             backgroundColor: "white",
             padding: "2px",
-            borderRadius: "4px",
+            objectFit: "cover",
+            // borderRadius: "4px",
           }}
         />
       </div>
       <Menu
-        style={{ height: "calc(100% - 64px)", borderRight: 0 }}
+        style={{ height: "calc(100% - 64px)", marginTop: 20, borderRight: 0 }}
         selectedKeys={[selectedKey as string]}
         mode="inline"
         items={menuItems}

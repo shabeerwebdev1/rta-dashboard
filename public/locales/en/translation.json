@@ -17,14 +17,6 @@
     "compactMode": "Compact Mode",
     "standardMode": "Standard Mode"
   },
-  "dashboard": {
-    "totalVehicles": "Total Vehicles",
-    "activePledges": "Active Whitelists",
-    "finesIssued": "Fines Issued (Month)",
-    "openDisputes": "Open Disputes",
-    "activityTitle": "Recent Activity",
-    "activityPlaceholder": "Activity feed will be displayed here."
-  },
   "whitelist": {
     "title": "Whitelist Management",
     "addNew": "Add New",
@@ -47,6 +39,25 @@
     "view": "View",
     "compactView": "Compact View",
     "standardView": "Standard View"
+  },
+  "dashboard": {
+    "totalVehicles": "Total Vehicles",
+    "activePledges": "Active Whitelists",
+    "finesIssued": "Fines Issued (Month)",
+    "openDisputes": "Open Disputes",
+    "finesOverTime": "Fines Over Time",
+    "whitelistStatus": "Whitelist Status",
+    "pendingApprovals": "Pending Whitelist Approvals",
+    "recentActivity": "Recent Activity Feed",
+    "last30days": "Last 30 Days",
+    "approve": "Approve",
+    "reject": "Reject",
+    "activity": {
+      "fineIssued": "issued a fine to",
+      "whitelistApproved": "approved whitelist for",
+      "disputeOpened": "opened a dispute for",
+      "vehicleInspected": "inspected vehicle"
+    }
   },
   "form": {
     "plateNumber": "Plate Number",

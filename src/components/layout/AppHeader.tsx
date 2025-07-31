@@ -55,7 +55,7 @@ const AppHeader = () => {
 
       <Space size="middle" align="center">
         <ThemeSwitcher />
-        <Tooltip
+        {/* <Tooltip
           title={isCompact ? t("header.standardMode") : t("header.compactMode")}
         >
           <Button
@@ -63,7 +63,7 @@ const AppHeader = () => {
             icon={isCompact ? <ExpandOutlined /> : <CompressOutlined />}
             onClick={toggleCompactMode}
           />
-        </Tooltip>
+        </Tooltip> */}
         <LanguageSwitcher />
         <Badge dot>
           <Button type="text" icon={<BellOutlined />} />

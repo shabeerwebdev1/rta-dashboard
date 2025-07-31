@@ -47,6 +47,6 @@ body {
 }
 
 .ant-pagination-total-text {
-  margin-right: auto;
+  margin-right: auto !important;
   padding-left: 10px;
 }

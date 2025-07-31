@@ -34,7 +34,7 @@ const MapDrawer: React.FC<MapDrawerProps> = ({ open, onClose, record }) => {
       open={open}
       width={500}
     >
-      <Title style={{ marginTop: 0 }} level={4}>
+      <Title style={{ marginTop: 0, paddingLeft: 2 }} level={4}>
         {record.tradeLicenseName}
       </Title>
 

@@ -17,15 +17,7 @@
     "compactMode": "الوضع المضغوط",
     "standardMode": "الوضع القياسي"
   },
-  "dashboard": {
-    "totalVehicles": "إجمالي المركبات",
-    "activePledges": "القوائم البيضاء النشطة",
-    "finesIssued": "الغرامات الصادرة (شهريًا)",
-    "openDisputes": "النزاعات المفتوحة",
-    "activityTitle": "النشاط الأخير",
-    "activityPlaceholder": "سيتم عرض موجز النشاط هنا."
-  },
-    "whitelist": {
+  "whitelist": {
     "title": "إدارة القائمة البيضاء",
     "addNew": "إضافة جديدة",
     "downloadCsv": "تنزيل CSV",
@@ -47,6 +39,25 @@
     "view": "عرض",
     "compactView": "عرض مضغوط",
     "standardView": "عرض قياسي"
+  },
+  "dashboard": {
+    "totalVehicles": "إجمالي المركبات",
+    "activePledges": "القوائم البيضاء النشطة",
+    "finesIssued": "الغرامات الصادرة (شهريًا)",
+    "openDisputes": "النزاعات المفتوحة",
+    "finesOverTime": "الغرامات مع مرور الوقت",
+    "whitelistStatus": "حالة القائمة البيضاء",
+    "pendingApprovals": "الموافقات المعلقة للقائمة البيضاء",
+    "recentActivity": "موجز النشاط الأخير",
+    "last30days": "آخر 30 يومًا",
+    "approve": "موافقة",
+    "reject": "رفض",
+    "activity": {
+      "fineIssued": "أصدر غرامة لـ",
+      "whitelistApproved": "وافق على القائمة البيضاء لـ",
+      "disputeOpened": "فتح نزاعًا لـ",
+      "vehicleInspected": "فحص المركبة"
+    }
   },
   "form": {
     "plateNumber": "رقم اللوحة",
