@@ -32,9 +32,9 @@ const AppSidebar: React.FC = () => {
       label: <Link to="/dashboard">{t("sidebar.dashboard")}</Link>,
     },
     {
-      key: "/pledges",
+      key: "/whitelist",
       icon: <FileTextOutlined />,
-      label: <Link to="/pledges">{t("sidebar.pledges")}</Link>,
+      label: <Link to="/whitelist">{t("sidebar.whitelist")}</Link>,
     },
     { key: "/parking", icon: <PushpinOutlined />, label: t("sidebar.parking") },
     { key: "/fleet", icon: <CarOutlined />, label: t("sidebar.fleet") },

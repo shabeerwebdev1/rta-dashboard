@@ -9,7 +9,7 @@ const AppRoutes = () => {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="pledges" element={<WhitelistPage />} />
+        <Route path="whitelist" element={<WhitelistPage />} />
         {/* Add other routes here */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
