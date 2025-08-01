@@ -47,12 +47,15 @@ body {
 }
 
 .ant-table-wrapper .ant-table-pagination.ant-pagination {
-  margin-right: 16px;
+  margin: 16px;
 }
 
-.ant-pagination-total-text {
+html[lang="en"] .ant-pagination-total-text {
   margin-right: auto !important;
-  padding-left: 20px;
+}
+
+html[lang="ar"] .ant-pagination-total-text {
+  margin-left: auto !important;
 }
 
 .ant-form-item-label>label.ant-form-item-required::before {
