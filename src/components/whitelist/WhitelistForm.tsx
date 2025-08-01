@@ -78,7 +78,7 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
                 label={t("form.plateNumber")}
                 rules={[{ required: true }]}
               >
-                <Input placeholder="e.g. A 12345" />
+                <Input size="large" placeholder="e.g. A 12345" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
@@ -87,7 +87,7 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
                 label={t("form.plateSource")}
                 rules={[{ required: true }]}
               >
-                <Select placeholder="Select source">
+                <Select size="large" placeholder="Select source">
                   <Select.Option value="DXB">Dubai</Select.Option>
                 </Select>
               </Form.Item>
@@ -98,7 +98,7 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
                 label={t("form.plateType")}
                 rules={[{ required: true }]}
               >
-                <Select placeholder="Select type">
+                <Select size="large" placeholder="Select type">
                   <Select.Option value="private">Private</Select.Option>
                 </Select>
               </Form.Item>
@@ -109,7 +109,7 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
                 label={t("form.plateColor")}
                 rules={[{ required: true }]}
               >
-                <Select placeholder="Select color">
+                <Select size="large" placeholder="Select color">
                   <Select.Option value="white">White</Select.Option>
                 </Select>
               </Form.Item>
@@ -125,7 +125,7 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
                 label={t("form.tradeLicenseNumber")}
                 rules={[{ required: true }]}
               >
-                <Input />
+                <Input size="large" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={12}>
@@ -134,24 +134,7 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
                 label={t("form.tradeLicenseName")}
                 rules={[{ required: true }]}
               >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12} md={12}>
-              <Form.Item
-                name="zone"
-                label={t("form.zone")}
-                initialValue="mainland"
-                rules={[{ required: true }]}
-              >
-                <Radio.Group>
-                  <Radio.Button value="mainland">
-                    {t("form.mainland")}
-                  </Radio.Button>
-                  <Radio.Button value="freezone">
-                    {t("form.freezone")}
-                  </Radio.Button>
-                </Radio.Group>
+                <Input size="large" />
               </Form.Item>
             </Col>
           </>
@@ -163,7 +146,11 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
             label={t("form.startDate")}
             rules={[{ required: true }]}
           >
-            <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+            <DatePicker
+              size="large"
+              style={{ width: "100%" }}
+              format="DD/MM/YYYY"
+            />
           </Form.Item>
         </Col>
         <Col xs={24} sm={12}>
@@ -172,12 +159,29 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
             label={t("form.endDate")}
             rules={[{ required: true }]}
           >
-            <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+            <DatePicker
+              size="large"
+              style={{ width: "100%" }}
+              format="DD/MM/YYYY"
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} sm={12} md={12}>
+          <Form.Item
+            name="zone"
+            label={t("form.zone")}
+            initialValue="mainland"
+            rules={[{ required: true }]}
+          >
+            <Radio.Group>
+              <Radio.Button value="mainland">{t("form.mainland")}</Radio.Button>
+              <Radio.Button value="freezone">{t("form.freezone")}</Radio.Button>
+            </Radio.Group>
           </Form.Item>
         </Col>
         <Col style={{ margin: "auto 0" }} xs={24} sm={12}>
           <Form.Item
-            style={{ margin: 0 }}
+            style={type === "trade" ? { margin: 0 } : undefined}
             name="priority"
             valuePropName="checked"
           >
