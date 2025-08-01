@@ -46,7 +46,27 @@ body {
   background-color: transparent;
 }
 
+.ant-table-wrapper .ant-table-pagination.ant-pagination {
+  margin-right: 16px;
+}
+
 .ant-pagination-total-text {
   margin-right: auto !important;
-  padding-left: 10px;
+  padding-left: 20px;
+}
+
+.ant-form-item-label>label.ant-form-item-required::before {
+  content: "*";
+  color: red;
+  font-size: 20px;
+  position: relative;
+  top: -3px;
+  left: -10px;
+  order: 2;
+  margin: 0;
+}
+
+.ant-form-item-label>label {
+  display: inline-flex;
+  align-items: flex-start;
 }

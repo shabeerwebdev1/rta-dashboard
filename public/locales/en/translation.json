@@ -95,7 +95,8 @@
     "reset": "Reset",
     "delete": "Delete",
     "cancel": "Cancel",
-    "download": "Download"
+    "download": "Download",
+    "submit": "Submit"
   },
   "messages": {
     "csvDownloaded": "CSV file downloaded successfully!",

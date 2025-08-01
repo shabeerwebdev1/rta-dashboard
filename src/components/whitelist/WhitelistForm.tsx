@@ -13,7 +13,7 @@ import {
   Radio,
   Tooltip,
 } from "antd";
-import { UploadOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { InfoCircleOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 
 export interface WhitelistFormValues {
@@ -154,25 +154,6 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
                 </Radio.Group>
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} md={12}>
-              <Form.Item
-                name="document"
-                label={t("form.tradeLicenseDocument")}
-                valuePropName="fileList"
-                getValueFromEvent={normFile}
-              >
-                <Upload
-                  name="logo"
-                  listType="picture"
-                  maxCount={1}
-                  beforeUpload={() => false}
-                >
-                  <Button icon={<UploadOutlined />}>
-                    {t("form.uploadHint")}
-                  </Button>
-                </Upload>
-              </Form.Item>
-            </Col>
           </>
         )}
 
@@ -194,13 +175,12 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
             <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
           </Form.Item>
         </Col>
-        <Col xs={24}>
-          <Form.Item name="notes" label={t("form.notes")}>
-            <Input.TextArea rows={3} placeholder="Add any relevant notes..." />
-          </Form.Item>
-        </Col>
-        <Col xs={24}>
-          <Form.Item name="priority" valuePropName="checked">
+        <Col style={{ margin: "auto 0" }} xs={24} sm={12}>
+          <Form.Item
+            style={{ margin: 0 }}
+            name="priority"
+            valuePropName="checked"
+          >
             <Checkbox>
               {t("form.highPriority")}
               <Tooltip title={t("form.highPriorityHint")}>
@@ -209,6 +189,31 @@ const WhitelistForm: React.FC<WhitelistFormProps> = ({
                 />
               </Tooltip>
             </Checkbox>
+          </Form.Item>
+        </Col>
+        <Col xs={24}>
+          <Form.Item name="notes" label={t("form.notes")}>
+            <Input.TextArea rows={3} placeholder="Add any relevant notes..." />
+          </Form.Item>
+        </Col>
+        <Col xs={24} sm={24} md={24}>
+          <Form.Item
+            name="document"
+            label={t("form.tradeLicenseDocument")}
+            valuePropName="fileList"
+            getValueFromEvent={normFile}
+          >
+            <Upload
+              name="logo"
+              listType="picture-card"
+              // maxCount={1}
+              multiple={true}
+              beforeUpload={() => false}
+            >
+              {/* <Button icon={<UploadOutlined />}> */}
+              {t("form.uploadHint")}
+              {/* </Button> */}
+            </Upload>
           </Form.Item>
         </Col>
       </Row>

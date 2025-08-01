@@ -95,7 +95,8 @@
     "reset": "إعادة تعيين",
     "delete": "حذف",
     "cancel": "إلغاء",
-    "download": "تنزيل"
+    "download": "تنزيل",
+    "submit": "إرسال"
   },
   "messages": {
     "csvDownloaded": "تم تنزيل ملف CSV بنجاح!",
