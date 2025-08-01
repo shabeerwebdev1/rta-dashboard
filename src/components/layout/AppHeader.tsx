@@ -49,7 +49,7 @@ const AppHeader = () => {
         borderBottom: "1px solid var(--ant-color-border-secondary)",
       }}
     >
-      <Title level={3} style={{ margin: "0 0 0 20px" }}>
+      <Title level={3} style={{ margin: 0 }}>
         {pageTitle}
       </Title>
 

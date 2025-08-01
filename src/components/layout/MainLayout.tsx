@@ -14,7 +14,7 @@ const MainLayout: React.FC = () => {
         <AppHeader />
         <Content
           style={{
-            margin: "0 16px 24px 16px",
+            margin: "0",
             padding: 24,
             borderRadius: "8px",
           }}
