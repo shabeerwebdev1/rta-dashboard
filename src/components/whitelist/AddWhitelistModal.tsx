@@ -1,15 +1,18 @@
 import React from "react";
-import { Modal, Button, Typography, Divider } from "antd";
-import { CloseOutlined } from "@ant-design/icons";
-import WhitelistForm, { type WhitelistFormValues } from "./WhitelistForm";
+import { Modal, Typography, Divider } from "antd";
+import PlateForm from "./PlateForm";
+import TradeForm from "./TradeForm";
+import type { PlateFormValues } from "../whitelist/PlateForm";
+import type { TradeFormValues } from "../whitelist/TradeForm";
+import { useTranslation } from "react-i18next";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 interface AddWhitelistModalProps {
   type: "plate" | "trade" | null;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (values: WhitelistFormValues) => void;
+  onSubmit: (values: PlateFormValues | TradeFormValues) => void;
   isSubmitting: boolean;
 }
 
@@ -20,10 +23,14 @@ const AddWhitelistModal: React.FC<AddWhitelistModalProps> = ({
   onSubmit,
   isSubmitting,
 }) => {
+  const { t } = useTranslation();
+
   if (!type) return null;
 
   const titleText =
-    type === "plate" ? "Add by Plate Details" : "Add by Trade Details";
+    type === "plate"
+      ? t("whitelist.addPlateTitle")
+      : t("whitelist.addTradeTitle");
 
   return (
     <Modal
@@ -48,12 +55,19 @@ const AddWhitelistModal: React.FC<AddWhitelistModalProps> = ({
     >
       <Divider />
 
-      <WhitelistForm
-        type={type}
-        onSubmit={onSubmit}
-        onCancel={onClose}
-        isSubmitting={isSubmitting}
-      />
+      {type === "plate" ? (
+        <PlateForm
+          onSubmit={onSubmit as (values: PlateFormValues) => void}
+          onCancel={onClose}
+          isSubmitting={isSubmitting}
+        />
+      ) : (
+        <TradeForm
+          onSubmit={onSubmit as (values: TradeFormValues) => void}
+          onCancel={onClose}
+          isSubmitting={isSubmitting}
+        />
+      )}
     </Modal>
   );
 };

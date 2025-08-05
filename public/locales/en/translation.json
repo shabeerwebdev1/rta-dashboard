@@ -6,12 +6,15 @@
     "whitelist": "Whitelist Management",
     "permits": "Permits",
     "hrms": "HRMS",
-    "inspections": "Inspections",
+    "inspections": "Inspection Obstacles",
+    "pledgesManagement": "Pledges Management",
     "fines": "Fines Management",
     "dispute": "Dispute Management",
     "towing": "Towing",
     "team": "Team Assessment",
-    "analytics": "Analytics & Insights"
+    "analytics": "Analytics & Insights",
+    "addPlate": "Add Plate Details",
+    "addtrade": "Add Trade Details"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -37,7 +40,13 @@
     "edit": "Edit",
     "delete": "Delete",
     "view": "View",
+    "platenumber": "Plate Number",
+    "vehicleowner": "Vehicle Owner",
     "compactView": "Compact View",
+    "addplate":"Add Plate",
+    "addtrade":"Add Trade",
+      "addPlateTitle": "Add Plate Details",
+    "addTradeTitle": "Add Trade Details",
     "standardView": "Standard View"
   },
   "dashboard": {
@@ -67,8 +76,8 @@
     "tradeLicenseNumber": "Trade License Number",
     "tradeLicenseName": "Trade License Name",
     "plotNumber": "Plot Number",
-    "startDate": "Start Date",
-    "endDate": "End Date",
+    "fromDate": "From Date",
+    "toDate": "To Date",
     "plateStatus": "Plate Status",
     "exceptionReason": "Exception Reason",
     "highPriority": "High Priority",
