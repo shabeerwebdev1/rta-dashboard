@@ -6,11 +6,14 @@
     "whitelist": "إدارة القائمة البيضاء",
     "permits": "التصاريح",
     "hrms": "إدارة الموارد البشرية",
-    "inspections": "التفتيش",
+    "inspections": "التفتيش والمعوقات",
+    "pledgesManagement": "إدارة القوائم البيضاء",
     "fines": "إدارة الغرامات",
     "dispute": "إدارة النزاعات",
     "towing": "سحب المركبات",
     "team": "تقييم الفريق",
+    "addPlate": "إضافة تفاصيل اللوحة",
+    "addtrade": "إضافة تفاصيل الرخصة التجارية",
     "analytics": "التحليلات والرؤى"
   },
   "header": {
@@ -35,8 +38,16 @@
     "locationDetails": "تفاصيل الموقع",
     "expiryDate": "تاريخ الانتهاء",
     "edit": "تعديل",
+    "addPlateTitle": "أضف تفاصيل اللوحة",
+    "addTradeTitle": "أضف تفاصيل الرخصة التجارية",
     "delete": "حذف",
     "view": "عرض",
+
+    "addplate": "إضافة لوحة",
+    "addtrade": "إضافة رخصة",
+    "platenumber": "رقم اللوحة",
+    "vehicleowner": "مالك المركبة",
+
     "compactView": "عرض مضغوط",
     "standardView": "عرض قياسي"
   },
@@ -67,8 +78,8 @@
     "tradeLicenseNumber": "رقم الرخصة التجارية",
     "tradeLicenseName": "اسم الرخصة التجارية",
     "plotNumber": "رقم قطعة الأرض",
-    "startDate": "تاريخ البدء",
-    "endDate": "تاريخ الانتهاء",
+    "fromDate": "تاريخ البدء",
+    "toDate": "تاريخ الانتهاء",
     "plateStatus": "حالة اللوحة",
     "exceptionReason": "سبب الاستثناء",
     "highPriority": "أولوية عالية",
@@ -76,7 +87,6 @@
     "tradeLicenseDocument": "مستند الرخصة التجارية",
     "uploadHint": "انقر أو اسحب الملف إلى هذه المنطقة للتحميل (PDF, PNG, JPG)",
     "zone": "المنطقة",
-    "freezone": "منطقة حرة",
     "mainland": "البر الرئيسي",
     "notes": "ملاحظات"
   },

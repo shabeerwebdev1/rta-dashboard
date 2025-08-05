@@ -1,6 +1,4 @@
-import React, { useState } from "react";
-import { Drawer, Typography, Descriptions, Tag, Avatar, Spin } from "antd";
-import { UserOutlined } from "@ant-design/icons";
+import { Drawer, Typography, Descriptions, Tag } from "antd";
 import { useTranslation } from "react-i18next";
 import type { WhitelistRecord } from "../../types";
 
@@ -14,11 +12,10 @@ interface MapDrawerProps {
 
 const MapDrawer: React.FC<MapDrawerProps> = ({ open, onClose, record }) => {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(true);
 
   if (!record) return null;
 
-  const mapUrl = `https://maps.google.com/maps?q=${record.location.lat},${record.location.lng}&z=15&output=embed`;
+  // const mapUrl = `https://maps.google.com/maps?q=${record.location.lat},${record.location.lng}&z=15&output=embed`;
   const statusColor =
     record.status === "Active"
       ? "green"
@@ -62,13 +59,10 @@ const MapDrawer: React.FC<MapDrawerProps> = ({ open, onClose, record }) => {
         <Descriptions.Item label={t("whitelist.type")}>
           <Tag>{t(`status.${record.type.toLowerCase()}`)}</Tag>
         </Descriptions.Item>
-        <Descriptions.Item label={t("whitelist.photo")}>
-          <Avatar src={record.photo} icon={<UserOutlined />} />
-        </Descriptions.Item>
       </Descriptions>
 
       {/* Map Loader */}
-      <div
+      {/* <div
         style={{
           height: "300px",
           width: "100%",
@@ -106,7 +100,7 @@ const MapDrawer: React.FC<MapDrawerProps> = ({ open, onClose, record }) => {
           referrerPolicy="no-referrer-when-downgrade"
           onLoad={() => setLoading(false)}
         ></iframe>
-      </div>
+      </div> */}
     </Drawer>
   );
 };
