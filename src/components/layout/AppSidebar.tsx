@@ -34,7 +34,23 @@ const AppSidebar: React.FC = () => {
     {
       key: "/whitelist",
       icon: <FileTextOutlined />,
-      label: <Link to="/whitelist">{t("sidebar.whitelist")}</Link>,
+      label: t("sidebar.whitelist"),
+      children: [
+        {
+          key: "/whitelist/plates",
+          label: (
+            <Link to="/whitelist/plates">{t("whitelist.plate.title")}</Link>
+          ),
+        },
+        {
+          key: "/whitelist/tradelicenses",
+          label: (
+            <Link to="/whitelist/tradelicenses">
+              {t("whitelist.trade.title")}
+            </Link>
+          ),
+        },
+      ],
     },
     { key: "/parking", icon: <PushpinOutlined />, label: t("sidebar.parking") },
     { key: "/fleet", icon: <CarOutlined />, label: t("sidebar.fleet") },
@@ -61,8 +77,24 @@ const AppSidebar: React.FC = () => {
   ];
 
   const selectedKey =
+    menuItems
+      .flatMap((item) => (item && "children" in item ? item.children : item))
+      .find((item) => item && location.pathname.startsWith(item.key as string))
+      ?.key ||
     menuItems.find((item) => location.pathname.startsWith(item?.key as string))
-      ?.key || "/dashboard";
+      ?.key ||
+    "/dashboard";
+
+  const defaultOpenKeys = menuItems
+    .filter(
+      (item) =>
+        item &&
+        "children" in item &&
+        item.children?.some((child) =>
+          location.pathname.startsWith(child?.key as string),
+        ),
+    )
+    .map((item) => item?.key as string);
 
   return (
     <Sider
@@ -85,25 +117,23 @@ const AppSidebar: React.FC = () => {
           alignItems: "center",
           justifyContent: "center",
           borderBottom: `1px solid ${token.colorBorderSecondary}`,
-          // backgroundColor: token.components.Layout.siderBg,
         }}
       >
         <img
           src="https://upload.wikimedia.org/wikipedia/en/d/dd/RTA_Dubai_logo.png"
           alt="RTA Logo"
           style={{
-            // height: "100%",
             width: "100%",
             transition: "all 0.2s",
             backgroundColor: "white",
             padding: "2px",
             objectFit: "cover",
-            // borderRadius: "4px",
           }}
         />
       </div>
       <Menu
         style={{ height: "calc(100% - 64px)", marginTop: 20, borderRight: 0 }}
+        defaultOpenKeys={defaultOpenKeys}
         selectedKeys={[selectedKey as string]}
         mode="inline"
         items={menuItems}

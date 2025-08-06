@@ -7,5 +7,12 @@ export default defineConfig({
     watch: {
       usePolling: true,
     },
+    proxy: {
+      "/api": {
+        target: "https://devparkingapi.kandaprojects.live",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });

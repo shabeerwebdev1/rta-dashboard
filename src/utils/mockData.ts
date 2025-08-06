@@ -19,14 +19,13 @@ const users = [
   "Aisha Al Mansoori",
 ];
 
-// Main UAE cities coordinates
 const cityCoordinates = [
-  { lat: 25.276987, lng: 55.296249 }, // Dubai
-  { lat: 24.453884, lng: 54.377342 }, // Abu Dhabi
-  { lat: 25.346266, lng: 55.420933 }, // Sharjah
-  { lat: 25.382436, lng: 55.483902 }, // Ajman
-  { lat: 25.13253,  lng: 56.341602 }, // Fujairah
-  { lat: 25.689531, lng: 55.793087 }, // Ras Al Khaimah
+  { lat: 25.276987, lng: 55.296249 },
+  { lat: 24.453884, lng: 54.377342 },
+  { lat: 25.346266, lng: 55.420933 },
+  { lat: 25.382436, lng: 55.483902 },
+  { lat: 25.13253, lng: 56.341602 },
+  { lat: 25.689531, lng: 55.793087 },
 ];
 
 export const generateWhitelistData = (count: number): WhitelistRecord[] => {
@@ -35,7 +34,6 @@ export const generateWhitelistData = (count: number): WhitelistRecord[] => {
     const status = i % 5 === 0 ? "Expired" : i % 3 === 0 ? "Pending" : "Active";
     const baseCity = cityCoordinates[i % cityCoordinates.length];
 
-    // Keep points within ~1km of city center
     const latOffset = (Math.random() - 0.5) * 0.01;
     const lngOffset = (Math.random() - 0.5) * 0.01;
 
