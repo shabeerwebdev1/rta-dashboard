@@ -22,23 +22,17 @@
     "addNew": "إضافة جديدة",
     "downloadCsv": "تنزيل CSV",
     "searchPlaceholder": "بحث في جميع الحقول...",
-    "tradeLicenseName": "اسم الرخصة التجارية",
-    "licenseNumber": "رقم الرخصة",
-    "photo": "صورة",
-    "date": "تاريخ الانتهاء",
-    "location": "الموقع",
-    "status": "الحالة",
-    "type": "النوع",
-    "addedBy": "أضيف بواسطة",
-    "priority": "أولوية",
-    "viewMap": "عرض على الخريطة",
-    "locationDetails": "تفاصيل الموقع",
-    "expiryDate": "تاريخ الانتهاء",
     "edit": "تعديل",
     "delete": "حذف",
     "view": "عرض",
-    "compactView": "عرض مضغوط",
-    "standardView": "عرض قياسي"
+    "plate": {
+      "title": "القائمة البيضاء للوحات",
+      "addTitle": "إضافة لوحة جديدة إلى القائمة البيضاء"
+    },
+    "trade": {
+      "title": "القائمة البيضاء للرخص التجارية",
+      "addTitle": "إضافة رخصة تجارية جديدة إلى القائمة البيضاء"
+    }
   },
   "dashboard": {
     "totalVehicles": "إجمالي المركبات",
@@ -65,27 +59,20 @@
     "plateType": "نوع اللوحة",
     "plateColor": "لون اللوحة",
     "tradeLicenseNumber": "رقم الرخصة التجارية",
-    "tradeLicenseName": "اسم الرخصة التجارية",
+    "tradeLicense_EN_Name": "اسم الرخصة التجارية (إنجليزي)",
+    "tradeLicense_AR_Name": "اسم الرخصة التجارية (عربي)",
     "plotNumber": "رقم قطعة الأرض",
     "startDate": "تاريخ البدء",
     "endDate": "تاريخ الانتهاء",
-    "plateStatus": "حالة اللوحة",
-    "exceptionReason": "سبب الاستثناء",
-    "highPriority": "أولوية عالية",
-    "highPriorityHint": "تتم معالجة الإدخالات ذات الأولوية أولاً.",
-    "tradeLicenseDocument": "مستند الرخصة التجارية",
-    "uploadHint": "انقر أو اسحب الملف إلى هذه المنطقة للتحميل (PDF, PNG, JPG)",
-    "zone": "المنطقة",
-    "freezone": "منطقة حرة",
-    "mainland": "البر الرئيسي",
-    "notes": "ملاحظات"
+    "dateRange": "الفترة الزمنية",
+    "plateStatus": "الحالة",
+    "exemptionReason_EN": "سبب الاستثناء (إنجليزي)",
+    "exemptionReason_AR": "سبب الاستثناء (عربي)"
   },
   "status": {
     "active": "نشط",
     "expired": "منتهي الصلاحية",
-    "pending": "قيد الانتظار",
-    "trade": "رخصة تجارية",
-    "plate": "لوحة مركبة"
+    "pending": "قيد الانتظار"
   },
   "common": {
     "action": "إجراء",
@@ -100,7 +87,7 @@
   },
   "messages": {
     "csvDownloaded": "تم تنزيل ملف CSV بنجاح!",
-    "whitelistAdded": "تمت إضافة القائمة البيضاء بنجاح!",
+    "whitelistAdded": "تمت إضافة الإدخال بنجاح!",
     "confirmDeleteTitle": "تأكيد الحذف",
     "confirmDeleteContent": "هل أنت متأكد أنك تريد حذف",
     "deletedSuccess": "تم الحذف بنجاح.",
