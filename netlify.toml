@@ -1,0 +1,17 @@
+# Netlify Redirects and Rewrites
+# This rule proxies API requests to the backend to avoid CORS issues.
+
+[[redirects]]
+  # The path on your Netlify site that you want to proxy
+  from = "/api/*"
+  
+  # The actual API endpoint you want to proxy to
+  to = "https://devparkingapi.kandaprojects.live/api/:splat"
+  
+  # A 200 status code makes this a "rewrite" or "proxy"
+  # instead of a 301/302 redirect. This is crucial.
+  status = 200
+  
+  # force = true ensures this rule is applied even if a file
+  # exists at the "from" path.
+  force = true
