@@ -30,11 +30,15 @@
     "view": "View",
     "plate": {
       "title": "Plate Whitelist",
-      "addTitle": "Add New Plate to Whitelist"
+      "addTitle": "Add New Plate to Whitelist",
+      "editTitle": "Edit Plate Whitelist",
+      "viewTitle": "View Plate Details"
     },
     "trade": {
       "title": "Trade License Whitelist",
-      "addTitle": "Add New Trade License to Whitelist"
+      "addTitle": "Add New Trade License to Whitelist",
+      "editTitle": "Edit Trade License Whitelist",
+      "viewTitle": "View Trade License Details"
     }
   },
   "dashboard": {

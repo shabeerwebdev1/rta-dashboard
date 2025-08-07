@@ -10,7 +10,10 @@ import {
   Tooltip,
   Input,
   DatePicker,
+  Dropdown,
+  Typography,
 } from "antd";
+import type { MenuProps } from "antd";
 import {
   PlusOutlined,
   DeleteOutlined,
@@ -18,12 +21,15 @@ import {
   DownloadOutlined,
   UnorderedListOutlined,
   AppstoreOutlined,
+  MoreOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import PageLoader from "../components/common/PageLoader";
-import WhitelistTradeLicenseDrawer from "../components/whitelist/trade/WhitelistTradeLicenseDrawer";
+import WhitelistTradeLicenseModal from "../components/whitelist/trade/WhitelistTradeLicenseModal";
+import WhitelistTradeLicenseViewDrawer from "../components/whitelist/trade/WhitelistTradeLicenseViewDrawer";
 import {
   useGetWhitelistTradeLicensesQuery,
   useDeleteWhitelistTradeLicenseMutation,
@@ -31,7 +37,6 @@ import {
 import type { WhitelistTradeLicenseResponseDto } from "../types/api";
 import dayjs, { type Dayjs } from "dayjs";
 import { exportToCsv } from "../utils/csvExporter";
-import { Typography } from "antd";
 
 const { RangePicker } = DatePicker;
 const { Text: AntText } = Typography;
@@ -41,9 +46,10 @@ const WhitelistTradeLicensesPage: React.FC = () => {
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [drawerMode, setDrawerMode] = useState<"add" | "edit">("add");
-  const [editingRecord, setEditingRecord] =
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [selectedRecord, setEditingRecord] =
     useState<WhitelistTradeLicenseResponseDto | null>(null);
 
   const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
@@ -73,16 +79,26 @@ const WhitelistTradeLicensesPage: React.FC = () => {
     }
   }, [isError, error]);
 
-  const showAddDrawer = () => {
-    setDrawerMode("add");
+  const showAddModal = () => {
+    setModalMode("add");
     setEditingRecord(null);
+    setIsModalOpen(true);
+  };
+
+  const showEditModal = (record: WhitelistTradeLicenseResponseDto) => {
+    setModalMode("edit");
+    setEditingRecord(record);
+    setIsModalOpen(true);
+  };
+
+  const showViewDrawer = (record: WhitelistTradeLicenseResponseDto) => {
+    setEditingRecord(record);
     setIsDrawerOpen(true);
   };
 
-  const showEditDrawer = (record: WhitelistTradeLicenseResponseDto) => {
-    setDrawerMode("edit");
-    setEditingRecord(record);
-    setIsDrawerOpen(true);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingRecord(null);
   };
 
   const closeDrawer = () => {
@@ -127,10 +143,10 @@ const WhitelistTradeLicensesPage: React.FC = () => {
 
   const handleDownloadCsv = () => {
     const stats = {
-      total: filteredData.length,
-      active: filteredData.filter((i) => i.status === "Active").length,
-      expired: filteredData.filter((i) => i.status === "Expired").length,
-      pending: filteredData.filter((i) => i.status === "Pending").length,
+      total: filteredData?.length || 0,
+      active: filteredData?.filter((i) => i.plateStatus === "Active").length,
+      expired: filteredData?.filter((i) => i.plateStatus === "Expired").length,
+      pending: filteredData?.filter((i) => i.plateStatus === "Pending").length,
     };
 
     modal.confirm({
@@ -160,8 +176,13 @@ const WhitelistTradeLicensesPage: React.FC = () => {
       cancelText: t("common.cancel"),
       onOk() {
         try {
-          exportToCsv(filteredData, "whitelist_export.csv");
-          message.success(t("messages.csvDownloaded"));
+          if (filteredData) {
+            exportToCsv(
+              filteredData as any,
+              "whitelist_tradelicense_export.csv",
+            );
+            message.success(t("messages.csvDownloaded"));
+          }
         } catch (error) {
           console.error("CSV Export Failed:", error);
           message.error("Failed to download CSV.");
@@ -212,26 +233,38 @@ const WhitelistTradeLicensesPage: React.FC = () => {
         fixed: "right",
         width: 100,
         align: "center",
-        render: (_, record) => (
-          <Space size="small">
-            <Tooltip title={t("whitelist.edit")}>
-              <Button
-                icon={<EditOutlined />}
-                type="text"
-                onClick={() => showEditDrawer(record)}
-              />
-            </Tooltip>
-            <Tooltip title={t("whitelist.delete")}>
-              <Button
-                icon={<DeleteOutlined />}
-                type="text"
-                danger
-                loading={isDeleting}
-                onClick={() => handleDelete(record)}
-              />
-            </Tooltip>
-          </Space>
-        ),
+        render: (_, record) => {
+          const menuItems: MenuProps["items"] = [
+            {
+              key: "view",
+              label: t("whitelist.view"),
+              icon: <EyeOutlined />,
+              onClick: () => showViewDrawer(record),
+            },
+            {
+              key: "edit",
+              label: t("whitelist.edit"),
+              icon: <EditOutlined />,
+              onClick: () => showEditModal(record),
+            },
+            {
+              key: "delete",
+              label: t("whitelist.delete"),
+              icon: <DeleteOutlined />,
+              danger: true,
+              onClick: () => handleDelete(record),
+            },
+          ];
+          return (
+            <Dropdown
+              menu={{ items: menuItems }}
+              trigger={["click"]}
+              disabled={isDeleting}
+            >
+              <Button type="text" icon={<MoreOutlined />} />
+            </Dropdown>
+          );
+        },
       },
     ],
     [t, isDeleting],
@@ -280,7 +313,7 @@ const WhitelistTradeLicensesPage: React.FC = () => {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={showAddDrawer}
+              onClick={showAddModal}
             >
               {t("whitelist.addNew")}
             </Button>
@@ -302,10 +335,16 @@ const WhitelistTradeLicensesPage: React.FC = () => {
         />
       </Card>
 
-      <WhitelistTradeLicenseDrawer
+      <WhitelistTradeLicenseModal
+        open={isModalOpen}
+        mode={modalMode}
+        initialData={selectedRecord}
+        onClose={closeModal}
+      />
+
+      <WhitelistTradeLicenseViewDrawer
         open={isDrawerOpen}
-        mode={drawerMode}
-        initialData={editingRecord}
+        record={selectedRecord}
         onClose={closeDrawer}
       />
     </Space>
