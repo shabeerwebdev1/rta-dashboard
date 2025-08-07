@@ -1,10 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import DashboardPage from "./pages/DashboardPage";
-import InspectionObstaclePage from "./pages/InspectionObstaclePage";
-import PlatePage from "./pages/PlatePage";
-import TradePage from "./pages/TradePage";
-import WhitelistPage from "./pages/WhitelistPage"; 
+import WhitelistPlatesPage from "./pages/WhitelistPlatesPage";
+import WhitelistTradeLicensesPage from "./pages/WhitelistTradeLicensesPage";
 
 const AppRoutes = () => {
   return (
@@ -12,14 +10,15 @@ const AppRoutes = () => {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="inspectionobstacle" element={<InspectionObstaclePage />} />
-
-        {/* Nested route for Whitelist */}
-        <Route path="whitelist" element={<WhitelistPage />}>
-          <Route path="plate" element={<PlatePage />} />
-          <Route path="trade" element={<TradePage />} />
+        <Route path="whitelist">
+          <Route index element={<Navigate to="/whitelist/plates" replace />} />
+          <Route path="plates" element={<WhitelistPlatesPage />} />
+          <Route
+            path="tradelicenses"
+            element={<WhitelistTradeLicensesPage />}
+          />
         </Route>
-
+        {/* Add other routes here */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>

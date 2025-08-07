@@ -46,17 +46,25 @@ const AppSidebar: React.FC = () => {
       label: t("sidebar.whitelist"),
       children: [
         {
-          key: "/whitelist/plate",
-          icon: <CarOutlined />,
-          label: <Link to="/whitelist/plate">{t("sidebar.addPlate")}</Link>,
+          key: "/whitelist/plates",
+          label: (
+            <Link to="/whitelist/plates">{t("whitelist.plate.title")}</Link>
+          ),
         },
         {
-          key: "/whitelist/trade",
-          icon: <SwapOutlined />,
-          label: <Link to="/whitelist/trade">{t("sidebar.addtrade")}</Link>,
+          key: "/whitelist/tradelicenses",
+          label: (
+            <Link to="/whitelist/tradelicenses">
+              {t("whitelist.trade.title")}
+            </Link>
+          ),
         },
       ],
     },
+    { key: "/parking", icon: <PushpinOutlined />, label: t("sidebar.parking") },
+    { key: "/fleet", icon: <CarOutlined />, label: t("sidebar.fleet") },
+    { key: "/permits", icon: <IdcardOutlined />, label: t("sidebar.permits") },
+    { key: "/hrms", icon: <TeamOutlined />, label: t("sidebar.hrms") },
     {
       key: "/inspectionobstacle",
       icon: <SearchOutlined />,
@@ -146,8 +154,24 @@ const AppSidebar: React.FC = () => {
   };
 
   const selectedKey =
-    findSelectedKey(menuItems, location.pathname) || "/dashboard";
-  const openKey = getOpenKey(menuItems, location.pathname);
+    menuItems
+      .flatMap((item) => (item && "children" in item ? item.children : item))
+      .find((item) => item && location.pathname.startsWith(item.key as string))
+      ?.key ||
+    menuItems.find((item) => location.pathname.startsWith(item?.key as string))
+      ?.key ||
+    "/dashboard";
+
+  const defaultOpenKeys = menuItems
+    .filter(
+      (item) =>
+        item &&
+        "children" in item &&
+        item.children?.some((child) =>
+          location.pathname.startsWith(child?.key as string),
+        ),
+    )
+    .map((item) => item?.key as string);
 
   return (
     <Sider
@@ -172,35 +196,22 @@ const AppSidebar: React.FC = () => {
           borderBottom: `1px solid ${token.colorBorderSecondary}`,
         }}
       >
-        {collapsed ? (
-          <img
-            src="https://images.seeklogo.com/logo-png/4/2/dubai-roads-transport-authority-logo-png_seeklogo-44110.png"
-            alt="RTA Logo"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              transition: "all 0.2s",
-            }}
-          />
-        ) : (
-          <img
-            src="https://upload.wikimedia.org/wikipedia/en/archive/d/dd/20230611035551%21RTA_Dubai_logo.png"
-            alt="RTA Logo"
-            style={{
-              width: "100%",
-              transition: "all 0.2s",
-              backgroundColor: "white",
-              padding: "2px",
-              objectFit: "cover",
-            }}
-          />
-        )}
+        <img
+          src="https://upload.wikimedia.org/wikipedia/en/d/dd/RTA_Dubai_logo.png"
+          alt="RTA Logo"
+          style={{
+            width: "100%",
+            transition: "all 0.2s",
+            backgroundColor: "white",
+            padding: "2px",
+            objectFit: "cover",
+          }}
+        />
       </div>
       <Menu
         style={{ height: "calc(100% - 64px)", marginTop: 20, borderRight: 0 }}
-        selectedKeys={[selectedKey]}
-        defaultOpenKeys={openKey ? [openKey] : []}
+        defaultOpenKeys={defaultOpenKeys}
+        selectedKeys={[selectedKey as string]}
         mode="inline"
         items={menuItems}
       />

@@ -25,29 +25,17 @@
     "addNew": "Add New",
     "downloadCsv": "Download CSV",
     "searchPlaceholder": "Search across all fields...",
-    "tradeLicenseName": "Trade License Name",
-    "licenseNumber": "License Number",
-    "photo": "Photo",
-    "date": "Expiry Date",
-    "location": "Location",
-    "status": "Status",
-    "type": "Type",
-    "addedBy": "Added By",
-    "priority": "Priority",
-    "viewMap": "View on Map",
-    "locationDetails": "Location & Details",
-    "expiryDate": "Expiry Date",
     "edit": "Edit",
     "delete": "Delete",
     "view": "View",
-    "platenumber": "Plate Number",
-    "vehicleowner": "Vehicle Owner",
-    "compactView": "Compact View",
-    "addplate":"Add Plate",
-    "addtrade":"Add Trade",
-      "addPlateTitle": "Add Plate Details",
-    "addTradeTitle": "Add Trade Details",
-    "standardView": "Standard View"
+    "plate": {
+      "title": "Plate Whitelist",
+      "addTitle": "Add New Plate to Whitelist"
+    },
+    "trade": {
+      "title": "Trade License Whitelist",
+      "addTitle": "Add New Trade License to Whitelist"
+    }
   },
   "dashboard": {
     "totalVehicles": "Total Vehicles",
@@ -74,27 +62,20 @@
     "plateType": "Plate Type",
     "plateColor": "Plate Color",
     "tradeLicenseNumber": "Trade License Number",
-    "tradeLicenseName": "Trade License Name",
+    "tradeLicense_EN_Name": "Trade License Name (EN)",
+    "tradeLicense_AR_Name": "Trade License Name (AR)",
     "plotNumber": "Plot Number",
-    "fromDate": "From Date",
-    "toDate": "To Date",
-    "plateStatus": "Plate Status",
-    "exceptionReason": "Exception Reason",
-    "highPriority": "High Priority",
-    "highPriorityHint": "Priority entries are processed first.",
-    "tradeLicenseDocument": "Trade License Document",
-    "uploadHint": "Upload (PDF, PNG, JPG)",
-    "zone": "Zone",
-    "freezone": "Freezone",
-    "mainland": "Mainland",
-    "notes": "Notes / Remarks"
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "dateRange": "Date Range",
+    "plateStatus": "Status",
+    "exemptionReason_EN": "Exemption Reason (EN)",
+    "exemptionReason_AR": "Exemption Reason (AR)"
   },
   "status": {
     "active": "Active",
     "expired": "Expired",
-    "pending": "Pending",
-    "trade": "Trade",
-    "plate": "Plate"
+    "pending": "Pending"
   },
   "common": {
     "action": "Action",
@@ -109,7 +90,7 @@
   },
   "messages": {
     "csvDownloaded": "CSV file downloaded successfully!",
-    "whitelistAdded": "Whitelist added successfully!",
+    "whitelistAdded": "Entry added successfully!",
     "confirmDeleteTitle": "Confirm Deletion",
     "confirmDeleteContent": "Are you sure you want to delete",
     "deletedSuccess": "deleted successfully.",
