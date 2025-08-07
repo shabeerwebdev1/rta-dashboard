@@ -45,7 +45,7 @@ const PlateForm: React.FC<PlateFormProps> = ({ onCancel }) => {
 
   const onFinish = async (values: any) => {
     const selectedReason = exemptionReasons.find(
-      (r) => r.id === values.exemptionReasonId
+      (r) => r.id === values.exemptionReasonId,
     );
 
     const payload: PlateFormValues = {
@@ -186,7 +186,7 @@ const PlateForm: React.FC<PlateFormProps> = ({ onCancel }) => {
           <Button onClick={() => form.resetFields()}>
             {t("common.reset")}
           </Button>
-          <Button type="primary" htmlType="submit" >
+          <Button type="primary" htmlType="submit">
             {t("common.submit")}
           </Button>
         </Space>

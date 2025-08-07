@@ -61,21 +61,6 @@ const AppSidebar: React.FC = () => {
         },
       ],
     },
-    { key: "/parking", icon: <PushpinOutlined />, label: t("sidebar.parking") },
-    { key: "/fleet", icon: <CarOutlined />, label: t("sidebar.fleet") },
-    { key: "/permits", icon: <IdcardOutlined />, label: t("sidebar.permits") },
-    { key: "/hrms", icon: <TeamOutlined />, label: t("sidebar.hrms") },
-    {
-      key: "/inspectionobstacle",
-      icon: <SearchOutlined />,
-      label: <Link to="/inspectionobstacle">{t("sidebar.inspections")}</Link>,
-    },
-    {
-      key: "/pledges",
-      icon: <AuditOutlined />,
-      label: <Link to="/pledges">{t("sidebar.pledgesManagement")}</Link>,
-    },
-
     {
       key: "/parking",
       icon: <PushpinOutlined />,
@@ -95,6 +80,16 @@ const AppSidebar: React.FC = () => {
       key: "/hrms",
       icon: <TeamOutlined />,
       label: <Link to="/hrms">{t("sidebar.hrms")}</Link>,
+    },
+    {
+      key: "/inspectionobstacle",
+      icon: <SearchOutlined />,
+      label: <Link to="/inspectionobstacle">{t("sidebar.inspections")}</Link>,
+    },
+    {
+      key: "/pledges",
+      icon: <AuditOutlined />,
+      label: <Link to="/pledges">{t("sidebar.pledgesManagement")}</Link>,
     },
     {
       key: "/fines",
@@ -126,7 +121,7 @@ const AppSidebar: React.FC = () => {
   // Recursively find the selected key for active menu item
   const findSelectedKey = (
     items: MenuItem[],
-    path: string
+    path: string,
   ): string | undefined => {
     for (const item of items) {
       if (item.children) {

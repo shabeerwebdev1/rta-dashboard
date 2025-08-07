@@ -6,19 +6,19 @@ const zones = ["North", "South", "East", "West"];
 const areas = ["Residential", "Commercial", "Industrial"];
 const obstacleSources = [
   "Construction",
-  "Parked Vehicle", 
+  "Parked Vehicle",
   "Natural Obstacle",
   "Road Work",
   "Utility Work",
-  "Other"
+  "Other",
 ];
 const paymentDevices = [
-  "Meter #1234", 
+  "Meter #1234",
   "Meter #5678",
   "Kiosk #A1",
   "Kiosk #B2",
   "Mobile Zone 1",
-  "Mobile Zone 2"
+  "Mobile Zone 2",
 ];
 const users = [
   "Ali Ahmed",
@@ -34,7 +34,7 @@ const commentExamples = [
   "Tree fallen on road",
   "Pothole causing obstruction",
   "Temporary road closure",
-  "Equipment left on roadway"
+  "Equipment left on roadway",
 ];
 
 // Main UAE cities coordinates
@@ -43,19 +43,18 @@ const cityCoordinates = [
   { lat: 24.453884, lng: 54.377342 }, // Abu Dhabi
   { lat: 25.346266, lng: 55.420933 }, // Sharjah
   { lat: 25.382436, lng: 55.483902 }, // Ajman
-  { lat: 25.13253,  lng: 56.341602 }, // Fujairah
+  { lat: 25.13253, lng: 56.341602 }, // Fujairah
   { lat: 25.689531, lng: 55.793087 }, // Ras Al Khaimah
 ];
 
 export const generateInspectionData = (count: number): InspectionRecord[] => {
   const data: InspectionRecord[] = [];
-  
+
   for (let i = 0; i < count; i++) {
     const statusIndex = i % 3;
-    const status: "Open" | "Resolved" | "Pending" = 
-      statusIndex === 0 ? "Open" : 
-      statusIndex === 1 ? "Resolved" : "Pending";
-    
+    const status: "Open" | "Resolved" | "Pending" =
+      statusIndex === 0 ? "Open" : statusIndex === 1 ? "Resolved" : "Pending";
+
     const baseCity = cityCoordinates[i % cityCoordinates.length];
     const latOffset = (Math.random() - 0.5) * 0.01;
     const lngOffset = (Math.random() - 0.5) * 0.01;
@@ -76,11 +75,12 @@ export const generateInspectionData = (count: number): InspectionRecord[] => {
       comments: commentExamples[i % commentExamples.length],
       location: {
         lat: baseCity.lat + latOffset,
-        lng: baseCity.lng + lngOffset
+        lng: baseCity.lng + lngOffset,
       },
-      photo: i % 3 === 0 ? `https://picsum.photos/200/200?random=${i}` : undefined
+      photo:
+        i % 3 === 0 ? `https://picsum.photos/200/200?random=${i}` : undefined,
     });
   }
-  
+
   return data;
 };

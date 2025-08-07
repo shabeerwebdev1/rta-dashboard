@@ -23,36 +23,35 @@ const AddPledgeModal: React.FC<AddPledgeModalProps> = ({
 }) => {
   return (
     <Modal
-    open={isOpen}
-    onCancel={onClose}
-    title={
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Title level={5} style={{ margin: 0 }}>
-          Add New Pledge
-        </Title>
-      </div>
-    }
-    footer={null}
-    width={600}
-    destroyOnHidden
-    closable={true} // enable default close icon to match the first modal
-  >
-    <Divider />
-  
-    <PledgeForm
-      onSubmit={onSubmit}
+      open={isOpen}
       onCancel={onClose}
-      isSubmitting={isSubmitting}
-      initialValues={initialValues}
-    />
-  </Modal>
-  
+      title={
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Title level={5} style={{ margin: 0 }}>
+            Add New Pledge
+          </Title>
+        </div>
+      }
+      footer={null}
+      width={600}
+      destroyOnHidden
+      closable={true} // enable default close icon to match the first modal
+    >
+      <Divider />
+
+      <PledgeForm
+        onSubmit={onSubmit}
+        onCancel={onClose}
+        isSubmitting={isSubmitting}
+        initialValues={initialValues}
+      />
+    </Modal>
   );
 };
 

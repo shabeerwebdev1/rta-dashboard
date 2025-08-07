@@ -75,7 +75,7 @@ const TradePage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<WhitelistRecord | null>(
-    null
+    null,
   );
   const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
 
@@ -92,8 +92,8 @@ const TradePage: React.FC = () => {
     const filtered = tableData.filter((item) =>
       Object.values(item).some(
         (field) =>
-          typeof field === "string" && field.toLowerCase().includes(value)
-      )
+          typeof field === "string" && field.toLowerCase().includes(value),
+      ),
     );
     setFilteredData(filtered);
   };
@@ -167,7 +167,7 @@ const TradePage: React.FC = () => {
       cancelText: t("common.cancel"),
       onOk() {
         message.success(
-          `"${record.tradeLicenseName}" ${t("messages.deletedSuccess")}`
+          `"${record.tradeLicenseName}" ${t("messages.deletedSuccess")}`,
         );
         const newData = tableData.filter((item) => item.key !== record.key);
         setTableData(newData);
@@ -366,7 +366,7 @@ const TradePage: React.FC = () => {
         ),
       },
     ],
-    [t, token]
+    [t, token],
   );
 
   if (pageLoading) return <PageLoader />;
@@ -439,7 +439,7 @@ const TradePage: React.FC = () => {
       </Card>
 
       <AddWhitelistModal
-        type="trade" 
+        type="trade"
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleFormSubmit}

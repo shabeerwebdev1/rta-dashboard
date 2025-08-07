@@ -54,7 +54,7 @@ const PledgePage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<PledgeRecord | null>(
-    null
+    null,
   );
   const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
 
@@ -116,8 +116,8 @@ const PledgePage: React.FC = () => {
     const filtered = tableData.filter((item) =>
       Object.values(item).some(
         (field) =>
-          typeof field === "string" && field.toLowerCase().includes(value)
-      )
+          typeof field === "string" && field.toLowerCase().includes(value),
+      ),
     );
     setFilteredData(filtered);
   };
@@ -269,7 +269,7 @@ const PledgePage: React.FC = () => {
         ),
       },
     ],
-    [tableData, token]
+    [tableData, token],
   );
 
   const handleFormSubmit = (values: any) => {
@@ -350,7 +350,7 @@ const PledgePage: React.FC = () => {
 
       <Card variant="borderless" bodyStyle={{ padding: 0 }}>
         <Table
-        rowKey={"id"}
+          rowKey={"id"}
           rowSelection={{ type: "checkbox" }}
           columns={columns}
           dataSource={filteredData}

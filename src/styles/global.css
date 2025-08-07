@@ -73,3 +73,7 @@ html[lang="ar"] .ant-pagination-total-text {
   display: inline-flex;
   align-items: flex-start;
 }
+
+.ant-layout-sider .ant-layout-sider-trigger {
+  background-color: #ee3a41;
+}

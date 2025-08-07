@@ -104,8 +104,8 @@ const FinesManagementPage: React.FC = () => {
     const filtered = tableData.filter((item) =>
       Object.values(item).some(
         (field) =>
-          typeof field === "string" && field.toLowerCase().includes(value)
-      )
+          typeof field === "string" && field.toLowerCase().includes(value),
+      ),
     );
     setFilteredData(filtered);
   };
@@ -189,7 +189,6 @@ const FinesManagementPage: React.FC = () => {
 
   const columns: ColumnsType<FineRecord> = useMemo(
     () => [
-      
       {
         title: "Inspector Device",
         dataIndex: "inspectorDeviceNumber",
@@ -286,7 +285,7 @@ const FinesManagementPage: React.FC = () => {
         ),
       },
     ],
-    [token]
+    [token],
   );
 
   if (pageLoading) return <PageLoader />;

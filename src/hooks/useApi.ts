@@ -28,7 +28,6 @@
 //   };
 // }
 
-
 // hooks/useApi.ts
 import { useState, useEffect } from "react";
 
@@ -39,7 +38,7 @@ interface UseApiOptions {
 
 export function useApi<T = any>(
   apiFunc: (...args: any[]) => Promise<any>,
-  options?: UseApiOptions
+  options?: UseApiOptions,
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);

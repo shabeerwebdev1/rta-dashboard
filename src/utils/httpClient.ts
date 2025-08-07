@@ -1,4 +1,8 @@
-import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
+import axios, {
+  AxiosError,
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+} from "axios";
 
 const API_BASE_URL = "https://devparkingapi.kandaprojects.live";
 
@@ -26,7 +30,7 @@ HttpClient.interceptors.request.use(
   (error: AxiosError) => {
     console.error("Request error:", error.message);
     return Promise.reject(error);
-  }
+  },
 );
 
 HttpClient.interceptors.response.use(
@@ -61,7 +65,7 @@ HttpClient.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default HttpClient;

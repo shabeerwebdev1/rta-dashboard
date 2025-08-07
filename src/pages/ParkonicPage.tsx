@@ -54,7 +54,7 @@ const ParkonicPage: React.FC = () => {
   const [filteredData, setFilteredData] = useState<ParkonicRecord[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<ParkonicRecord | null>(
-    null
+    null,
   );
   const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
 
@@ -92,8 +92,8 @@ const ParkonicPage: React.FC = () => {
     const filtered = tableData.filter((item) =>
       Object.values(item).some(
         (field) =>
-          typeof field === "string" && field.toLowerCase().includes(value)
-      )
+          typeof field === "string" && field.toLowerCase().includes(value),
+      ),
     );
     setFilteredData(filtered);
   };
@@ -207,7 +207,7 @@ const ParkonicPage: React.FC = () => {
                     disabled: record.status === "Approved",
                     onClick: () =>
                       message.success(
-                        `Fine ${record.fineNumber} marked as paid.`
+                        `Fine ${record.fineNumber} marked as paid.`,
                       ),
                   },
                 ],
@@ -221,7 +221,7 @@ const ParkonicPage: React.FC = () => {
         ),
       },
     ],
-    [token]
+    [token],
   );
 
   if (pageLoading) return <PageLoader />;
@@ -267,7 +267,7 @@ const ParkonicPage: React.FC = () => {
 
       <Card variant="borderless" bodyStyle={{ padding: 0 }}>
         <Table
-          rowKey="id" 
+          rowKey="id"
           rowSelection={{ type: "checkbox" }}
           columns={columns}
           dataSource={filteredData}

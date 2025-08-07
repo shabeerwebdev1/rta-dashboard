@@ -49,13 +49,18 @@ const WhitelistPlateViewDrawer: React.FC<WhitelistPlateViewDrawerProps> = ({
         </Descriptions.Item>
         <Descriptions.Item label={t("form.plateColor")}>
           {record.plateColor ? (
-            <Badge color={record.plateColor.toLowerCase()} text={record.plateColor} />
+            <Badge
+              color={record.plateColor.toLowerCase()}
+              text={record.plateColor}
+            />
           ) : (
             "-"
           )}
         </Descriptions.Item>
         <Descriptions.Item label={t("form.startDate")}>
-          {record.fromDate ? dayjs(record.fromDate).format("DD MMMM, YYYY") : "-"}
+          {record.fromDate
+            ? dayjs(record.fromDate).format("DD MMMM, YYYY")
+            : "-"}
         </Descriptions.Item>
         <Descriptions.Item label={t("form.endDate")}>
           {record.toDate ? dayjs(record.toDate).format("DD MMMM, YYYY") : "-"}

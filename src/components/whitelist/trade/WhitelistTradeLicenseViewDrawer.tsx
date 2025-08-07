@@ -49,7 +49,9 @@ const WhitelistTradeLicenseViewDrawer: React.FC<
           {record.plotNumber || "-"}
         </Descriptions.Item>
         <Descriptions.Item label={t("form.startDate")}>
-          {record.fromDate ? dayjs(record.fromDate).format("DD MMMM, YYYY") : "-"}
+          {record.fromDate
+            ? dayjs(record.fromDate).format("DD MMMM, YYYY")
+            : "-"}
         </Descriptions.Item>
         <Descriptions.Item label={t("form.endDate")}>
           {record.toDate ? dayjs(record.toDate).format("DD MMMM, YYYY") : "-"}
@@ -57,7 +59,9 @@ const WhitelistTradeLicenseViewDrawer: React.FC<
         <Descriptions.Item label={t("form.plateStatus")}>
           {record.plateStatus ? (
             <Tag
-              color={record.plateStatus.toLowerCase() === "active" ? "green" : "red"}
+              color={
+                record.plateStatus.toLowerCase() === "active" ? "green" : "red"
+              }
             >
               {record.plateStatus}
             </Tag>
