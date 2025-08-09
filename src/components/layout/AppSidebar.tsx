@@ -25,7 +25,12 @@ const AppSidebar: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
 
-  const menuItems: any[] = [
+  const menuItems: Array<{
+    key: string;
+    icon: React.ReactNode;
+    label: React.ReactNode;
+    children?: Array<{ key: string; label: React.ReactNode }>;
+  }> = [
     {
       key: FULL_PATHS.DASHBOARD,
       icon: <DashboardOutlined />,
@@ -42,11 +47,7 @@ const AppSidebar: React.FC = () => {
         },
         {
           key: FULL_PATHS.WHITELIST_TRADELICENSES,
-          label: (
-            <Link to={FULL_PATHS.WHITELIST_TRADELICENSES}>
-              {t("sidebar.tradelicenses")}
-            </Link>
-          ),
+          label: <Link to={FULL_PATHS.WHITELIST_TRADELICENSES}>{t("sidebar.tradelicenses")}</Link>,
         },
       ],
     },
@@ -101,19 +102,13 @@ const AppSidebar: React.FC = () => {
   const getDefaultOpenKeys = () => {
     const path = location.pathname;
     const parent = menuItems.find((item) =>
-      item.children?.some((child: any) => path.startsWith(child.key)),
+      item.children?.some((child) => path.startsWith(child.key)),
     );
     return parent ? [parent.key] : [];
   };
 
   return (
-    <Sider
-      collapsible
-      collapsed={collapsed}
-      onCollapse={setCollapsed}
-      width={250}
-      className="app-sidebar"
-    >
+    <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} width={250} className="app-sidebar">
       <div className="sidebar-logo-container">
         <img
           src={

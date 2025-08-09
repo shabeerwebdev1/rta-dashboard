@@ -11,13 +11,11 @@ import "./styles/main.css";
 const AppContent = () => {
   const { themeName } = useTheme();
   const { i18n } = useTranslation();
-
   const isRtl = i18n.dir() === "rtl";
-
   const activeThemeConfig = availableThemes[themeName];
 
   return (
-    <ConfigProvider   componentSize="large" direction={isRtl ? "rtl" : "ltr"} theme={activeThemeConfig}>
+    <ConfigProvider componentSize="large" direction={isRtl ? "rtl" : "ltr"} theme={activeThemeConfig}>
       <App>
         <AppRoutes />
       </App>

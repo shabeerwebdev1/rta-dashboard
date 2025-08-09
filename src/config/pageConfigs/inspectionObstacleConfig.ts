@@ -3,10 +3,7 @@ import type { PageConfig } from "../../types/config";
 export const inspectionObstacleConfig: PageConfig = {
   key: "inspection-obstacles",
   title: "page.title.inspection-obstacles",
-  name: {
-    singular: "Inspection Obstacle",
-    plural: "Inspection Obstacles",
-  },
+  name: { singular: "Inspection Obstacle", plural: "Inspection Obstacles" },
   api: {
     get: "/api/InspectionObstacle",
     post: "/api/InspectionObstacle",
@@ -19,11 +16,7 @@ export const inspectionObstacleConfig: PageConfig = {
       { key: "obstacleNumber", title: "form.obstacleNumber", type: "string" },
       { key: "zone", title: "form.zone", type: "string" },
       { key: "area", title: "form.area", type: "string" },
-      {
-        key: "sourceOfObstacle",
-        title: "form.sourceOfObstacle",
-        type: "string",
-      },
+      { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "string" },
       { key: "reportedAt", title: "form.date", type: "date" },
       { key: "reportedBy", title: "form.reportedBy", type: "string" },
       { key: "status", title: "form.status", type: "tag" },
@@ -62,12 +55,7 @@ export const inspectionObstacleConfig: PageConfig = {
         type: "select",
         required: true,
         span: 12,
-        options: [
-          "Construction",
-          "Parked Vehicle",
-          "Natural Obstacle",
-          "Road Work",
-        ],
+        options: ["Construction", "Parked Vehicle", "Natural Obstacle", "Road Work"],
       },
       {
         name: "ClosestPaymentDevice",

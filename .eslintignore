@@ -1,0 +1,8 @@
+node_modules
+dist
+build
+.next
+.nuxt
+*.config.js
+*.config.ts
+vite.config.ts

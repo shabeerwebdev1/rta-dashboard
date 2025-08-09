@@ -1,6 +1,6 @@
-import type { WhitelistRecord } from "../types";
 
-function convertToCSV(data: WhitelistRecord[]): string {
+
+function convertToCSV(data: Record<string, unknown>[]): string {
   if (!data || data.length === 0) {
     return "";
   }
@@ -20,14 +20,15 @@ function convertToCSV(data: WhitelistRecord[]): string {
 
   for (const row of data) {
     const values = headers.map((header) => {
-      let cellValue = (row as any)[header];
+      let cellValue = row[header];
 
       if (cellValue === null || cellValue === undefined) {
         return '""';
       }
 
-      if (header === "location" && typeof cellValue === "object") {
-        cellValue = `"${cellValue.lat}, ${cellValue.lng}"`;
+      if (header === "location" && typeof cellValue === "object" && cellValue !== null) {
+        const location = cellValue as { lat: number; lng: number };
+        cellValue = `"${location.lat}, ${location.lng}"`;
       } else {
         const stringValue = String(cellValue).replace(/"/g, '""');
         cellValue = `"${stringValue}"`;
@@ -41,7 +42,7 @@ function convertToCSV(data: WhitelistRecord[]): string {
   return "\uFEFF" + csvRows.join("\n");
 }
 
-export function exportToCsv(data: WhitelistRecord[], filename: string) {
+export function exportToCsv(data: Record<string, unknown>[], filename: string) {
   const csvString = convertToCSV(data);
   const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
 

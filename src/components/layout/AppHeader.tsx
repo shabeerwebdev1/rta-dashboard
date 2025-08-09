@@ -1,21 +1,5 @@
-import {
-  Layout,
-  Space,
-  Avatar,
-  Badge,
-  Dropdown,
-  type MenuProps,
-  Button,
-  Typography,
-  Tooltip,
-} from "antd";
-import {
-  BellOutlined,
-  UserOutlined,
-  LogoutOutlined,
-  CompressOutlined,
-  ExpandOutlined,
-} from "@ant-design/icons";
+import { Layout, Space, Avatar, Badge, Dropdown, type MenuProps, Button, Typography } from "antd";
+import { BellOutlined, UserOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import ThemeSwitcher from "../ThemeSwitcher";
 import LanguageSwitcher from "../LanguageSwitcher";

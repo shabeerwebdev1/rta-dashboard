@@ -18,8 +18,13 @@ dayjs.extend(isBetween);
 interface EntityPageProps {
   pageKey: string;
   config: PageConfig;
-  useGetHook: () => any;
-  useDeleteHook?: () => any;
+  useGetHook: () => {
+    data: unknown;
+    isLoading: boolean;
+    isError: boolean;
+    error: unknown;
+  };
+  useDeleteHook?: () => [((id: string | number) => { unwrap: () => Promise<unknown> }) | null, { isLoading: boolean }];
 }
 
 const EntityPage: React.FC<EntityPageProps> = ({
@@ -35,48 +40,39 @@ const EntityPage: React.FC<EntityPageProps> = ({
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
-  const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<Record<string, unknown> | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [globalSearch, setGlobalSearch] = useState("");
-  const [dateFilter, setDateFilter] = useState<any>(null);
+  const [dateFilter, setDateFilter] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
 
   const { data, isLoading, isError, error: getError } = useGetHook();
-  const [deleteItem, { isLoading: isDeleting }] = useDeleteHook
-    ? useDeleteHook()
-    : [null, { isLoading: false }];
+  const [deleteItem, { isLoading: isDeleting }] = useDeleteHook ? useDeleteHook() : [null, { isLoading: false }];
 
   useEffect(() => {
     setPageTitle(t(config.title));
   }, [setPageTitle, t, config.title]);
 
-  const handleEdit = (record: any) => {
+  const handleEdit = (record: Record<string, unknown>) => {
     setModalMode("edit");
     setSelectedRecord(record);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (record: any) => {
+  const handleDelete = (record: Record<string, unknown>) => {
     if (!deleteItem) return;
     modal.confirm({
-      title: t("messages.deleteConfirmTitle", {
-        entity: t(config.name.singular),
-      }),
-      content: t("messages.deleteConfirmContent", {
-        entity: t(config.name.singular).toLowerCase(),
-      }),
+      title: t("messages.deleteConfirmTitle", { entity: t(config.name.singular) }),
+      content: t("messages.deleteConfirmContent", { entity: t(config.name.singular).toLowerCase() }),
       okText: t("common.delete"),
       okType: "danger",
       cancelText: t("common.cancel"),
       onOk: async () => {
         try {
-          const response = await deleteItem(record.id).unwrap();
+          const response = await deleteItem(record.id as string | number).unwrap();
 
-          notification.success(
-            response,
-            t("messages.deleteSuccess", { entity: t(config.name.singular) }),
-          );
+          notification.success(response, t("messages.deleteSuccess", { entity: t(config.name.singular) }));
         } catch (err) {
-          notification.error(err as any, `Failed to delete`);
+          notification.error(err as { data?: { en_Msg?: string; ar_Msg?: string } }, `Failed to delete`);
         }
       },
     });
@@ -84,24 +80,16 @@ const EntityPage: React.FC<EntityPageProps> = ({
 
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
-      notification.error(
-        { data: { en_Msg: t("messages.selectRows") } },
-        t("messages.selectRows"),
-      );
+      notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
       return;
     }
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = filteredData.filter((item: any) =>
-          selectedRowKeys.includes(item.id),
-        );
+        const selectedData = filteredData.filter((item: Record<string, unknown>) => selectedRowKeys.includes(item.id as React.Key));
         exportToCsv(selectedData, `${config.key}_export.csv`);
-        notification.success(
-          { data: { en_Msg: t("messages.csvDownloaded") } },
-          t("messages.csvDownloaded"),
-        );
+        notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
       },
     });
@@ -109,7 +97,7 @@ const EntityPage: React.FC<EntityPageProps> = ({
 
   const filteredData = useMemo(() => {
     if (!data) return [];
-    return (data as any[])
+    return (data as Record<string, unknown>[])
       .filter((item) => {
         if (!globalSearch) return true;
         const searchableValues = Object.values(item).join(" ").toLowerCase();
@@ -117,8 +105,7 @@ const EntityPage: React.FC<EntityPageProps> = ({
       })
       .filter((item) => {
         if (!dateFilter || !dateFilter[0] || !dateFilter[1]) return true;
-        const dateString =
-          item.toDate || item.pledgeDate || item.reportedAt || item.issueDate;
+        const dateString = (item.toDate as string) || (item.pledgeDate as string) || (item.reportedAt as string) || (item.issueDate as string);
         if (!dateString) return true;
         const itemDate = dayjs(dateString);
         if (!itemDate.isValid()) return true;
@@ -128,7 +115,7 @@ const EntityPage: React.FC<EntityPageProps> = ({
 
   if (isLoading) return <PageLoader />;
   if (isError) {
-    notification.error(getError as any, "Failed to load data");
+    notification.error(getError as { data?: { en_Msg?: string; ar_Msg?: string } }, "Failed to load data");
     return <div>Error loading data. See notifications for details.</div>;
   }
 
@@ -144,15 +131,11 @@ const EntityPage: React.FC<EntityPageProps> = ({
               style={{ width: 300 }}
               allowClear
             />
-            <DatePicker.RangePicker onChange={setDateFilter} />
+            <DatePicker.RangePicker onChange={(dates) => setDateFilter(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)} />
           </Space>
           <Space>
             <Tooltip title={t("common.downloadCsv")}>
-              <Button
-                icon={<DownloadOutlined />}
-                onClick={handleDownloadCsv}
-                disabled={selectedRowKeys.length === 0}
-              />
+              <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0} />
             </Tooltip>
             <Button
               type="primary"
@@ -168,11 +151,7 @@ const EntityPage: React.FC<EntityPageProps> = ({
           </Space>
         </Space>
       </Card>
-      <Card
-        bordered={false}
-        bodyStyle={{ padding: 0 }}
-        className="page-content-card"
-      >
+      <Card bordered={false} bodyStyle={{ padding: 0 }} className="page-content-card">
         <DynamicTable
           config={config}
           data={filteredData}

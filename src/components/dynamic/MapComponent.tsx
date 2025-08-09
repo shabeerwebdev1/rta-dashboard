@@ -46,7 +46,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ lat, lng }) => {
         loading="lazy"
         src={mapUrl}
         onLoad={() => setLoading(false)}
-      ></iframe>
+      />
     </div>
   );
 };

@@ -3,10 +3,7 @@ import type { PageConfig } from "../../types/config";
 export const whitelistTradeLicenseConfig: PageConfig = {
   key: "whitelist-tradelicenses",
   title: "page.title.whitelist-tradelicenses",
-  name: {
-    singular: "Trade License",
-    plural: "Trade Licenses",
-  },
+  name: { singular: "Trade License", plural: "Trade Licenses" },
   api: {
     get: "/api/WhitelistTradeLicense",
     post: "/api/WhitelistTradeLicense",
@@ -15,16 +12,8 @@ export const whitelistTradeLicenseConfig: PageConfig = {
   },
   tableConfig: {
     columns: [
-      {
-        key: "tradeLicenseNumber",
-        title: "form.tradeLicenseNumber",
-        type: "string",
-      },
-      {
-        key: "tradeLicense_EN_Name",
-        title: "form.tradeLicense_EN_Name",
-        type: "string",
-      },
+      { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "string" },
+      { key: "tradeLicense_EN_Name", title: "form.tradeLicense_EN_Name", type: "string" },
       { key: "plotNumber", title: "form.plotNumber", type: "string" },
       { key: "fromDate", title: "form.fromDate", type: "date" },
       { key: "toDate", title: "form.toDate", type: "date" },
@@ -80,10 +69,7 @@ export const whitelistTradeLicenseConfig: PageConfig = {
         type: "select",
         required: true,
         span: 12,
-        options: [
-          { label: "Govt Entity", value: 1 },
-          { label: "Diplomatic Entity", value: 2 },
-        ],
+        options: [{ label: "Govt Entity", value: 1 }, { label: "Diplomatic Entity", value: 2 }],
         showLabel: true,
       },
       {
