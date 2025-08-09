@@ -53,17 +53,17 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   pageKey,
 }) => {
   const { t } = useTranslation();
-  const { notification } = App.useApp();
+  const { notification, message } = App.useApp();
   const [uploadFiles, { isLoading: isUploading }] = uploadFilesMutation;
 
   const handleUploadChange = async (
     info: any,
     fieldName: string,
-    category: string
+    category: string,
   ) => {
     const { fileList } = info;
     const newFilesToUpload = fileList.filter(
-      (f: any) => f.originFileObj && f.status !== "uploading"
+      (f: any) => f.originFileObj && f.status !== "uploading",
     );
     const existingFileNames = fileList
       .filter((f: any) => !f.originFileObj)
@@ -78,8 +78,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         form.setFieldValue(
           fieldName,
           fileList.map((f: any) =>
-            f.uid === file.uid ? { ...f, status: "uploading" } : f
-          )
+            f.uid === file.uid ? { ...f, status: "uploading" } : f,
+          ),
         );
       });
 
@@ -103,7 +103,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         const updatedFileList = fileList
           .map((f: any) => {
             const uploadedFile = newFilesToUpload.find(
-              (nf) => nf.uid === f.uid
+              (nf) => nf.uid === f.uid,
             );
             if (uploadedFile) {
               const savedAs = uploadedNames.shift();
@@ -127,8 +127,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         form.setFieldValue(
           fieldName,
           fileList.filter(
-            (f: any) => !newFilesToUpload.some((nf) => nf.uid === f.uid)
-          )
+            (f: any) => !newFilesToUpload.some((nf) => nf.uid === f.uid),
+          ),
         );
       }
     } else {
@@ -151,20 +151,39 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         return (
           <Upload
             name={field.name}
-            listType="picture"
+            listType="picture-card"
             multiple
             onChange={(info) =>
               handleUploadChange(
                 info,
                 field.name,
-                field.fileCategory || "Default"
+                field.fileCategory || "Default",
               )
             }
-            beforeUpload={() => false}
+            beforeUpload={(file) => {
+              const isAllowedType =
+                file.type === "image/png" ||
+                file.type === "image/jpeg" ||
+                file.type === "image/jpg";
+
+              if (!isAllowedType) {
+                message.error("Only PNG, JPEG, and JPG files are allowed.");
+                return Upload.LIST_IGNORE; // This completely blocks the file
+              }
+
+              const isLt5M = file.size / 1024 / 1024 < 5;
+              if (!isLt5M) {
+                message.error("File must be smaller than 5MB.");
+                return Upload.LIST_IGNORE;
+              }
+
+              return false; // Valid file, but we still prevent auto-upload
+            }}
           >
-            <Button icon={<UploadOutlined />} loading={isUploading}>
-              Click to Upload
-            </Button>
+            <>
+              {" "}
+              Upload <br /> (Max: 5MB)
+            </>
           </Upload>
         );
 
@@ -237,7 +256,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                 name: name,
                 status: "done",
                 url: getFileUrl(name),
-              })
+              }),
             );
           }
         }

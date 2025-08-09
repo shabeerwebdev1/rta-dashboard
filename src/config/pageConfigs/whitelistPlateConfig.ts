@@ -34,7 +34,7 @@ export const whitelistPlateConfig: PageConfig = {
         type: "text",
         required: true,
         span: 12,
-        validationType: 'plateNumber'
+        validationType: "plateNumber",
       },
       {
         name: "plateSource",
@@ -75,7 +75,7 @@ export const whitelistPlateConfig: PageConfig = {
         required: true,
         span: 24,
         fieldMapping: { from: "fromDate", to: "toDate" },
-        disablePastDates: true
+        disablePastDates: true,
       },
       {
         name: "exemptionReason_ID",

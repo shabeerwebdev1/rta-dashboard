@@ -96,7 +96,7 @@
     "location": "Location",
     "noData": "No Data"
   },
-   "entity": {
+  "entity": {
     "plate": "Plate",
     "tradeLicense": "Trade License",
     "pledge": "Pledge",

@@ -41,7 +41,7 @@ export const whitelistTradeLicenseConfig: PageConfig = {
         type: "text",
         required: true,
         span: 12,
-        validationType: 'alphanumeric_hyphen_uppercase'
+        validationType: "alphanumeric_hyphen_uppercase",
       },
       {
         name: "tradeLicense_EN_Name",
@@ -56,7 +56,7 @@ export const whitelistTradeLicenseConfig: PageConfig = {
         type: "text",
         required: true,
         span: 12,
-        validationType: 'arabic'
+        validationType: "arabic",
       },
       {
         name: "plotNumber",
@@ -72,7 +72,7 @@ export const whitelistTradeLicenseConfig: PageConfig = {
         required: true,
         span: 24,
         fieldMapping: { from: "fromDate", to: "toDate" },
-        disablePastDates: true
+        disablePastDates: true,
       },
       {
         name: "exemptionReason_ID",
@@ -84,7 +84,7 @@ export const whitelistTradeLicenseConfig: PageConfig = {
           { label: "Govt Entity", value: 1 },
           { label: "Diplomatic Entity", value: 2 },
         ],
-        showLabel: true
+        showLabel: true,
       },
       {
         name: "plateStatus",

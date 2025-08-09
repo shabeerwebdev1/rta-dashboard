@@ -21,7 +21,7 @@ export interface FormField {
   dependencies?: string[];
   hidden?: (formValues: any) => boolean;
   responseKey?: string;
-  validationType?: 'plateNumber' | 'alphanumeric_hyphen_uppercase' | 'arabic';
+  validationType?: "plateNumber" | "alphanumeric_hyphen_uppercase" | "arabic";
   disablePastDates?: boolean;
   showLabel?: boolean;
 }

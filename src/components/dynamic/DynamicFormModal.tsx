@@ -124,7 +124,7 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
           {t("common.cancel")}
         </Button>,
         <Button key="reset" onClick={() => form.resetFields()}>
-          {t('common.reset')}
+          {t("common.reset")}
         </Button>,
         <Button
           key="submit"
@@ -132,7 +132,11 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
           loading={isSubmitting || isUploading}
           onClick={() => form.submit()}
         >
-          {isUploading ? 'Uploading...' : (mode === 'add' ? t('common.submit') : t('common.update'))}
+          {isUploading
+            ? "Uploading..."
+            : mode === "add"
+              ? t("common.submit")
+              : t("common.update")}
         </Button>,
       ]}
     >
