@@ -14,6 +14,7 @@ import type { PageConfig } from "../../types/config";
 import { getFileUrl } from "../../services/fileApi";
 import dayjs from "dayjs";
 import MapComponent from "./MapComponent";
+import { STATUS_COLORS } from "../../constants/ui";
 
 interface DynamicViewDrawerProps {
   open: boolean;
@@ -21,15 +22,6 @@ interface DynamicViewDrawerProps {
   record: any | null;
   config: PageConfig;
 }
-
-const statusColors = {
-  active: "green",
-  inactive: "default",
-  expired: "red",
-  pending: "orange",
-  removed: "volcano",
-  reported: "green",
-};
 
 const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({
   open,
@@ -46,7 +38,10 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({
   );
 
   const additionalFormFields = config.formConfig.fields
-    .filter((ff) => !tableKeysLower.has(ff.name.toLowerCase()))
+    .filter(
+      (ff) =>
+        !tableKeysLower.has(ff.name.toLowerCase()) && ff.type !== "hidden",
+    )
     .map((ff) => ({
       // The record from GET has camelCase keys. The form config may have PascalCase names.
       // Convert the form field name to camelCase to access the data correctly.
@@ -96,7 +91,7 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({
                   return t("common.noData");
                 const statusKey = typeof text === "string" && text?.toLowerCase();
                 const tagColor =
-                  statusColors[statusKey as keyof typeof statusColors] ||
+                  STATUS_COLORS[statusKey as keyof typeof STATUS_COLORS] ||
                   "default";
                 switch (field.type) {
                   case "date":
@@ -163,4 +158,4 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({
   );
 };
 
-export default DynamicViewDrawer;
+export default DynamicViewDrawer

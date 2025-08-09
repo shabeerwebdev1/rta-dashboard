@@ -16,6 +16,7 @@ import {
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
+import { FULL_PATHS } from "../../constants/paths";
 
 const { Sider } = Layout;
 
@@ -26,9 +27,9 @@ const AppSidebar: React.FC = () => {
 
   const menuItems: any[] = [
     {
-      key: "/dashboard",
+      key: FULL_PATHS.DASHBOARD,
       icon: <DashboardOutlined />,
-      label: <Link to="/dashboard">{t("sidebar.dashboard")}</Link>,
+      label: <Link to={FULL_PATHS.DASHBOARD}>{t("sidebar.dashboard")}</Link>,
     },
     {
       key: "whitelist",
@@ -36,13 +37,13 @@ const AppSidebar: React.FC = () => {
       label: t("sidebar.whitelist"),
       children: [
         {
-          key: "/whitelist/plates",
-          label: <Link to="/whitelist/plates">{t("sidebar.plates")}</Link>,
+          key: FULL_PATHS.WHITELIST_PLATES,
+          label: <Link to={FULL_PATHS.WHITELIST_PLATES}>{t("sidebar.plates")}</Link>,
         },
         {
-          key: "/whitelist/tradelicenses",
+          key: FULL_PATHS.WHITELIST_TRADELICENSES,
           label: (
-            <Link to="/whitelist/tradelicenses">
+            <Link to={FULL_PATHS.WHITELIST_TRADELICENSES}>
               {t("sidebar.tradelicenses")}
             </Link>
           ),
@@ -50,36 +51,36 @@ const AppSidebar: React.FC = () => {
       ],
     },
     {
-      key: "/inspections",
+      key: FULL_PATHS.INSPECTIONS,
       icon: <SearchOutlined />,
-      label: <Link to="/inspections">{t("sidebar.inspections")}</Link>,
+      label: <Link to={FULL_PATHS.INSPECTIONS}>{t("sidebar.inspections")}</Link>,
     },
     {
-      key: "/pledges",
+      key: FULL_PATHS.PLEDGES,
       icon: <AuditOutlined />,
-      label: <Link to="/pledges">{t("sidebar.pledges")}</Link>,
+      label: <Link to={FULL_PATHS.PLEDGES}>{t("sidebar.pledges")}</Link>,
     },
     {
-      key: "/permits",
+      key: FULL_PATHS.PERMITS,
       icon: <IdcardOutlined />,
-      label: <Link to="/permits">{t("sidebar.permits")}</Link>,
+      label: <Link to={FULL_PATHS.PERMITS}>{t("sidebar.permits")}</Link>,
     },
     {
-      key: "/parkonic",
+      key: FULL_PATHS.PARKONIC,
       icon: <PushpinOutlined />,
       label: t("sidebar.parkonic"),
     },
-    { key: "/fines", icon: <DollarOutlined />, label: t("sidebar.fines") },
-    { key: "/hrms", icon: <TeamOutlined />, label: t("sidebar.hrms") },
+    { key: FULL_PATHS.FINES, icon: <DollarOutlined />, label: t("sidebar.fines") },
+    { key: FULL_PATHS.HRMS, icon: <TeamOutlined />, label: t("sidebar.hrms") },
     {
-      key: "/dispute",
+      key: FULL_PATHS.DISPUTE,
       icon: <ExclamationCircleOutlined />,
       label: t("sidebar.dispute"),
     },
-    { key: "/towing", icon: <CarOutlined />, label: t("sidebar.towing") },
-    { key: "/team", icon: <UsergroupAddOutlined />, label: t("sidebar.team") },
+    { key: FULL_PATHS.TOWING, icon: <CarOutlined />, label: t("sidebar.towing") },
+    { key: FULL_PATHS.TEAM, icon: <UsergroupAddOutlined />, label: t("sidebar.team") },
     {
-      key: "/analytics",
+      key: FULL_PATHS.ANALYTICS,
       icon: <BarChartOutlined />,
       label: t("sidebar.analytics"),
     },
@@ -87,12 +88,14 @@ const AppSidebar: React.FC = () => {
 
   const getSelectedKeys = () => {
     const path = location.pathname;
+    // find the most specific match
+    let bestMatch = FULL_PATHS.DASHBOARD;
     for (const item of menuItems.flatMap((i) => i.children || i)) {
-      if (path.startsWith(item.key)) {
-        return [item.key];
+      if (path.startsWith(item.key) && item.key.length > bestMatch.length) {
+        bestMatch = item.key;
       }
     }
-    return ["/dashboard"];
+    return [bestMatch];
   };
 
   const getDefaultOpenKeys = () => {
