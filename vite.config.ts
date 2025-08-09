@@ -26,4 +26,35 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("@ant-design/plots")) {
+            return "@ant-design/plots";
+          }
+
+          if (id.includes("antd/es/") || id.includes("@ant-design/icons")) {
+            return "antd";
+          }
+
+          if (
+            id.includes("react") ||
+            id.includes("react-router-dom") ||
+            id.includes("react-dom")
+          ) {
+            return "react-vendor";
+          }
+
+          if (id.includes("redux") || id.includes("i18next")) {
+            return "state-vendor";
+          }
+
+          if (id.includes("node_modules")) {
+            return "vendor";
+          }
+        },
+      },
+    },
+  },
 });
