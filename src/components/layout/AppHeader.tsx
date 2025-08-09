@@ -20,14 +20,13 @@ import { useTranslation } from "react-i18next";
 import ThemeSwitcher from "../ThemeSwitcher";
 import LanguageSwitcher from "../LanguageSwitcher";
 import { usePage } from "../../contexts/PageContext";
-import { useCompactMode } from "../../contexts/CompactModeContext";
 
 const { Header } = Layout;
 const { Title } = Typography;
 
 const AppHeader = () => {
   const { pageTitle } = usePage();
-  const { isCompact, toggleCompactMode } = useCompactMode();
+
   const { t } = useTranslation();
 
   const userMenuItems: MenuProps["items"] = [
