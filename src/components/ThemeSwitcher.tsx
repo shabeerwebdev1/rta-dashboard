@@ -1,9 +1,5 @@
 import { Button, Dropdown, type MenuProps } from "antd";
-import {
-  SkinOutlined,
-  BgColorsOutlined,
-  MoonOutlined,
-} from "@ant-design/icons";
+import { SkinOutlined, BgColorsOutlined, MoonOutlined } from "@ant-design/icons";
 import { useTheme, type ThemeName } from "../contexts/ThemeContext";
 
 const ThemeSwitcher = () => {
@@ -38,11 +34,7 @@ const ThemeSwitcher = () => {
   ];
 
   return (
-    <Dropdown
-      menu={{ items, selectedKeys: [themeName] }}
-      placement="bottomRight"
-      trigger={["click"]}
-    >
+    <Dropdown menu={{ items, selectedKeys: [themeName] }} placement="bottomRight" trigger={["click"]}>
       <Button type="text" icon={<SkinOutlined />} />
     </Dropdown>
   );

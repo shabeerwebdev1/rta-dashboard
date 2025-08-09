@@ -1,19 +1,5 @@
-import React, { useState, useEffect } from "react";
-import {
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Button,
-  Row,
-  Col,
-  Space,
-  Card,
-  Table,
-  message,
-  Spin,
-  Empty,
-} from "antd";
+import React, { useEffect } from "react";
+import { Form, Input, Select, DatePicker, Button, Row, Col, Space, Card, Table, Spin, Empty } from "antd";
 import { useTranslation } from "react-i18next";
 import { useLazySearchPermitsQuery } from "../services/rtkApiFactory";
 import { usePage } from "../contexts/PageContext";
@@ -27,64 +13,33 @@ const PermitsPage: React.FC = () => {
   const [form] = Form.useForm();
   const { setPageTitle } = usePage();
 
-  const [searchPermits, { data: searchResults, isLoading, isFetching }] =
-    useLazySearchPermitsQuery();
+  const [searchPermits, { data: searchResults, isLoading, isFetching }] = useLazySearchPermitsQuery();
 
   useEffect(() => {
     setPageTitle(t("page.title.permits"));
   }, [setPageTitle, t]);
 
-  const onFinish = (values: any) => {
-    const params = {
+  const onFinish = (values: Record<string, unknown>) => {
+    const params: Record<string, unknown> = {
       ...values,
-      dateFrom: values.dateRange
-        ? values.dateRange[0].toISOString()
-        : undefined,
-      dateTo: values.dateRange ? values.dateRange[1].toISOString() : undefined,
+      dateFrom: values.dateRange ? (values.dateRange as [{ toISOString(): string }, { toISOString(): string }])[0].toISOString() : undefined,
+      dateTo: values.dateRange ? (values.dateRange as [{ toISOString(): string }, { toISOString(): string }])[1].toISOString() : undefined,
     };
     delete params.dateRange;
 
-    Object.keys(params).forEach(
-      (key) => params[key] == null && delete params[key],
-    );
+    Object.keys(params).forEach((key) => params[key] == null && delete params[key]);
 
     searchPermits(params);
   };
 
   const columns = [
-    {
-      title: t("form.permitNumber"),
-      dataIndex: "permitNumber",
-      key: "permitNumber",
-    },
+    { title: t("form.permitNumber"), dataIndex: "permitNumber", key: "permitNumber" },
     { title: t("form.permitType"), dataIndex: "permitType", key: "permitType" },
-    {
-      title: t("form.plateNumber"),
-      dataIndex: "plateNumber",
-      key: "plateNumber",
-    },
-    {
-      title: t("form.phoneNumber"),
-      dataIndex: "phoneNumber",
-      key: "phoneNumber",
-    },
-    {
-      title: t("form.fromDate"),
-      dataIndex: "validFrom",
-      key: "validFrom",
-      render: (text: string) => dayjs(text).format("YYYY-MM-DD"),
-    },
-    {
-      title: t("form.toDate"),
-      dataIndex: "validTo",
-      key: "validTo",
-      render: (text: string) => dayjs(text).format("YYYY-MM-DD"),
-    },
-    {
-      title: t("form.authorizedAreas"),
-      dataIndex: "authorizedAreas",
-      key: "authorizedAreas",
-    },
+    { title: t("form.plateNumber"), dataIndex: "plateNumber", key: "plateNumber" },
+    { title: t("form.phoneNumber"), dataIndex: "phoneNumber", key: "phoneNumber" },
+    { title: t("form.fromDate"), dataIndex: "validFrom", key: "validFrom", render: (text: string) => dayjs(text).format("YYYY-MM-DD") },
+    { title: t("form.toDate"), dataIndex: "validTo", key: "validTo", render: (text: string) => dayjs(text).format("YYYY-MM-DD") },
+    { title: t("form.authorizedAreas"), dataIndex: "authorizedAreas", key: "authorizedAreas" },
   ];
 
   return (
@@ -97,9 +52,7 @@ const PermitsPage: React.FC = () => {
                 <Select placeholder={t("form.permitType")} allowClear>
                   <Option value="VIP">VIP</Option>
                   <Option value="Residential">Residential</Option>
-                  <Option value="People of Determination">
-                    People of Determination
-                  </Option>
+                  <Option value="People of Determination">People of Determination</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -126,12 +79,8 @@ const PermitsPage: React.FC = () => {
           </Row>
           <Row justify="end">
             <Space>
-              <Button onClick={() => form.resetFields()}>
-                {t("common.reset")}
-              </Button>
-              <Button type="primary" htmlType="submit" loading={isFetching}>
-                {t("common.search")}
-              </Button>
+              <Button onClick={() => form.resetFields()}>{t("common.reset")}</Button>
+              <Button type="primary" htmlType="submit" loading={isFetching}>{t("common.search")}</Button>
             </Space>
           </Row>
         </Form>
@@ -143,10 +92,7 @@ const PermitsPage: React.FC = () => {
             dataSource={searchResults}
             rowKey="id"
             locale={{ emptyText: <Empty description={t("common.noData")} /> }}
-            pagination={{
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
-            }}
+            pagination={{ showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}` }}
           />
         </Spin>
       </Card>

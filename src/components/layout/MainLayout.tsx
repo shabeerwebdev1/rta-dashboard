@@ -12,13 +12,7 @@ const MainLayout: React.FC = () => {
       <AppSidebar />
       <Layout>
         <AppHeader />
-        <Content
-          style={{
-            margin: "0",
-            padding: 24,
-            borderRadius: "8px",
-          }}
-        >
+        <Content style={{ margin: "0", padding: 24, borderRadius: "8px" }}>
           <Outlet />
         </Content>
       </Layout>

@@ -1,23 +1,9 @@
 import type { WhitelistRecord } from "../types";
 import dayjs from "dayjs";
 
-const names = [
-  "ABC Traders",
-  "XYZ Logistics",
-  "EFG Corp",
-  "Dubai Solutions",
-  "Global Exports",
-  "Innovate Tech",
-];
+const names = ["ABC Traders", "XYZ Logistics", "EFG Corp", "Dubai Solutions", "Global Exports", "Innovate Tech"];
 
-const users = [
-  "Ali Ahmed",
-  "Fatima Khan",
-  "John Doe",
-  "Jane Smith",
-  "Yusuf Ibrahim",
-  "Aisha Al Mansoori",
-];
+const users = ["Ali Ahmed", "Fatima Khan", "John Doe", "Jane Smith", "Yusuf Ibrahim", "Aisha Al Mansoori"];
 
 const cityCoordinates = [
   { lat: 25.276987, lng: 55.296249 },
@@ -41,9 +27,7 @@ export const generateWhitelistData = (count: number): WhitelistRecord[] => {
       key: `${i + 1}`,
       tradeLicenseName: `${names[i % names.length]} #${i + 1}`,
       licenseNumber: `TLN${Math.floor(10000000 + Math.random() * 90000000)}`,
-      date: dayjs()
-        .add(Math.floor(Math.random() * 365) - 60, "day")
-        .format("DD-MM-YYYY"),
+      date: dayjs().add(Math.floor(Math.random() * 365) - 60, "day").format("DD-MM-YYYY"),
       location: {
         lat: baseCity.lat + latOffset,
         lng: baseCity.lng + lngOffset,

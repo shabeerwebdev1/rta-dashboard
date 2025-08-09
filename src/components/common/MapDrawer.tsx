@@ -19,32 +19,15 @@ const MapDrawer: React.FC<MapDrawerProps> = ({ open, onClose, record }) => {
   if (!record) return null;
 
   const mapUrl = `https://maps.google.com/maps?q=${record.location.lat},${record.location.lng}&z=15&output=embed`;
-  const statusColor =
-    record.status === "Active"
-      ? "green"
-      : record.status === "Expired"
-        ? "red"
-        : "gold";
+  const statusColor = record.status === "Active" ? "green" : record.status === "Expired" ? "red" : "gold";
 
   return (
-    <Drawer
-      title={t("whitelist.locationDetails")}
-      placement="right"
-      onClose={onClose}
-      open={open}
-      width={500}
-    >
+    <Drawer title={t("whitelist.locationDetails")} placement="right" onClose={onClose} open={open} width={500}>
       <Title style={{ marginTop: 0, paddingLeft: 2 }} level={4}>
         {record.tradeLicenseName}
       </Title>
 
-      <Descriptions
-        bordered
-        column={1}
-        size="small"
-        layout="horizontal"
-        style={{ marginBottom: 24 }}
-      >
+      <Descriptions bordered column={1} size="small" layout="horizontal" style={{ marginBottom: 24 }}>
         <Descriptions.Item label={t("whitelist.licenseNumber")}>
           {record.licenseNumber}
         </Descriptions.Item>
@@ -63,7 +46,7 @@ const MapDrawer: React.FC<MapDrawerProps> = ({ open, onClose, record }) => {
           <Tag>{t(`status.${record.type.toLowerCase()}`)}</Tag>
         </Descriptions.Item>
         <Descriptions.Item label={t("whitelist.photo")}>
-          <Avatar src={record.photo} icon={<UserOutlined />} />
+          <Avatar src={(record as { photo?: string }).photo} icon={<UserOutlined />} />
         </Descriptions.Item>
       </Descriptions>
 
@@ -105,7 +88,7 @@ const MapDrawer: React.FC<MapDrawerProps> = ({ open, onClose, record }) => {
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
           onLoad={() => setLoading(false)}
-        ></iframe>
+        />
       </div>
     </Drawer>
   );

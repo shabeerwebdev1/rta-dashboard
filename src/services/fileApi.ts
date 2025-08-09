@@ -4,7 +4,7 @@ export const fileApi = createApi({
   reducerPath: "fileApi",
   baseQuery: fetchBaseQuery({ baseUrl: "/file-api/api/Files/" }),
   endpoints: (builder) => ({
-    uploadFiles: builder.mutation<any, FormData>({
+    uploadFiles: builder.mutation<unknown, FormData>({
       query: (formData) => ({
         url: "upload-multiple",
         method: "POST",

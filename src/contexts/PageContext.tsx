@@ -1,10 +1,4 @@
-import React, {
-  createContext,
-  useState,
-  useMemo,
-  useContext,
-  ReactNode,
-} from "react";
+import React, { createContext, useState, useMemo, useContext, ReactNode } from "react";
 
 interface PageContextType {
   pageTitle: string;
@@ -13,9 +7,7 @@ interface PageContextType {
 
 const PageContext = createContext<PageContextType | undefined>(undefined);
 
-export const PageProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export const PageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [pageTitle, setPageTitle] = useState("Dashboard");
 
   const value = useMemo(() => ({ pageTitle, setPageTitle }), [pageTitle]);

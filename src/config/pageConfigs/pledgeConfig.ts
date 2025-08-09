@@ -3,10 +3,7 @@ import type { PageConfig } from "../../types/config";
 export const pledgeConfig: PageConfig = {
   key: "pledges",
   title: "page.title.pledges",
-  name: {
-    singular: "Pledge",
-    plural: "Pledges",
-  },
+  name: { singular: "Pledge", plural: "Pledges" },
   api: {
     get: "/api/Pledge",
     post: "/api/Pledge",
@@ -16,11 +13,7 @@ export const pledgeConfig: PageConfig = {
   tableConfig: {
     columns: [
       { key: "pledgeNumber", title: "form.pledgeNumber", type: "string" },
-      {
-        key: "tradeLicenseNumber",
-        title: "form.tradeLicenseNumber",
-        type: "string",
-      },
+      { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "string" },
       { key: "businessName", title: "form.businessName", type: "string" },
       { key: "pledgeType", title: "form.pledgeType", type: "string" },
       { key: "submittedAt", title: "form.date", type: "date" },

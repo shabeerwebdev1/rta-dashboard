@@ -1,6 +1,7 @@
 import React from "react";
-import { App } from "antd";
+import { App, List, Typography } from "antd";
 import { useTranslation } from "react-i18next";
+
 interface ApiErrorResponse {
   data?: {
     en_Msg?: string;
@@ -12,8 +13,6 @@ interface ApiErrorResponse {
     }[];
   };
 }
-
-import { List, Typography } from "antd";
 const { Text } = Typography;
 
 export const useAppNotification = () => {
@@ -24,7 +23,7 @@ export const useAppNotification = () => {
     return i18n.language === "ar" && arMsg ? arMsg : enMsg;
   };
 
-  const success = (response: any, defaultMessage: string) => {
+  const success = (response: unknown, defaultMessage: string) => {
     const data = response?.data ?? response;
     const title = getLangMsg(data?.en_Msg, data?.ar_Msg) || defaultMessage;
     notification.success({
@@ -35,15 +34,14 @@ export const useAppNotification = () => {
 
   const error = (error: ApiErrorResponse, defaultMessage: string) => {
     const errData = error?.data;
-    const title =
-      getLangMsg(errData?.en_Msg, errData?.ar_Msg) || defaultMessage;
+    const title = getLangMsg(errData?.en_Msg, errData?.ar_Msg) || defaultMessage;
 
     let description: React.ReactNode = null;
     if (errData?.validationErrors && errData.validationErrors.length > 0) {
       description = React.createElement(List, {
         size: "small",
         dataSource: errData.validationErrors,
-        renderItem: (ve) =>
+        renderItem: (ve: { fieldName: string; enMessage: string; arMessage: string }) =>
           React.createElement(
             List.Item,
             {},

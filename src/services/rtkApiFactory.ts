@@ -3,7 +3,7 @@ import { pageConfigs } from "../config/pageConfigs";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: "/",
-  prepareHeaders: (headers, { getState }) => {
+  prepareHeaders: (headers) => {
     const token = localStorage.getItem("auth_token");
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
@@ -17,7 +17,7 @@ export const dynamicApi = createApi({
   baseQuery: baseQuery,
   tagTypes: Object.keys(pageConfigs).concat(["PermitSearch"]),
   endpoints: (builder) => {
-    const endpoints: any = {};
+    const endpoints: Record<string, unknown> = {};
 
     for (const [entity, config] of Object.entries(pageConfigs)) {
       const singular = config.name.singular.replace(/\s/g, "");
@@ -26,11 +26,11 @@ export const dynamicApi = createApi({
       endpoints[`get${plural}`] = builder.query({
         query: () => config.api.get,
         providesTags: [entity],
-        transformResponse: (response: any) => response.data || [],
+        transformResponse: (response: { data?: unknown[] }) => response.data || [],
       });
 
       endpoints[`add${singular}`] = builder.mutation({
-        query: (body) => {
+        query: (body: unknown) => {
           return {
             url: config.api.post,
             method: "POST",
@@ -41,10 +41,8 @@ export const dynamicApi = createApi({
       });
 
       endpoints[`update${singular}`] = builder.mutation({
-        query: ({ id, ...body }) => ({
-          url: config.api.put.includes(":id")
-            ? config.api.put.replace(":id", id)
-            : config.api.put,
+        query: ({ id, ...body }: { id: string | number; [key: string]: unknown }) => ({
+          url: config.api.put.includes(":id") ? config.api.put.replace(":id", id) : config.api.put,
           method: "PUT",
           body: { id, ...body },
         }),
@@ -53,7 +51,7 @@ export const dynamicApi = createApi({
 
       if (config.api.delete) {
         endpoints[`delete${singular}`] = builder.mutation({
-          query: (id) => ({
+          query: (id: string | number) => ({
             url: config.api.delete.replace(":id", id),
             method: "DELETE",
           }),
@@ -63,12 +61,12 @@ export const dynamicApi = createApi({
     }
 
     endpoints.searchPermits = builder.query({
-      query: (params) => ({
+      query: (params: Record<string, unknown>) => ({
         url: "/api/Permit/search",
         params,
       }),
       providesTags: ["PermitSearch"],
-      transformResponse: (response: any) => response.data || [],
+      transformResponse: (response: { data?: unknown[] }) => response.data || [],
     });
 
     return endpoints;

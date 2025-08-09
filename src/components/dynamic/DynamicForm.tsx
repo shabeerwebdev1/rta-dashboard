@@ -1,17 +1,5 @@
 import React, { useEffect } from "react";
-import {
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Upload,
-  Row,
-  Col,
-  Button,
-  App,
-  message,
-} from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { Form, Input, Select, DatePicker, Upload, Row, Col } from "antd";
 import { useTranslation } from "react-i18next";
 import type { FormField } from "../../types/config";
 import { getFileUrl } from "../../services/fileApi";
@@ -20,13 +8,11 @@ import dayjs, { Dayjs } from "dayjs";
 const validationPatterns = {
   plateNumber: {
     pattern: /^[A-Za-z0-9 -]+$/,
-    message:
-      "Plate number can only contain letters, numbers, spaces, and hyphens.",
+    message: "Plate number can only contain letters, numbers, spaces, and hyphens.",
   },
   alphanumeric_hyphen_uppercase: {
     pattern: /^[A-Z0-9-]+$/,
-    message:
-      "This field can only contain uppercase letters, numbers, and hyphens.",
+    message: "This field can only contain uppercase letters, numbers, and hyphens.",
   },
   arabic: {
     pattern: /^[\u0600-\u06FF\s]+$/,
@@ -35,8 +21,12 @@ const validationPatterns = {
 };
 interface DynamicFormProps {
   fields: FormField[];
-  form: any;
-  initialData: any | null;
+  form: {
+    setFieldsValue: (values: Record<string, unknown>) => void;
+    resetFields: () => void;
+    getFieldsValue: () => Record<string, unknown>;
+  };
+  initialData: Record<string, unknown> | null;
 }
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
@@ -46,7 +36,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const normFile = (e: any) => {
+  const normFile = (e: unknown) => {
     if (Array.isArray(e)) {
       return e;
     }
@@ -54,9 +44,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   };
 
   const disabledDate = (current: Dayjs, field: FormField) => {
-    return (
-      field.disablePastDates && current && current < dayjs().startOf("day")
-    );
+    return field.disablePastDates && current && current < dayjs().startOf("day");
   };
 
   const renderField = (field: FormField) => {
@@ -67,10 +55,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             name={field.name}
             listType="picture-card"
             multiple
-            beforeUpload={() => {
-              return false; // Prevent automatic upload
-            }}
-          >{t("common.selectFile")}
+            beforeUpload={() => false}
+          >
+            {t("common.selectFile")}
           </Upload>
         );
 
@@ -81,24 +68,15 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
       case "select":
         return (
           <Select size="large" allowClear>
-            {field.options?.map((opt: any) => (
-              <Select.Option
-                key={typeof opt === "string" ? opt : opt.value}
-                value={typeof opt === "string" ? opt : opt.value}
-              >
+            {field.options?.map((opt: string | { label: string; value: unknown }) => (
+              <Select.Option key={typeof opt === "string" ? opt : opt.value} value={typeof opt === "string" ? opt : opt.value}>
                 {typeof opt === "string" ? opt : opt.label}
               </Select.Option>
             ))}
           </Select>
         );
       case "date":
-        return (
-          <DatePicker
-            size="large"
-            style={{ width: "100%" }}
-            format="YYYY-MM-DD"
-          />
-        );
+        return <DatePicker size="large" style={{ width: "100%" }} format="YYYY-MM-DD" />;
       case "dateRange":
         return (
           <DatePicker.RangePicker
@@ -115,10 +93,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
   useEffect(() => {
     if (initialData) {
-      const transformedData = { ...initialData };
+      const transformedData: Record<string, unknown> = { ...initialData };
       fields.forEach((field) => {
         if (field.type === "date" && initialData[field.name]) {
-          transformedData[field.name] = dayjs(initialData[field.name]);
+          transformedData[field.name] = dayjs(initialData[field.name] as string);
         }
         if (
           field.type === "dateRange" &&
@@ -127,24 +105,20 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           initialData[field.fieldMapping.to]
         ) {
           transformedData[field.name] = [
-            dayjs(initialData[field.fieldMapping.from]),
-            dayjs(initialData[field.fieldMapping.to]),
+            dayjs(initialData[field.fieldMapping.from] as string),
+            dayjs(initialData[field.fieldMapping.to] as string),
           ];
         }
         if (field.type === "file") {
           const fileDataKey = field.responseKey || field.name;
           if (typeof initialData[fileDataKey] === "string") {
-            const fileNames = initialData[fileDataKey]
-              .split(";")
-              .filter(Boolean);
-            transformedData[field.name] = fileNames.map(
-              (name: string, index: number) => ({
-                uid: `${-index}`,
-                name: name,
-                status: "done",
-                url: getFileUrl(name),
-              }),
-            );
+            const fileNames = (initialData[fileDataKey] as string).split(";").filter(Boolean);
+            transformedData[field.name] = fileNames.map((name: string, index: number) => ({
+              uid: `${-index}`,
+              name: name,
+              status: "done" as const,
+              url: getFileUrl(name),
+            }));
           }
         }
       });

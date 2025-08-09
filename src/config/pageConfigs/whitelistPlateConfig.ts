@@ -3,10 +3,7 @@ import type { PageConfig } from "../../types/config";
 export const whitelistPlateConfig: PageConfig = {
   key: "whitelist-plates",
   title: "page.title.whitelist-plates",
-  name: {
-    singular: "Plate",
-    plural: "Plates",
-  },
+  name: { singular: "Plate", plural: "Plates" },
   api: {
     get: "/api/WhitelistPlate",
     post: "/api/WhitelistPlate",
@@ -42,15 +39,7 @@ export const whitelistPlateConfig: PageConfig = {
         type: "select",
         required: true,
         span: 12,
-        options: [
-          "Dubai",
-          "Abu Dhabi",
-          "Sharjah",
-          "Ajman",
-          "Ras Al Khaimah",
-          "Fujairah",
-          "Umm Al Quwain",
-        ],
+        options: ["Dubai", "Abu Dhabi", "Sharjah", "Ajman", "Ras Al Khaimah", "Fujairah", "Umm Al Quwain"],
       },
       {
         name: "plateType",

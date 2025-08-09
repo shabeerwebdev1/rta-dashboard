@@ -1,23 +1,23 @@
 import React, { useState } from "react";
-import { Table, Button, Space, Tag, Badge, Dropdown, App, Tooltip } from "antd";
+import { Table, Button, Tag, Badge, Dropdown } from "antd";
 import type { TableProps, MenuProps } from "antd";
-import {
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  MoreOutlined,
-} from "@ant-design/icons";
+import { EditOutlined, DeleteOutlined, EyeOutlined, MoreOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import type { PageConfig } from "../../types/config";
 import DynamicViewDrawer from "./DynamicViewDrawer";
 
+interface TableRecord {
+  id: string | number;
+  [key: string]: unknown;
+}
+
 interface DynamicTableProps {
   config: PageConfig;
-  data: any[];
+  data: TableRecord[];
   loading: boolean;
-  onEdit: (record: any) => void;
-  onDelete: (record: any) => void;
+  onEdit: (record: TableRecord) => void;
+  onDelete: (record: TableRecord) => void;
   selectedRowKeys: React.Key[];
   setSelectedRowKeys: (keys: React.Key[]) => void;
 }
@@ -42,40 +42,40 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
 }) => {
   const { t } = useTranslation();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [viewRecord, setViewRecord] = useState(null);
+  const [viewRecord, setViewRecord] = useState<TableRecord | null>(null);
 
-  const handleView = (record: any) => {
+  const handleView = (record: TableRecord) => {
     setViewRecord(record);
     setIsDrawerOpen(true);
   };
 
-  const columns: TableProps<any>["columns"] = [
+  const columns: TableProps<TableRecord>["columns"] = [
     ...config.tableConfig.columns.map((col) => ({
       title: t(col.title),
       dataIndex: col.key,
       key: col.key,
-      sorter: (a: any, b: any) =>
-        typeof a[col.key] === "string"
-          ? a[col.key].localeCompare(b[col.key])
-          : a[col.key] - b[col.key],
-      render: (text: any) => {
-        const statusKey = typeof text === "string" && text?.toLowerCase();
-        const tagColor =
-          statusColors[statusKey as keyof typeof statusColors] || "default";
+      sorter: (a: TableRecord, b: TableRecord) => {
+        const aVal = a[col.key];
+        const bVal = b[col.key];
+        if (typeof aVal === "string" && typeof bVal === "string") {
+          return aVal.localeCompare(bVal);
+        }
+        return Number(aVal) - Number(bVal);
+      },
+      render: (text: unknown) => {
+        const statusKey = typeof text === "string" ? text.toLowerCase() : "";
+        const tagColor = statusKey && statusColors[statusKey as keyof typeof statusColors] ?
+          statusColors[statusKey as keyof typeof statusColors] : "default";
         if (!text) return " - ";
         switch (col.type) {
           case "date":
-            return dayjs(text).isValid()
-              ? dayjs(text).format("DD MMM YYYY")
-              : text;
+            return dayjs(text as string).isValid() ? dayjs(text as string).format("DD MMM YYYY") : String(text);
           case "tag":
-            return (
-              <Tag color={tagColor}>{t(`status.${statusKey}`)}</Tag>
-            );
+            return <Tag color={tagColor}>{t(`status.${statusKey}`)}</Tag>;
           case "badge":
-            return <Badge color={statusKey} text={text} />;
+            return <Badge color="red" text={String(text)} />;
           default:
-            return text;
+            return String(text);
         }
       },
     })),
@@ -85,7 +85,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       align: "center",
       fixed: "right",
       width: 100,
-      render: (_, record) => {
+      render: (_, record: TableRecord) => {
         const menuItems: MenuProps["items"] = [];
         if (config.tableConfig.viewRecord) {
           menuItems.push({
@@ -114,11 +114,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         }
 
         return menuItems.length > 0 ? (
-          <Dropdown
-            menu={{ items: menuItems }}
-            trigger={["click"]}
-            placement="bottomRight"
-          >
+          <Dropdown menu={{ items: menuItems }} trigger={["click"]} placement="bottomRight">
             <Button type="text" icon={<MoreOutlined />} />
           </Dropdown>
         ) : null;
@@ -145,8 +141,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         rowSelection={rowSelection}
         scroll={{ x: "max-content" }}
         pagination={{
-          showTotal: (total, range) =>
-            `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
+          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
           showSizeChanger: true,
           pageSizeOptions: ["10", "20", "50"],
         }}

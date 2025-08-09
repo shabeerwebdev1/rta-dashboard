@@ -1,25 +1,18 @@
 import type { Rule } from "antd/es/form";
 
-export type FormFieldType =
-  | "text"
-  | "textarea"
-  | "select"
-  | "date"
-  | "dateRange"
-  | "file"
-  | "hidden";
+export type FormFieldType = "text" | "textarea" | "select" | "date" | "dateRange" | "file" | "hidden";
 export interface FormField {
   name: string;
   label: string;
   type: FormFieldType;
   required?: boolean;
   span: number;
-  options?: string[] | { label: string; value: any }[];
+  options?: string[] | { label: string; value: unknown }[];
   rules?: Rule[];
   fieldMapping?: { from: string; to: string };
   fileCategory?: string;
   dependencies?: string[];
-  hidden?: (formValues: any) => boolean;
+  hidden?: (formValues: Record<string, unknown>) => boolean;
   responseKey?: string;
   validationType?: "plateNumber" | "alphanumeric_hyphen_uppercase" | "arabic";
   disablePastDates?: boolean;
