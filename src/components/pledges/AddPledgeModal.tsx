@@ -1,50 +1,39 @@
 import React from "react";
-import { Modal, Typography, Divider, Button } from "antd";
-import { CloseOutlined } from "@ant-design/icons";
+import { Modal, Typography, Divider } from "antd";
 import PledgeForm from "./PledgeForm";
 import type { PledgeFormValues } from "../../types/pledge";
 
 const { Title } = Typography;
 
 interface AddPledgeModalProps {
-  isOpen: boolean;
+  open: boolean;
   onClose: () => void;
-  onSubmit: (values: PledgeFormValues) => void;
+  onSubmit: (values: PledgeFormValues) => Promise<void>;
   isSubmitting: boolean;
-  initialValues?: Partial<PledgeFormValues>;
+  initialValues?: PledgeFormValues;
+  mode: "add" | "edit";
 }
 
 const AddPledgeModal: React.FC<AddPledgeModalProps> = ({
-  isOpen,
+  open,
   onClose,
   onSubmit,
   isSubmitting,
   initialValues,
+  mode,
 }) => {
   return (
     <Modal
-      open={isOpen}
+      open={open}
       onCancel={onClose}
-      title={
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Title level={5} style={{ margin: 0 }}>
-            Add New Pledge
-          </Title>
-        </div>
-      }
       footer={null}
-      width={600}
-      destroyOnHidden
-      closable={true} // enable default close icon to match the first modal
+      width={800}
+      destroyOnClose
     >
+      <Title level={4} style={{ marginBottom: 16 }}>
+        {mode === "add" ? "Add New Pledge" : "Edit Pledge"}
+      </Title>
       <Divider />
-
       <PledgeForm
         onSubmit={onSubmit}
         onCancel={onClose}

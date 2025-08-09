@@ -78,7 +78,7 @@ const WhitelistPlatesPage: React.FC = () => {
   useEffect(() => {
     if (isError) {
       message.error(
-        "Failed to load whitelist plates: " + (error as any).toString(),
+        "Failed to load whitelist plates: " + (error as any).toString()
       );
     }
   }, [isError, error]);
@@ -121,7 +121,7 @@ const WhitelistPlatesPage: React.FC = () => {
         try {
           await deletePlate(record.id).unwrap();
           message.success(
-            `Plate "${record.plateNumber}" ${t("messages.deletedSuccess")}`,
+            `Plate "${record.plateNumber}" ${t("messages.deletedSuccess")}`
           );
         } catch (err) {
           message.error(`Failed to delete plate: ${err}`);
@@ -135,7 +135,7 @@ const WhitelistPlatesPage: React.FC = () => {
       ?.filter((item) => {
         if (!globalSearch) return true;
         return Object.values(item).some((value) =>
-          String(value).toLowerCase().includes(globalSearch.toLowerCase()),
+          String(value).toLowerCase().includes(globalSearch.toLowerCase())
         );
       })
       .filter((item) => {
@@ -282,7 +282,7 @@ const WhitelistPlatesPage: React.FC = () => {
         },
       },
     ],
-    [t, isDeleting],
+    [t, isDeleting]
   );
 
   if (isLoading) return <PageLoader />;
@@ -336,8 +336,9 @@ const WhitelistPlatesPage: React.FC = () => {
         </Space>
       </Card>
 
-      <Card variant="borderless" bodyStyle={{ padding: "10px 10px 0px 10px" }}>
+      <Card variant="borderless" bodyStyle={{ padding: 0}}>
         <Table
+          rowSelection={{ type: "checkbox" }}
           rowKey="id"
           columns={columns}
           dataSource={filteredData}

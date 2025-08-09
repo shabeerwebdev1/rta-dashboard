@@ -12,7 +12,6 @@ import {
   Typography,
   theme,
   App,
-  DatePicker,
 } from "antd";
 import {
   PlusOutlined,
@@ -31,9 +30,7 @@ import usePageLoader from "../hooks/usePageLoader";
 import PageLoader from "../components/common/PageLoader";
 import { exportToCsv } from "../utils/csvExporter";
 import MapDrawer from "../components/inspection/InspectionViewDrawer";
-import dayjs from "dayjs";
 
-const { RangePicker } = DatePicker;
 const { useToken } = theme;
 const { Text } = Typography;
 
@@ -55,7 +52,7 @@ const InspectionObstaclePage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<InspectionRecord | null>(
-    null,
+    null
   );
   const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
 
@@ -132,28 +129,11 @@ const InspectionObstaclePage: React.FC = () => {
     const filtered = tableData.filter((item) =>
       Object.values(item).some(
         (field) =>
-          typeof field === "string" && field.toLowerCase().includes(value),
-      ),
+          typeof field === "string" && field.toLowerCase().includes(value)
+      )
     );
     setFilteredData(filtered);
   };
-
-  const handleDateFilter = (dates: any) => {
-    if (!dates) {
-      setFilteredData(tableData);
-      return;
-    }
-    const [start, end] = dates;
-    const filtered = tableData.filter((item) => {
-      const itemDate = dayjs(item.date, "DD-MM-YYYY");
-      return (
-        itemDate.isAfter(start.startOf("day")) &&
-        itemDate.isBefore(end.endOf("day"))
-      );
-    });
-    setFilteredData(filtered);
-  };
-
   const handleDownloadCsv = () => {
     const stats = {
       total: filteredData.length,
@@ -317,7 +297,7 @@ const InspectionObstaclePage: React.FC = () => {
         ),
       },
     ],
-    [tableData, token],
+    [tableData, token]
   );
 
   const handleFormSubmit = (values: any) => {
@@ -363,7 +343,7 @@ const InspectionObstaclePage: React.FC = () => {
               onChange={handleGlobalSearch}
               allowClear
             />
-            <RangePicker onChange={handleDateFilter} />
+            {/* <RangePicker onChange={handleDateFilter} /> */}
             <Tooltip
               title={tableSize === "middle" ? "Compact view" : "Standard view"}
             >
@@ -385,9 +365,12 @@ const InspectionObstaclePage: React.FC = () => {
             <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv}>
               Download CSV
             </Button>
-            <Button type="primary" onClick={() => setIsModalOpen(true)}>
+            <Button
+              type="primary"
+              onClick={() => setIsModalOpen(true)}
+              icon={<PlusOutlined />}
+            >
               Add New
-              <PlusOutlined />
             </Button>
           </Space>
         </Space>

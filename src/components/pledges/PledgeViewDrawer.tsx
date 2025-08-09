@@ -49,17 +49,12 @@ const PledgeViewDrawer: React.FC<PledgeViewDrawerProps> = ({
         <Descriptions.Item label="Trade License Number">
           {record.tradeLicenseNumber}
         </Descriptions.Item>
-        <Descriptions.Item label="Trade License Name">
-          {record.tradeLicenseName}
-        </Descriptions.Item>
+
         <Descriptions.Item label="Business Name">
           {record.businessName}
         </Descriptions.Item>
         <Descriptions.Item label="Pledge Type">
           {record.pledgeType}
-        </Descriptions.Item>
-        <Descriptions.Item label="From Date">
-          {record.fromDate}
         </Descriptions.Item>
         <Descriptions.Item label="Remarks">{record.remarks}</Descriptions.Item>
       </Descriptions>

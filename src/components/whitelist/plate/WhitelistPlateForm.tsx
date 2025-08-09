@@ -6,7 +6,6 @@ import {
   Select,
   Row,
   Col,
-  InputNumber,
   type FormInstance,
 } from "antd";
 import { useTranslation } from "react-i18next";
@@ -21,6 +20,13 @@ interface WhitelistPlateFormProps {
   onSubmit: (values: WhitelistPlateRequestDto) => void;
   initialValues: WhitelistPlateResponseDto | null;
 }
+
+const EXEMPTION_REASONS = [
+  { code: 1, label: "Government Vehicle" },
+  { code: 2, label: "Diplomatic Vehicle" },
+  { code: 3, label: "Emergency Vehicle" },
+  { code: 4, label: "Special Permission" },
+];
 
 const WhitelistPlateForm: React.FC<WhitelistPlateFormProps> = ({
   form,
@@ -37,6 +43,7 @@ const WhitelistPlateForm: React.FC<WhitelistPlateFormProps> = ({
           initialValues.fromDate ? dayjs(initialValues.fromDate) : null,
           initialValues.toDate ? dayjs(initialValues.toDate) : null,
         ],
+        exemptionReason_ID: initialValues.exemptionReason_ID,
       });
     }
   }, [initialValues, form]);
@@ -120,30 +127,19 @@ const WhitelistPlateForm: React.FC<WhitelistPlateFormProps> = ({
             />
           </Form.Item>
         </Col>
-        <Col xs={24} sm={12}>
+        <Col xs={24}>
           <Form.Item
-            name="exemptionReason_EN"
-            label={t("form.exemptionReason_EN")}
+            name="exemptionReason_ID"
+            label={t("form.exemptionReason")}
             rules={[{ required: true }]}
           >
-            <InputNumber
-              size="large"
-              style={{ width: "100%" }}
-              placeholder="Enter reason code"
-            />
-          </Form.Item>
-        </Col>
-        <Col xs={24} sm={12}>
-          <Form.Item
-            name="exemptionReason_AR"
-            label={t("form.exemptionReason_AR")}
-            rules={[{ required: true }]}
-          >
-            <InputNumber
-              size="large"
-              style={{ width: "100%" }}
-              placeholder="أدخل رمز السبب"
-            />
+            <Select size="large" placeholder="Select exemption reason">
+              {EXEMPTION_REASONS.map((reason) => (
+                <Select.Option key={reason.code} value={reason.code}>
+                  {reason.code} - {reason.label}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
         </Col>
         <Col xs={24}>

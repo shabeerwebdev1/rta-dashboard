@@ -30,7 +30,7 @@ export const whitelistApi = createApi({
     getWhitelistPlates: builder.query<WhitelistPlateResponseDto[], void>({
       query: () => "WhitelistPlate",
       transformResponse: (
-        response: IResponseWrapper<WhitelistPlateResponseDto[]>,
+        response: IResponseWrapper<WhitelistPlateResponseDto[]>
       ) => response.data,
       providesTags: ["WhitelistPlate"],
     }),
@@ -44,7 +44,7 @@ export const whitelistApi = createApi({
         body: newPlate,
       }),
       transformResponse: (
-        response: IResponseWrapper<WhitelistPlateResponseDto>,
+        response: IResponseWrapper<WhitelistPlateResponseDto>
       ) => response.data,
       invalidatesTags: ["WhitelistPlate"],
     }),
@@ -58,7 +58,7 @@ export const whitelistApi = createApi({
         body: plate,
       }),
       transformResponse: (
-        response: IResponseWrapper<WhitelistPlateResponseDto>,
+        response: IResponseWrapper<WhitelistPlateResponseDto>
       ) => response.data,
       invalidatesTags: ["WhitelistPlate"],
     }),
@@ -77,7 +77,7 @@ export const whitelistApi = createApi({
     >({
       query: () => "WhitelistTradeLicense",
       transformResponse: (
-        response: IResponseWrapper<WhitelistTradeLicenseResponseDto[]>,
+        response: IResponseWrapper<WhitelistTradeLicenseResponseDto[]>
       ) => response.data,
       providesTags: ["WhitelistTradeLicense"],
     }),
@@ -91,7 +91,7 @@ export const whitelistApi = createApi({
         body: newLicense,
       }),
       transformResponse: (
-        response: IResponseWrapper<WhitelistTradeLicenseResponseDto>,
+        response: IResponseWrapper<WhitelistTradeLicenseResponseDto>
       ) => response.data,
       invalidatesTags: ["WhitelistTradeLicense"],
     }),
@@ -105,7 +105,7 @@ export const whitelistApi = createApi({
         body: license,
       }),
       transformResponse: (
-        response: IResponseWrapper<WhitelistTradeLicenseResponseDto>,
+        response: IResponseWrapper<WhitelistTradeLicenseResponseDto>
       ) => response.data,
       invalidatesTags: ["WhitelistTradeLicense"],
     }),

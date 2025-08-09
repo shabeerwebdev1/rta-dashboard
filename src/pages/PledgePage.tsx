@@ -1,149 +1,219 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Table,
-  Input,
   Button,
   Space,
-  Tooltip,
-  Dropdown,
   Card,
-  Tag,
-  Typography,
-  theme,
+  message,
   App,
+  Tooltip,
+  Input,
   DatePicker,
+  Dropdown,
+  Typography,
 } from "antd";
+import type { MenuProps } from "antd";
 import {
   PlusOutlined,
+  DeleteOutlined,
+  EditOutlined,
   DownloadOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  EnvironmentOutlined,
   UnorderedListOutlined,
   AppstoreOutlined,
+  MoreOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type { PledgeRecord } from "../types/pledge";
-import AddPledgeModal from "../components/pledges/AddPledgeModal";
 import { usePage } from "../contexts/PageContext";
-import usePageLoader from "../hooks/usePageLoader";
 import PageLoader from "../components/common/PageLoader";
-import { exportToCsv } from "../utils/csvExporter";
 import PledgeViewDrawer from "../components/pledges/PledgeViewDrawer";
-import dayjs from "dayjs";
+import {
+  useGetPledgesQuery,
+  useAddPledgeMutation,
+  useUpdatePledgeMutation,
+  useDeletePledgeMutation,
+} from "../store/api/pledgeApi";
+import dayjs, { type Dayjs } from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
+import { exportToCsv } from "../utils/csvExporter";
+import type { PledgeResponseDto, PledgeRequestDto } from "../types/api";
+import AddPledgeModal from "../components/pledges/AddPledgeModal";
 
+dayjs.extend(isBetween);
 const { RangePicker } = DatePicker;
-const { useToken } = theme;
-const { Text } = Typography;
-
-const getInitials = (name: string) => {
-  const names = name.split(" ");
-  const initials = names.map((n) => n[0]).join("");
-  return initials.slice(0, 2).toUpperCase();
-};
 
 const PledgePage: React.FC = () => {
   const { setPageTitle } = usePage();
-  const pageLoading = usePageLoader();
-  const { token } = useToken();
-  const { message, modal } = App.useApp();
+  const { modal } = App.useApp();
+  const { Text: AntText } = Typography;
 
-  const [tableData, setTableData] = useState<PledgeRecord[]>([]);
-  const [filteredData, setFilteredData] = useState<PledgeRecord[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<PledgeRecord | null>(
-    null,
-  );
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [selectedRecord, setSelectedRecord] =
+    useState<PledgeResponseDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [dateFilter, setDateFilter] = useState<
+    [Dayjs | null, Dayjs | null] | null
+  >(null);
+
+  const { data: pledges, isLoading, isError, error } = useGetPledgesQuery();
+  const [addPledge] = useAddPledgeMutation();
+  const [updatePledge] = useUpdatePledgeMutation();
+  const [deletePledge, { isLoading: isDeleting }] = useDeletePledgeMutation();
 
   useEffect(() => {
-    setPageTitle("Pledge Management");
-    const data: PledgeRecord[] = [
-      {
-        id: "1",
-        pledgeNumber: "PL0001237",
-        tradeLicenseNumber: "TL123456",
-        tradeLicenseName: "ABC Trading LLC",
-        businessName: "ABC Trading",
-        pledgeType: "Corporate",
-        fromDate: "01-08-2025",
-        toDate: "31-12-2025",
-        status: "Active",
-        createdBy: "Admin User",
-        createdAt: "01-08-2025",
-        documents: [
-          {
-            id: "1",
-            url: "https://example.com/doc1.pdf",
-            type: "license",
-            name: "Trade License",
-          },
-        ],
-        location: { lat: 25.2048, lng: 55.2708 },
-      },
-      {
-        id: "2",
-        pledgeNumber: "PL0001337",
-        tradeLicenseNumber: "TL654321",
-        tradeLicenseName: "XYZ Enterprises",
-        businessName: "XYZ Corp",
-        pledgeType: "Corporate",
-        fromDate: "15-08-2025",
-        toDate: "15-12-2025",
-        status: "Pending",
-        createdBy: "Officer 1",
-        createdAt: "15-08-2025",
-        documents: [
-          {
-            id: "2",
-            url: "https://example.com/doc2.pdf",
-            type: "license",
-            name: "Trade License",
-          },
-        ],
-        location: { lat: 25.2148, lng: 55.2808 },
-      },
-      // Add more sample data as needed
-    ];
-    setTableData(data);
-    setFilteredData(data);
+    setPageTitle("Pledges");
   }, [setPageTitle]);
 
-  const handleGlobalSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toLowerCase();
-    const filtered = tableData.filter((item) =>
-      Object.values(item).some(
-        (field) =>
-          typeof field === "string" && field.toLowerCase().includes(value),
-      ),
-    );
-    setFilteredData(filtered);
+  useEffect(() => {
+    if (isError) {
+      message.error("Failed to load pledges: " + (error as any).toString());
+    }
+  }, [isError, error]);
+
+  const showAddModal = () => {
+    setModalMode("add");
+    setSelectedRecord(null);
+    setIsModalOpen(true);
   };
 
-  const handleDateFilter = (dates: any) => {
-    if (!dates) {
-      setFilteredData(tableData);
-      return;
-    }
-    const [start, end] = dates;
-    const filtered = tableData.filter((item) => {
-      const itemDate = dayjs(item.fromDate, "DD-MM-YYYY");
-      return (
-        itemDate.isAfter(start.startOf("day")) &&
-        itemDate.isBefore(end.endOf("day"))
-      );
-    });
-    setFilteredData(filtered);
+  const showEditModal = (record: PledgeResponseDto) => {
+    setModalMode("edit");
+    setSelectedRecord(record);
+    setIsModalOpen(true);
   };
+
+  const showViewDrawer = (record: PledgeResponseDto) => {
+    setSelectedRecord(record);
+    setIsDrawerOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedRecord(null);
+  };
+
+  const closeDrawer = () => {
+    setIsDrawerOpen(false);
+    setSelectedRecord(null);
+  };
+
+  const handleDelete = (record: PledgeResponseDto) => {
+    modal.confirm({
+      title: "Are you sure?",
+      content: `Do you really want to delete pledge "${record.pledgeNumber}"?`,
+      okText: "Delete",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk: async () => {
+        try {
+          await deletePledge(record.id).unwrap();
+          message.success(
+            `Pledge "${record.pledgeNumber}" deleted successfully`
+          );
+        } catch (err) {
+          message.error(`Failed to delete pledge: ${err}`);
+        }
+      },
+    });
+  };
+
+  const handleFormSubmit = async (values: PledgeRequestDto) => {
+    setIsSubmitting(true);
+    try {
+      const payload: PledgeRequestDto = {
+        ...values,
+        pledgeNumber: values.pledgeNumber || "",
+        documentUploaded: true,
+        documentPath: "",
+      };
+
+      if (modalMode === "add") {
+        await addPledge(payload).unwrap();
+        message.success("Pledge added successfully");
+      } else if (selectedRecord) {
+        await updatePledge({ id: selectedRecord.id, ...payload }).unwrap();
+        message.success("Pledge updated successfully");
+      }
+
+      closeModal();
+    } catch (err: any) {
+      console.error("Submission error:", err);
+      message.error(
+        "Failed to submit form: " + (err?.data?.message || err.toString())
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // const handleFormSubmit = async (values: PledgeRequestDto) => {
+  //   setIsSubmitting(true);
+  //   try {
+  //     let payload: PledgeRequestDto = {
+  //       ...values,
+  //       pledgeNumber: values.pledgeNumber || "",
+  //     };
+
+  //     if (modalMode === "add") {
+  //       payload = {
+  //         ...payload,
+  //         documentUploaded: true,
+  //         documentPath: values.documentPath || "",
+  //       };
+  //     }
+
+  //     if (modalMode === "edit") {
+  //       if (values.documentPath) {
+  //         payload = {
+  //           ...payload,
+  //           documentUploaded: true,
+  //           documentPath: values.documentPath,
+  //         };
+  //       }
+  //     }
+
+  //     if (modalMode === "add") {
+  //       await addPledge(payload).unwrap();
+  //       message.success("Pledge added successfully");
+  //     } else if (selectedRecord) {
+  //       await updatePledge({ id: selectedRecord.id, ...payload }).unwrap();
+  //       message.success("Pledge updated successfully");
+  //     }
+
+  //     closeModal();
+  //   } catch (err: any) {
+  //     console.error("Submission error:", err);
+  //     message.error("Failed to submit form: " + (err?.data?.message || err.toString()));
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  const filteredData = useMemo(() => {
+    return pledges
+      ?.filter((item) => {
+        if (!globalSearch) return true;
+        return Object.values(item).some((value) =>
+          String(value).toLowerCase().includes(globalSearch.toLowerCase())
+        );
+      })
+      .filter((item) => {
+        if (!dateFilter || !dateFilter[0] || !dateFilter[1]) return true;
+        const itemDate = dayjs(item.fromDate);
+        return itemDate.isBetween(dateFilter[0], dateFilter[1], null, "[]");
+      });
+  }, [pledges, globalSearch, dateFilter]);
 
   const handleDownloadCsv = () => {
     const stats = {
-      total: filteredData.length,
-      active: filteredData.filter((i) => i.status === "Active").length,
-      pending: filteredData.filter((i) => i.status === "Pending").length,
-      expired: filteredData.filter((i) => i.status === "Expired").length,
+      total: filteredData?.length || 0,
+      active: filteredData?.filter((i) => i.plateStatus === "Active").length,
+      expired: filteredData?.filter((i) => i.plateStatus === "Expired").length,
+      pending: filteredData?.filter((i) => i.plateStatus === "Pending").length,
     };
 
     modal.confirm({
@@ -151,19 +221,19 @@ const PledgePage: React.FC = () => {
       icon: <DownloadOutlined />,
       content: (
         <div>
-          <p>You're about to download the filtered data as CSV.</p>
+          <p>Confirm export:</p>
           <ul>
             <li>
-              <Text strong>Total Entries:</Text> {stats.total}
+              <AntText strong>Total:</AntText> {stats.total}
             </li>
             <li>
-              <Text strong>Active:</Text> {stats.active}
+              <AntText strong>Active:</AntText> {stats.active}
             </li>
             <li>
-              <Text strong>Pending:</Text> {stats.pending}
+              <AntText strong>Expired:</AntText> {stats.expired}
             </li>
             <li>
-              <Text strong>Expired:</Text> {stats.expired}
+              <AntText strong>Pending:</AntText> {stats.pending}
             </li>
           </ul>
         </div>
@@ -172,8 +242,10 @@ const PledgePage: React.FC = () => {
       cancelText: "Cancel",
       onOk() {
         try {
-          exportToCsv(filteredData, "pledge_export.csv");
-          message.success("CSV downloaded successfully.");
+          if (filteredData) {
+            exportToCsv(filteredData as any, "pledges_export.csv");
+            message.success("CSV downloaded successfully.");
+          }
         } catch (error) {
           console.error("CSV Export Failed:", error);
           message.error("Failed to download CSV.");
@@ -182,126 +254,68 @@ const PledgePage: React.FC = () => {
     });
   };
 
-  const handleViewDetails = (record: PledgeRecord) => {
-    setSelectedRecord(record);
-    setIsDrawerOpen(true);
-  };
-
-  const handleRevoke = (record: PledgeRecord) => {
-    modal.confirm({
-      title: "Confirm Revocation",
-      content: `Are you sure you want to revoke pledge ${record.pledgeType}?`,
-      okText: "Yes, Revoke",
-      cancelText: "Cancel",
-      onOk: () => {
-        message.success("Pledge revoked successfully.");
-      },
-    });
-  };
-
-  const columns: ColumnsType<PledgeRecord> = useMemo(
+  const columns: ColumnsType<PledgeResponseDto> = useMemo(
     () => [
+      {
+        title: "Pledge Number",
+        dataIndex: "pledgeNumber",
+        key: "pledgeNumber",
+      },
+      {
+        title: "Trade License No",
+        dataIndex: "tradeLicenseNumber",
+        key: "tradeLicenseNumber",
+      },
       {
         title: "Pledge Type",
         dataIndex: "pledgeType",
-        key: "pledgeNumber",
-        width: 150,
-        ellipsis: true,
-        sorter: (a, b) => a.pledgeType.localeCompare(b.pledgeType),
+        key: "pledgeType",
       },
-      {
-        title: "TL Number",
-        dataIndex: "tradeLicenseNumber",
-        key: "tradeLicenseNumber",
-        width: 120,
-        ellipsis: true,
-        sorter: (a, b) =>
-          a.tradeLicenseNumber.localeCompare(b.tradeLicenseNumber),
-      },
-
-      {
-        title: "From Date",
-        dataIndex: "fromDate",
-        key: "fromDate",
-        width: 120,
-        sorter: (a, b) => dayjs(a.fromDate).diff(dayjs(b.fromDate)),
-      },
-
       {
         title: "",
         key: "action",
         fixed: "right",
-        width: 120,
+        width: 100,
         align: "center",
-        render: (_, record) => (
-          <Space size="small">
-            <Tooltip title="View on map">
-              <Button
-                icon={<EnvironmentOutlined />}
-                type="text"
-                onClick={() => handleViewDetails(record)}
-              />
-            </Tooltip>
+        render: (_, record) => {
+          const menuItems: MenuProps["items"] = [
+            {
+              key: "view",
+              label: "View",
+              icon: <EyeOutlined />,
+              onClick: () => showViewDrawer(record),
+            },
+            {
+              key: "edit",
+              label: "Edit",
+              icon: <EditOutlined />,
+              onClick: () => showEditModal(record),
+            },
+            {
+              key: "delete",
+              label: "Delete",
+              icon: <DeleteOutlined />,
+              danger: true,
+              onClick: () => handleDelete(record),
+            },
+          ];
+
+          return (
             <Dropdown
-              menu={{
-                items: [
-                  {
-                    key: "view",
-                    icon: <EyeOutlined />,
-                    label: "View Details",
-                    onClick: () => handleViewDetails(record),
-                  },
-                  {
-                    key: "revoke",
-                    icon: <EyeOutlined />,
-                    label: "Revoke Pledge",
-                    onClick: () => handleRevoke(record),
-                    disabled: record.status !== "Active",
-                  },
-                ],
-              }}
-              placement="bottomLeft"
+              menu={{ items: menuItems }}
               trigger={["click"]}
+              disabled={isDeleting}
             >
               <Button type="text" icon={<MoreOutlined />} />
             </Dropdown>
-          </Space>
-        ),
+          );
+        },
       },
     ],
-    [tableData, token],
+    [isDeleting]
   );
 
-  const handleFormSubmit = (values: any) => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      const newRecord: PledgeRecord = {
-        id: Date.now().toString(),
-        pledgeNumber: `PL000${1000 + tableData.length}`,
-        tradeLicenseNumber: values.tradeLicenseNumber,
-        tradeLicenseName: values.tradeLicenseName,
-        businessName: values.businessName,
-        pledgeType: values.pledgeType,
-        fromDate: new Date().toLocaleDateString(),
-        toDate: values.toDate,
-        status: "Pending",
-        createdBy: "Current User",
-        createdAt: new Date().toLocaleDateString(),
-        documents: values.documents || [],
-        location: values.location || {
-          lat: 25.2048 + (Math.random() - 0.5) * 0.1,
-          lng: 55.2708 + (Math.random() - 0.5) * 0.1,
-        },
-      };
-      setTableData([newRecord, ...tableData]);
-      setFilteredData([newRecord, ...tableData]);
-      setIsSubmitting(false);
-      setIsModalOpen(false);
-      message.success("Pledge added successfully.");
-    }, 1500);
-  };
-
-  if (pageLoading) return <PageLoader />;
+  if (isLoading) return <PageLoader />;
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -315,12 +329,13 @@ const PledgePage: React.FC = () => {
             <Input.Search
               placeholder="Search pledges..."
               style={{ minWidth: "300px" }}
-              onChange={handleGlobalSearch}
+              onSearch={(value) => setGlobalSearch(value)}
+              onChange={(e) => setGlobalSearch(e.target.value)}
               allowClear
             />
-            <RangePicker onChange={handleDateFilter} />
+            <RangePicker onChange={(dates) => setDateFilter(dates as any)} />
             <Tooltip
-              title={tableSize === "middle" ? "Compact view" : "Standard view"}
+              title={tableSize === "middle" ? "Compact View" : "Standard View"}
             >
               <Button
                 icon={
@@ -340,9 +355,12 @@ const PledgePage: React.FC = () => {
             <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv}>
               Download CSV
             </Button>
-            <Button type="primary" onClick={() => setIsModalOpen(true)}>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={showAddModal}
+            >
               Add New
-              <PlusOutlined />
             </Button>
           </Space>
         </Space>
@@ -350,33 +368,31 @@ const PledgePage: React.FC = () => {
 
       <Card variant="borderless" bodyStyle={{ padding: 0 }}>
         <Table
-          rowKey={"id"}
           rowSelection={{ type: "checkbox" }}
+          rowKey="id"
           columns={columns}
           dataSource={filteredData}
           size={tableSize}
-          sticky={{ offsetHeader: 64 }}
-          scroll={{ x: 1200 }}
+          scroll={{ x: 800 }}
           pagination={{
             showTotal: (total, range) =>
               `${range[0]}-${range[1]} of ${total} items`,
-            defaultPageSize: 10,
-            showSizeChanger: true,
-            pageSizeOptions: ["10", "20", "50"],
           }}
         />
       </Card>
 
       <AddPledgeModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        open={isModalOpen}
+        onClose={closeModal}
         onSubmit={handleFormSubmit}
         isSubmitting={isSubmitting}
+        initialValues={selectedRecord ?? undefined}
+        mode={modalMode}
       />
       <PledgeViewDrawer
         open={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
         record={selectedRecord}
+        onClose={closeDrawer}
       />
     </Space>
   );

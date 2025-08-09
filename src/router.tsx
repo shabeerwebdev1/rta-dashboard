@@ -7,6 +7,7 @@ import InspectionObstaclePage from "./pages/InspectionObstaclePage";
 import PledgePage from "./pages/PledgePage";
 import ParkonicPage from "./pages/ParkonicPage";
 import FinesManagementPage from "./pages/FinesManagementPage";
+import PermitsPage from "./pages/PermitsPage";
 
 const AppRoutes = () => {
   return (
@@ -26,6 +27,8 @@ const AppRoutes = () => {
         <Route path="pledges" element={<PledgePage />} />
         <Route path="parking" element={<ParkonicPage />} />
         <Route path="fines" element={<FinesManagementPage />} />
+        <Route path="permits" element={<PermitsPage/>} />
+
         {/* Add other routes here */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>

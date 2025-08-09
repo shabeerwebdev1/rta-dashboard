@@ -1,7 +1,7 @@
 {
   "sidebar": {
     "dashboard": "Dashboard",
-    "parking": "Parking Management",
+    "parking": "Parkonic Management",
     "fleet": "Fleet Management",
     "whitelist": "Whitelist Management",
     "permits": "Permits",
@@ -74,6 +74,8 @@
     "dateRange": "Date Range",
     "plateStatus": "Status",
     "exemptionReason_EN": "Exemption Reason (EN)",
+    "exemptionReason": "Exemption Reason",
+
     "exemptionReason_AR": "Exemption Reason (AR)"
   },
   "status": {

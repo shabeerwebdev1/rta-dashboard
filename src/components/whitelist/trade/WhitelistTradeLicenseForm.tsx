@@ -6,7 +6,6 @@ import {
   Select,
   Row,
   Col,
-  InputNumber,
   type FormInstance,
 } from "antd";
 import { useTranslation } from "react-i18next";
@@ -21,6 +20,13 @@ interface WhitelistTradeLicenseFormProps {
   onSubmit: (values: WhitelistTradeLicenseRequestDto) => void;
   initialValues: WhitelistTradeLicenseResponseDto | null;
 }
+
+const EXEMPTION_REASONS = [
+  { code: 1, label: "Government Entity" },
+  { code: 2, label: "Diplomatic Entity" },
+  { code: 3, label: "Emergency Services" },
+  { code: 4, label: "Special Economic Zone" },
+];
 
 const WhitelistTradeLicenseForm: React.FC<WhitelistTradeLicenseFormProps> = ({
   form,
@@ -37,6 +43,8 @@ const WhitelistTradeLicenseForm: React.FC<WhitelistTradeLicenseFormProps> = ({
           initialValues.fromDate ? dayjs(initialValues.fromDate) : null,
           initialValues.toDate ? dayjs(initialValues.toDate) : null,
         ],
+        // Map existing exemption reason to the new single field
+        exemptionReasonId: initialValues.exemptionReason_EN,
       });
     }
   }, [initialValues, form]);
@@ -46,6 +54,8 @@ const WhitelistTradeLicenseForm: React.FC<WhitelistTradeLicenseFormProps> = ({
       ...values,
       fromDate: values.dateRange[0].toISOString(),
       toDate: values.dateRange[1].toISOString(),
+      // Map the single exemption reason to both fields for backend compatibility
+      exemptionReason_ID: values.exemptionReason_ID,
     };
     delete formattedValues.dateRange;
     onSubmit(formattedValues);
@@ -110,32 +120,30 @@ const WhitelistTradeLicenseForm: React.FC<WhitelistTradeLicenseFormProps> = ({
           </Form.Item>
         </Col>
 
-        <Col xs={24} sm={12}>
+        <Col xs={24}>
           <Form.Item
-            name="exemptionReason_EN"
-            label={t("form.exemptionReason_EN")}
+            name="exemptionReason_ID"
+            label={t("form.exemptionReason")}
             rules={[{ required: true }]}
           >
-            <InputNumber
-              size="large"
-              style={{ width: "100%" }}
-              placeholder="Enter reason code"
-            />
+            <Select size="large" placeholder="Select exemption reason">
+              {EXEMPTION_REASONS.map((reason) => (
+                <Select.Option key={reason.code} value={reason.code}>
+                  {reason.label}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
         </Col>
-        <Col xs={24} sm={12}>
-          <Form.Item
-            name="exemptionReason_AR"
-            label={t("form.exemptionReason_AR")}
-            rules={[{ required: true }]}
-          >
-            <InputNumber
-              size="large"
-              style={{ width: "100%" }}
-              placeholder="أدخل رمز السبب"
-            />
-          </Form.Item>
-        </Col>
+
+        {/* Hidden fields to maintain backend contract */}
+        <Form.Item name="exemptionReason_EN" noStyle hidden>
+          <Input />
+        </Form.Item>
+        <Form.Item name="exemptionReason_AR" noStyle hidden>
+          <Input />
+        </Form.Item>
+
         <Col xs={24}>
           <Form.Item
             name="plateStatus"

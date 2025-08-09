@@ -1,18 +1,10 @@
 import React from "react";
 import { Form, Input, Select, Button, Row, Col, Upload } from "antd";
 
-export interface InspectionFormValues {
-  zone: string;
-  area: string;
-  obstacleSource: string;
-  paymentDevice: string;
-  document?: File[];
-  comments?: string;
-  priority?: boolean;
-}
+import type { InspectionObstacleRequestDto } from "../../types/api"; // Adjust path as needed
 
 interface InspectionFormProps {
-  onSubmit: (values: InspectionFormValues) => void;
+  onSubmit: (values: InspectionObstacleRequestDto) => void;
   onCancel: () => void;
   isSubmitting: boolean;
 }
@@ -29,7 +21,8 @@ const InspectionForm: React.FC<InspectionFormProps> = ({
   };
 
   const handleFinish = (values: any) => {
-    onSubmit(values);
+    // You may need to transform fileList -> URLs here if needed
+    onSubmit(values as InspectionObstacleRequestDto);
   };
 
   return (
@@ -37,12 +30,22 @@ const InspectionForm: React.FC<InspectionFormProps> = ({
       form={form}
       layout="vertical"
       onFinish={handleFinish}
-      initialValues={{ priority: false }}
+      initialValues={{}}
     >
       <Row gutter={24}>
         <Col span={12}>
           <Form.Item
-            name="zone"
+            name="ObstacleNumber"
+            label="Obstacle Number"
+            rules={[{ required: true, message: "Obstacle number is required" }]}
+          >
+            <Input placeholder="Enter obstacle number" size="large" />
+          </Form.Item>
+        </Col>
+
+        <Col span={12}>
+          <Form.Item
+            name="Zone"
             label="Zone"
             rules={[{ required: true, message: "Zone is required" }]}
           >
@@ -57,7 +60,7 @@ const InspectionForm: React.FC<InspectionFormProps> = ({
 
         <Col span={12}>
           <Form.Item
-            name="area"
+            name="Area"
             label="Area"
             rules={[{ required: true, message: "Area is required" }]}
           >
@@ -71,18 +74,14 @@ const InspectionForm: React.FC<InspectionFormProps> = ({
 
         <Col span={12}>
           <Form.Item
-            name="obstacleSource"
+            name="SourceOfObstacle"
             label="Obstacle Source"
-            rules={[{ required: true, message: "Obstacle source is required" }]}
+            rules={[{ required: true, message: "Source is required" }]}
           >
             <Select placeholder="Select obstacle source" size="large">
               <Select.Option value="Construction">Construction</Select.Option>
-              <Select.Option value="Parked Vehicle">
-                Parked Vehicle
-              </Select.Option>
-              <Select.Option value="Natural Obstacle">
-                Natural Obstacle
-              </Select.Option>
+              <Select.Option value="Parked Vehicle">Parked Vehicle</Select.Option>
+              <Select.Option value="Natural Obstacle">Natural Obstacle</Select.Option>
               <Select.Option value="Road Work">Road Work</Select.Option>
               <Select.Option value="Utility Work">Utility Work</Select.Option>
               <Select.Option value="Other">Other</Select.Option>
@@ -92,8 +91,8 @@ const InspectionForm: React.FC<InspectionFormProps> = ({
 
         <Col span={12}>
           <Form.Item
-            name="paymentDevice"
-            label="Payment Device"
+            name="ClosestPaymentDevice"
+            label="Closest Payment Device"
             rules={[{ required: true, message: "Payment device is required" }]}
           >
             <Select placeholder="Select payment device" size="large">
@@ -107,26 +106,36 @@ const InspectionForm: React.FC<InspectionFormProps> = ({
           </Form.Item>
         </Col>
 
-        <Col xs={24} sm={24} md={24}>
+        <Col span={12}>
           <Form.Item
-            name="document"
-            label="Obstacle Image"
+            name="ReportedBy"
+            label="Reported By"
+            rules={[{ required: true, message: "Reported By is required" }]}
+          >
+            <Input placeholder="Enter your name" size="large" />
+          </Form.Item>
+        </Col>
+
+        <Col span={24}>
+          <Form.Item
+            name="Photos"
+            label="Obstacle Image(s)"
             valuePropName="fileList"
             getValueFromEvent={normFile}
           >
             <Upload
-              name="logo"
+              name="photos"
               listType="picture-card"
-              multiple={true}
-              beforeUpload={() => false}
+              multiple
+              beforeUpload={() => false} // prevent auto-upload
             >
-              upload(PDF,PNG and JPG)
+              Upload (PDF, PNG, JPG)
             </Upload>
           </Form.Item>
         </Col>
 
         <Col span={24}>
-          <Form.Item name="comments" label="Comments">
+          <Form.Item name="Comments" label="Comments">
             <Input.TextArea
               placeholder="Enter any comments"
               rows={3}
@@ -139,7 +148,7 @@ const InspectionForm: React.FC<InspectionFormProps> = ({
       <Row justify="end" gutter={12}>
         <Col>
           <Button htmlType="reset" onClick={onCancel}>
-            Cancel{" "}
+            Cancel
           </Button>
         </Col>
         <Col>

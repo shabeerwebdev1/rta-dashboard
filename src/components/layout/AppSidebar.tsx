@@ -12,7 +12,6 @@ import {
   IdcardOutlined,
   PushpinOutlined,
   DashboardOutlined,
-  SwapOutlined,
   AuditOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
@@ -67,21 +66,6 @@ const AppSidebar: React.FC = () => {
       label: <Link to="/parking">{t("sidebar.parking")}</Link>,
     },
     {
-      key: "/fleet",
-      icon: <CarOutlined />,
-      label: <Link to="/fleet">{t("sidebar.fleet")}</Link>,
-    },
-    {
-      key: "/permits",
-      icon: <IdcardOutlined />,
-      label: <Link to="/permits">{t("sidebar.permits")}</Link>,
-    },
-    {
-      key: "/hrms",
-      icon: <TeamOutlined />,
-      label: <Link to="/hrms">{t("sidebar.hrms")}</Link>,
-    },
-    {
       key: "/inspectionobstacle",
       icon: <SearchOutlined />,
       label: <Link to="/inspectionobstacle">{t("sidebar.inspections")}</Link>,
@@ -95,6 +79,16 @@ const AppSidebar: React.FC = () => {
       key: "/fines",
       icon: <DollarOutlined />,
       label: <Link to="/fines">{t("sidebar.fines")}</Link>,
+    },
+    {
+      key: "/permits",
+      icon: <IdcardOutlined />,
+      label: <Link to="/permits">{t("sidebar.permits")}</Link>,
+    },
+    {
+      key: "/hrms",
+      icon: <TeamOutlined />,
+      label: <Link to="/hrms">{t("sidebar.hrms")}</Link>,
     },
     {
       key: "/dispute",
@@ -118,36 +112,6 @@ const AppSidebar: React.FC = () => {
     },
   ];
 
-  // Recursively find the selected key for active menu item
-  const findSelectedKey = (
-    items: MenuItem[],
-    path: string,
-  ): string | undefined => {
-    for (const item of items) {
-      if (item.children) {
-        const childKey = findSelectedKey(item.children, path);
-        if (childKey) return childKey;
-      } else if (path.startsWith(item.key)) {
-        return item.key;
-      }
-    }
-    return undefined;
-  };
-
-  // Find the parent open key if a child is active
-  const getOpenKey = (items: MenuItem[], path: string): string | undefined => {
-    for (const item of items) {
-      if (item.children) {
-        for (const child of item.children) {
-          if (path.startsWith(child.key)) {
-            return item.key;
-          }
-        }
-      }
-    }
-    return undefined;
-  };
-
   const selectedKey =
     menuItems
       .flatMap((item) => (item && "children" in item ? item.children : item))
@@ -163,8 +127,8 @@ const AppSidebar: React.FC = () => {
         item &&
         "children" in item &&
         item.children?.some((child) =>
-          location.pathname.startsWith(child?.key as string),
-        ),
+          location.pathname.startsWith(child?.key as string)
+        )
     )
     .map((item) => item?.key as string);
 
@@ -189,17 +153,21 @@ const AppSidebar: React.FC = () => {
           alignItems: "center",
           justifyContent: "center",
           borderBottom: `1px solid ${token.colorBorderSecondary}`,
+          padding: collapsed ? "8px" : "2px",
+          backgroundColor: "white",
         }}
       >
         <img
-          src="https://upload.wikimedia.org/wikipedia/en/d/dd/RTA_Dubai_logo.png"
+          src={
+            collapsed
+              ? "https://images.seeklogo.com/logo-png/4/2/dubai-roads-transport-authority-logo-png_seeklogo-44110.png"
+              : "https://upload.wikimedia.org/wikipedia/en/d/dd/RTA_Dubai_logo.png"
+          }
           alt="RTA Logo"
           style={{
-            width: "100%",
-            transition: "all 0.2s",
-            backgroundColor: "white",
-            padding: "2px",
-            objectFit: "cover",
+            width: collapsed ? "80px" : "100%",
+            height: "auto",
+            objectFit: "contain",
           }}
         />
       </div>

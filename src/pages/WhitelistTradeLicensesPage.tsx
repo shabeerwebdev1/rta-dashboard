@@ -74,7 +74,7 @@ const WhitelistTradeLicensesPage: React.FC = () => {
   useEffect(() => {
     if (isError) {
       message.error(
-        "Failed to load trade licenses: " + (error as any).toString(),
+        "Failed to load trade licenses: " + (error as any).toString()
       );
     }
   }, [isError, error]);
@@ -117,7 +117,7 @@ const WhitelistTradeLicensesPage: React.FC = () => {
         try {
           await deleteLicense(record.id).unwrap();
           message.success(
-            `License "${record.tradeLicenseNumber}" ${t("messages.deletedSuccess")}`,
+            `License "${record.tradeLicenseNumber}" ${t("messages.deletedSuccess")}`
           );
         } catch (err) {
           message.error(`Failed to delete license: ${err}`);
@@ -131,7 +131,7 @@ const WhitelistTradeLicensesPage: React.FC = () => {
       ?.filter((item) => {
         if (!globalSearch) return true;
         return Object.values(item).some((value) =>
-          String(value).toLowerCase().includes(globalSearch.toLowerCase()),
+          String(value).toLowerCase().includes(globalSearch.toLowerCase())
         );
       })
       .filter((item) => {
@@ -179,7 +179,7 @@ const WhitelistTradeLicensesPage: React.FC = () => {
           if (filteredData) {
             exportToCsv(
               filteredData as any,
-              "whitelist_tradelicense_export.csv",
+              "whitelist_tradelicense_export.csv"
             );
             message.success(t("messages.csvDownloaded"));
           }
@@ -267,7 +267,7 @@ const WhitelistTradeLicensesPage: React.FC = () => {
         },
       },
     ],
-    [t, isDeleting],
+    [t, isDeleting]
   );
 
   if (isLoading) return <PageLoader />;
@@ -321,8 +321,9 @@ const WhitelistTradeLicensesPage: React.FC = () => {
         </Space>
       </Card>
 
-      <Card variant="borderless" bodyStyle={{ padding: "10px 10px 0px 10px" }}>
+      <Card variant="borderless" bodyStyle={{ padding: 0 }}>
         <Table
+          rowSelection={{ type: "checkbox" }}
           rowKey="id"
           columns={columns}
           dataSource={filteredData}

@@ -1,26 +1,18 @@
-import React from "react";
-import {
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Upload,
-  Button,
-  Row,
-  Col,
-} from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import React, { useEffect } from "react";
+import { Form, Input, Select, Upload, Button, Row, Col } from "antd";
+
+import type { PledgeRequestDto } from "../../types/api";
 
 const { Option } = Select;
 
-interface PledgeFormProps {
-  onSubmit: (values: any) => void;
+interface PledgeRequestDto {
+  onSubmit: (values: PledgeRequestDto) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
-  initialValues?: any;
+  initialValues?: PledgeRequestDto;
 }
 
-const PledgeForm: React.FC<PledgeFormProps> = ({
+const PledgeForm: React.FC<PledgeRequestDto> = ({
   onSubmit,
   onCancel,
   isSubmitting,
@@ -29,19 +21,28 @@ const PledgeForm: React.FC<PledgeFormProps> = ({
   const [form] = Form.useForm();
 
   const normFile = (e: any) => {
-    return Array.isArray(e) ? e : e?.fileList;
+    if (Array.isArray(e)) {
+      return e;
+    }
+    return e?.fileList ? e.fileList : [];
   };
 
-  const onFinish = (values: any) => {
-    onSubmit(values);
+  const onFinish = async (values: any) => {
+    await onSubmit(values);
   };
+
+  useEffect(() => {
+    if (initialValues) {
+      form.setFieldsValue(initialValues);
+    }
+  }, [initialValues, form]);
 
   return (
     <Form
       form={form}
       layout="vertical"
-      initialValues={initialValues}
       onFinish={onFinish}
+      initialValues={initialValues}
     >
       <Row gutter={24}>
         <Col span={12}>
@@ -61,35 +62,23 @@ const PledgeForm: React.FC<PledgeFormProps> = ({
             rules={[{ required: true, message: "Please select pledge type" }]}
           >
             <Select size="large" placeholder="Select Type">
-              <Option value="type1">Type 1</Option>
-              <Option value="type2">Type 2</Option>
+              <Option value="Corporate">Corporate</Option>
+              <Option value="Individual">Individual</Option>
             </Select>
           </Form.Item>
         </Col>
 
         <Col span={12}>
           <Form.Item
-            name="fromDate"
-            label="From Date"
-            rules={[{ required: true, message: "Please select from date" }]}
+            name="pledgeNumber"
+            label="Pledge Number"
+            rules={[{ required: true, message: "Please enter pledge number" }]}
           >
-            <DatePicker
-              size="large"
-              style={{ width: "100%" }}
-              format="DD/MM/YYYY"
-            />
+            <Input size="large" placeholder="Enter Pledge Number" />
           </Form.Item>
         </Col>
 
-        <Col span={12}>
-          <Form.Item
-            name="tradeLicenseName"
-            label="Trade License Name"
-            rules={[{ required: true, message: "Please enter TL name" }]}
-          >
-            <Input size="large" placeholder="Enter TL Name" />
-          </Form.Item>
-        </Col>
+       
 
         <Col span={12}>
           <Form.Item
@@ -101,7 +90,7 @@ const PledgeForm: React.FC<PledgeFormProps> = ({
           </Form.Item>
         </Col>
 
-        <Col xs={24} sm={24} md={24}>
+        <Col span={24}>
           <Form.Item
             name="files"
             label="Upload Files"
@@ -129,22 +118,13 @@ const PledgeForm: React.FC<PledgeFormProps> = ({
 
       <Row justify="end" gutter={12}>
         <Col>
-          <Button size="large" onClick={onCancel}>
-            Cancel
-          </Button>
+          <Button onClick={onCancel}>Cancel</Button>
         </Col>
         <Col>
-          <Button size="large" onClick={() => form.resetFields()}>
-            Reset
-          </Button>
+          <Button onClick={() => form.resetFields()}>Reset</Button>
         </Col>
         <Col>
-          <Button
-            type="primary"
-            htmlType="submit"
-            size="large"
-            loading={isSubmitting}
-          >
+          <Button type="primary" htmlType="submit" loading={isSubmitting}>
             Submit
           </Button>
         </Col>

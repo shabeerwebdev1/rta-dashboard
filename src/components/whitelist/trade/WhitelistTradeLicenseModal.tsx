@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, App, Button, Form, Space } from "antd";
+import { Modal, App, Button, Form } from "antd";
 import { useTranslation } from "react-i18next";
 import WhitelistTradeLicenseForm from "./WhitelistTradeLicenseForm";
 import {
@@ -47,7 +47,7 @@ const WhitelistTradeLicenseModal: React.FC<WhitelistTradeLicenseModalProps> = ({
       onClose();
     } catch (err: any) {
       message.error(
-        `Failed to ${mode} license: ${err?.data?.en_Msg || "Unknown error"}`,
+        `Failed to ${mode} license: ${err?.data?.en_Msg || "Unknown error"}`
       );
     }
   };

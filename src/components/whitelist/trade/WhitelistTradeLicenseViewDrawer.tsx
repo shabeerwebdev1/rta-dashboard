@@ -69,11 +69,8 @@ const WhitelistTradeLicenseViewDrawer: React.FC<
             "-"
           )}
         </Descriptions.Item>
-        <Descriptions.Item label={t("form.exemptionReason_EN")}>
+        <Descriptions.Item label={t("form.exemptionReason")}>
           {record.exemptionReason_EN || "-"}
-        </Descriptions.Item>
-        <Descriptions.Item label={t("form.exemptionReason_AR")}>
-          {record.exemptionReason_AR || "-"}
         </Descriptions.Item>
       </Descriptions>
     </Drawer>

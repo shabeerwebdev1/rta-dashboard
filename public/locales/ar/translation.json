@@ -1,7 +1,7 @@
 {
   "sidebar": {
     "dashboard": "لوحة التحكم",
-    "parking": "إدارة المواقف",
+    "parking": "إدارة باركونيك",
     "fleet": "إدارة الأسطول",
     "whitelist": "إدارة القائمة البيضاء",
     "permits": "التصاريح",
@@ -75,6 +75,7 @@
     "endDate": "تاريخ الانتهاء",
     "dateRange": "الفترة الزمنية",
     "plateStatus": "الحالة",
+    "exemptionReason": "سبب الاستثناء",
     "exemptionReason_EN": "سبب الاستثناء (إنجليزي)",
     "exemptionReason_AR": "سبب الاستثناء (عربي)"
   },
