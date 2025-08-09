@@ -94,7 +94,8 @@
     "addNew": "Add New",
     "searchPlaceholder": "Search...",
     "location": "Location",
-    "noData": "No Data"
+    "noData": "No Data",
+    "selectFile" : "Select File"
   },
   "entity": {
     "plate": "Plate",

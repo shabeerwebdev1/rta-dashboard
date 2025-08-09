@@ -28,6 +28,7 @@ const statusColors = {
   expired: "red",
   pending: "orange",
   removed: "volcano",
+  reported: "green",
 };
 
 const DynamicTable: React.FC<DynamicTableProps> = ({
@@ -58,7 +59,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           ? a[col.key].localeCompare(b[col.key])
           : a[col.key] - b[col.key],
       render: (text: any) => {
-        const statusKey = text?.toLowerCase();
+        const statusKey = typeof text === "string" && text?.toLowerCase();
         const tagColor =
           statusColors[statusKey as keyof typeof statusColors] || "default";
         if (!text) return " - ";
@@ -69,10 +70,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
               : text;
           case "tag":
             return (
-              <Tag color={tagColor}>{t(`status.${text?.toLowerCase()}`)}</Tag>
+              <Tag color={tagColor}>{t(`status.${statusKey}`)}</Tag>
             );
           case "badge":
-            return <Badge color={text?.toLowerCase()} text={text} />;
+            return <Badge color={statusKey} text={text} />;
           default:
             return text;
         }

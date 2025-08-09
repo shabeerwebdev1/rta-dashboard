@@ -6,7 +6,7 @@ import { dynamicApi } from "../../services/rtkApiFactory";
 import { useUploadFilesMutation } from "../../services/fileApi";
 import { useAppNotification } from "../../utils/notificationManager";
 import DynamicForm from "./DynamicForm";
-import type { PageConfig } from "../../types/config";
+import type { PageConfig, FormField } from "../../types/config";
 
 const getMutationHooks = (config: PageConfig) => {
   const singular = config.name.singular.replace(/\s/g, "");
@@ -35,34 +35,55 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
   const notification = useAppNotification();
   const config = pageConfigs[pageKey];
 
-  const [uploadedFileNames, setUploadedFileNames] = useState<
-    Record<string, string>
-  >({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState("");
 
   const { useAddHook, useUpdateHook } = getMutationHooks(config);
-  const [addItem, { isLoading: isAdding }] = useAddHook();
-  const [updateItem, { isLoading: isUpdating }] = useUpdateHook();
-  const [uploadFiles, { isLoading: isUploading }] = useUploadFilesMutation();
-
-  const isSubmitting = isAdding || isUpdating;
+  const [addItem] = useAddHook();
+  const [updateItem] = useUpdateHook();
+  const [uploadFiles] = useUploadFilesMutation();
 
   const handleFinish = async (values: any) => {
+    setIsSubmitting(true);
     try {
-      const finalPayload = { ...values };
+      let finalPayload: any = { ...values };
+      const formFields = config.formConfig.fields;
+      const fileFields = formFields.filter((f) => f.type === "file");
 
-      for (const [fieldName, fileString] of Object.entries(uploadedFileNames)) {
-        const payloadKey = fieldName;
-        finalPayload[payloadKey] = fileString;
+      // --- File Upload Step ---
+      if (fileFields.length > 0) {
+        setSubmissionStatus(t("status.uploading"));
+        for (const field of fileFields) {
+          const fileList = values[field.name] || [];
+          const newFiles = fileList.filter((f: any) => f.originFileObj);
+          const existingFiles = fileList
+            .filter((f: any) => !f.originFileObj)
+            .map((f: any) => f.name);
 
-        if (finalPayload.hasOwnProperty("documentUploaded")) {
-          finalPayload.documentUploaded = !!fileString;
+          let uploadedFileNames: string[] = [];
+          if (newFiles.length > 0) {
+            const uploadFormData = new FormData();
+            uploadFormData.append("Category", field.fileCategory || "Default");
+            newFiles.forEach((f: any) =>
+              uploadFormData.append("Files", f.originFileObj),
+            );
+            const result = await uploadFiles(uploadFormData).unwrap();
+            if (Array.isArray(result)) {
+              uploadedFileNames = result
+                .filter((r) => r.success)
+                .map((r) => r.savedAs);
+            } else if (result.fileName) {
+              uploadedFileNames = [result.fileName];
+            }
+          }
+          // Replace file list object with a string of filenames for the payload
+          finalPayload[field.name] =
+            [...existingFiles, ...uploadedFileNames].join(";") || null;
         }
       }
 
-      config.formConfig.fields.forEach((field) => {
-        // if (field.type === "file") {
-        //   delete finalPayload[field.name];
-        // }
+      // --- Payload Preparation Step ---
+      formFields.forEach((field) => {
         if (
           field.type === "dateRange" &&
           field.fieldMapping &&
@@ -76,19 +97,42 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
         }
       });
 
+      const isMultipart =
+        (mode === "add" &&
+          config.api.postContentType === "multipart/form-data") ||
+        (mode === "edit" &&
+          config.api.putContentType === "multipart/form-data");
+      let submissionPayload: any;
+
+      if (isMultipart) {
+        const formData = new FormData();
+        for (const key in finalPayload) {
+          if (finalPayload[key] !== undefined && finalPayload[key] !== null) {
+            formData.append(key, finalPayload[key]);
+          }
+        }
+        submissionPayload = formData;
+      } else {
+        submissionPayload = finalPayload;
+      }
+
+      // --- Submission Step ---
+      setSubmissionStatus(t("status.submitting"));
       let response;
       if (mode === "add") {
-        response = await addItem(finalPayload).unwrap();
+        response = await addItem(submissionPayload).unwrap();
       } else {
         response = await updateItem({
           id: initialData.id,
-          ...finalPayload,
+          ...submissionPayload,
         }).unwrap();
       }
 
       notification.success(
         response,
-        t("messages.updateSuccess", { entity: t(config.name.singular) }),
+        t(mode === "add" ? "messages.addSuccess" : "messages.updateSuccess", {
+          entity: t(config.name.singular),
+        }),
       );
       onClose();
     } catch (err: any) {
@@ -96,11 +140,14 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
       notification.error(err, "Operation failed");
       if (err.data?.validationErrors) {
         const errorFields = err.data.validationErrors.map((ve: any) => ({
-          name: ve.fieldName.charAt(0).toLowerCase() + ve.fieldName.slice(1),
-          errors: [i18n.language === "ar" ? ve.arMessage : ve.enMessage],
+          name: ve.fieldName,
+          errors: [`${ve.enMessage} / ${ve.arMessage}`],
         }));
         form.setFields(errorFields);
       }
+    } finally {
+      setIsSubmitting(false);
+      setSubmissionStatus("");
     }
   };
 
@@ -120,20 +167,24 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
       destroyOnClose
       className="dynamic-modal"
       footer={[
-        <Button key="cancel" onClick={onClose}>
+        <Button key="cancel" onClick={handleClose} disabled={isSubmitting}>
           {t("common.cancel")}
         </Button>,
-        <Button key="reset" onClick={() => form.resetFields()}>
+        <Button
+          key="reset"
+          onClick={() => form.resetFields()}
+          disabled={isSubmitting}
+        >
           {t("common.reset")}
         </Button>,
         <Button
           key="submit"
           type="primary"
-          loading={isSubmitting || isUploading}
+          loading={isSubmitting}
           onClick={() => form.submit()}
         >
-          {isUploading
-            ? "Uploading..."
+          {isSubmitting
+            ? submissionStatus
             : mode === "add"
               ? t("common.submit")
               : t("common.update")}
@@ -150,8 +201,6 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
           fields={config.formConfig.fields}
           form={form}
           initialData={initialData}
-          uploadFilesMutation={[uploadFiles, { isLoading: isUploading }]}
-          setUploadedFileNames={setUploadedFileNames}
         />
       </Form>
     </Modal>

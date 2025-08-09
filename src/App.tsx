@@ -17,7 +17,7 @@ const AppContent = () => {
   const activeThemeConfig = availableThemes[themeName];
 
   return (
-    <ConfigProvider direction={isRtl ? "rtl" : "ltr"} theme={activeThemeConfig}>
+    <ConfigProvider   componentSize="large" direction={isRtl ? "rtl" : "ltr"} theme={activeThemeConfig}>
       <App>
         <AppRoutes />
       </App>

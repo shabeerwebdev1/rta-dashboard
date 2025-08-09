@@ -10,6 +10,7 @@ export const inspectionObstacleConfig: PageConfig = {
   api: {
     get: "/api/InspectionObstacle",
     post: "/api/InspectionObstacle",
+    postContentType: "multipart/form-data",
     put: "/api/InspectionObstacle/markremoved/:id",
     delete: "",
   },
@@ -89,6 +90,7 @@ export const inspectionObstacleConfig: PageConfig = {
         required: true,
         span: 24,
         fileCategory: "Obstacles",
+        responseKey: "photoPath",
       },
       {
         name: "Comments",

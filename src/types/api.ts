@@ -23,8 +23,7 @@ export interface WhitelistPlateRequestDto {
   fromDate: string;
   toDate: string;
   plateStatus: string;
-  exemptionReason_EN: number;
-  exemptionReason_AR: number;
+  exemptionReason_ID: number;
 }
 
 export interface WhitelistPlateUpdateDto extends WhitelistPlateRequestDto {
@@ -40,8 +39,7 @@ export interface WhitelistPlateResponseDto {
   fromDate: string | null;
   toDate: string | null;
   plateStatus: string | null;
-  exemptionReason_EN: number | null;
-  exemptionReason_AR: number | null;
+  exemptionReason_ID: number | null;
 }
 
 export interface WhitelistTradeLicenseRequestDto {
@@ -52,8 +50,7 @@ export interface WhitelistTradeLicenseRequestDto {
   fromDate: string;
   toDate: string;
   plateStatus: string;
-  exemptionReason_EN: number;
-  exemptionReason_AR: number;
+  exemptionReason_ID: number;
 }
 
 export interface WhitelistTradeLicenseUpdateDto
@@ -70,6 +67,5 @@ export interface WhitelistTradeLicenseResponseDto {
   fromDate: string | null;
   toDate: string | null;
   plateStatus: string | null;
-  exemptionReason_EN: number | null;
-  exemptionReason_AR: number | null;
+  exemptionReason_ID: number | null;
 }

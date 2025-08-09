@@ -22,6 +22,15 @@ interface DynamicViewDrawerProps {
   config: PageConfig;
 }
 
+const statusColors = {
+  active: "green",
+  inactive: "default",
+  expired: "red",
+  pending: "orange",
+  removed: "volcano",
+  reported: "green",
+};
+
 const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({
   open,
   onClose,
@@ -31,22 +40,35 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({
   const { t } = useTranslation();
   if (!record) return null;
 
-  const allFields = [
-    ...config.tableConfig.columns,
-    ...config.formConfig.fields
-      .filter(
-        (ff) => !config.tableConfig.columns.some((tc) => tc.key === ff.name),
-      )
-      .map((ff) => ({ key: ff.name, title: ff.label, type: "string" })),
-  ];
-  const uniqueFields = Array.from(
-    new Map(allFields.map((item) => [item.key, item])).values(),
+  // Logic to merge table and form fields, handling case-insensitivity to prevent duplicates.
+  const tableKeysLower = new Set(
+    config.tableConfig.columns.map((c) => c.key.toLowerCase()),
   );
 
+  const additionalFormFields = config.formConfig.fields
+    .filter((ff) => !tableKeysLower.has(ff.name.toLowerCase()))
+    .map((ff) => ({
+      // The record from GET has camelCase keys. The form config may have PascalCase names.
+      // Convert the form field name to camelCase to access the data correctly.
+      key: ff.name.charAt(0).toLowerCase() + ff.name.slice(1),
+      title: ff.label,
+      type: ff.type,
+    }));
+
+  const displayFields = [
+    ...config.tableConfig.columns,
+    ...additionalFormFields,
+  ];
+
   const fileField = config.formConfig.fields.find((f) => f.type === "file");
+  // Use responseKey if available, otherwise default to the field's name, then convert to camelCase for data access.
+  const fileDataKey = fileField
+    ? fileField.responseKey ||
+      fileField.name.charAt(0).toLowerCase() + fileField.name.slice(1)
+    : null;
   const imageNames =
-    fileField && record[fileField.responseKey]
-      ? String(record[fileField.responseKey]).split(";").filter(Boolean)
+    fileDataKey && record[fileDataKey]
+      ? String(record[fileDataKey]).split(";").filter(Boolean)
       : [];
 
   return (
@@ -63,7 +85,7 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({
         size="small"
         style={{ marginBottom: 24 }}
       >
-        {uniqueFields.map((field) => {
+        {displayFields.map((field) => {
           if (field.type === "file") return null;
           const text = record[field.key];
 
@@ -72,23 +94,26 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({
               {(() => {
                 if (text === null || text === undefined || text === "")
                   return t("common.noData");
+                const statusKey = typeof text === "string" && text?.toLowerCase();
+                const tagColor =
+                  statusColors[statusKey as keyof typeof statusColors] ||
+                  "default";
                 switch (field.type) {
                   case "date":
                     return dayjs(text).isValid()
                       ? dayjs(text).format("DD MMM YYYY, h:mm A")
                       : text;
+
                   case "tag":
                     return (
-                      <Tag
-                        color={
-                          field.options?.[text]?.toLowerCase() || "default"
-                        }
-                      >
-                        {t(`status.${text?.toLowerCase()}`)}
+                      <Tag color={tagColor}>
+                        {t(`status.${statusKey}`, statusKey)}
                       </Tag>
                     );
                   case "badge":
-                    return <Badge color={text?.toLowerCase()} text={text} />;
+                    return (
+                      <Badge color={String(text).toLowerCase()} text={text} />
+                    );
                   default:
                     return String(text);
                 }

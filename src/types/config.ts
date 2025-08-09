@@ -54,7 +54,9 @@ export interface PageConfig {
   api: {
     get: string;
     post: string;
+    postContentType?: "application/json" | "multipart/form-data";
     put: string;
+    putContentType?: "application/json" | "multipart/form-data";
     delete: string;
     search?: string;
   };

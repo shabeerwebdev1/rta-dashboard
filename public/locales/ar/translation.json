@@ -94,7 +94,8 @@
     "addNew": "إضافة جديد",
     "searchPlaceholder": "بحث...",
     "location": "الموقع",
-    "noData": "لا توجد بيانات"
+    "noData": "لا توجد بيانات",
+    "selectFile" : "Select File"
   },
   "entity": {
     "plate": "لوحة",

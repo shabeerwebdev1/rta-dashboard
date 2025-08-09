@@ -9,14 +9,13 @@ import {
   Col,
   Button,
   App,
+  message,
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import type { FormField } from "../../types/config";
 import { getFileUrl } from "../../services/fileApi";
 import dayjs, { Dayjs } from "dayjs";
-
-type UploadMutation = [(formData: FormData) => any, { isLoading: boolean }];
 
 const validationPatterns = {
   plateNumber: {
@@ -38,108 +37,23 @@ interface DynamicFormProps {
   fields: FormField[];
   form: any;
   initialData: any | null;
-  uploadFilesMutation: UploadMutation;
-  setUploadedFileNames: React.Dispatch<
-    React.SetStateAction<Record<string, string>>
-  >;
 }
 
 const DynamicForm: React.FC<DynamicFormProps> = ({
   fields,
   form,
   initialData,
-  uploadFilesMutation,
-  setUploadedFileNames,
-  pageKey,
 }) => {
   const { t } = useTranslation();
-  const { notification, message } = App.useApp();
-  const [uploadFiles, { isLoading: isUploading }] = uploadFilesMutation;
 
-  const handleUploadChange = async (
-    info: any,
-    fieldName: string,
-    category: string,
-  ) => {
-    const { fileList } = info;
-    const newFilesToUpload = fileList.filter(
-      (f: any) => f.originFileObj && f.status !== "uploading",
-    );
-    const existingFileNames = fileList
-      .filter((f: any) => !f.originFileObj)
-      .map((f: any) => f.name);
-
-    if (newFilesToUpload.length > 0) {
-      const formData = new FormData();
-      formData.append("Category", category);
-      newFilesToUpload.forEach((file: any) => {
-        formData.append("Files", file.originFileObj);
-
-        form.setFieldValue(
-          fieldName,
-          fileList.map((f: any) =>
-            f.uid === file.uid ? { ...f, status: "uploading" } : f,
-          ),
-        );
-      });
-
-      try {
-        const uploadResult = await uploadFiles(formData).unwrap();
-        let uploadedNames: string[] = [];
-
-        if (Array.isArray(uploadResult)) {
-          uploadedNames = uploadResult
-            .filter((res) => res.success)
-            .map((res) => res.savedAs);
-        } else if (uploadResult.fileName) {
-          uploadedNames = [uploadResult.fileName];
-        }
-
-        setUploadedFileNames((prev) => ({
-          ...prev,
-          [fieldName]: [...existingFileNames, ...uploadedNames].join(";"),
-        }));
-
-        const updatedFileList = fileList
-          .map((f: any) => {
-            const uploadedFile = newFilesToUpload.find(
-              (nf) => nf.uid === f.uid,
-            );
-            if (uploadedFile) {
-              const savedAs = uploadedNames.shift();
-              return savedAs
-                ? {
-                    ...f,
-                    status: "done",
-                    name: savedAs,
-                    url: getFileUrl(savedAs),
-                  }
-                : { ...f, status: "error" };
-            }
-            return f;
-          })
-          .filter((f: any) => f.status !== "error");
-
-        form.setFieldValue(fieldName, updatedFileList);
-      } catch (error) {
-        notification.error({ message: "Upload Failed" });
-
-        form.setFieldValue(
-          fieldName,
-          fileList.filter(
-            (f: any) => !newFilesToUpload.some((nf) => nf.uid === f.uid),
-          ),
-        );
-      }
-    } else {
-      setUploadedFileNames((prev) => ({
-        ...prev,
-        [fieldName]: existingFileNames.join(";"),
-      }));
+  const normFile = (e: any) => {
+    if (Array.isArray(e)) {
+      return e;
     }
+    return e?.fileList;
   };
 
-  const disabledDate = (current: Dayjs, field) => {
+  const disabledDate = (current: Dayjs, field: FormField) => {
     return (
       field.disablePastDates && current && current < dayjs().startOf("day")
     );
@@ -153,37 +67,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             name={field.name}
             listType="picture-card"
             multiple
-            onChange={(info) =>
-              handleUploadChange(
-                info,
-                field.name,
-                field.fileCategory || "Default",
-              )
-            }
-            beforeUpload={(file) => {
-              const isAllowedType =
-                file.type === "image/png" ||
-                file.type === "image/jpeg" ||
-                file.type === "image/jpg";
-
-              if (!isAllowedType) {
-                message.error("Only PNG, JPEG, and JPG files are allowed.");
-                return Upload.LIST_IGNORE; // This completely blocks the file
-              }
-
-              const isLt5M = file.size / 1024 / 1024 < 5;
-              if (!isLt5M) {
-                message.error("File must be smaller than 5MB.");
-                return Upload.LIST_IGNORE;
-              }
-
-              return false; // Valid file, but we still prevent auto-upload
+            beforeUpload={() => {
+              return false; // Prevent automatic upload
             }}
-          >
-            <>
-              {" "}
-              Upload <br /> (Max: 5MB)
-            </>
+          >{t("common.selectFile")}
           </Upload>
         );
 
@@ -245,9 +132,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
           ];
         }
         if (field.type === "file") {
-          const payloadKey = field.name;
-          if (typeof initialData[payloadKey] === "string") {
-            const fileNames = initialData[payloadKey]
+          const fileDataKey = field.responseKey || field.name;
+          if (typeof initialData[fileDataKey] === "string") {
+            const fileNames = initialData[fileDataKey]
               .split(";")
               .filter(Boolean);
             transformedData[field.name] = fileNames.map(
@@ -265,21 +152,19 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     } else {
       form.resetFields();
     }
-  }, [initialData, form, fields, pageKey]);
+  }, [initialData, form, fields]);
 
   return (
     <Row gutter={24}>
       {fields.map((field) => {
         const customRules = field.validationType
-          ? [validationPatterns[field.validationType]]
+          ? [
+              {
+                pattern: validationPatterns[field.validationType].pattern,
+                message: t(validationPatterns[field.validationType].message),
+              },
+            ]
           : [];
-        const allRules = [...(field.rules || []), ...customRules];
-        if (field.required) {
-          allRules.push({
-            required: true,
-            message: `${t(field.label)} is required.`,
-          });
-        }
 
         return (
           !field.hidden?.(form.getFieldsValue()) && (
@@ -292,8 +177,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                     required: field.required,
                     message: `${t(field.label)} is required.`,
                   },
+                  ...customRules,
                 ]}
                 valuePropName={field.type === "file" ? "fileList" : "value"}
+                getValueFromEvent={field.type === "file" ? normFile : undefined}
               >
                 {renderField(field)}
               </Form.Item>
