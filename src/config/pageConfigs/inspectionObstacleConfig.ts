@@ -1,0 +1,102 @@
+import type { PageConfig } from "../../types/config";
+
+export const inspectionObstacleConfig: PageConfig = {
+  key: "inspection-obstacles",
+  title: "page.title.inspection-obstacles",
+  name: {
+    singular: "Inspection Obstacle",
+    plural: "Inspection Obstacles",
+  },
+  api: {
+    get: "/api/InspectionObstacle",
+    post: "/api/InspectionObstacle",
+    put: "/api/InspectionObstacle/markremoved/:id",
+    delete: "",
+  },
+  tableConfig: {
+    columns: [
+      { key: "obstacleNumber", title: "form.obstacleNumber", type: "string" },
+      { key: "zone", title: "form.zone", type: "string" },
+      { key: "area", title: "form.area", type: "string" },
+      {
+        key: "sourceOfObstacle",
+        title: "form.sourceOfObstacle",
+        type: "string",
+      },
+      { key: "reportedAt", title: "form.date", type: "date" },
+      { key: "reportedBy", title: "form.reportedBy", type: "string" },
+      { key: "status", title: "form.status", type: "tag" },
+    ],
+    viewRecord: true,
+  },
+  formConfig: {
+    modalWidth: "720px",
+    fields: [
+      {
+        name: "ObstacleNumber",
+        label: "form.obstacleNumber",
+        type: "text",
+        required: true,
+        span: 12,
+      },
+      {
+        name: "Zone",
+        label: "form.zone",
+        type: "select",
+        required: true,
+        span: 12,
+        options: ["North", "South", "East", "West"],
+      },
+      {
+        name: "Area",
+        label: "form.area",
+        type: "select",
+        required: true,
+        span: 12,
+        options: ["Residential", "Commercial", "Industrial"],
+      },
+      {
+        name: "SourceOfObstacle",
+        label: "form.sourceOfObstacle",
+        type: "select",
+        required: true,
+        span: 12,
+        options: [
+          "Construction",
+          "Parked Vehicle",
+          "Natural Obstacle",
+          "Road Work",
+        ],
+      },
+      {
+        name: "ClosestPaymentDevice",
+        label: "form.closestPaymentDevice",
+        type: "text",
+        required: true,
+        span: 12,
+      },
+      {
+        name: "ReportedBy",
+        label: "form.reportedBy",
+        type: "text",
+        required: true,
+        span: 12,
+      },
+      {
+        name: "Photo",
+        label: "form.photo",
+        type: "file",
+        required: true,
+        span: 24,
+        fileCategory: "Obstacles",
+      },
+      {
+        name: "Comments",
+        label: "form.comments",
+        type: "textarea",
+        required: false,
+        span: 24,
+      },
+    ],
+  },
+};

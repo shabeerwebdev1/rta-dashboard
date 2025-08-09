@@ -1,57 +1,48 @@
 {
   "sidebar": {
     "dashboard": "Dashboard",
-    "parking": "Parking Management",
-    "fleet": "Fleet Management",
     "whitelist": "Whitelist Management",
+    "inspections": "Inspection Obstacles",
+    "pledges": "Pledges Management",
     "permits": "Permits",
-    "hrms": "HRMS",
-    "inspections": "Inspections",
     "fines": "Fines Management",
+    "parkonic": "Parkonic Management",
+    "hrms": "HRMS",
     "dispute": "Dispute Management",
     "towing": "Towing",
     "team": "Team Assessment",
-    "analytics": "Analytics & Insights"
+    "analytics": "Analytics & Insights",
+    "plates": "Plates",
+    "tradelicenses": "Trade Licenses"
   },
   "header": {
     "compactMode": "Compact Mode",
     "standardMode": "Standard Mode"
   },
-  "whitelist": {
-    "title": "Whitelist Management",
-    "addNew": "Add New",
-    "downloadCsv": "Download CSV",
-    "searchPlaceholder": "Search across all fields...",
-    "edit": "Edit",
-    "delete": "Delete",
-    "view": "View",
-    "plate": {
-      "title": "Plate Whitelist",
-      "addTitle": "Add New Plate to Whitelist"
+  "page": {
+    "title": {
+      "whitelist-plates": "Plate Whitelist",
+      "whitelist-tradelicenses": "Trade License Whitelist",
+      "inspection-obstacles": "Inspection Obstacles",
+      "pledges": "Pledges Management",
+      "permits": "Permits Search"
     },
-    "trade": {
-      "title": "Trade License Whitelist",
-      "addTitle": "Add New Trade License to Whitelist"
-    }
+    "addTitle": "Add New {entity}",
+    "editTitle": "Edit {entity}",
+    "viewTitle": "{entity} Details"
   },
-  "dashboard": {
-    "totalVehicles": "Total Vehicles",
-    "activePledges": "Active Whitelists",
-    "finesIssued": "Fines Issued (Month)",
-    "openDisputes": "Open Disputes",
-    "finesOverTime": "Fines Over Time",
-    "whitelistStatus": "Whitelist Status",
-    "pendingApprovals": "Pending Whitelist Approvals",
-    "recentActivity": "Recent Activity Feed",
-    "last30days": "Last 30 Days",
-    "approve": "Approve",
-    "reject": "Reject",
-    "activity": {
-      "fineIssued": "issued a fine to",
-      "whitelistApproved": "approved whitelist for",
-      "disputeOpened": "opened a dispute for",
-      "vehicleInspected": "inspected vehicle"
-    }
+  "messages": {
+    "addSuccess": "{entity} added successfully!",
+    "updateSuccess": "{entity} updated successfully!",
+    "deleteSuccess": "{entity} deleted successfully.",
+    "deleteConfirmTitle": "Confirm Deletion",
+    "deleteConfirmContent": "Are you sure you want to delete this {entity}?",
+    "csvDownloaded": "CSV file downloaded successfully!",
+    "csvConfirmTitle": "Confirm CSV Download",
+    "csvConfirmContent": "You are about to download the selected data.",
+    "selectRows": "Please select at least one row to download.",
+    "fileUploadSuccess": "File uploaded successfully: {fileName}",
+    "fileUploadError": "File upload failed for: {fileName}"
   },
   "form": {
     "plateNumber": "Plate Number",
@@ -62,17 +53,29 @@
     "tradeLicense_EN_Name": "Trade License Name (EN)",
     "tradeLicense_AR_Name": "Trade License Name (AR)",
     "plotNumber": "Plot Number",
-    "startDate": "Start Date",
-    "endDate": "End Date",
+    "fromDate": "From Date",
+    "toDate": "To Date",
     "dateRange": "Date Range",
+    "status": "Status",
     "plateStatus": "Status",
-    "exemptionReason_EN": "Exemption Reason (EN)",
-    "exemptionReason_AR": "Exemption Reason (AR)"
-  },
-  "status": {
-    "active": "Active",
-    "expired": "Expired",
-    "pending": "Pending"
+    "exemptionReason": "Exemption Reason",
+    "exemptionReason_ID": "Exemption Reason ID",
+    "pledgeNumber": "Pledge Number",
+    "pledgeType": "Pledge Type",
+    "businessName": "Business Name",
+    "remarks": "Remarks",
+    "document": "Document",
+    "obstacleNumber": "Obstacle Number",
+    "zone": "Zone",
+    "area": "Area",
+    "sourceOfObstacle": "Source Of Obstacle",
+    "closestPaymentDevice": "Closest Payment Device",
+    "comments": "Comments",
+    "photo": "Photo(s)",
+    "reportedBy": "Reported By",
+    "permitType": "Permit Type",
+    "permitNumber": "Permit Number",
+    "phoneNumber": "Phone Number"
   },
   "common": {
     "action": "Action",
@@ -83,19 +86,19 @@
     "delete": "Delete",
     "cancel": "Cancel",
     "download": "Download",
-    "submit": "Submit"
+    "submit": "Submit",
+    "edit": "Edit",
+    "view": "View",
+    "downloadCsv": "Download CSV",
+    "addNew": "Add New",
+    "searchPlaceholder": "Search...",
+    "location": "Location",
+    "noData": "No Data"
   },
-  "messages": {
-    "csvDownloaded": "CSV file downloaded successfully!",
-    "whitelistAdded": "Entry added successfully!",
-    "confirmDeleteTitle": "Confirm Deletion",
-    "confirmDeleteContent": "Are you sure you want to delete",
-    "deletedSuccess": "deleted successfully.",
-    "csvConfirmTitle": "Confirm CSV Download",
-    "csvConfirmContent": "You are about to download a CSV file with the following data:",
-    "totalEntries": "Total Entries",
+  "status": {
     "active": "Active",
     "expired": "Expired",
-    "pending": "Pending"
+    "pending": "Pending",
+    "removed": "Removed"
   }
 }
