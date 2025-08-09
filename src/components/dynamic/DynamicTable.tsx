@@ -22,6 +22,15 @@ interface DynamicTableProps {
   setSelectedRowKeys: (keys: React.Key[]) => void;
 }
 
+const statusColors = {
+  active: "green",
+  inactive: "default",
+  expired: "red",
+  pending: "orange",
+  removed: "volcano",
+};
+
+
 const DynamicTable: React.FC<DynamicTableProps> = ({
   config,
   data,
@@ -40,6 +49,9 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
     setIsDrawerOpen(true);
   };
 
+  
+
+
   const columns: TableProps<any>["columns"] = [
     ...config.tableConfig.columns.map((col) => ({
       title: t(col.title),
@@ -50,6 +62,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           ? a[col.key].localeCompare(b[col.key])
           : a[col.key] - b[col.key],
       render: (text: any) => {
+        const statusKey = text?.toLowerCase();
+        const tagColor = statusColors[statusKey as keyof typeof statusColors] || "default";
         if (!text) return " - ";
         switch (col.type) {
           case "date":
@@ -58,19 +72,19 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
               : text;
           case "tag":
             return (
-              <Tag color={col.options?.[text]?.toLowerCase() || "default"}>
+              <Tag color={tagColor}>
                 {t(`status.${text?.toLowerCase()}`)}
               </Tag>
             );
           case "badge":
-            return <Badge color={text?.toLowerCase()} text={text} />;
+            return <Badge color={"red"} text={text} />;
           default:
             return text;
         }
       },
     })),
     {
-      title: t("common.action"),
+      // title: t("common.action"),
       key: "action",
       align: "center",
       fixed: "right",

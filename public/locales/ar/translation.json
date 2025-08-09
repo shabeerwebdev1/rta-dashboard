@@ -27,16 +27,16 @@
       "pledges": "إدارة التعهدات",
       "permits": "بحث التصاريح"
     },
-    "addTitle": "إضافة {entity} جديد",
-    "editTitle": "تعديل {entity}",
-    "viewTitle": "تفاصيل {entity}"
+    "addTitle": "إضافة {{entity}} جديد",
+    "editTitle": "تعديل {{entity}}",
+    "viewTitle": "تفاصيل {{entity}}"
   },
   "messages": {
-    "addSuccess": "تمت إضافة {entity} بنجاح!",
-    "updateSuccess": "{entity} تم التحديث بنجاح!",
-    "deleteSuccess": "تم حذف {entity} بنجاح.",
+    "addSuccess": "تمت إضافة {{entity}} بنجاح!",
+    "updateSuccess": "{{entity}} تم التحديث بنجاح!",
+    "deleteSuccess": "تم حذف {{entity}} بنجاح.",
     "deleteConfirmTitle": "تأكيد الحذف",
-    "deleteConfirmContent": "هل أنت متأكد أنك تريد حذف هذا {entity}؟",
+    "deleteConfirmContent": "هل أنت متأكد أنك تريد حذف هذا {{entity}}؟",
     "csvDownloaded": "تم تنزيل ملف CSV بنجاح!",
     "csvConfirmTitle": "تأكيد تنزيل CSV",
     "csvConfirmContent": "أنت على وشك تنزيل البيانات المحددة.",
@@ -87,6 +87,7 @@
     "cancel": "إلغاء",
     "download": "تنزيل",
     "submit": "إرسال",
+    "update": "تحديث",
     "edit": "تعديل",
     "view": "عرض",
     "downloadCsv": "تنزيل CSV",
@@ -95,10 +96,18 @@
     "location": "الموقع",
     "noData": "لا توجد بيانات"
   },
+  "entity": {
+    "plate": "لوحة",
+    "tradeLicense": "رخصة تجارية",
+    "pledge": "تعهد",
+    "inspectionObstacle": "عائق تفتيش"
+  },
   "status": {
     "active": "نشط",
+    "inactive": "غير نشط",
     "expired": "منتهي الصلاحية",
     "pending": "قيد الانتظار",
-    "removed": "تمت الإزالة"
+    "removed": "تمت الإزالة",
+    "reported": "Reported"
   }
 }

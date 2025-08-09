@@ -1,11 +1,9 @@
-/* src/styles/main.css */
-
 /* MODAL & DRAWER STYLES */
 .dynamic-modal .ant-modal-content,
 .dynamic-drawer .ant-drawer-content {
   display: flex;
   flex-direction: column;
-  max-height: 85vh;
+  max-height: 75vh;
 }
 
 .dynamic-modal .ant-modal-body,
@@ -106,4 +104,12 @@ html[lang="ar"] .ant-pagination-total-text {
 .ant-menu-vertical,
 .ant-menu-vertical-left {
   border-right: 0;
+}
+
+/* styles/global.css or in your main CSS file */
+.ant-table-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

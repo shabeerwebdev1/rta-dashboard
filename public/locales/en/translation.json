@@ -27,16 +27,16 @@
       "pledges": "Pledges Management",
       "permits": "Permits Search"
     },
-    "addTitle": "Add New {entity}",
-    "editTitle": "Edit {entity}",
-    "viewTitle": "{entity} Details"
+    "addTitle": "Add New {{entity}}",
+    "editTitle": "Edit {{entity}}",
+    "viewTitle": "{{entity}} Details"
   },
   "messages": {
-    "addSuccess": "{entity} added successfully!",
-    "updateSuccess": "{entity} updated successfully!",
-    "deleteSuccess": "{entity} deleted successfully.",
+    "addSuccess": "{{entity}} added successfully!",
+    "updateSuccess": "{{entity}} updated successfully!",
+    "deleteSuccess": "{{entity}} deleted successfully.",
     "deleteConfirmTitle": "Confirm Deletion",
-    "deleteConfirmContent": "Are you sure you want to delete this {entity}?",
+    "deleteConfirmContent": "Are you sure you want to delete this {{entity}}?",
     "csvDownloaded": "CSV file downloaded successfully!",
     "csvConfirmTitle": "Confirm CSV Download",
     "csvConfirmContent": "You are about to download the selected data.",
@@ -87,6 +87,7 @@
     "cancel": "Cancel",
     "download": "Download",
     "submit": "Submit",
+    "update": "Update",
     "edit": "Edit",
     "view": "View",
     "downloadCsv": "Download CSV",
@@ -95,10 +96,18 @@
     "location": "Location",
     "noData": "No Data"
   },
+   "entity": {
+    "plate": "Plate",
+    "tradeLicense": "Trade License",
+    "pledge": "Pledge",
+    "inspectionObstacle": "Inspection Obstacle"
+  },
   "status": {
     "active": "Active",
+    "inactive": "In Active",
     "expired": "Expired",
     "pending": "Pending",
-    "removed": "Removed"
+    "removed": "Removed",
+    "reported": "Reported"
   }
 }

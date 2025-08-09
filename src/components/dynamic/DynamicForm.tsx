@@ -14,10 +14,26 @@ import { UploadOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import type { FormField } from "../../types/config";
 import { getFileUrl } from "../../services/fileApi";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 
 type UploadMutation = [(formData: FormData) => any, { isLoading: boolean }];
 
+const validationPatterns = {
+  plateNumber: {
+    pattern: /^[A-Za-z0-9 -]+$/,
+    message:
+      "Plate number can only contain letters, numbers, spaces, and hyphens.",
+  },
+  alphanumeric_hyphen_uppercase: {
+    pattern: /^[A-Z0-9-]+$/,
+    message:
+      "This field can only contain uppercase letters, numbers, and hyphens.",
+  },
+  arabic: {
+    pattern: /^[\u0600-\u06FF\s]+$/,
+    message: "This field can only contain Arabic characters and spaces.",
+  },
+};
 interface DynamicFormProps {
   fields: FormField[];
   form: any;
@@ -43,11 +59,11 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   const handleUploadChange = async (
     info: any,
     fieldName: string,
-    category: string,
+    category: string
   ) => {
     const { fileList } = info;
     const newFilesToUpload = fileList.filter(
-      (f: any) => f.originFileObj && f.status !== "uploading",
+      (f: any) => f.originFileObj && f.status !== "uploading"
     );
     const existingFileNames = fileList
       .filter((f: any) => !f.originFileObj)
@@ -62,8 +78,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         form.setFieldValue(
           fieldName,
           fileList.map((f: any) =>
-            f.uid === file.uid ? { ...f, status: "uploading" } : f,
-          ),
+            f.uid === file.uid ? { ...f, status: "uploading" } : f
+          )
         );
       });
 
@@ -87,7 +103,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         const updatedFileList = fileList
           .map((f: any) => {
             const uploadedFile = newFilesToUpload.find(
-              (nf) => nf.uid === f.uid,
+              (nf) => nf.uid === f.uid
             );
             if (uploadedFile) {
               const savedAs = uploadedNames.shift();
@@ -111,8 +127,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         form.setFieldValue(
           fieldName,
           fileList.filter(
-            (f: any) => !newFilesToUpload.some((nf) => nf.uid === f.uid),
-          ),
+            (f: any) => !newFilesToUpload.some((nf) => nf.uid === f.uid)
+          )
         );
       }
     } else {
@@ -121,6 +137,12 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         [fieldName]: existingFileNames.join(";"),
       }));
     }
+  };
+
+  const disabledDate = (current: Dayjs, field) => {
+    return (
+      field.disablePastDates && current && current < dayjs().startOf("day")
+    );
   };
 
   const renderField = (field: FormField) => {
@@ -135,7 +157,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
               handleUploadChange(
                 info,
                 field.name,
-                field.fileCategory || "Default",
+                field.fileCategory || "Default"
               )
             }
             beforeUpload={() => false}
@@ -177,6 +199,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             size="large"
             style={{ width: "100%" }}
             format="YYYY-MM-DD"
+            disabledDate={(current: Dayjs) => disabledDate(current, field)}
           />
         );
       default:
@@ -214,7 +237,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                 name: name,
                 status: "done",
                 url: getFileUrl(name),
-              }),
+              })
             );
           }
         }
@@ -227,8 +250,19 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
 
   return (
     <Row gutter={24}>
-      {fields.map(
-        (field) =>
+      {fields.map((field) => {
+        const customRules = field.validationType
+          ? [validationPatterns[field.validationType]]
+          : [];
+        const allRules = [...(field.rules || []), ...customRules];
+        if (field.required) {
+          allRules.push({
+            required: true,
+            message: `${t(field.label)} is required.`,
+          });
+        }
+
+        return (
           !field.hidden?.(form.getFieldsValue()) && (
             <Col span={field.span} key={field.name}>
               <Form.Item
@@ -245,8 +279,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
                 {renderField(field)}
               </Form.Item>
             </Col>
-          ),
-      )}
+          )
+        );
+      })}
     </Row>
   );
 };

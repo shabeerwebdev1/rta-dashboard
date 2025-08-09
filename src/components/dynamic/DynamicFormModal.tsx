@@ -104,6 +104,11 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
     }
   };
 
+  const handleClose = () => {
+    form.resetFields();
+    onClose();
+  };
+
   return (
     <Modal
       open={open}
@@ -111,12 +116,15 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
         entity: t(config.name.singular),
       })}
       width={config.formConfig.modalWidth}
-      onCancel={onClose}
+      onCancel={handleClose}
       destroyOnClose
       className="dynamic-modal"
       footer={[
         <Button key="cancel" onClick={onClose}>
           {t("common.cancel")}
+        </Button>,
+        <Button key="reset" onClick={() => form.resetFields()}>
+          {t('common.reset')}
         </Button>,
         <Button
           key="submit"
@@ -124,7 +132,7 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
           loading={isSubmitting || isUploading}
           onClick={() => form.submit()}
         >
-          {isUploading ? "Uploading..." : t("common.submit")}
+          {isUploading ? 'Uploading...' : (mode === 'add' ? t('common.submit') : t('common.update'))}
         </Button>,
       ]}
     >
