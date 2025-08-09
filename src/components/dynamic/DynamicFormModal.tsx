@@ -60,9 +60,9 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
       }
 
       config.formConfig.fields.forEach((field) => {
-        if (field.type === "file") {
-          delete finalPayload[field.name];
-        }
+        // if (field.type === "file") {
+        //   delete finalPayload[field.name];
+        // }
         if (
           field.type === "dateRange" &&
           field.fieldMapping &&
