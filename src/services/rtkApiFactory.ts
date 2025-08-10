@@ -1,8 +1,10 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { pageConfigs } from "../config/pageConfigs";
 
+const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
+
 const baseQuery = fetchBaseQuery({
-  baseUrl: "/",
+  baseUrl: RTA_API_TARGET,
   prepareHeaders: (headers) => {
     const token = localStorage.getItem("auth_token");
     if (token) {
