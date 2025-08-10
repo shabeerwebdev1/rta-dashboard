@@ -89,15 +89,16 @@ const AppSidebar: React.FC = () => {
 
   const getSelectedKeys = () => {
     const path = location.pathname;
-    // find the most specific match
-    let bestMatch = FULL_PATHS.DASHBOARD;
+    let bestMatch = "";
     for (const item of menuItems.flatMap((i) => i.children || i)) {
       if (path.startsWith(item.key) && item.key.length > bestMatch.length) {
         bestMatch = item.key;
       }
     }
-    return [bestMatch];
+    return [bestMatch || FULL_PATHS.DASHBOARD];
   };
+
+console.log(getSelectedKeys(), "getSelectedKeys 99");
 
   const getDefaultOpenKeys = () => {
     const path = location.pathname;

@@ -21,7 +21,7 @@ const AppHeader = () => {
   return (
     <Header
       style={{
-        padding: "0 24px",
+        padding: "15px 24px 0",
         background: "inherit",
         display: "flex",
         alignItems: "center",
