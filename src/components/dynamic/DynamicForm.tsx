@@ -29,11 +29,7 @@ interface DynamicFormProps {
   initialData: Record<string, unknown> | null;
 }
 
-const DynamicForm: React.FC<DynamicFormProps> = ({
-  fields,
-  form,
-  initialData,
-}) => {
+const DynamicForm: React.FC<DynamicFormProps> = ({ fields, form, initialData }) => {
   const { t } = useTranslation();
 
   const normFile = (e: unknown) => {
@@ -51,12 +47,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     switch (field.type) {
       case "file":
         return (
-          <Upload
-            name={field.name}
-            listType="picture-card"
-            multiple
-            beforeUpload={() => false}
-          >
+          <Upload name={field.name} listType="picture-card" multiple beforeUpload={() => false} accept=".jpg,.jpeg">
             {t("common.selectFile")}
           </Upload>
         );
@@ -69,7 +60,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         return (
           <Select size="large" allowClear>
             {field.options?.map((opt: string | { label: string; value: unknown }) => (
-              <Select.Option key={typeof opt === "string" ? opt : opt.value} value={typeof opt === "string" ? opt : opt.value}>
+              <Select.Option
+                key={typeof opt === "string" ? opt : opt.value}
+                value={typeof opt === "string" ? opt : opt.value}
+              >
                 {typeof opt === "string" ? opt : opt.label}
               </Select.Option>
             ))}

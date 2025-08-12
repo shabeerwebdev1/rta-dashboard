@@ -16,7 +16,7 @@ export const pledgeConfig: PageConfig = {
       { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "string" },
       { key: "businessName", title: "form.businessName", type: "string" },
       { key: "pledgeType", title: "form.pledgeType", type: "string" },
-      { key: "submittedAt", title: "form.date", type: "date" },
+      { key: "submittedAt", title: "form.fromDate", type: "date" },
     ],
     viewRecord: true,
   },

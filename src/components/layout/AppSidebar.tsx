@@ -69,15 +69,20 @@ const AppSidebar: React.FC = () => {
     {
       key: FULL_PATHS.PARKONIC,
       icon: <PushpinOutlined />,
-      label: t("sidebar.parkonic"),
+      label: <Link to={FULL_PATHS.PARKONIC}>{t("sidebar.parkonic")}</Link>,
     },
-    { key: FULL_PATHS.FINES, icon: <DollarOutlined />, label: t("sidebar.fines") },
-    { key: FULL_PATHS.HRMS, icon: <TeamOutlined />, label: t("sidebar.hrms") },
+    {
+      key: FULL_PATHS.FINES,
+      icon: <DollarOutlined />,
+      label: <Link to={FULL_PATHS.FINES}>{t("sidebar.fines")}</Link>,
+    },
     {
       key: FULL_PATHS.DISPUTE,
       icon: <ExclamationCircleOutlined />,
-      label: t("sidebar.dispute"),
+      label: <Link to={FULL_PATHS.DISPUTE}>{t("sidebar.dispute")}</Link>,
     },
+    { key: FULL_PATHS.HRMS, icon: <TeamOutlined />, label: t("sidebar.hrms") },
+
     { key: FULL_PATHS.TOWING, icon: <CarOutlined />, label: t("sidebar.towing") },
     { key: FULL_PATHS.TEAM, icon: <UsergroupAddOutlined />, label: t("sidebar.team") },
     {
@@ -98,13 +103,11 @@ const AppSidebar: React.FC = () => {
     return [bestMatch || FULL_PATHS.DASHBOARD];
   };
 
-console.log(getSelectedKeys(), "getSelectedKeys 99");
+  console.log(getSelectedKeys(), "getSelectedKeys 99");
 
   const getDefaultOpenKeys = () => {
     const path = location.pathname;
-    const parent = menuItems.find((item) =>
-      item.children?.some((child) => path.startsWith(child.key)),
-    );
+    const parent = menuItems.find((item) => item.children?.some((child) => path.startsWith(child.key)));
     return parent ? [parent.key] : [];
   };
 

@@ -6,6 +6,9 @@ export const PATHS = {
   TRADELICENSES: "tradelicenses",
   PLEDGES: "pledges",
   INSPECTIONS: "inspections",
+  FINES: "fines",
+  PARKONIC: "parkonic",
+  DISPUTE: "dispute",
 };
 
 export const FULL_PATHS = {

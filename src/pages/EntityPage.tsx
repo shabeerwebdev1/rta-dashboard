@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Card, Space, App, Input, DatePicker, Button, Tooltip } from "antd";
-import { DownloadOutlined, PlusOutlined } from "@ant-design/icons";
+import { AppstoreOutlined, DownloadOutlined, PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import DynamicTable from "../components/dynamic/DynamicTable";
@@ -27,12 +27,7 @@ interface EntityPageProps {
   useDeleteHook?: () => [((id: string | number) => { unwrap: () => Promise<unknown> }) | null, { isLoading: boolean }];
 }
 
-const EntityPage: React.FC<EntityPageProps> = ({
-  pageKey,
-  config,
-  useGetHook,
-  useDeleteHook,
-}) => {
+const EntityPage: React.FC<EntityPageProps> = ({ pageKey, config, useGetHook, useDeleteHook }) => {
   const { t } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
@@ -44,6 +39,8 @@ const EntityPage: React.FC<EntityPageProps> = ({
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [globalSearch, setGlobalSearch] = useState("");
   const [dateFilter, setDateFilter] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
+  const [tableSize, setTableSize] = useState<"small" | "middle">("middle");
+
 
   const { data, isLoading, isError, error: getError } = useGetHook();
   const [deleteItem, { isLoading: isDeleting }] = useDeleteHook ? useDeleteHook() : [null, { isLoading: false }];
@@ -87,7 +84,9 @@ const EntityPage: React.FC<EntityPageProps> = ({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = filteredData.filter((item: Record<string, unknown>) => selectedRowKeys.includes(item.id as React.Key));
+        const selectedData = filteredData.filter((item: Record<string, unknown>) =>
+          selectedRowKeys.includes(item.id as React.Key),
+        );
         exportToCsv(selectedData, `${config.key}_export.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
@@ -105,7 +104,11 @@ const EntityPage: React.FC<EntityPageProps> = ({
       })
       .filter((item) => {
         if (!dateFilter || !dateFilter[0] || !dateFilter[1]) return true;
-        const dateString = (item.toDate as string) || (item.pledgeDate as string) || (item.reportedAt as string) || (item.issueDate as string);
+        const dateString =
+          (item.toDate as string) ||
+          (item.pledgeDate as string) ||
+          (item.reportedAt as string) ||
+          (item.issueDate as string);
         if (!dateString) return true;
         const itemDate = dayjs(dateString);
         if (!itemDate.isValid()) return true;
@@ -132,11 +135,22 @@ const EntityPage: React.FC<EntityPageProps> = ({
               allowClear
             />
             <DatePicker.RangePicker onChange={(dates) => setDateFilter(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)} />
+
+            <Tooltip title={tableSize === "middle" ? "Compact view" : "Standard view"}>
+              <Button
+                icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
+                type="text"
+                onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
+              />
+            </Tooltip>
           </Space>
           <Space>
             <Tooltip title={t("common.downloadCsv")}>
-              <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0} />
+              <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
+                {t("common.downloadCsv")}
+              </Button>
             </Tooltip>
+
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -160,6 +174,7 @@ const EntityPage: React.FC<EntityPageProps> = ({
           onDelete={config.api.delete ? handleDelete : undefined}
           selectedRowKeys={selectedRowKeys}
           setSelectedRowKeys={setSelectedRowKeys}
+          tableSize={tableSize} 
         />
       </Card>
       {isModalOpen && (

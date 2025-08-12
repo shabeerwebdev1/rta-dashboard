@@ -1,6 +1,6 @@
 import type { Rule } from "antd/es/form";
 
-export type FormFieldType = "text" | "textarea" | "select" | "date" | "dateRange" | "file" | "hidden";
+export type FormFieldType = "text" | "textarea" | "select" | "date" | "dateRange" | "file" | "hidden" | "email";
 export interface FormField {
   name: string;
   label: string;
