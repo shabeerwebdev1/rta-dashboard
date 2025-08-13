@@ -22,8 +22,12 @@ const PermitsPage: React.FC = () => {
   const onFinish = (values: Record<string, unknown>) => {
     const params: Record<string, unknown> = {
       ...values,
-      dateFrom: values.dateRange ? (values.dateRange as [{ toISOString(): string }, { toISOString(): string }])[0].toISOString() : undefined,
-      dateTo: values.dateRange ? (values.dateRange as [{ toISOString(): string }, { toISOString(): string }])[1].toISOString() : undefined,
+      dateFrom: values.dateRange
+        ? (values.dateRange as [{ toISOString(): string }, { toISOString(): string }])[0].toISOString()
+        : undefined,
+      dateTo: values.dateRange
+        ? (values.dateRange as [{ toISOString(): string }, { toISOString(): string }])[1].toISOString()
+        : undefined,
     };
     delete params.dateRange;
 
@@ -37,14 +41,24 @@ const PermitsPage: React.FC = () => {
     { title: t("form.permitType"), dataIndex: "permitType", key: "permitType" },
     { title: t("form.plateNumber"), dataIndex: "plateNumber", key: "plateNumber" },
     { title: t("form.phoneNumber"), dataIndex: "phoneNumber", key: "phoneNumber" },
-    { title: t("form.fromDate"), dataIndex: "validFrom", key: "validFrom", render: (text: string) => dayjs(text).format("YYYY-MM-DD") },
-    { title: t("form.toDate"), dataIndex: "validTo", key: "validTo", render: (text: string) => dayjs(text).format("YYYY-MM-DD") },
+    {
+      title: t("form.fromDate"),
+      dataIndex: "validFrom",
+      key: "validFrom",
+      render: (text: string) => dayjs(text).format("YYYY-MM-DD"),
+    },
+    {
+      title: t("form.toDate"),
+      dataIndex: "validTo",
+      key: "validTo",
+      render: (text: string) => dayjs(text).format("YYYY-MM-DD"),
+    },
     { title: t("form.authorizedAreas"), dataIndex: "authorizedAreas", key: "authorizedAreas" },
   ];
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <Card title={t("common.search")} bordered={false}>
+      <Card bordered={false}>
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Row gutter={24}>
             <Col xs={24} sm={12} md={8}>
@@ -76,23 +90,31 @@ const PermitsPage: React.FC = () => {
                 <RangePicker style={{ width: "100%" }} />
               </Form.Item>
             </Col>
-          </Row>
-          <Row justify="end">
-            <Space>
-              <Button onClick={() => form.resetFields()}>{t("common.reset")}</Button>
-              <Button type="primary" htmlType="submit" loading={isFetching}>{t("common.search")}</Button>
-            </Space>
+
+            {/* Buttons aligned to the right */}
+            <Col xs={24} sm={12} md={8} style={{ textAlign: "right", marginTop: 30 }}>
+              <Space>
+                <Button onClick={() => form.resetFields()}>{t("common.reset")}</Button>
+                <Button type="primary" htmlType="submit" loading={isFetching}>
+                  {t("common.search")}
+                </Button>
+              </Space>
+            </Col>
           </Row>
         </Form>
       </Card>
-      <Card title="Search Results" bordered={false}>
+
+      <Card bordered={false} bodyStyle={{ padding: 0 }}>
         <Spin spinning={isLoading || isFetching}>
           <Table
+            rowSelection={{ type: "checkbox" }}
             columns={columns}
             dataSource={searchResults}
             rowKey="id"
             locale={{ emptyText: <Empty description={t("common.noData")} /> }}
-            pagination={{ showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}` }}
+            pagination={{
+              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
+            }}
           />
         </Spin>
       </Card>

@@ -10,8 +10,12 @@ import type { PageConfig } from "../../types/config";
 
 const getMutationHooks = (config: PageConfig) => {
   const singular = config.name.singular.replace(/\s/g, "");
-  const useAddHook = (dynamicApi as Record<string, () => [unknown, { isLoading: boolean }]>)[`useAdd${singular}Mutation`];
-  const useUpdateHook = (dynamicApi as Record<string, () => [unknown, { isLoading: boolean }]>)[`useUpdate${singular}Mutation`];
+  const useAddHook = (dynamicApi as Record<string, () => [unknown, { isLoading: boolean }]>)[
+    `useAdd${singular}Mutation`
+  ];
+  const useUpdateHook = (dynamicApi as Record<string, () => [unknown, { isLoading: boolean }]>)[
+    `useUpdate${singular}Mutation`
+  ];
   return { useAddHook, useUpdateHook };
 };
 
@@ -23,13 +27,7 @@ interface DynamicFormModalProps {
   onClose: () => void;
 }
 
-const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
-  pageKey,
-  mode,
-  open,
-  initialData,
-  onClose,
-}) => {
+const DynamicFormModal: React.FC<DynamicFormModalProps> = ({ pageKey, mode, open, initialData, onClose }) => {
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const notification = useAppNotification();
@@ -80,15 +78,13 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
 
       // --- Payload Preparation Step ---
       formFields.forEach((field) => {
-        if (
-          field.type === "dateRange" &&
-          field.fieldMapping &&
-          finalPayload[field.name]
-        ) {
-          finalPayload[field.fieldMapping.from] =
-            (finalPayload[field.name] as [{ toISOString(): string }, { toISOString(): string }])[0].toISOString();
-          finalPayload[field.fieldMapping.to] =
-            (finalPayload[field.name] as [{ toISOString(): string }, { toISOString(): string }])[1].toISOString();
+        if (field.type === "dateRange" && field.fieldMapping && finalPayload[field.name]) {
+          finalPayload[field.fieldMapping.from] = (
+            finalPayload[field.name] as [{ toISOString(): string }, { toISOString(): string }]
+          )[0].toISOString();
+          finalPayload[field.fieldMapping.to] = (
+            finalPayload[field.name] as [{ toISOString(): string }, { toISOString(): string }]
+          )[1].toISOString();
           delete finalPayload[field.name];
         }
       });
@@ -130,8 +126,13 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
     } catch (err: unknown) {
       console.error("Form submission error:", err);
       notification.error(err as { data?: { en_Msg?: string; ar_Msg?: string } }, "Operation failed");
-      if ((err as { data?: { validationErrors?: Array<{ fieldName: string; enMessage: string; arMessage: string }> } }).data?.validationErrors) {
-        const errorFields = (err as { data: { validationErrors: Array<{ fieldName: string; enMessage: string; arMessage: string }> } }).data.validationErrors.map((ve) => ({
+      if (
+        (err as { data?: { validationErrors?: Array<{ fieldName: string; enMessage: string; arMessage: string }> } })
+          .data?.validationErrors
+      ) {
+        const errorFields = (
+          err as { data: { validationErrors: Array<{ fieldName: string; enMessage: string; arMessage: string }> } }
+        ).data.validationErrors.map((ve) => ({
           name: ve.fieldName,
           errors: [`${ve.enMessage} / ${ve.arMessage}`],
         }));
@@ -171,11 +172,7 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({
       ]}
     >
       <Form form={form} layout="vertical" onFinish={handleFinish} preserve={false}>
-        <DynamicForm
-          fields={config.formConfig.fields}
-          form={form}
-          initialData={initialData}
-        />
+        <DynamicForm fields={config.formConfig.fields} form={form} initialData={initialData} />
       </Form>
     </Modal>
   );

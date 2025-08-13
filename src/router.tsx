@@ -11,6 +11,9 @@ const WhitelistPlatesPage = lazy(() => import("./pages/entity/WhitelistPlatesPag
 const WhitelistTradeLicensesPage = lazy(() => import("./pages/entity/WhitelistTradeLicensesPage"));
 const PledgesPage = lazy(() => import("./pages/entity/PledgesPage"));
 const InspectionObstaclesPage = lazy(() => import("./pages/entity/InspectionObstaclesPage"));
+const FinesPage = lazy(() => import("./pages/FinesPage"));
+const ParkonicPage = lazy(() => import("./pages/ParkonicPage"));
+const DisputeManagementPage = lazy(() => import("./pages/entity/DisputeManagementPage"));
 
 const AppRoutes = () => {
   return (
@@ -21,6 +24,9 @@ const AppRoutes = () => {
           <Route index element={<Navigate to={FULL_PATHS.DASHBOARD} replace />} />
           <Route path={PATHS.DASHBOARD} element={<DashboardPage />} />
           <Route path={PATHS.PERMITS} element={<PermitsPage />} />
+          <Route path={PATHS.FINES} element={<FinesPage />} />
+          <Route path={PATHS.PARKONIC} element={<ParkonicPage />} />
+          <Route path={PATHS.DISPUTE} element={<DisputeManagementPage />} />
 
           <Route path={PATHS.WHITELIST}>
             <Route index element={<Navigate to={PATHS.PLATES} replace />} />

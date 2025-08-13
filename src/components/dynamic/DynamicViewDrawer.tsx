@@ -14,19 +14,11 @@ interface DynamicViewDrawerProps {
   config: PageConfig;
 }
 
-const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({
-  open,
-  onClose,
-  record,
-  config,
-}) => {
+const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, record, config }) => {
   const { t } = useTranslation();
   if (!record) return null;
 
-  // Logic to merge table and form fields, handling case-insensitivity to prevent duplicates.
-  const tableKeysLower = new Set(
-    config.tableConfig.columns.map((c) => c.key.toLowerCase()),
-  );
+  const tableKeysLower = new Set(config.tableConfig.columns.map((c) => c.key.toLowerCase()));
 
   const additionalFormFields = config.formConfig.fields
     .filter((ff) => !tableKeysLower.has(ff.name.toLowerCase()) && ff.type !== "hidden")
@@ -39,14 +31,19 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({
   const displayFields = [...config.tableConfig.columns, ...additionalFormFields];
 
   const fileField = config.formConfig.fields.find((f) => f.type === "file");
-  // Use responseKey if available, otherwise default to the field's name, then convert to camelCase for data access.
   const fileDataKey = fileField
     ? fileField.responseKey || fileField.name.charAt(0).toLowerCase() + fileField.name.slice(1)
     : null;
   const imageNames = fileDataKey && record[fileDataKey] ? String(record[fileDataKey]).split(";").filter(Boolean) : [];
 
   return (
-    <Drawer open={open} onClose={onClose} width={500} title={t("page.viewTitle", { entity: t(config.name.singular) })} className="dynamic-drawer">
+    <Drawer
+      open={open}
+      onClose={onClose}
+      width={500}
+      title={t("page.viewTitle", { entity: t(config.name.singular) })}
+      className="dynamic-drawer"
+    >
       <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
         {displayFields.map((field) => {
           if (field.type === "file") return null;
@@ -60,13 +57,31 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({
                 const tagColor = STATUS_COLORS[statusKey as keyof typeof STATUS_COLORS] || "default";
                 switch (field.type) {
                   case "date":
-                    return dayjs(text as string).isValid() ? dayjs(text as string).format("DD MMM YYYY, h:mm A") : String(text);
+                    return dayjs(text as string).isValid()
+                      ? dayjs(text as string).format("DD MMM YYYY, h:mm A")
+                      : String(text);
 
                   case "tag":
                     return <Tag color={tagColor}>{t(`status.${statusKey}`, statusKey)}</Tag>;
+
                   case "badge":
                     return <Badge color={String(text).toLowerCase()} text={String(text)} />;
+
                   default:
+                    //  If field is a select, show label instead of value
+                    if (field.type === "select") {
+                      const formFieldConfig = config.formConfig.fields.find(
+                        (f) => f.name.toLowerCase() === field.key.toLowerCase(),
+                      );
+                      if (formFieldConfig?.options) {
+                        const selectedOption = formFieldConfig.options.find(
+                          (opt: any) => (typeof opt === "object" ? opt.value : opt) === text,
+                        );
+                        if (selectedOption) {
+                          return typeof selectedOption === "object" ? selectedOption.label : selectedOption;
+                        }
+                      }
+                    }
                     return String(text);
                 }
               })()}
@@ -112,4 +127,4 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({
   );
 };
 
-export default DynamicViewDrawer
+export default DynamicViewDrawer;

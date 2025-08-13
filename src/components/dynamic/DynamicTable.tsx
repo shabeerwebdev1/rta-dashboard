@@ -20,6 +20,7 @@ interface DynamicTableProps {
   onDelete: (record: TableRecord) => void;
   selectedRowKeys: React.Key[];
   setSelectedRowKeys: (keys: React.Key[]) => void;
+  tableSize: "small" | "middle";
 }
 
 const statusColors = {
@@ -35,6 +36,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   config,
   data,
   loading,
+  tableSize,
   onEdit,
   onDelete,
   selectedRowKeys,
@@ -64,8 +66,10 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       },
       render: (text: unknown) => {
         const statusKey = typeof text === "string" ? text.toLowerCase() : "";
-        const tagColor = statusKey && statusColors[statusKey as keyof typeof statusColors] ?
-          statusColors[statusKey as keyof typeof statusColors] : "default";
+        const tagColor =
+          statusKey && statusColors[statusKey as keyof typeof statusColors]
+            ? statusColors[statusKey as keyof typeof statusColors]
+            : "default";
         if (!text) return " - ";
         switch (col.type) {
           case "date":
@@ -73,7 +77,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           case "tag":
             return <Tag color={tagColor}>{t(`status.${statusKey}`)}</Tag>;
           case "badge":
-            return <Badge color="red" text={String(text)} />;
+            return <Badge color={String(text).toLowerCase()} text={String(text)} />;
           default:
             return String(text);
         }
@@ -140,6 +144,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         loading={loading}
         rowSelection={rowSelection}
         scroll={{ x: "max-content" }}
+        size={tableSize}
         pagination={{
           showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
           showSizeChanger: true,

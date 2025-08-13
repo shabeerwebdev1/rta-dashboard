@@ -25,7 +25,10 @@
       "whitelist-tradelicenses": "القائمة البيضاء للرخص التجارية",
       "inspection-obstacles": "معوقات التفتيش",
       "pledges": "إدارة التعهدات",
-      "permits": "بحث التصاريح"
+      "dispute-management": "إدارة النزاعات",
+      "permits": "بحث التصاريح",
+      "fines": "إدارة الغرامات",
+      "parkonic": "إدارة باركونيك"
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",
@@ -75,7 +78,18 @@
     "reportedBy": "تم الإبلاغ بواسطة",
     "permitType": "نوع التصريح",
     "permitNumber": "رقم التصريح",
-    "phoneNumber": "رقم الهاتف"
+    "phoneNumber": "رقم الهاتف",
+    "department": "القسم",
+    "paymentType": "نوع الدفع",
+    "crmReference": "مرجع CRM",
+    "authorizedAreas": "المناطق المصرح بها",
+    "fineNumber": "رقم الغرامة",
+    "supervisorName": "اسم المشرف",
+    "issuer": "المُصدر",
+    "fineType": "نوع الغرامة",
+    "section": "القسم",
+    "issuedBy": "المُصدر",
+    "issuedAmount": "المبلغ المُصدر"
   },
   "common": {
     "action": "إجراء",
@@ -95,7 +109,7 @@
     "searchPlaceholder": "بحث...",
     "location": "الموقع",
     "noData": "لا توجد بيانات",
-    "selectFile" : "Select File"
+    "selectFile": "Select File"
   },
   "entity": {
     "plate": "لوحة",

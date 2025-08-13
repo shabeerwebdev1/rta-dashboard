@@ -179,7 +179,9 @@ const DashboardPage = () => {
               renderItem={(item) => (
                 <List.Item
                   actions={[
-                    <Button type="primary" size="small">{t("dashboard.approve")}</Button>,
+                    <Button type="primary" size="small">
+                      {t("dashboard.approve")}
+                    </Button>,
                     <Button size="small">{t("dashboard.reject")}</Button>,
                   ]}
                 >
@@ -197,7 +199,14 @@ const DashboardPage = () => {
           <Card bordered={false} title={<Title level={5}>{t("dashboard.recentActivity")}</Title>}>
             <Timeline
               items={recentActivity.map((item) => ({
-                color: item.status === "critical" ? "red" : item.status === "success" ? "green" : item.status === "warning" ? "gold" : "blue",
+                color:
+                  item.status === "critical"
+                    ? "red"
+                    : item.status === "success"
+                      ? "green"
+                      : item.status === "warning"
+                        ? "gold"
+                        : "blue",
                 dot: item.status === "info" ? <SearchOutlined /> : undefined,
                 children: (
                   <Space>

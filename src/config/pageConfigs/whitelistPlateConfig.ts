@@ -55,7 +55,7 @@ export const whitelistPlateConfig: PageConfig = {
         type: "select",
         required: true,
         span: 12,
-        options: ["White", "Red", "Blue", "Green", "Black", "Yellow"],
+        options: ["White", "Red", "Blue", "Green", "Black", "Yellow", "Orange", "Purple"],
       },
       {
         name: "dateRange",
