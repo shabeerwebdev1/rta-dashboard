@@ -104,7 +104,7 @@ const PermitsPage: React.FC = () => {
         </Form>
       </Card>
 
-      <Card bordered={false} bodyStyle={{ padding: 0 }}>
+      <Card bordered={false} bodyStyle={{ padding: "5px 5px 0 5px" }}>
         <Spin spinning={isLoading || isFetching}>
           <Table
             rowSelection={{ type: "checkbox" }}

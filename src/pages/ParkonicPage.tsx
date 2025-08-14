@@ -165,7 +165,7 @@ const ParkonicPage: React.FC = () => {
         </Space>
       </Card>
 
-      <Card bordered={false} bodyStyle={{ padding: 0 }}>
+      <Card bordered={false} bodyStyle={{ padding: "5px 5px 0 5px" }}>
         <Table
           rowSelection={{ type: "checkbox" }}
           rowKey="id"

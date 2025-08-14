@@ -20,7 +20,13 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<MainLayout />}>
         {/* Correctly wrap the page routes in a Suspense-powered layout route */}
-        <Route element={<Suspense fallback={<PageLoader />}><Outlet /></Suspense>}>
+        <Route
+          element={
+            <Suspense fallback={<PageLoader />}>
+              <Outlet />
+            </Suspense>
+          }
+        >
           <Route index element={<Navigate to={FULL_PATHS.DASHBOARD} replace />} />
           <Route path={PATHS.DASHBOARD} element={<DashboardPage />} />
           <Route path={PATHS.PERMITS} element={<PermitsPage />} />

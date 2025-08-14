@@ -29,37 +29,25 @@ export const whitelistApi = createApi({
   endpoints: (builder) => ({
     getWhitelistPlates: builder.query<WhitelistPlateResponseDto[], void>({
       query: () => "WhitelistPlate",
-      transformResponse: (
-        response: IResponseWrapper<WhitelistPlateResponseDto[]>,
-      ) => response.data,
+      transformResponse: (response: IResponseWrapper<WhitelistPlateResponseDto[]>) => response.data,
       providesTags: ["WhitelistPlate"],
     }),
-    addWhitelistPlate: builder.mutation<
-      WhitelistPlateResponseDto,
-      WhitelistPlateRequestDto
-    >({
+    addWhitelistPlate: builder.mutation<WhitelistPlateResponseDto, WhitelistPlateRequestDto>({
       query: (newPlate) => ({
         url: "WhitelistPlate",
         method: "POST",
         body: newPlate,
       }),
-      transformResponse: (
-        response: IResponseWrapper<WhitelistPlateResponseDto>,
-      ) => response.data,
+      transformResponse: (response: IResponseWrapper<WhitelistPlateResponseDto>) => response.data,
       invalidatesTags: ["WhitelistPlate"],
     }),
-    updateWhitelistPlate: builder.mutation<
-      WhitelistPlateResponseDto,
-      WhitelistPlateUpdateDto
-    >({
+    updateWhitelistPlate: builder.mutation<WhitelistPlateResponseDto, WhitelistPlateUpdateDto>({
       query: (plate) => ({
         url: `WhitelistPlate`,
         method: "PUT",
         body: plate,
       }),
-      transformResponse: (
-        response: IResponseWrapper<WhitelistPlateResponseDto>,
-      ) => response.data,
+      transformResponse: (response: IResponseWrapper<WhitelistPlateResponseDto>) => response.data,
       invalidatesTags: ["WhitelistPlate"],
     }),
     deleteWhitelistPlate: builder.mutation<boolean, number>({
@@ -71,42 +59,27 @@ export const whitelistApi = createApi({
       invalidatesTags: ["WhitelistPlate"],
     }),
 
-    getWhitelistTradeLicenses: builder.query<
-      WhitelistTradeLicenseResponseDto[],
-      void
-    >({
+    getWhitelistTradeLicenses: builder.query<WhitelistTradeLicenseResponseDto[], void>({
       query: () => "WhitelistTradeLicense",
-      transformResponse: (
-        response: IResponseWrapper<WhitelistTradeLicenseResponseDto[]>,
-      ) => response.data,
+      transformResponse: (response: IResponseWrapper<WhitelistTradeLicenseResponseDto[]>) => response.data,
       providesTags: ["WhitelistTradeLicense"],
     }),
-    addWhitelistTradeLicense: builder.mutation<
-      WhitelistTradeLicenseResponseDto,
-      WhitelistTradeLicenseRequestDto
-    >({
+    addWhitelistTradeLicense: builder.mutation<WhitelistTradeLicenseResponseDto, WhitelistTradeLicenseRequestDto>({
       query: (newLicense) => ({
         url: "WhitelistTradeLicense",
         method: "POST",
         body: newLicense,
       }),
-      transformResponse: (
-        response: IResponseWrapper<WhitelistTradeLicenseResponseDto>,
-      ) => response.data,
+      transformResponse: (response: IResponseWrapper<WhitelistTradeLicenseResponseDto>) => response.data,
       invalidatesTags: ["WhitelistTradeLicense"],
     }),
-    updateWhitelistTradeLicense: builder.mutation<
-      WhitelistTradeLicenseResponseDto,
-      WhitelistTradeLicenseUpdateDto
-    >({
+    updateWhitelistTradeLicense: builder.mutation<WhitelistTradeLicenseResponseDto, WhitelistTradeLicenseUpdateDto>({
       query: (license) => ({
         url: `WhitelistTradeLicense/update`,
         method: "PUT",
         body: license,
       }),
-      transformResponse: (
-        response: IResponseWrapper<WhitelistTradeLicenseResponseDto>,
-      ) => response.data,
+      transformResponse: (response: IResponseWrapper<WhitelistTradeLicenseResponseDto>) => response.data,
       invalidatesTags: ["WhitelistTradeLicense"],
     }),
     deleteWhitelistTradeLicense: builder.mutation<boolean, number>({

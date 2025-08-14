@@ -7,11 +7,7 @@ const InspectionObstaclesPage: React.FC = () => {
   const config = pageConfigs["inspection-obstacles"];
 
   return (
-    <EntityPage
-      pageKey="inspection-obstacles"
-      config={config}
-      useGetHook={dynamicApi.useGetInspectionObstaclesQuery}
-    />
+    <EntityPage pageKey="inspection-obstacles" config={config} useGetHook={dynamicApi.useGetInspectionObstaclesQuery} />
   );
 };
 

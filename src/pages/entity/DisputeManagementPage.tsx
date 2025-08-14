@@ -12,7 +12,7 @@ const DisputeManagementPage: React.FC = () => {
       config={config}
       useGetHook={dynamicApi.useGetDisputesQuery}
       useDeleteHook={dynamicApi.useDeleteDisputeMutation}
-    /> 
+    />
   );
 };
 

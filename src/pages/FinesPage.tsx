@@ -77,7 +77,7 @@ const FinesPage: React.FC = () => {
       key: "createdAt",
       render: (date: string) => (date ? dayjs(date).format("YYYY-MM-DD ") : t("common.noData")),
     },
-    
+
     // Action column with location icon
     {
       title: "",
@@ -162,7 +162,7 @@ const FinesPage: React.FC = () => {
       </Card>
 
       {/* Results Table */}
-      <Card bordered={false} bodyStyle={{ padding: 0 }}>
+      <Card bordered={false} bodyStyle={{ padding: "5px 5px 0 5px" }}>
         <Spin spinning={isFetching}>
           <Table
             rowSelection={{ type: "checkbox" }}

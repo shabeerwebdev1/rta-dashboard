@@ -1,4 +1,5 @@
 import type { PageConfig } from "../../types/config";
+import { AuditOutlined, SnippetsOutlined } from "@ant-design/icons";
 
 export const pledgeConfig: PageConfig = {
   key: "pledges",
@@ -10,6 +11,14 @@ export const pledgeConfig: PageConfig = {
     put: "/api/Pledge/:id",
     delete: "/api/Pledge/:id",
   },
+  statsConfig: [
+    { title: "Total Pledges", icon: <AuditOutlined />, value: (data) => data.length },
+    {
+      title: "Corporate Pledges",
+      icon: <SnippetsOutlined />,
+      value: (data) => data.filter((d) => d.pledgeType === "Corporate").length,
+    },
+  ],
   tableConfig: {
     columns: [
       { key: "pledgeNumber", title: "form.pledgeNumber", type: "string" },

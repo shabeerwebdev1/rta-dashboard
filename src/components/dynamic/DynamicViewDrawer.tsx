@@ -1,6 +1,7 @@
 import React from "react";
-import { Drawer, Descriptions, Tag, Typography, Badge, Image, Empty, Space } from "antd";
+import { Drawer, Descriptions, Tag, Typography, Badge, Image, Empty, Space, Button } from "antd";
 import { useTranslation } from "react-i18next";
+import { ShareAltOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
 import { getFileUrl } from "../../services/fileApi";
 import dayjs from "dayjs";
@@ -12,9 +13,10 @@ interface DynamicViewDrawerProps {
   onClose: () => void;
   record: Record<string, unknown> | null;
   config: PageConfig;
+  onShare: () => void;
 }
 
-const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, record, config }) => {
+const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, record, config, onShare }) => {
   const { t } = useTranslation();
   if (!record) return null;
 
@@ -43,6 +45,11 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, re
       width={500}
       title={t("page.viewTitle", { entity: t(config.name.singular) })}
       className="dynamic-drawer"
+      extra={
+        <Button icon={<ShareAltOutlined />} onClick={onShare}>
+          {t("common.share")}
+        </Button>
+      }
     >
       <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
         {displayFields.map((field) => {

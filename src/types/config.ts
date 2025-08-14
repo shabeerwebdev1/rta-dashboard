@@ -1,4 +1,5 @@
 import type { Rule } from "antd/es/form";
+import type { ReactNode } from "react";
 
 export type FormFieldType = "text" | "textarea" | "select" | "date" | "dateRange" | "file" | "hidden" | "email";
 
@@ -34,11 +35,19 @@ export interface TableColumn {
   type: TableColumnType;
   //  Updated to allow same structure as formConfig.options
   options?: string[] | { label: string; value: unknown }[];
+  filterable?: boolean;
 }
 
 export interface TableConfig {
   columns: TableColumn[];
   viewRecord: boolean;
+}
+
+export interface StatConfig {
+  title: string;
+  icon: ReactNode;
+  value: (data: any[]) => number | string;
+  color?: string;
 }
 
 export interface PageConfig {
@@ -59,4 +68,5 @@ export interface PageConfig {
   };
   tableConfig: TableConfig;
   formConfig: FormConfig;
+  statsConfig?: StatConfig[];
 }

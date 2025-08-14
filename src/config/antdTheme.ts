@@ -94,7 +94,7 @@ const corporateRedTheme: ThemeConfig = {
     Button: { primaryShadow: "none" },
     Card: { headerBg: "transparent" },
     Table: {
-      headerBg: redPalette.bgLayout,
+      headerBg: "#ffffffff",
       colorBgContainer: redPalette.bgContainer,
     },
     Modal: {

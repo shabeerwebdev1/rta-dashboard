@@ -124,7 +124,8 @@
     "searchPlaceholder": "بحث...",
     "location": "الموقع",
     "noData": "لا توجد بيانات",
-    "selectFile": "Select File"
+    "selectFile": "Select File",
+    "share": "مشاركة"
   },
   "entity": {
     "plate": "لوحة",

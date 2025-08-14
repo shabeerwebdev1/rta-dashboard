@@ -9,9 +9,7 @@ export const store = configureStore({
     [fileApi.reducerPath]: fileApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({ serializableCheck: false })
-      .concat(dynamicApi.middleware)
-      .concat(fileApi.middleware),
+    getDefaultMiddleware({ serializableCheck: false }).concat(dynamicApi.middleware).concat(fileApi.middleware),
 });
 
 setupListeners(store.dispatch);

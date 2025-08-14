@@ -2,16 +2,19 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Card, Space, App, Input, DatePicker, Button, Tooltip } from "antd";
 import { AppstoreOutlined, DownloadOutlined, PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
-import { usePage } from "../contexts/PageContext";
+// import { usePage } from "../../contexts/PageContext";
+import { useSearchParams } from "react-router-dom";
 import DynamicTable from "../components/dynamic/DynamicTable";
 import DynamicFormModal from "../components/dynamic/DynamicFormModal";
+import DynamicViewDrawer from "../components/dynamic/DynamicViewDrawer";
 import PageLoader from "../components/common/PageLoader";
+import StatsGroup from "../components/common/StatsGroup";
 import { exportToCsv } from "../utils/csvExporter";
-
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import type { PageConfig } from "../types/config";
 import { useAppNotification } from "../utils/notificationManager";
+import { usePage } from "../contexts/PageContext";
 
 dayjs.extend(isBetween);
 
@@ -32,22 +35,38 @@ const EntityPage: React.FC<EntityPageProps> = ({ pageKey, config, useGetHook, us
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [selectedRecord, setSelectedRecord] = useState<Record<string, unknown> | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [viewRecord, setViewRecord] = useState<Record<string, unknown> | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [globalSearch, setGlobalSearch] = useState("");
   const [dateFilter, setDateFilter] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
   const [tableSize, setTableSize] = useState<"small" | "middle">("middle");
-
 
   const { data, isLoading, isError, error: getError } = useGetHook();
   const [deleteItem, { isLoading: isDeleting }] = useDeleteHook ? useDeleteHook() : [null, { isLoading: false }];
 
   useEffect(() => {
     setPageTitle(t(config.title));
-  }, [setPageTitle, t, config.title]);
+    const viewId = searchParams.get("view");
+    if (viewId && data && (data as any[]).length > 0) {
+      const recordToView = (data as any[]).find((item: any) => String(item.id) === viewId);
+      if (recordToView) {
+        handleView(recordToView);
+        searchParams.delete("view");
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [setPageTitle, t, config.title, data, searchParams, setSearchParams]);
+
+  const handleView = (record: Record<string, unknown>) => {
+    setViewRecord(record);
+    setIsDrawerOpen(true);
+  };
 
   const handleEdit = (record: Record<string, unknown>) => {
     setModalMode("edit");
@@ -66,13 +85,26 @@ const EntityPage: React.FC<EntityPageProps> = ({ pageKey, config, useGetHook, us
       onOk: async () => {
         try {
           const response = await deleteItem(record.id as string | number).unwrap();
-
           notification.success(response, t("messages.deleteSuccess", { entity: t(config.name.singular) }));
         } catch (err) {
           notification.error(err as { data?: { en_Msg?: string; ar_Msg?: string } }, `Failed to delete`);
         }
       },
     });
+  };
+
+  const handleShare = () => {
+    if (!viewRecord) return;
+    const shareUrl = `${window.location.origin}${window.location.pathname}?view=${viewRecord.id}`;
+    navigator.clipboard.writeText(shareUrl).then(
+      () => {
+        notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!");
+      },
+      (err) => {
+        notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed");
+        console.error("Could not copy text: ", err);
+      },
+    );
   };
 
   const handleDownloadCsv = () => {
@@ -116,15 +148,15 @@ const EntityPage: React.FC<EntityPageProps> = ({ pageKey, config, useGetHook, us
       });
   }, [data, globalSearch, dateFilter]);
 
-  if (isLoading) return <PageLoader />;
+  if (isLoading && !data) return <PageLoader />;
   if (isError) {
     notification.error(getError as { data?: { en_Msg?: string; ar_Msg?: string } }, "Failed to load data");
     return <div>Error loading data. See notifications for details.</div>;
   }
 
   return (
-    
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      {config.statsConfig && <StatsGroup config={config.statsConfig} data={filteredData} loading={isLoading} />}
       <Card bordered={false} className="page-header-card">
         <Space style={{ width: "100%", justifyContent: "space-between" }} wrap>
           <Space wrap>
@@ -166,16 +198,17 @@ const EntityPage: React.FC<EntityPageProps> = ({ pageKey, config, useGetHook, us
           </Space>
         </Space>
       </Card>
-      <Card bordered={false} bodyStyle={{ padding: 0 }} className="page-content-card">
+      <Card bordered={false} bodyStyle={{ padding: "5px 5px 0 5px" }} className="page-content-card">
         <DynamicTable
           config={config}
           data={filteredData}
           loading={isLoading || isDeleting}
+          onView={handleView}
           onEdit={handleEdit}
           onDelete={config.api.delete ? handleDelete : undefined}
           selectedRowKeys={selectedRowKeys}
           setSelectedRowKeys={setSelectedRowKeys}
-          tableSize={tableSize} 
+          tableSize={tableSize}
         />
       </Card>
       {isModalOpen && (
@@ -185,6 +218,18 @@ const EntityPage: React.FC<EntityPageProps> = ({ pageKey, config, useGetHook, us
           open={isModalOpen}
           initialData={selectedRecord}
           onClose={() => setIsModalOpen(false)}
+        />
+      )}
+      {viewRecord && (
+        <DynamicViewDrawer
+          open={isDrawerOpen}
+          onClose={() => {
+            setIsDrawerOpen(false);
+            setViewRecord(null);
+          }}
+          record={viewRecord}
+          config={config}
+          onShare={handleShare}
         />
       )}
     </Space>
