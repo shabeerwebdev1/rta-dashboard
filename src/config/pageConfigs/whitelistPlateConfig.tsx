@@ -1,4 +1,5 @@
 import type { PageConfig } from "../../types/config";
+import { IdcardOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 
 export const whitelistPlateConfig: PageConfig = {
   key: "whitelist-plates",
@@ -10,15 +11,30 @@ export const whitelistPlateConfig: PageConfig = {
     put: "/api/WhitelistPlate",
     delete: "/api/WhitelistPlate/:id",
   },
+  statsConfig: [
+    { title: "Total Plates", icon: <IdcardOutlined />, value: (data) => data.length },
+    {
+      title: "Active Plates",
+      icon: <CheckCircleOutlined />,
+      value: (data) => data.filter((d) => d.plateStatus?.toLowerCase() === "active").length,
+      color: "#52c41a",
+    },
+    {
+      title: "Inactive Plates",
+      icon: <CloseCircleOutlined />,
+      value: (data) => data.filter((d) => d.plateStatus?.toLowerCase() === "inactive").length,
+      color: "#ff4d4f",
+    },
+  ],
   tableConfig: {
     columns: [
       { key: "plateNumber", title: "form.plateNumber", type: "string" },
-      { key: "plateSource", title: "form.plateSource", type: "string" },
-      { key: "plateType", title: "form.plateType", type: "string" },
+      { key: "plateSource", title: "form.plateSource", type: "string", filterable: true },
+      { key: "plateType", title: "form.plateType", type: "string", filterable: true },
       { key: "plateColor", title: "form.plateColor", type: "badge" },
       { key: "fromDate", title: "form.fromDate", type: "date" },
       { key: "toDate", title: "form.toDate", type: "date" },
-      { key: "plateStatus", title: "form.status", type: "tag" },
+      { key: "plateStatus", title: "form.status", type: "tag", filterable: true },
     ],
     viewRecord: true,
   },

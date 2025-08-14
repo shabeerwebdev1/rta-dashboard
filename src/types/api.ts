@@ -53,8 +53,7 @@ export interface WhitelistTradeLicenseRequestDto {
   exemptionReason_ID: number;
 }
 
-export interface WhitelistTradeLicenseUpdateDto
-  extends WhitelistTradeLicenseRequestDto {
+export interface WhitelistTradeLicenseUpdateDto extends WhitelistTradeLicenseRequestDto {
   id: number;
 }
 

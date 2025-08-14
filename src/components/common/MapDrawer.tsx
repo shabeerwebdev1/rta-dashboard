@@ -28,19 +28,11 @@ const MapDrawer: React.FC<MapDrawerProps> = ({ open, onClose, record }) => {
       </Title>
 
       <Descriptions bordered column={1} size="small" layout="horizontal" style={{ marginBottom: 24 }}>
-        <Descriptions.Item label={t("whitelist.licenseNumber")}>
-          {record.licenseNumber}
-        </Descriptions.Item>
-        <Descriptions.Item label={t("whitelist.addedBy")}>
-          {record.addedBy}
-        </Descriptions.Item>
-        <Descriptions.Item label={t("whitelist.expiryDate")}>
-          {record.date}
-        </Descriptions.Item>
+        <Descriptions.Item label={t("whitelist.licenseNumber")}>{record.licenseNumber}</Descriptions.Item>
+        <Descriptions.Item label={t("whitelist.addedBy")}>{record.addedBy}</Descriptions.Item>
+        <Descriptions.Item label={t("whitelist.expiryDate")}>{record.date}</Descriptions.Item>
         <Descriptions.Item label={t("whitelist.status")}>
-          <Tag color={statusColor}>
-            {t(`status.${record.status.toLowerCase()}`)}
-          </Tag>
+          <Tag color={statusColor}>{t(`status.${record.status.toLowerCase()}`)}</Tag>
         </Descriptions.Item>
         <Descriptions.Item label={t("whitelist.type")}>
           <Tag>{t(`status.${record.type.toLowerCase()}`)}</Tag>

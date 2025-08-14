@@ -27,7 +27,9 @@ export const generateWhitelistData = (count: number): WhitelistRecord[] => {
       key: `${i + 1}`,
       tradeLicenseName: `${names[i % names.length]} #${i + 1}`,
       licenseNumber: `TLN${Math.floor(10000000 + Math.random() * 90000000)}`,
-      date: dayjs().add(Math.floor(Math.random() * 365) - 60, "day").format("DD-MM-YYYY"),
+      date: dayjs()
+        .add(Math.floor(Math.random() * 365) - 60, "day")
+        .format("DD-MM-YYYY"),
       location: {
         lat: baseCity.lat + latOffset,
         lng: baseCity.lng + lngOffset,

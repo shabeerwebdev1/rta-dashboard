@@ -52,12 +52,24 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({ open, onClose, fine }
           {/* Vehicle Details */}
           <h4 style={{ marginTop: 16 }}>{t("form.vehicleDetails")}</h4>
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label={t("form.plateNumber")}>{fine.plateDetails?.plateNumber || "No Data"}</Descriptions.Item>
-            <Descriptions.Item label={t("form.plateType")}>{fine.plateDetails?.plateType || "No Data"}</Descriptions.Item>
-            <Descriptions.Item label={t("form.vehicleColor")}>{fine.plateDetails?.vehicleColor || "No Data"}</Descriptions.Item>
-            <Descriptions.Item label={t("form.vehicleType")}>{fine.plateDetails?.vehicleType || "No Data"}</Descriptions.Item>
-            <Descriptions.Item label={t("form.vehicleBrand")}>{fine.plateDetails?.vehicleBrand || "No Data"}</Descriptions.Item>
-            <Descriptions.Item label={t("form.vehicleOwnerName")}>{fine.plateDetails?.vehicleOwnerName || "No Data"}</Descriptions.Item>
+            <Descriptions.Item label={t("form.plateNumber")}>
+              {fine.plateDetails?.plateNumber || "No Data"}
+            </Descriptions.Item>
+            <Descriptions.Item label={t("form.plateType")}>
+              {fine.plateDetails?.plateType || "No Data"}
+            </Descriptions.Item>
+            <Descriptions.Item label={t("form.vehicleColor")}>
+              {fine.plateDetails?.vehicleColor || "No Data"}
+            </Descriptions.Item>
+            <Descriptions.Item label={t("form.vehicleType")}>
+              {fine.plateDetails?.vehicleType || "No Data"}
+            </Descriptions.Item>
+            <Descriptions.Item label={t("form.vehicleBrand")}>
+              {fine.plateDetails?.vehicleBrand || "No Data"}
+            </Descriptions.Item>
+            <Descriptions.Item label={t("form.vehicleOwnerName")}>
+              {fine.plateDetails?.vehicleOwnerName || "No Data"}
+            </Descriptions.Item>
           </Descriptions>
 
           {/* Map */}

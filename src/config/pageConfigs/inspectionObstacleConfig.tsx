@@ -1,4 +1,5 @@
 import type { PageConfig } from "../../types/config";
+import { SearchOutlined, CheckSquareOutlined } from "@ant-design/icons";
 
 export const inspectionObstacleConfig: PageConfig = {
   key: "inspection-obstacles",
@@ -11,6 +12,15 @@ export const inspectionObstacleConfig: PageConfig = {
     put: "/api/InspectionObstacle/markremoved/:id",
     delete: "",
   },
+  statsConfig: [
+    { title: "Reported Obstacles", icon: <SearchOutlined />, value: (data) => data.length },
+    {
+      title: "Removed Obstacles",
+      icon: <CheckSquareOutlined />,
+      value: (data) => data.filter((d) => d.status?.toLowerCase() === "removed").length,
+      color: "#52c41a",
+    },
+  ],
   tableConfig: {
     columns: [
       { key: "obstacleNumber", title: "form.obstacleNumber", type: "string" },

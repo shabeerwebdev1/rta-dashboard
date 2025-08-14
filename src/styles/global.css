@@ -45,3 +45,11 @@ body {
   order: 2;
   margin: 0;
 }
+
+.ant-table-wrapper .ant-table-thead > tr > th {
+  border-bottom: 1px solid #e6e6e6 !important;
+}
+
+.ant-table-wrapper .ant-checkbox:not(.ant-checkbox-checked) .ant-checkbox-inner {
+  border-color: #bbbbbb !important;
+}

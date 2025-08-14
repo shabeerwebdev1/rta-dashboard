@@ -1,20 +1,9 @@
-
-
 function convertToCSV(data: Record<string, unknown>[]): string {
   if (!data || data.length === 0) {
     return "";
   }
 
-  const headers = [
-    "key",
-    "tradeLicenseName",
-    "licenseNumber",
-    "addedBy",
-    "type",
-    "date",
-    "status",
-    "location",
-  ];
+  const headers = ["key", "tradeLicenseName", "licenseNumber", "addedBy", "type", "date", "status", "location"];
 
   const csvRows = [headers.join(",")];
 

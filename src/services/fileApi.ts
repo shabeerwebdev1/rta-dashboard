@@ -21,7 +21,6 @@ export const fileApi = createApi({
   }),
 });
 
-export const getFileUrl = (fileName: string) =>
-  `${FILE_SERVER_TARGET}/api/Files/download/${fileName}`;
+export const getFileUrl = (fileName: string) => `${FILE_SERVER_TARGET}/api/Files/download/${fileName}`;
 
 export const { useUploadFilesMutation, useDeleteFileMutation } = fileApi;

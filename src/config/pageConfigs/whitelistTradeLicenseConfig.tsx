@@ -1,4 +1,6 @@
 import type { PageConfig } from "../../types/config";
+import { IdcardOutlined, CheckCircleOutlined, FieldTimeOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 
 export const whitelistTradeLicenseConfig: PageConfig = {
   key: "whitelist-tradelicenses",
@@ -10,6 +12,21 @@ export const whitelistTradeLicenseConfig: PageConfig = {
     put: "/api/WhitelistTradeLicense/update",
     delete: "/api/WhitelistTradeLicense/:id",
   },
+  statsConfig: [
+    { title: "Total Licenses", icon: <IdcardOutlined />, value: (data) => data.length },
+    {
+      title: "Active Licenses",
+      icon: <CheckCircleOutlined />,
+      value: (data) => data.filter((d) => d.plateStatus?.toLowerCase() === "active").length,
+      color: "#52c41a",
+    },
+    {
+      title: "Expired Licenses",
+      icon: <FieldTimeOutlined />,
+      value: (data) => data.filter((d) => dayjs(d.toDate as string).isBefore(dayjs())).length,
+      color: "#ff4d4f",
+    },
+  ],
   tableConfig: {
     columns: [
       { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "string" },
@@ -69,7 +86,10 @@ export const whitelistTradeLicenseConfig: PageConfig = {
         type: "select",
         required: true,
         span: 12,
-        options: [{ label: "Govt Entity", value: 1 }, { label: "Diplomatic Entity", value: 2 }],
+        options: [
+          { label: "Govt Entity", value: 1 },
+          { label: "Diplomatic Entity", value: 2 },
+        ],
         showLabel: true,
       },
       {

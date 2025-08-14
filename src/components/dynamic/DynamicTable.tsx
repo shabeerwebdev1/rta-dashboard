@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { Table, Button, Tag, Badge, Dropdown } from "antd";
-import type { TableProps, MenuProps } from "antd";
+import type { TableProps, MenuProps, TableColumnType as AntTableColumnType } from "antd";
 import { EditOutlined, DeleteOutlined, EyeOutlined, MoreOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import type { PageConfig } from "../../types/config";
-import DynamicViewDrawer from "./DynamicViewDrawer";
 
 interface TableRecord {
   id: string | number;
@@ -16,8 +15,9 @@ interface DynamicTableProps {
   config: PageConfig;
   data: TableRecord[];
   loading: boolean;
+  onView: (record: TableRecord) => void;
   onEdit: (record: TableRecord) => void;
-  onDelete: (record: TableRecord) => void;
+  onDelete?: (record: TableRecord) => void;
   selectedRowKeys: React.Key[];
   setSelectedRowKeys: (keys: React.Key[]) => void;
   tableSize: "small" | "middle";
@@ -37,60 +37,70 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   data,
   loading,
   tableSize,
+  onView,
   onEdit,
   onDelete,
   selectedRowKeys,
   setSelectedRowKeys,
 }) => {
   const { t } = useTranslation();
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [viewRecord, setViewRecord] = useState<TableRecord | null>(null);
 
-  const handleView = (record: TableRecord) => {
-    setViewRecord(record);
-    setIsDrawerOpen(true);
-  };
+  const columns: AntTableColumnType<TableRecord>[] = [
+    ...config.tableConfig.columns.map((col) => {
+      const { key, title, type, filterable } = col;
 
-  const columns: TableProps<TableRecord>["columns"] = [
-    ...config.tableConfig.columns.map((col) => ({
-      title: t(col.title),
-      dataIndex: col.key,
-      key: col.key,
-      sorter: (a: TableRecord, b: TableRecord) => {
-        const aVal = a[col.key];
-        const bVal = b[col.key];
-        if (typeof aVal === "string" && typeof bVal === "string") {
-          return aVal.localeCompare(bVal);
-        }
-        return Number(aVal) - Number(bVal);
-      },
-      render: (text: unknown) => {
-        if (!text) return " - ";
+      const columnProps: AntTableColumnType<TableRecord> = {
+        title: t(title),
+        dataIndex: key,
+        key: key,
+        sorter: (a: TableRecord, b: TableRecord) => {
+          const aVal = a[key];
+          const bVal = b[key];
+          if (typeof aVal === "string" && typeof bVal === "string") {
+            return aVal.localeCompare(bVal);
+          }
+          if (typeof aVal === "number" && typeof bVal === "number") {
+            return aVal - bVal;
+          }
+          return 0;
+        },
+        render: (text: unknown) => {
+          if (text === null || text === undefined || text === "") return " - ";
 
-        // Handle select fields (show label instead of number)
-        if (col.type === "select" && col.options) {
-          const found = col.options.find((opt) => opt.value === text);
-          return found ? found.label : String(text);
-        }
+          if (col.type === "select" && col.options) {
+            const found = col.options.find((opt: any) => opt.value === text);
+            return found ? found.label : String(text);
+          }
 
-        const statusKey = typeof text === "string" ? text.toLowerCase() : "";
-        const tagColor =
-          statusKey && statusColors[statusKey as keyof typeof statusColors]
-            ? statusColors[statusKey as keyof typeof statusColors]
-            : "default";
+          const statusKey = typeof text === "string" ? text.toLowerCase() : "";
+          const tagColor = statusColors[statusKey as keyof typeof statusColors] ?? "default";
 
-        switch (col.type) {
-          case "date":
-            return dayjs(text as string).isValid() ? dayjs(text as string).format("DD MMM YYYY") : String(text);
-          case "tag":
-            return <Tag color={tagColor}>{t(`status.${statusKey}`)}</Tag>;
-          case "badge":
-            return <Badge color={String(text).toLowerCase()} text={String(text)} />;
-          default:
-            return String(text);
-        }
-      },
-    })),
+          switch (type) {
+            case "date":
+              return dayjs(text as string).isValid() ? dayjs(text as string).format("DD MMM YYYY") : String(text);
+            case "tag":
+              return <Tag color={tagColor}>{t(`status.${statusKey}`, statusKey)}</Tag>;
+            case "badge":
+              return <Badge color={String(text).toLowerCase()} text={String(text)} />;
+            default:
+              return String(text);
+          }
+        },
+      };
+
+      if (filterable) {
+        const uniqueValues = [...new Set(data.map((item) => item[key]).filter(Boolean))];
+        columnProps.filters = uniqueValues.map((value) => ({
+          text: String(value),
+          value: value as string | number,
+        }));
+        columnProps.filterMode = "tree";
+        columnProps.filterSearch = true;
+        columnProps.onFilter = (value, record) => record[key] === value;
+      }
+
+      return columnProps;
+    }),
     {
       key: "action",
       align: "center",
@@ -104,11 +114,11 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
             key: "view",
             label: t("common.view"),
             icon: <EyeOutlined />,
-            onClick: () => handleView(record),
+            onClick: () => onView(record),
           });
         }
 
-        if (config.api.put && config.tableConfig.showEdit !== false) {
+        if (config.api.put && (config.tableConfig as any).showEdit !== false) {
           menuItems.push({
             key: "edit",
             label: t("common.edit"),
@@ -117,7 +127,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
           });
         }
 
-        if (config.api.delete) {
+        if (config.api.delete && onDelete) {
           menuItems.push({
             key: "delete",
             label: t("common.delete"),
@@ -146,30 +156,20 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
   };
 
   return (
-    <>
-      <Table
-        rowKey="id"
-        columns={columns}
-        dataSource={data}
-        loading={loading}
-        rowSelection={rowSelection}
-        scroll={{ x: "max-content" }}
-        size={tableSize}
-        pagination={{
-          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
-          showSizeChanger: true,
-          pageSizeOptions: ["10", "20", "50"],
-        }}
-      />
-      {viewRecord && (
-        <DynamicViewDrawer
-          open={isDrawerOpen}
-          onClose={() => setIsDrawerOpen(false)}
-          record={viewRecord}
-          config={config}
-        />
-      )}
-    </>
+    <Table
+      rowKey="id"
+      columns={columns}
+      dataSource={data}
+      loading={loading}
+      rowSelection={rowSelection}
+      scroll={{ x: "max-content" }}
+      size={tableSize}
+      pagination={{
+        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
+        showSizeChanger: true,
+        pageSizeOptions: ["10", "20", "50"],
+      }}
+    />
   );
 };
 

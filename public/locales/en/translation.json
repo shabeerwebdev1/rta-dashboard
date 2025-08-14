@@ -127,7 +127,8 @@
     "searchPlaceholder": "Search...",
     "location": "Location",
     "noData": "No Data",
-    "selectFile": "Select File"
+    "selectFile": "Select File",
+    "share": "Share"
   },
   "entity": {
     "plate": "Plate",
