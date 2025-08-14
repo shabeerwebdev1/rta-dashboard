@@ -1,80 +1,65 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Table, Card, Space, Tag, Button, Tooltip, Dropdown, App, Input, DatePicker } from "antd";
 import {
-  AppstoreOutlined,
-  DownloadOutlined,
-  EnvironmentOutlined,
   EyeOutlined,
   MoreOutlined,
+  AppstoreOutlined,
   UnorderedListOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
+import { useLazySearchParkonicsQuery } from "../services/rtkApiFactory";
+import ParkonicViewDrawer from "../components/parkonic/ParkonicViewDrawer";
 
 const { RangePicker } = DatePicker;
 
-interface FineRecord {
+interface ParkonicRecord {
   id: string;
-  fineNumber: string;
-  inspectorDeviceNumber: string;
-  assignedArea: string;
-  fineType: string;
-  fineAmount: number;
-  status: "Issued" | "Paid" | "Disputed";
+  vehicleNumber: string;
+  area: string;
+  status: string;
+  issuedAt: string;
 }
 
 const ParkonicPage: React.FC = () => {
   const { t } = useTranslation();
   const { setPageTitle } = usePage();
-  const { message, modal } = App.useApp();
+  const { message } = App.useApp();
 
-  const [tableData, setTableData] = useState<FineRecord[]>([]);
-  const [filteredData, setFilteredData] = useState<FineRecord[]>([]);
+  const [tableData, setTableData] = useState<ParkonicRecord[]>([]);
+  const [filteredData, setFilteredData] = useState<ParkonicRecord[]>([]);
   const [tableSize, setTableSize] = useState<"small" | "middle">("middle");
+  const [selectedRecord, setSelectedRecord] = useState<ParkonicRecord | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
+  const [searchParkonics, { data, isLoading }] = useLazySearchParkonicsQuery();
+
+  // Fetch data on mount
   useEffect(() => {
     setPageTitle(t("page.title.parkonic"));
+    searchParkonics({});
+  }, [searchParkonics, setPageTitle, t]);
 
-    const data: FineRecord[] = [
-      {
-        id: "1",
-        fineNumber: "FINE2023001",
-        inspectorDeviceNumber: "DEV-001",
-        assignedArea: "Downtown Area",
-        fineType: "Illegal Parking",
-        fineAmount: 500,
-        status: "Issued",
-      },
-    ];
+  // Update table when API data changes
+  useEffect(() => {
+    if (data) {
+      setTableData(data);
+      setFilteredData(data);
+    }
+  }, [data]);
 
-    setTableData(data);
-    setFilteredData(data);
-  }, [setPageTitle, t]);
-
-  const handleViewDetails = (record: FineRecord) => {
-    message.info(`Viewing details for ${record.fineNumber}`);
-  };
-
-  const handleMarkAsPaid = (record: FineRecord) => {
-    modal.confirm({
-      title: "Confirm Payment",
-      content: `Mark fine ${record.fineNumber} as paid?`,
-      onOk: () => {
-        message.success(`Fine ${record.fineNumber} marked as paid.`);
-      },
-    });
-  };
-
+  // Global search
   const handleGlobalSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase();
     const filtered = tableData.filter(
-      (item) =>
-        item.fineNumber.toLowerCase().includes(value) || item.inspectorDeviceNumber.toLowerCase().includes(value),
+      (item) => item.vehicleNumber.toLowerCase().includes(value) || item.area.toLowerCase().includes(value),
     );
     setFilteredData(filtered);
   };
 
+  // Date filter (placeholder)
   const handleDateFilter = (dates: any) => {
     if (!dates || dates.length === 0) {
       setFilteredData(tableData);
@@ -83,69 +68,65 @@ const ParkonicPage: React.FC = () => {
     message.info(`Filtering from ${dates[0].format("YYYY-MM-DD")} to ${dates[1].format("YYYY-MM-DD")}`);
   };
 
-  const columns: ColumnsType<FineRecord> = useMemo(
+  // Show drawer
+  const showDrawer = (record: ParkonicRecord) => {
+    setSelectedRecord(record);
+    setDrawerOpen(true);
+  };
+
+  // Table columns
+  const columns: ColumnsType<ParkonicRecord> = useMemo(
     () => [
       {
-        title: t("form.fineNumber"),
-        dataIndex: "fineNumber",
-        key: "fineNumber",
-        width: 160,
-        ellipsis: true,
+        title: t("form.vehicleNumber"),
+        dataIndex: "plateNumber",
+        key: "vehicleNumber",
       },
+
       {
-        title: t("form.issuedBy"),
-        dataIndex: "inspectorDeviceNumber",
-        key: "inspectorDeviceNumber",
-        width: 160,
-        ellipsis: true,
-      },
-      {
-        title: t("form.issuedAmount"),
-        dataIndex: "fineAmount",
-        key: "fineAmount",
-        width: 160,
-        render: (amount) => <span style={{ fontWeight: "bold" }}>AED {amount.toFixed(2)}</span>,
-        sorter: (a, b) => a.fineAmount - b.fineAmount,
-      },
-      {
-        title: t("form.status"),
-        dataIndex: "status",
-        key: "status",
-        width: 130,
-        render: (status) => {
-          const colorMap = {
-            Issued: "orange",
-            Paid: "green",
-            Disputed: "red",
+        title: t("form.reviewStatus"),
+        dataIndex: "reviewStatus",
+        key: "reviewStatus",
+        render: (status: number) => {
+          const labelMap = {
+            0: "Rejected",
+            1: "Approved",
           } as const;
-          return <Tag color={colorMap[status]}>{status}</Tag>;
+
+          const colorMap = {
+            0: "red",
+            1: "green",
+          } as const;
+
+          return <Tag color={colorMap[status] || "blue"}>{labelMap[status] || "Unknown"}</Tag>;
         },
+      },
+      {
+        title: t("form.entryDateTime"),
+        dataIndex: "entryDateTime",
+        key: "issuedAt",
+      },
+      {
+        title: t("form.exitDateTime"),
+        dataIndex: "exitDateTime",
+        key: "area",
       },
       {
         title: "",
         key: "actions",
         width: 100,
         align: "center",
+        fixed: "left",
         render: (_, record) => (
           <Space size="small">
-            <Tooltip title="View on map">
-              <Button icon={<EnvironmentOutlined />} type="text" onClick={() => handleViewDetails(record)} />
-            </Tooltip>
             <Dropdown
               menu={{
                 items: [
                   {
                     key: "view",
                     icon: <EyeOutlined />,
-                    label: "View Details",
-                    onClick: () => handleViewDetails(record),
-                  },
-                  {
-                    key: "markPaid",
-                    icon: <EyeOutlined />,
-                    label: "Mark as Paid",
-                    disabled: record.status !== "Issued",
-                    onClick: () => handleMarkAsPaid(record),
+                    label: "View ",
+                    onClick: () => showDrawer(record),
                   },
                 ],
               }}
@@ -166,7 +147,7 @@ const ParkonicPage: React.FC = () => {
         <Space wrap style={{ width: "100%", justifyContent: "space-between" }} size="middle">
           <Space wrap size="middle">
             <Input.Search
-              placeholder="Search fines..."
+              placeholder="Search..."
               style={{ minWidth: "300px" }}
               onChange={handleGlobalSearch}
               allowClear
@@ -186,11 +167,12 @@ const ParkonicPage: React.FC = () => {
 
       <Card bordered={false} bodyStyle={{ padding: 0 }}>
         <Table
-          rowKey="id"
           rowSelection={{ type: "checkbox" }}
+          rowKey="id"
           columns={columns}
           dataSource={filteredData}
           size={tableSize}
+          loading={isLoading}
           pagination={{
             defaultPageSize: 10,
             showSizeChanger: true,
@@ -201,6 +183,9 @@ const ParkonicPage: React.FC = () => {
           sticky={{ offsetHeader: 64 }}
         />
       </Card>
+
+      {/* Drawer */}
+      <ParkonicViewDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} record={selectedRecord} />
     </Space>
   );
 };

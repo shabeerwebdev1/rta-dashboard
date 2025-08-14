@@ -107,7 +107,12 @@ const DynamicFormModal: React.FC<DynamicFormModalProps> = ({ pageKey, mode, open
       }
 
       // --- Submission Step ---
-      setSubmissionStatus(t("status.submitting"));
+      if (mode === "add") {
+        setSubmissionStatus(t("status.submitting"));
+      } else {
+        setSubmissionStatus(t("status.updating"));
+      }
+
       let response: unknown;
       if (mode === "add") {
         response = await addItem(submissionPayload).unwrap();

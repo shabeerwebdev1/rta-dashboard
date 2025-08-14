@@ -89,7 +89,22 @@
     "fineType": "نوع الغرامة",
     "section": "القسم",
     "issuedBy": "المُصدر",
-    "issuedAmount": "المبلغ المُصدر"
+    "issuedAmount": "المبلغ المُصدر",
+    "amount": "المبلغ",
+    "date": "التاريخ",
+    "vehicleColor": "لون المركبة",
+    "vehicleType": "نوع المركبة",
+    "vehicleBrand": "ماركة المركبة",
+    "vehicleOwnerName": "اسم مالك المركبة",
+    "finedetails": "تفاصيل الغرامة",
+    "vehicleDetails": "تفاصيل المركبة",
+    "FineLocation": "موقع الغرامة",
+    "AttachedPhotos": "الصور المرفقة",
+    "ActivityLog": "سجل النشاطات",
+    "vehicleNumber": "رقم المركبة",
+    "exitDateTime": "تاريخ ووقت الخروج",
+    "reviewStatus": "حالة المراجعة",
+    "entryDateTime": "تاريخ ووقت الدخول"
   },
   "common": {
     "action": "إجراء",
@@ -123,6 +138,8 @@
     "expired": "منتهي الصلاحية",
     "pending": "قيد الانتظار",
     "removed": "تمت الإزالة",
-    "reported": "Reported"
+    "reported": "Reported",
+    "submitting": "جارٍ الإرسال",
+    "updating": "جارٍ التحديث"
   }
 }

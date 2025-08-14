@@ -92,9 +92,22 @@
     "issuer": "Issuer",
     "fineType": "Fine Type",
     "section": "Section",
-    "issuedBy" : "Issued By",
-    "issuedAmount": "Issued Amount"
-
+    "issuedBy": "Issued By",
+    "issuedAmount": "Issued Amount",
+    "amount": "Amount",
+    "vehicleColor": "Vehicle Color",
+    "vehicleType": "Vehicle Type",
+    "vehicleBrand": "Vehicle Brand",
+    "vehicleOwnerName": "Vehicle Owner Name",
+    "finedetails": "Fine Details",
+    "vehicleDetails": "Vehicle Details",
+    "FineLocation": "Fine Location",
+    "AttachedPhotos": "Attached Photos",
+    "ActivityLog": "Activity Log",
+    "vehicleNumber": "Vehicle Number",
+    "exitDateTime": "Exit Date & Time",
+    "reviewStatus": "Review Status",
+    "entryDateTime": "Entry Date & Time"
   },
   "common": {
     "action": "Action",
@@ -128,6 +141,8 @@
     "expired": "Expired",
     "pending": "Pending",
     "removed": "Removed",
-    "reported": "Reported"
+    "reported": "Reported",
+    "submitting": "Submitting",
+    "updating": "Updating"
   }
 }

@@ -15,13 +15,12 @@
 
 /* TABLE STYLES */
 .ant-table-wrapper .ant-table-pagination.ant-pagination {
-  margin: 24px;
+  margin: 16px;
 }
 
 html[lang="en"] .ant-pagination-total-text {
   margin-right: auto !important;
 }
-
 html[lang="ar"] .ant-pagination-total-text {
   margin-left: auto !important;
 }

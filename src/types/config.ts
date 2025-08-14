@@ -1,6 +1,7 @@
 import type { Rule } from "antd/es/form";
 
 export type FormFieldType = "text" | "textarea" | "select" | "date" | "dateRange" | "file" | "hidden" | "email";
+
 export interface FormField {
   name: string;
   label: string;
@@ -24,19 +25,22 @@ export interface FormConfig {
   fields: FormField[];
 }
 
-export type TableColumnType = "string" | "date" | "tag" | "badge";
+// Added "select" so table columns can be dropdown-based
+export type TableColumnType = "string" | "date" | "tag" | "badge" | "select";
 
 export interface TableColumn {
   key: string;
   title: string;
   type: TableColumnType;
-  options?: Record<string, string>;
+  //  Updated to allow same structure as formConfig.options
+  options?: string[] | { label: string; value: unknown }[];
 }
 
 export interface TableConfig {
   columns: TableColumn[];
   viewRecord: boolean;
 }
+
 export interface PageConfig {
   key: string;
   title: string;
