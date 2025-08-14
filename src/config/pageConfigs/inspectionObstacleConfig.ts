@@ -22,6 +22,7 @@ export const inspectionObstacleConfig: PageConfig = {
       { key: "status", title: "form.status", type: "tag" },
     ],
     viewRecord: true,
+    showEdit: false,
   },
   formConfig: {
     modalWidth: "720px",

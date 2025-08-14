@@ -123,6 +123,7 @@ const EntityPage: React.FC<EntityPageProps> = ({ pageKey, config, useGetHook, us
   }
 
   return (
+    
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Card bordered={false} className="page-header-card">
         <Space style={{ width: "100%", justifyContent: "space-between" }} wrap>

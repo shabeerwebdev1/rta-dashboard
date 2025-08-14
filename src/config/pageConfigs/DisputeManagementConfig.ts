@@ -4,56 +4,88 @@ export const disputeManagementConfig: PageConfig = {
   key: "dispute-management",
   title: "page.title.dispute-management",
   name: { singular: "Dispute", plural: "Disputes" },
-  // api: {
-  //   get: "/api/Dispute",
-  //   post: "/api/Dispute",
-  //   put: "/api/Dispute/:id",
-  //   delete: "/api/Dispute/:id",
-  // },
-
   api: {
-    get: "/api/Pledge",
-    post: "/api/Pledge",
-    put: "/api/Pledge/:id",
-    delete: "/api/Pledge/:id",
+    get: "/api/Dispute/GetAll",
+    post: "/api/Dispute/Create",
+    put: "/api/Dispute/Update",
+    delete: "",
   },
+
   tableConfig: {
     columns: [
-      { key: "department", title: "form.department", type: "string" },
-      { key: "paymentType", title: "form.paymentType", type: "string" },
-      { key: "phoneNumber", title: "form.phoneNumber", type: "string" },
-      { key: "crmReference", title: "form.crmReference", type: "string" },
+      {
+        key: "department",
+        title: "form.department",
+        type: "select",
+        options: [
+          { label: "Parking", value: 1 },
+          { label: "Traffic", value: 2 },
+          { label: "Finance", value: 3 },
+          { label: "Enforcement", value: 4 },
+        ],
+      },
+      {
+        key: "payment_Type",
+        title: "form.paymentType",
+        type: "select",
+        options: [
+          { label: "Cash", value: 1 },
+          { label: "Credit Card", value: 2 },
+          { label: "Online", value: 3 },
+        ],
+      },
+      { key: "phone", title: "form.phoneNumber", type: "string" },
+      { key: "crM_Ref", title: "form.crmReference", type: "string" },
     ],
+
     viewRecord: true,
+    showEdit: false,
   },
+
   formConfig: {
     modalWidth: "720px",
     fields: [
+      {
+        name: "fine_Number",
+        label: "form.fineNumber",
+        type: "text",
+        required: true,
+        span: 12,
+      },
       {
         name: "department",
         label: "form.department",
         type: "select",
         required: true,
         span: 12,
-        options: ["Finance", "Customer Service", "Legal", "Technical Support"],
+        options: [
+          { label: "Parking", value: 1 },
+          { label: "Traffic", value: 2 },
+          { label: "Finance", value: 3 },
+          { label: "Enforcement", value: 4 },
+        ],
       },
       {
-        name: "paymentType",
+        name: "payment_Type",
         label: "form.paymentType",
         type: "select",
         required: true,
         span: 12,
-        options: ["Credit Card", "Debit Card", "Cash", "Online Transfer"],
+        options: [
+          { label: "Cash", value: 1 },
+          { label: "Credit Card", value: 2 },
+          { label: "Online", value: 3 },
+        ],
       },
       {
-        name: "reason",
+        name: "dispute_Reason",
         label: "form.reason",
         type: "text",
         required: true,
         span: 12,
       },
       {
-        name: "crmReference",
+        name: "crM_Ref",
         label: "form.crmReference",
         type: "text",
         required: true,
@@ -67,7 +99,7 @@ export const disputeManagementConfig: PageConfig = {
         span: 12,
       },
       {
-        name: "phoneNumber",
+        name: "phone",
         label: "form.phoneNumber",
         type: "text",
         required: false,

@@ -71,8 +71,55 @@ export const dynamicApi = createApi({
       transformResponse: (response: { data?: unknown[] }) => response.data || [],
     });
 
+    endpoints.searchFines = builder.query({
+      query: (params: Record<string, unknown>) => ({
+        url: "/api/FineManagement/search",
+        method: "GET",
+        params,
+      }),
+      providesTags: ["FineSearch"],
+      transformResponse: (response: any) => {
+        // If the API sometimes returns a single object instead of array, normalize it
+        const data = response?.data;
+        return Array.isArray(data) ? data : [data];
+      },
+    });
+
+    endpoints.searchParkonics = builder.query({
+      query: (params: Record<string, unknown>) => ({
+        url: "/api/Parkonic",
+        method: "GET",
+        params,
+      }),
+      providesTags: ["ParkonicSearch"],
+      transformResponse: (response: any) => {
+        const data = response?.data;
+        return Array.isArray(data) ? data : [data];
+      },
+    });
+    endpoints.reviewParkonic = builder.mutation({
+      query: (body: {
+        fineId: string;
+        reviewerName: string;
+        reviewTimestamp: string;
+        reviewStatus: number;
+        updatedby: string;
+        rejectionReason?: string;
+      }) => ({
+        url: "/api/Parkonic/Review",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["ParkonicSearch"], // refresh Parkonic list after review
+    });
+
     return endpoints;
   },
 });
 
-export const { useLazySearchPermitsQuery } = dynamicApi;
+export const {
+  useLazySearchPermitsQuery,
+  useLazySearchFinesQuery,
+  useLazySearchParkonicsQuery,
+  useReviewParkonicMutation,
+} = dynamicApi;

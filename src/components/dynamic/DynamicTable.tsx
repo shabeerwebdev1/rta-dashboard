@@ -65,12 +65,20 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
         return Number(aVal) - Number(bVal);
       },
       render: (text: unknown) => {
+        if (!text) return " - ";
+
+        // Handle select fields (show label instead of number)
+        if (col.type === "select" && col.options) {
+          const found = col.options.find((opt) => opt.value === text);
+          return found ? found.label : String(text);
+        }
+
         const statusKey = typeof text === "string" ? text.toLowerCase() : "";
         const tagColor =
           statusKey && statusColors[statusKey as keyof typeof statusColors]
             ? statusColors[statusKey as keyof typeof statusColors]
             : "default";
-        if (!text) return " - ";
+
         switch (col.type) {
           case "date":
             return dayjs(text as string).isValid() ? dayjs(text as string).format("DD MMM YYYY") : String(text);
@@ -84,13 +92,13 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
       },
     })),
     {
-      // title: t("common.action"),
       key: "action",
       align: "center",
       fixed: "right",
       width: 100,
       render: (_, record: TableRecord) => {
         const menuItems: MenuProps["items"] = [];
+
         if (config.tableConfig.viewRecord) {
           menuItems.push({
             key: "view",
@@ -99,7 +107,8 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
             onClick: () => handleView(record),
           });
         }
-        if (config.api.put) {
+
+        if (config.api.put && config.tableConfig.showEdit !== false) {
           menuItems.push({
             key: "edit",
             label: t("common.edit"),
@@ -107,6 +116,7 @@ const DynamicTable: React.FC<DynamicTableProps> = ({
             onClick: () => onEdit(record),
           });
         }
+
         if (config.api.delete) {
           menuItems.push({
             key: "delete",

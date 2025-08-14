@@ -19,6 +19,7 @@ export const pledgeConfig: PageConfig = {
       { key: "submittedAt", title: "form.fromDate", type: "date" },
     ],
     viewRecord: true,
+    showEdit: false,
   },
   formConfig: {
     modalWidth: "720px",
