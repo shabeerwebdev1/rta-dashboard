@@ -1,56 +1,48 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Space,
-  Card,
-  Input,
-  Button,
-  Table,
-  Dropdown,
-  Tag,
-  Modal,
-  Form,
-  Row,
-  Col,
-  Select,
-  App,
-  Drawer,
-  Descriptions,
-  Upload,
-  Image,
-} from "antd";
+import { Space, Card, Input, Button, Dropdown, Modal, Form, Row, Col, Select, App, Upload, DatePicker, Tooltip } from "antd";
 import {
   PlusOutlined,
-  MoreOutlined,
   EyeOutlined,
-  ShareAltOutlined,
-  SearchOutlined,
-  CheckSquareOutlined,
+  DownloadOutlined,
+  AppstoreOutlined,
+  UnorderedListOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
+import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
 import { useGetInspectionObstaclesQuery, useAddInspectionObstacleMutation } from "../services/rtkApiFactory";
 import { useUploadFilesMutation } from "../services/fileApi";
-import { getFileUrl } from "../services/fileApi";
-import { STATUS_COLORS } from "../constants/ui";
 import StatsDisplay from "../components/common/StatsDisplay";
-import { searchConfig } from "../config/searchConfig";
+import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
+import { exportToCsv } from "../utils/csvExporter";
+import DynamicViewDrawer from "../components/drawer";
+import { pageConfigs } from "../config/pageConfigs";
+import DataTableWrapper from "../components/common/DataTableWrapper";
+
+const { Option } = Select;
+const pageKey = "inspection-obstacles";
 
 const InspectionObstaclesPage: React.FC = () => {
   const { t } = useTranslation();
   const { setPageTitle } = usePage();
+  const { modal } = App.useApp();
   const notification = useAppNotification();
-  const pageKey = "inspection-obstacles";
-  const { apiParams, handleTableChange, setSearchFilters } = useTableParams(searchConfig[pageKey]);
+  const config = pageConfigs[pageKey];
+  const { apiParams, handleTableChange, handlePaginationChange, setGlobalSearch, setDateRange, clearFilter, clearAll, state } =
+    useTableParams(config.searchConfig!);
   const [form] = Form.useForm();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any>(null);
+  const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+  const [searchValue, setSearchValue] = useState<string>(state.searchValue);
+  const debouncedSearchValue = useDebounce(searchValue, 500);
 
   const { data, isLoading, isFetching } = useGetInspectionObstaclesQuery(apiParams, {
     refetchOnMountOrArgChange: true,
@@ -59,37 +51,61 @@ const InspectionObstaclesPage: React.FC = () => {
   const [uploadFiles, { isLoading: isUploading }] = useUploadFilesMutation();
 
   useEffect(() => {
-    setPageTitle(t("page.title.inspection-obstacles"));
-  }, [setPageTitle, t]);
+    setPageTitle(t(config.title));
+  }, [setPageTitle, t, config.title]);
 
-  const handleModalOpen = (record?: any) => {
-    setSelectedRecord(record || null);
+  useEffect(() => {
+    setGlobalSearch(state.searchKey, debouncedSearchValue);
+  }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
+
+  const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
+    if (type === "search") {
+      setSearchValue("");
+    }
+    clearFilter(type, key, value);
+  };
+
+  const handleClearAll = () => {
+    setSearchValue("");
+    clearAll();
+  };
+
+  const handleModalOpen = () => {
     setIsModalOpen(true);
   };
 
   const handleModalClose = () => {
     setIsModalOpen(false);
-    setSelectedRecord(null);
     form.resetFields();
   };
 
   const handleFormSubmit = async (values: any) => {
-    const formData = new FormData();
-    Object.keys(values).forEach((key) => {
-      if (key === "Photo") {
-        values[key]?.forEach((file: any) => {
-          if (file.originFileObj) {
-            formData.append("Photo", file.originFileObj);
-          }
-        });
-      } else {
-        formData.append(key, values[key]);
-      }
-    });
+    const { Photo } = values;
+    let finalPayload: Record<string, any> = {};
 
     try {
-      const response = await addObstacle(formData).unwrap();
-      notification.success(response, t("messages.addSuccess", { entity: "Inspection Obstacle" }));
+      let savedFileName = "";
+      if (Photo && Photo.length > 0 && Photo[0].originFileObj) {
+        const formData = new FormData();
+        formData.append("Category", "Obstacles");
+        formData.append("Files", Photo[0].originFileObj);
+        const uploadResult = await uploadFiles(formData).unwrap();
+        savedFileName = (uploadResult as any[])[0].savedAs;
+      }
+
+      finalPayload = {
+        obstacleNumber: values.ObstacleNumber,
+        zone: values.Zone,
+        area: values.Area,
+        sourceOfObstacle: values.SourceOfObstacle,
+        closestPaymentDevice: values.ClosestPaymentDevice,
+        reportedBy: values.ReportedBy,
+        comments: values.Comments,
+        photo: savedFileName,
+      };
+
+      const response = await addObstacle(finalPayload).unwrap();
+      notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
       handleModalClose();
     } catch (err) {
       notification.error(err as any, "Operation Failed");
@@ -101,105 +117,112 @@ const InspectionObstaclesPage: React.FC = () => {
     setIsDrawerOpen(true);
   };
 
-  const stats = useMemo(
-    () => [
-      {
-        title: "Reported Obstacles",
-        icon: <SearchOutlined />,
-        value: data?.total || 0,
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href).then(
+      () => notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!"),
+      () => notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed"),
+    );
+  };
+
+  const handleDownloadCsv = () => {
+    if (selectedRowKeys.length === 0) {
+      notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
+      return;
+    }
+    modal.confirm({
+      title: t("messages.csvConfirmTitle"),
+      content: t("messages.csvConfirmContent"),
+      onOk: () => {
+        const selectedData = data.data.filter((item: any) => selectedRowKeys.includes(item.id));
+        exportToCsv(selectedData, `obstacles_export.csv`);
+        notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
+        setSelectedRowKeys([]);
       },
-      {
-        title: "Removed Obstacles",
-        icon: <CheckSquareOutlined />,
-        value: data?.data?.filter((d: any) => d.status?.toLowerCase() === "removed").length || 0,
-        color: "#52c41a",
-      },
-    ],
-    [data],
+    });
+  };
+
+  const columnLabels = useMemo(
+    () =>
+      Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
+    [t, config.tableConfig.columns],
   );
 
-  const columns = useMemo(
-    () => [
-      { key: "obstacleNumber", title: t("form.obstacleNumber"), dataIndex: "obstacleNumber", sorter: true },
-      { key: "zone", title: t("form.zone"), dataIndex: "zone", sorter: true },
-      { key: "area", title: t("form.area"), dataIndex: "area", sorter: true },
-      { key: "sourceOfObstacle", title: t("form.sourceOfObstacle"), dataIndex: "sourceOfObstacle" },
-      {
-        key: "reportedAt",
-        title: t("form.date"),
-        dataIndex: "reportedAt",
-        render: (text: string) => dayjs(text).format("YYYY-MM-DD"),
-        sorter: true,
-      },
-      { key: "reportedBy", title: t("form.reportedBy"), dataIndex: "reportedBy" },
-      {
-        key: "status",
-        title: t("form.status"),
-        dataIndex: "status",
-        render: (text: string) => <Tag color={STATUS_COLORS[text?.toLowerCase()]}>{text}</Tag>,
-      },
-      {
-        key: "action",
-        title: t("common.action"),
-        align: "center" as const,
-        render: (_: any, record: any) => (
-          <Dropdown
-            menu={{
-              items: [{ key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) }],
-            }}
-            trigger={["click"]}
-          >
-            <Button type="text" icon={<MoreOutlined />} />
-          </Dropdown>
-        ),
-      },
-    ],
-    [t],
+  const actionMenuItems = (record: any) => [
+    { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
+  ];
+
+  const searchAddon = (
+    <Select value={state.searchKey} onChange={(key) => setGlobalSearch(key, state.searchValue)} style={{ width: 150 }}>
+      {config.searchConfig?.globalSearchKeys.map((key) => (
+        <Option key={key} value={key}>
+          {columnLabels[key] || key}
+        </Option>
+      ))}
+    </Select>
   );
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <StatsDisplay stats={stats} loading={isLoading} />
-      <Card bordered={false}>
-        <Row justify="space-between" align="middle">
+      <StatsDisplay statsConfig={config.statsConfig} data={data?.data || []} loading={isLoading} />
+      <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
+        <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
           <Col>
-            <Input.Search
-              placeholder={t("common.searchPlaceholder")}
-              onSearch={(value) => setSearchFilters({ searchTerm: value })}
-              style={{ width: 300 }}
-              allowClear
-            />
+            <Space>
+              <Input
+                addonBefore={searchAddon}
+                placeholder={t("common.searchPlaceholder")}
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                style={{ width: 450 }}
+                allowClear
+              />
+              <DatePicker.RangePicker
+                value={state.dateRange}
+                onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
+              />
+            </Space>
           </Col>
           <Col>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => handleModalOpen()}>
-              {t("common.addNew")}
-            </Button>
+            <Space>
+              <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
+                {t("common.downloadCsv")}
+              </Button>
+              <Tooltip title={tableSize === "middle" ? "Compact view" : "Standard view"}>
+                <Button
+                  icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
+                  onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
+                />
+              </Tooltip>
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleModalOpen}>
+                {t("common.addNew")}
+              </Button>
+            </Space>
           </Col>
         </Row>
-      </Card>
-
-      <Card bordered={false} bodyStyle={{ padding: 0 }}>
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={data?.data}
-          loading={isLoading || isFetching}
-          pagination={{
-            current: apiParams.PageNumber,
-            pageSize: apiParams.PageSize,
-            total: data?.total,
-            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
-            showSizeChanger: true,
-            pageSizeOptions: ["10", "20", "50"],
-          }}
-          onChange={handleTableChange}
-          rowSelection={{ selectedRowKeys, onChange: (keys) => setSelectedRowKeys(keys) }}
+        <ActiveFiltersDisplay
+          state={state}
+          onClearFilter={handleClearFilter}
+          onClearAll={handleClearAll}
+          columnLabels={columnLabels}
         />
       </Card>
 
+      <DataTableWrapper
+        pageConfig={config}
+        data={data?.data || []}
+        total={data?.total || 0}
+        isLoading={isLoading || isFetching}
+        apiParams={apiParams}
+        handleTableChange={handleTableChange}
+        handlePaginationChange={handlePaginationChange}
+        rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
+        actionMenuItems={actionMenuItems}
+        tableSize={tableSize}
+      />
+
       <Modal
         open={isModalOpen}
-        title={t("page.addTitle", { entity: "Inspection Obstacle" })}
+        title={t("page.addTitle", { entity: t(config.name.singular) })}
         onCancel={handleModalClose}
         width="720px"
         footer={[
@@ -256,7 +279,7 @@ const InspectionObstaclesPage: React.FC = () => {
                 valuePropName="fileList"
                 getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
               >
-                <Upload listType="picture-card" beforeUpload={() => false}>
+                <Upload listType="picture-card" beforeUpload={() => false} maxCount={1}>
                   <div>
                     <PlusOutlined />
                     <div style={{ marginTop: 8 }}>{t("common.selectFile")}</div>
@@ -273,36 +296,18 @@ const InspectionObstaclesPage: React.FC = () => {
         </Form>
       </Modal>
 
-      <Drawer
-        open={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        width={500}
-        title={t("page.viewTitle", { entity: "Inspection Obstacle" })}
-        extra={
-          <Button icon={<ShareAltOutlined />} onClick={() => {}}>
-            {t("common.share")}
-          </Button>
-        }
-      >
-        {viewRecord && (
-          <Space direction="vertical" style={{ width: "100%" }} size="large">
-            <Descriptions bordered column={1}>
-              <Descriptions.Item label={t("form.obstacleNumber")}>{viewRecord.obstacleNumber}</Descriptions.Item>
-              <Descriptions.Item label={t("form.zone")}>{viewRecord.zone}</Descriptions.Item>
-              <Descriptions.Item label={t("form.area")}>{viewRecord.area}</Descriptions.Item>
-              <Descriptions.Item label={t("form.sourceOfObstacle")}>{viewRecord.sourceOfObstacle}</Descriptions.Item>
-              <Descriptions.Item label={t("form.date")}>
-                {dayjs(viewRecord.reportedAt).format("YYYY-MM-DD")}
-              </Descriptions.Item>
-              <Descriptions.Item label={t("form.reportedBy")}>{viewRecord.reportedBy}</Descriptions.Item>
-              <Descriptions.Item label={t("form.status")}>
-                <Tag color={STATUS_COLORS[viewRecord.status.toLowerCase()]}>{viewRecord.status}</Tag>
-              </Descriptions.Item>
-            </Descriptions>
-            {viewRecord.photoPath && <Image width={200} src={getFileUrl(viewRecord.photoPath)} />}
-          </Space>
-        )}
-      </Drawer>
+      {viewRecord && (
+        <DynamicViewDrawer
+          open={isDrawerOpen}
+          onClose={() => {
+            setIsDrawerOpen(false);
+            setViewRecord(null);
+          }}
+          record={viewRecord}
+          config={config}
+          onShare={handleShare}
+        />
+      )}
     </Space>
   );
 };

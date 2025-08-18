@@ -19,7 +19,6 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<MainLayout />}>
-        {/* Correctly wrap the page routes in a Suspense-powered layout route */}
         <Route
           element={
             <Suspense fallback={<PageLoader />}>

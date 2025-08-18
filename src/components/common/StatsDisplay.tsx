@@ -1,31 +1,26 @@
 import React from "react";
 import { Card, Col, Row, Skeleton, Statistic } from "antd";
-
-interface Stat {
-  title: string;
-  value: number | string;
-  icon?: React.ReactNode;
-  color?: string;
-}
+import type { StatConfig } from "../../types/config";
 
 interface StatsDisplayProps {
-  stats: Stat[];
+  statsConfig?: StatConfig[];
+  data: any[];
   loading?: boolean;
 }
 
-const StatsDisplay: React.FC<StatsDisplayProps> = ({ stats, loading }) => {
-  if (!stats || stats.length === 0) return null;
+const StatsDisplay: React.FC<StatsDisplayProps> = ({ statsConfig, data, loading }) => {
+  if (!statsConfig || statsConfig.length === 0) return null;
 
   return (
-    <div style={{ marginBottom: 0 }}>
+    <div>
       <Row gutter={[24, 24]}>
-        {stats.map((stat, index) => (
+        {statsConfig.map((stat, index) => (
           <Col xs={24} sm={12} md={8} lg={6} key={index}>
-            <Card  size="small" bordered={false}>
+            <Card size="small" bordered={false}>
               <Skeleton loading={loading} active paragraph={{ rows: 1 }} title={false}>
                 <Statistic
                   title={stat.title}
-                  value={stat.value}
+                  value={stat.value(data)}
                   valueStyle={{ color: stat.color }}
                   prefix={stat.icon}
                 />

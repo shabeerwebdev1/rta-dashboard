@@ -1,4 +1,3 @@
-// components/ParkonicViewDrawer.tsx
 import React, { useState } from "react";
 import { Drawer, Descriptions, Tag, Space, Image, Timeline, Empty, Button, Select, Input, message } from "antd";
 import { getFileUrl } from "../../services/fileApi";
@@ -27,15 +26,15 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
     try {
       await reviewParkonic({
         fineId: record.fineId,
-        reviewerName: "CurrentUser", // replace with actual user
+        reviewerName: "CurrentUser",
         reviewTimestamp: new Date().toISOString(),
         reviewStatus,
-        updatedby: "CurrentUser", // replace with actual user
+        updatedby: "CurrentUser",
         rejectionReason,
       }).unwrap();
 
       message.success("Review submitted successfully");
-      onClose(); // close drawer after review
+      onClose();
     } catch (error: any) {
       message.error(error?.data?.message || "Failed to submit review");
     }
@@ -63,7 +62,6 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
         <Empty description="No Data" />
       ) : (
         <>
-          {/* Basic Info */}
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label="Fine ID">{record.fineId || "No Data"}</Descriptions.Item>
             <Descriptions.Item label="Vehicle Number">{record.plateNumber || "No Data"}</Descriptions.Item>
@@ -78,7 +76,6 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
             <Descriptions.Item label="Exit Date Time">{record.exitDateTime || "No Data"}</Descriptions.Item>
           </Descriptions>
 
-          {/* Location */}
           <h4 style={{ marginTop: 16 }}>Location Details</h4>
           {record.locationDescription ? (
             <Descriptions bordered column={1} size="small">
@@ -88,7 +85,6 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
             <Empty description="No Location Data" />
           )}
 
-          {/* Map */}
           {record.location?.lat && record.location?.lng && (
             <iframe
               title="Parkonic Location"
@@ -101,7 +97,6 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
             />
           )}
 
-          {/* Photos */}
           <h4 style={{ marginTop: 16 }}>Attached Photos</h4>
           {record.photos && record.photos.length ? (
             <Image.PreviewGroup>
@@ -115,7 +110,6 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
             <Empty description="No Photos" />
           )}
 
-          {/* Permits */}
           <h4 style={{ marginTop: 16 }}>Permits</h4>
           {record.permits && record.permits.length ? (
             <Timeline>
@@ -129,7 +123,6 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
             <Empty description="No Permits" />
           )}
 
-          {/* Review Section */}
           <h4 style={{ marginTop: 16 }}>Review Fine</h4>
           <Space direction="vertical" style={{ width: "100%" }}>
             <Select value={reviewStatus} onChange={(value) => setReviewStatus(value)} style={{ width: "100%" }}>

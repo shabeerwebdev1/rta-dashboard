@@ -35,6 +35,11 @@ export const searchConfig: Record<string, PageSearchConfig> = {
     columnFilterKeys: ["plateSource", "plateType", "plateColor", "plateStatus"],
     dateRangeKey: "fromDate",
   },
+  parkonic: {
+    globalSearchKeys: ["plateNumber", "plateSource"],
+    columnFilterKeys: ["plateSource", "plateType", "plateColor", "plateStatus"],
+    dateRangeKey: "fromDate",
+  },
   "whitelist-tradelicenses": {
     globalSearchKeys: ["tradeLicenseNumber", "tradeLicense_EN_Name"],
     columnFilterKeys: ["plateStatus"],

@@ -1,38 +1,13 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Space,
-  Card,
-  Input,
-  Button,
-  Table,
-  Dropdown,
-  Tag,
-  Badge,
-  Modal,
-  Form,
-  Row,
-  Col,
-  Select,
-  DatePicker,
-  App,
-  Drawer,
-  Descriptions,
-  Tooltip,
-  Pagination,
-} from "antd";
+import { Space, Card, Input, Button, Dropdown, Modal, Form, Row, Col, Select, DatePicker, App, Tooltip } from "antd";
 import {
   PlusOutlined,
-  MoreOutlined,
   EyeOutlined,
   EditOutlined,
   DeleteOutlined,
-  ShareAltOutlined,
+  DownloadOutlined,
   AppstoreOutlined,
   UnorderedListOutlined,
-  IdcardOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  DownloadOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
@@ -46,11 +21,12 @@ import {
   useUpdatePlateMutation,
   useDeletePlateMutation,
 } from "../services/rtkApiFactory";
-import { STATUS_COLORS } from "../constants/ui";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
-import { searchConfig } from "../config/searchConfig";
+import DynamicViewDrawer from "../components/drawer";
+import { pageConfigs } from "../config/pageConfigs";
+import DataTableWrapper from "../components/common/DataTableWrapper";
 
 const { Option } = Select;
 const pageKey = "whitelist-plates";
@@ -66,9 +42,9 @@ const WhitelistPlatesPage: React.FC = () => {
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
-  const { apiParams, handleTableChange, handlePaginationChange, setGlobalSearch, setDateRange, clearFilter, clearAll, state } = useTableParams(
-    searchConfig[pageKey],
-  );
+  const config = pageConfigs[pageKey];
+  const { apiParams, handleTableChange, handlePaginationChange, setGlobalSearch, setDateRange, clearFilter, clearAll, state } =
+    useTableParams(config.searchConfig!);
   const [form] = Form.useForm();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -88,8 +64,8 @@ const WhitelistPlatesPage: React.FC = () => {
   const [deletePlate, { isLoading: isDeleting }] = useDeletePlateMutation();
 
   useEffect(() => {
-    setPageTitle(t("page.title.whitelist-plates"));
-  }, [setPageTitle, t]);
+    setPageTitle(t(config.title));
+  }, [setPageTitle, t, config.title]);
 
   useEffect(() => {
     setGlobalSearch(state.searchKey, debouncedSearchValue);
@@ -137,10 +113,10 @@ const WhitelistPlatesPage: React.FC = () => {
       let response;
       if (modalMode === "add") {
         response = await addPlate(payload).unwrap();
-        notification.success(response, t("messages.addSuccess", { entity: "Plate" }));
+        notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
       } else {
         response = await updatePlate({ ...payload, id: selectedRecord.id }).unwrap();
-        notification.success(response, t("messages.updateSuccess", { entity: "Plate" }));
+        notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
       }
       handleModalClose();
     } catch (err) {
@@ -151,11 +127,11 @@ const WhitelistPlatesPage: React.FC = () => {
   const handleDelete = (id: number) => {
     modal.confirm({
       title: t("messages.deleteConfirmTitle"),
-      content: t("messages.deleteConfirmContent", { entity: "Plate" }),
+      content: t("messages.deleteConfirmContent", { entity: t(config.name.singular) }),
       onOk: async () => {
         try {
           const response = await deletePlate(id).unwrap();
-          notification.success(response, t("messages.deleteSuccess", { entity: "Plate" }));
+          notification.success(response, t("messages.deleteSuccess", { entity: t(config.name.singular) }));
         } catch (err) {
           notification.error(err as any, "Delete Failed");
         }
@@ -170,12 +146,8 @@ const WhitelistPlatesPage: React.FC = () => {
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href).then(
-      () => {
-        notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!");
-      },
-      () => {
-        notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed");
-      },
+      () => notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!"),
+      () => notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed"),
     );
   };
 
@@ -196,121 +168,26 @@ const WhitelistPlatesPage: React.FC = () => {
     });
   };
 
-  const stats = useMemo(
-    () => [
-      { title: "Total Plates", icon: <IdcardOutlined />, value: data?.total || 0 },
-      {
-        title: "Active Plates",
-        icon: <CheckCircleOutlined />,
-        value: data?.data?.filter((d: any) => d.plateStatus?.toLowerCase() === "active").length || 0,
-        color: "#52c41a",
-      },
-      {
-        title: "Inactive Plates",
-        icon: <CloseCircleOutlined />,
-        value: data?.data?.filter((d: any) => d.plateStatus?.toLowerCase() === "inactive").length || 0,
-        color: "#ff4d4f",
-      },
-    ],
-    [data],
-  );
-
   const columnLabels = useMemo(
-    () => ({
-      plateNumber: t("form.plateNumber"),
-      plateSource: t("form.plateSource"),
-      plateType: t("form.plateType"),
-      plateColor: t("form.plateColor"),
-      plateStatus: t("form.status"),
-      fromDate: t("form.fromDate"),
-      toDate: t("form.toDate"),
-      exemptionReason_ID: t("form.exemptionReason_ID"),
-    }),
-    [t],
+    () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
+    [t, config.tableConfig.columns],
   );
 
-  const columns = useMemo(() => {
-    const getUniqueFilters = (key: string) => {
-      if (!data?.data) return [];
-      const uniqueValues = [...new Set(data.data.map((item: any) => item[key]).filter(Boolean))];
-      return uniqueValues.map((value) => ({ text: String(value), value: String(value) }));
-    };
-
-    const baseColumns = [
-      { key: "plateNumber", title: columnLabels.plateNumber, dataIndex: "plateNumber", sorter: true },
-      { key: "plateSource", title: columnLabels.plateSource, dataIndex: "plateSource", sorter: true },
-      { key: "plateType", title: columnLabels.plateType, dataIndex: "plateType", sorter: true },
-      {
-        key: "plateColor",
-        title: columnLabels.plateColor,
-        dataIndex: "plateColor",
-        render: (text: string) => <Badge color={text?.toLowerCase()} text={text} />,
-      },
-      {
-        key: "fromDate",
-        title: columnLabels.fromDate,
-        dataIndex: "fromDate",
-        render: (text: string) => (text ? dayjs(text).format("YYYY-MM-DD") : "-"),
-        sorter: true,
-      },
-      {
-        key: "toDate",
-        title: columnLabels.toDate,
-        dataIndex: "toDate",
-        render: (text: string) => (text ? dayjs(text).format("YYYY-MM-DD") : "-"),
-        sorter: true,
-      },
-      {
-        key: "plateStatus",
-        title: columnLabels.plateStatus,
-        dataIndex: "plateStatus",
-        render: (text: string) => <Tag color={STATUS_COLORS[text?.toLowerCase()]}>{text}</Tag>,
-      },
-      {
-        key: "action",
-        // title: t("common.action"),
-        align: "center" as const,
-        fixed: 'right',
-        width: 50,
-        render: (_: any, record: any) => (
-          <Dropdown
-            menu={{
-              items: [
-                { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
-                {
-                  key: "edit",
-                  label: t("common.edit"),
-                  icon: <EditOutlined />,
-                  onClick: () => handleModalOpen("edit", record),
-                },
-                {
-                  key: "delete",
-                  label: t("common.delete"),
-                  icon: <DeleteOutlined />,
-                  danger: true,
-                  onClick: () => handleDelete(record.id),
-                },
-              ],
-            }}
-            trigger={["click"]}
-          >
-            <Button type="text" icon={<MoreOutlined />} />
-          </Dropdown>
-        ),
-      },
-    ];
-
-    return baseColumns.map((col) => {
-      if (searchConfig[pageKey].columnFilterKeys.includes(col.key)) {
-        return { ...col, filters: getUniqueFilters(col.key), filterMode: "tree", filterSearch: true };
-      }
-      return col;
-    });
-  }, [t, data, columnLabels]);
+  const actionMenuItems = (record: any) => [
+    { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
+    { key: "edit", label: t("common.edit"), icon: <EditOutlined />, onClick: () => handleModalOpen("edit", record) },
+    {
+      key: "delete",
+      label: t("common.delete"),
+      icon: <DeleteOutlined />,
+      danger: true,
+      onClick: () => handleDelete(record.id),
+    },
+  ];
 
   const searchAddon = (
     <Select value={state.searchKey} onChange={(key) => setGlobalSearch(key, state.searchValue)} style={{ width: 150 }}>
-      {searchConfig[pageKey].globalSearchKeys.map((key) => (
+      {config.searchConfig?.globalSearchKeys.map((key) => (
         <Option key={key} value={key}>
           {columnLabels[key]}
         </Option>
@@ -320,9 +197,9 @@ const WhitelistPlatesPage: React.FC = () => {
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <StatsDisplay stats={stats} loading={isLoading} />
+      <StatsDisplay statsConfig={config.statsConfig} data={data?.data || []} loading={isLoading} />
       <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
-        <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
           <Col>
             <Space>
               <Input
@@ -364,45 +241,22 @@ const WhitelistPlatesPage: React.FC = () => {
         />
       </Card>
 
-      <Card bordered={false} bodyStyle={{ padding: 0 }}>
-        <Table
-          rowKey="id"
-          columns={columns}
-        scroll={{ x: 1500 }}
-          sticky={{ offsetHeader: 64 }}
-          dataSource={data?.data}
-          loading={isLoading || isFetching || isDeleting}
-          pagination={false}
-          onChange={handleTableChange}
-          rowSelection={{ selectedRowKeys, onChange: (keys) => setSelectedRowKeys(keys) }}
-          size={tableSize}
-        />
-<div
-    style={{
-      position: "sticky",
-      bottom: 0,
-      background: "#fff",
-      padding: "12px 16px",
-      textAlign: "right",
-      borderTop: "1px solid #f0f0f0",
-      zIndex: 10,
-    }}
-  >
-    <Pagination
-      current={apiParams.PageNumber}
-      pageSize={apiParams.PageSize}
-      total={data?.total}
-      showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`}
-      showSizeChanger={ true}
-      pageSizeOptions={["10", "20", "50"]}
-    onChange={handlePaginationChange}
-    />
-    </div>
-      </Card>
+      <DataTableWrapper
+        pageConfig={config}
+        data={data?.data || []}
+        total={data?.total || 0}
+        isLoading={isLoading || isFetching || isDeleting}
+        apiParams={apiParams}
+        handleTableChange={handleTableChange}
+        handlePaginationChange={handlePaginationChange}
+        rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
+        actionMenuItems={actionMenuItems}
+        tableSize={tableSize}
+      />
 
       <Modal
         open={isModalOpen}
-        title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: "Plate" })}
+        title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
         onCancel={handleModalClose}
         width="720px"
         footer={[
@@ -475,41 +329,18 @@ const WhitelistPlatesPage: React.FC = () => {
         </Form>
       </Modal>
 
-      <Drawer
-        open={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        width={500}
-        title={t("page.viewTitle", { entity: "Plate" })}
-        extra={
-          <Button icon={<ShareAltOutlined />} onClick={handleShare}>
-            {t("common.share")}
-          </Button>
-        }
-      >
-        {viewRecord && (
-          <Descriptions bordered column={1}>
-            <Descriptions.Item label={columnLabels.plateNumber}>{viewRecord.plateNumber}</Descriptions.Item>
-            <Descriptions.Item label={columnLabels.plateSource}>{viewRecord.plateSource}</Descriptions.Item>
-            <Descriptions.Item label={columnLabels.plateType}>{viewRecord.plateType}</Descriptions.Item>
-            <Descriptions.Item label={columnLabels.plateColor}>
-              <Badge color={viewRecord.plateColor.toLowerCase()} text={viewRecord.plateColor} />
-            </Descriptions.Item>
-            <Descriptions.Item label={columnLabels.fromDate}>
-              {dayjs(viewRecord.fromDate).format("YYYY-MM-DD")}
-            </Descriptions.Item>
-            <Descriptions.Item label={columnLabels.toDate}>
-              {dayjs(viewRecord.toDate).format("YYYY-MM-DD")}
-            </Descriptions.Item>
-            <Descriptions.Item label={columnLabels.plateStatus}>
-              <Tag color={STATUS_COLORS[viewRecord.plateStatus.toLowerCase()]}>{viewRecord.plateStatus}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label={columnLabels.exemptionReason_ID}>
-              {exemptionReasons.find((r) => r.value === viewRecord.exemptionReason_ID)?.label ||
-                viewRecord.exemptionReason_ID}
-            </Descriptions.Item>
-          </Descriptions>
-        )}
-      </Drawer>
+      {viewRecord && (
+        <DynamicViewDrawer
+          open={isDrawerOpen}
+          onClose={() => {
+            setIsDrawerOpen(false);
+            setViewRecord(null);
+          }}
+          record={viewRecord}
+          config={config}
+          onShare={handleShare}
+        />
+      )}
     </Space>
   );
 };

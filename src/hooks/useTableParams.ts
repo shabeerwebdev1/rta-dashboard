@@ -83,7 +83,6 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
     const searchKey = pageConfig.globalSearchKeys.find((key) => orFilters[key]) || pageConfig.globalSearchKeys[0];
     const searchValue = orFilters[searchKey]?.[0] || "";
 
-    // Separate column filters from search filter
     const columnFilters: Record<string, string[] | null> = {};
     for (const key in orFilters) {
       if (key !== searchKey) {

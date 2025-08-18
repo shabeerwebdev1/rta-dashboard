@@ -98,7 +98,7 @@ export const dynamicApi = createApi({
       providesTags: ["InspectionObstacle"],
     }),
     addInspectionObstacle: builder.mutation({
-      query: (formData) => ({ url: "/api/InspectionObstacle", method: "POST", body: formData }),
+      query: (body) => ({ url: "/api/InspectionObstacle", method: "POST", body }),
       invalidatesTags: ["InspectionObstacle"],
     }),
     updateInspectionObstacle: builder.mutation({

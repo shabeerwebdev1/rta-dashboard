@@ -1,49 +1,39 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { Space, Card, Input, Button, Dropdown, Modal, Form, Row, Col, Select, App, DatePicker, Tooltip } from "antd";
 import {
-  Space,
-  Card,
-  Input,
-  Button,
-  Table,
-  Dropdown,
-  Modal,
-  Form,
-  Row,
-  Col,
-  Select,
-  App,
-  Drawer,
-  Descriptions,
-} from "antd";
-import { PlusOutlined, MoreOutlined, EyeOutlined, EditOutlined, ShareAltOutlined, DownloadOutlined } from "@ant-design/icons";
+  PlusOutlined,
+  EyeOutlined,
+  EditOutlined,
+  DownloadOutlined,
+  AppstoreOutlined,
+  UnorderedListOutlined,
+} from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
+import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
 import { useGetDisputesQuery, useAddDisputeMutation, useUpdateDisputeMutation } from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
-import { searchConfig } from "../config/searchConfig";
+import StatsDisplay from "../components/common/StatsDisplay";
+import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
+import DynamicViewDrawer from "../components/drawer";
+import { pageConfigs } from "../config/pageConfigs";
+import dayjs from "dayjs";
+import DataTableWrapper from "../components/common/DataTableWrapper";
 
-const departmentOptions = [
-  { label: "Parking", value: 1 },
-  { label: "Traffic", value: 2 },
-  { label: "Finance", value: 3 },
-  { label: "Enforcement", value: 4 },
-];
-
-const paymentTypeOptions = [
-  { label: "Cash", value: 1 },
-  { label: "Credit Card", value: 2 },
-  { label: "Online", value: 3 },
-];
+const { Option } = Select;
+const pageKey = "dispute-management";
 
 const DisputeManagementPage: React.FC = () => {
   const { t } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
-  const pageKey = "dispute-management";
-  const { apiParams, handleTableChange, setSearchFilters } = useTableParams(searchConfig[pageKey]);
+  const config = pageConfigs[pageKey];
+
+  const { apiParams, handleTableChange, handlePaginationChange, setGlobalSearch, setDateRange, clearFilter, clearAll, state } =
+    useTableParams(config.searchConfig!);
   const [form] = Form.useForm();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,15 +41,35 @@ const DisputeManagementPage: React.FC = () => {
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any>(null);
+  const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+  const [searchValue, setSearchValue] = useState<string>(state.searchValue);
+  const debouncedSearchValue = useDebounce(searchValue, 500);
 
   const { data, isLoading, isFetching } = useGetDisputesQuery(apiParams, { refetchOnMountOrArgChange: true });
   const [addDispute, { isLoading: isAdding }] = useAddDisputeMutation();
   const [updateDispute, { isLoading: isUpdating }] = useUpdateDisputeMutation();
 
   useEffect(() => {
-    setPageTitle(t("page.title.dispute-management"));
-  }, [setPageTitle, t]);
+    setPageTitle(t(config.title));
+  }, [setPageTitle, t, config.title]);
+
+  useEffect(() => {
+    setGlobalSearch(state.searchKey, debouncedSearchValue);
+  }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
+
+  const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
+    if (type === "search") {
+      setSearchValue("");
+    }
+    clearFilter(type, key, value);
+  };
+
+  const handleClearAll = () => {
+    setSearchValue("");
+    clearAll();
+  };
 
   const handleModalOpen = (mode: "add" | "edit", record?: any) => {
     setModalMode(mode);
@@ -81,10 +91,10 @@ const DisputeManagementPage: React.FC = () => {
       let response;
       if (modalMode === "add") {
         response = await addDispute(values).unwrap();
-        notification.success(response, t("messages.addSuccess", { entity: "Dispute" }));
+        notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
       } else {
         response = await updateDispute({ ...values, dispute_Id: selectedRecord.dispute_Id }).unwrap();
-        notification.success(response, t("messages.updateSuccess", { entity: "Dispute" }));
+        notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
       }
       handleModalClose();
     } catch (err) {
@@ -95,6 +105,13 @@ const DisputeManagementPage: React.FC = () => {
   const handleView = (record: any) => {
     setViewRecord(record);
     setIsDrawerOpen(true);
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href).then(
+      () => notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!"),
+      () => notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed"),
+    );
   };
 
   const handleDownloadCsv = () => {
@@ -114,105 +131,94 @@ const DisputeManagementPage: React.FC = () => {
     });
   };
 
-  const columns = useMemo(
-    () => [
-      {
-        key: "department",
-        title: t("form.department"),
-        dataIndex: "department",
-        filters: departmentOptions.map((opt) => ({ text: opt.label, value: opt.value })),
-        filterMode: "tree",
-        filterSearch: true,
-        render: (value: number) => departmentOptions.find((opt) => opt.value === value)?.label || value,
-      },
-      {
-        key: "payment_Type",
-        title: t("form.paymentType"),
-        dataIndex: "payment_Type",
-        filters: paymentTypeOptions.map((opt) => ({ text: opt.label, value: opt.value })),
-        filterMode: "tree",
-        render: (value: number) => paymentTypeOptions.find((opt) => opt.value === value)?.label || value,
-      },
-      { key: "phone", title: t("form.phoneNumber"), dataIndex: "phone" },
-      { key: "crM_Ref", title: t("form.crmReference"), dataIndex: "crM_Ref", sorter: true },
-      {
-        key: "action",
-        title: t("common.action"),
-        align: "center" as const,
-        render: (_: any, record: any) => (
-          <Dropdown
-            menu={{
-              items: [
-                { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
-                {
-                  key: "edit",
-                  label: t("common.edit"),
-                  icon: <EditOutlined />,
-                  onClick: () => handleModalOpen("edit", record),
-                },
-              ],
-            }}
-            trigger={["click"]}
-          >
-            <Button type="text" icon={<MoreOutlined />} />
-          </Dropdown>
-        ),
-      },
-    ],
-    [t],
+  const columnLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        config.formConfig.fields
+          .map((f) => [f.name, t(f.label)])
+          .concat(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
+      ),
+    [t, config],
+  );
+
+  const actionMenuItems = (record: any) => [
+    { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
+    { key: "edit", label: t("common.edit"), icon: <EditOutlined />, onClick: () => handleModalOpen("edit", record) },
+  ];
+
+  const searchAddon = (
+    <Select value={state.searchKey} onChange={(key) => setGlobalSearch(key, state.searchValue)} style={{ width: 150 }}>
+      {config.searchConfig?.globalSearchKeys.map((key) => (
+        <Option key={key} value={key}>
+          {columnLabels[key]}
+        </Option>
+      ))}
+    </Select>
   );
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <Card bordered={false}>
-        <Row justify="space-between" align="middle">
+      <StatsDisplay statsConfig={config.statsConfig} data={data?.data || []} loading={isLoading} />
+      <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
+        <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
           <Col>
-            <Input.Search
-              placeholder={t("common.searchPlaceholder")}
-              onSearch={(value) => setSearchFilters({ searchTerm: value })}
-              style={{ width: 300 }}
-              allowClear
-            />
+            <Space>
+              <Input
+                addonBefore={searchAddon}
+                placeholder={t("common.searchPlaceholder")}
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                style={{ width: 450 }}
+                allowClear
+              />
+              <DatePicker.RangePicker
+                value={state.dateRange}
+                onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
+              />
+            </Space>
           </Col>
           <Col>
             <Space>
-              <Button
-                icon={<DownloadOutlined />}
-                onClick={handleDownloadCsv}
-                disabled={selectedRowKeys.length === 0}
-              >
+              <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
+              <Tooltip title={tableSize === "middle" ? "Compact view" : "Standard view"}>
+                <Button
+                  icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
+                  onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
+                />
+              </Tooltip>
               <Button type="primary" icon={<PlusOutlined />} onClick={() => handleModalOpen("add")}>
                 {t("common.addNew")}
               </Button>
             </Space>
           </Col>
         </Row>
-      </Card>
-
-      <Card bordered={false} bodyStyle={{ padding: 0 }}>
-        <Table
-          rowKey="dispute_Id"
-          columns={columns}
-          dataSource={data?.data}
-          loading={isLoading || isFetching}
-          pagination={{
-            current: apiParams.PageNumber,
-            pageSize: apiParams.PageSize,
-            total: data?.total,
-            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
-            showSizeChanger: true,
-            pageSizeOptions: ["10", "20", "50"],
-          }}
-          onChange={handleTableChange}
-          rowSelection={{ selectedRowKeys, onChange: (keys) => setSelectedRowKeys(keys) }}
+        <ActiveFiltersDisplay
+          state={state}
+          onClearFilter={handleClearFilter}
+          onClearAll={handleClearAll}
+          columnLabels={columnLabels}
         />
       </Card>
 
+      <DataTableWrapper
+        pageConfig={config}
+        data={data?.data || []}
+        total={data?.total || 0}
+        isLoading={isLoading || isFetching}
+        apiParams={apiParams}
+        handleTableChange={handleTableChange}
+        handlePaginationChange={handlePaginationChange}
+        rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
+        actionMenuItems={actionMenuItems}
+        tableSize={tableSize}
+        rowKey={config.tableConfig.rowKey}
+      />
+
       <Modal
         open={isModalOpen}
-        title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: "Dispute" })}
+        title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
         onCancel={handleModalClose}
         width="720px"
         footer={[
@@ -233,12 +239,26 @@ const DisputeManagementPage: React.FC = () => {
             </Col>
             <Col span={12}>
               <Form.Item name="department" label={t("form.department")} rules={[{ required: true }]}>
-                <Select options={departmentOptions} />
+                <Select
+                  options={
+                    config.formConfig.fields.find((f) => f.name === "department")?.options as {
+                      label: string;
+                      value: unknown;
+                    }[]
+                  }
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="payment_Type" label={t("form.paymentType")} rules={[{ required: true }]}>
-                <Select options={paymentTypeOptions} />
+                <Select
+                  options={
+                    config.formConfig.fields.find((f) => f.name === "payment_Type")?.options as {
+                      label: string;
+                      value: unknown;
+                    }[]
+                  }
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -270,34 +290,18 @@ const DisputeManagementPage: React.FC = () => {
         </Form>
       </Modal>
 
-      <Drawer
-        open={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        width={500}
-        title={t("page.viewTitle", { entity: "Dispute" })}
-        extra={
-          <Button icon={<ShareAltOutlined />} onClick={() => {}}>
-            {t("common.share")}
-          </Button>
-        }
-      >
-        {viewRecord && (
-          <Descriptions bordered column={1}>
-            <Descriptions.Item label={t("form.fineNumber")}>{viewRecord.fine_Number}</Descriptions.Item>
-            <Descriptions.Item label={t("form.department")}>
-              {departmentOptions.find((opt) => opt.value === viewRecord.department)?.label}
-            </Descriptions.Item>
-            <Descriptions.Item label={t("form.paymentType")}>
-              {paymentTypeOptions.find((opt) => opt.value === viewRecord.payment_Type)?.label}
-            </Descriptions.Item>
-            <Descriptions.Item label={t("form.reason")}>{viewRecord.dispute_Reason}</Descriptions.Item>
-            <Descriptions.Item label={t("form.crmReference")}>{viewRecord.crM_Ref}</Descriptions.Item>
-            <Descriptions.Item label={t("form.email")}>{viewRecord.email}</Descriptions.Item>
-            <Descriptions.Item label={t("form.phoneNumber")}>{viewRecord.phone}</Descriptions.Item>
-            <Descriptions.Item label={t("form.address")}>{viewRecord.address}</Descriptions.Item>
-          </Descriptions>
-        )}
-      </Drawer>
+      {viewRecord && (
+        <DynamicViewDrawer
+          open={isDrawerOpen}
+          onClose={() => {
+            setIsDrawerOpen(false);
+            setViewRecord(null);
+          }}
+          record={viewRecord}
+          config={config}
+          onShare={handleShare}
+        />
+      )}
     </Space>
   );
 };

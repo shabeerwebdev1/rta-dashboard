@@ -111,8 +111,8 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
       <Space wrap>
         {/* <Text strong>{t("common.activeFilters")}:</Text> */}
         {filterGroups}
-        <div style={{position: "sticky", right: 0 }}>
-        <Button type="link" danger onClick={onClearAll}>
+        <div style={{marginLeft: "auto", position: "absolute", bottom: 0, right: 0 }}>
+        <Button style={{marginLeft: 0}} type="link" danger onClick={onClearAll}>
           {t("common.clearAll")}
         </Button>
         </div>

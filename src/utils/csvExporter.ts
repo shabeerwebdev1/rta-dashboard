@@ -3,7 +3,6 @@ function convertToCSV(data: Record<string, unknown>[]): string {
     return "";
   }
 
-  // Dynamically get headers from the first object's keys
   const headers = Object.keys(data[0]);
   const csvRows = [headers.join(",")];
 
@@ -15,19 +14,16 @@ function convertToCSV(data: Record<string, unknown>[]): string {
         return '""';
       }
 
-      // Handle objects by JSON stringifying them
       if (typeof cellValue === "object") {
         cellValue = JSON.stringify(cellValue);
       }
 
-      // Escape double quotes and wrap in double quotes
       const stringValue = String(cellValue).replace(/"/g, '""');
       return `"${stringValue}"`;
     });
     csvRows.push(values.join(","));
   }
 
-  // Add BOM for Excel compatibility
   return "\uFEFF" + csvRows.join("\n");
 }
 
