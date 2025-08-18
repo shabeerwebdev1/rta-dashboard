@@ -5,15 +5,17 @@ import type { ColumnsType } from "antd/es/table";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { useSearchParkonicsQuery } from "../services/rtkApiFactory";
-import useTableParams from "../hooks/useTableParams";
+import { useTableParams } from "../hooks/useTableParams";
 import ParkonicViewDrawer from "../components/parkonic/ParkonicViewDrawer";
+import { searchConfig } from "../config/searchConfig";
 
 const { RangePicker } = DatePicker;
 
 const ParkonicPage: React.FC = () => {
   const { t } = useTranslation();
   const { setPageTitle } = usePage();
-  const { apiParams, handleTableChange, setSearchFilters } = useTableParams();
+  const pageKey = "parkonic";
+  const { apiParams, handleTableChange, setSearchFilters } = useTableParams(searchConfig[pageKey]);
 
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);

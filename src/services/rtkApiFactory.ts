@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { serializeParams } from "../hooks/useTableParams";
 
 const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
 
@@ -11,6 +12,7 @@ const baseQuery = fetchBaseQuery({
     }
     return headers;
   },
+  paramsSerializer: serializeParams, // Use the custom serializer
 });
 
 const transformListResponse = (response: any) => ({
@@ -119,7 +121,7 @@ export const dynamicApi = createApi({
       invalidatesTags: ["Dispute"],
     }),
 
-    // Search Endpoints
+    // Search Endpoints (Note: these might not support the new filtering yet, depends on backend)
     searchPermits: builder.query({
       query: (params) => ({ url: "/api/Permit/search", params }),
       providesTags: ["PermitSearch"],

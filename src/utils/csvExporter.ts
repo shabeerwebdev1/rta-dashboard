@@ -3,8 +3,8 @@ function convertToCSV(data: Record<string, unknown>[]): string {
     return "";
   }
 
-  const headers = ["key", "tradeLicenseName", "licenseNumber", "addedBy", "type", "date", "status", "location"];
-
+  // Dynamically get headers from the first object's keys
+  const headers = Object.keys(data[0]);
   const csvRows = [headers.join(",")];
 
   for (const row of data) {
@@ -15,23 +15,27 @@ function convertToCSV(data: Record<string, unknown>[]): string {
         return '""';
       }
 
-      if (header === "location" && typeof cellValue === "object" && cellValue !== null) {
-        const location = cellValue as { lat: number; lng: number };
-        cellValue = `"${location.lat}, ${location.lng}"`;
-      } else {
-        const stringValue = String(cellValue).replace(/"/g, '""');
-        cellValue = `"${stringValue}"`;
+      // Handle objects by JSON stringifying them
+      if (typeof cellValue === "object") {
+        cellValue = JSON.stringify(cellValue);
       }
 
-      return cellValue;
+      // Escape double quotes and wrap in double quotes
+      const stringValue = String(cellValue).replace(/"/g, '""');
+      return `"${stringValue}"`;
     });
     csvRows.push(values.join(","));
   }
 
+  // Add BOM for Excel compatibility
   return "\uFEFF" + csvRows.join("\n");
 }
 
 export function exportToCsv(data: Record<string, unknown>[], filename: string) {
+  if (!data || data.length === 0) {
+    console.error("No data provided to export.");
+    return;
+  }
   const csvString = convertToCSV(data);
   const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
 

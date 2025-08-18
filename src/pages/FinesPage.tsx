@@ -6,8 +6,9 @@ import { MoreOutlined, EyeOutlined, EnvironmentOutlined } from "@ant-design/icon
 import type { MenuProps } from "antd";
 import dayjs from "dayjs";
 import { useSearchFinesQuery } from "../services/rtkApiFactory";
-import useTableParams from "../hooks/useTableParams";
+import { useTableParams } from "../hooks/useTableParams";
 import FinesViewDrawer from "../components/fines/FinesViewDrawer";
+import { searchConfig } from "../config/searchConfig";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -16,7 +17,8 @@ const FinesPage: React.FC = () => {
   const { t } = useTranslation();
   const { setPageTitle } = usePage();
   const [form] = Form.useForm();
-  const { apiParams, handleTableChange, setSearchFilters } = useTableParams();
+  const pageKey = "fines";
+  const { apiParams, handleTableChange, setSearchFilters } = useTableParams(searchConfig[pageKey]);
 
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedFine, setSelectedFine] = useState<any>(null);

@@ -3,8 +3,9 @@ import { Form, Input, Select, DatePicker, Button, Row, Col, Space, Card, Table, 
 import { useTranslation } from "react-i18next";
 import { useSearchPermitsQuery } from "../services/rtkApiFactory";
 import { usePage } from "../contexts/PageContext";
-import useTableParams from "../hooks/useTableParams";
+import { useTableParams } from "../hooks/useTableParams";
 import dayjs from "dayjs";
+import { searchConfig } from "../config/searchConfig";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -13,7 +14,8 @@ const PermitsPage: React.FC = () => {
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const { setPageTitle } = usePage();
-  const { apiParams, handleTableChange, setSearchFilters } = useTableParams();
+  const pageKey = "permits";
+  const { apiParams, handleTableChange, setSearchFilters } = useTableParams(searchConfig[pageKey]);
 
   const { data, isLoading, isFetching } = useSearchPermitsQuery(apiParams, {
     refetchOnMountOrArgChange: true,
