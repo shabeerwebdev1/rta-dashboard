@@ -7,19 +7,20 @@ import { PATHS, FULL_PATHS } from "./constants/paths";
 // --- Lazy-loaded Page Components ---
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const PermitsPage = lazy(() => import("./pages/PermitsPage"));
-const WhitelistPlatesPage = lazy(() => import("./pages/entity/WhitelistPlatesPage"));
-const WhitelistTradeLicensesPage = lazy(() => import("./pages/entity/WhitelistTradeLicensesPage"));
-const PledgesPage = lazy(() => import("./pages/entity/PledgesPage"));
-const InspectionObstaclesPage = lazy(() => import("./pages/entity/InspectionObstaclesPage"));
 const FinesPage = lazy(() => import("./pages/FinesPage"));
 const ParkonicPage = lazy(() => import("./pages/ParkonicPage"));
-const DisputeManagementPage = lazy(() => import("./pages/entity/DisputeManagementPage"));
+
+// --- New Static Entity Pages ---
+const WhitelistPlatesPage = lazy(() => import("./pages/WhitelistPlatesPage"));
+// const WhitelistTradeLicensesPage = lazy(() => import("./pages/WhitelistTradeLicensesPage"));
+// const PledgesPage = lazy(() => import("./pages/PledgesPage"));
+// const InspectionObstaclesPage = lazy(() => import("./pages/InspectionObstaclesPage"));
+// const DisputeManagementPage = lazy(() => import("./pages/DisputeManagementPage"));
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<MainLayout />}>
-        {/* Correctly wrap the page routes in a Suspense-powered layout route */}
         <Route
           element={
             <Suspense fallback={<PageLoader />}>
@@ -32,16 +33,16 @@ const AppRoutes = () => {
           <Route path={PATHS.PERMITS} element={<PermitsPage />} />
           <Route path={PATHS.FINES} element={<FinesPage />} />
           <Route path={PATHS.PARKONIC} element={<ParkonicPage />} />
-          <Route path={PATHS.DISPUTE} element={<DisputeManagementPage />} />
+          {/* <Route path={PATHS.DISPUTE} element={<DisputeManagementPage />} /> */}
 
           <Route path={PATHS.WHITELIST}>
             <Route index element={<Navigate to={PATHS.PLATES} replace />} />
             <Route path={PATHS.PLATES} element={<WhitelistPlatesPage />} />
-            <Route path={PATHS.TRADELICENSES} element={<WhitelistTradeLicensesPage />} />
+            {/* <Route path={PATHS.TRADELICENSES} element={<WhitelistTradeLicensesPage />} /> */}
           </Route>
 
-          <Route path={PATHS.PLEDGES} element={<PledgesPage />} />
-          <Route path={PATHS.INSPECTIONS} element={<InspectionObstaclesPage />} />
+          {/* <Route path={PATHS.PLEDGES} element={<PledgesPage />} />
+          <Route path={PATHS.INSPECTIONS} element={<InspectionObstaclesPage />} /> */}
 
           <Route path="*" element={<Navigate to={FULL_PATHS.DASHBOARD} replace />} />
         </Route>

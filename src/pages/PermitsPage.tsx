@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
-import { Form, Input, Select, DatePicker, Button, Row, Col, Space, Card, Table, Spin, Empty } from "antd";
+import { Form, Input, Select, DatePicker, Button, Row, Col, Space, Card, Table, Empty } from "antd";
 import { useTranslation } from "react-i18next";
-import { useLazySearchPermitsQuery } from "../services/rtkApiFactory";
+import { useSearchPermitsQuery } from "../services/rtkApiFactory";
 import { usePage } from "../contexts/PageContext";
+import useTableParams from "../hooks/useTableParams";
 import dayjs from "dayjs";
 
 const { Option } = Select;
@@ -12,8 +13,14 @@ const PermitsPage: React.FC = () => {
   const { t } = useTranslation();
   const [form] = Form.useForm();
   const { setPageTitle } = usePage();
+  const { apiParams, handleTableChange, setSearchFilters } = useTableParams();
 
-  const [searchPermits, { data: searchResults, isLoading, isFetching }] = useLazySearchPermitsQuery();
+  const { data, isLoading, isFetching } = useSearchPermitsQuery(apiParams, {
+    refetchOnMountOrArgChange: true,
+  });
+
+  const searchResults = data?.data || [];
+  const totalRecords = data?.total || 0;
 
   useEffect(() => {
     setPageTitle(t("page.title.permits"));
@@ -33,25 +40,27 @@ const PermitsPage: React.FC = () => {
 
     Object.keys(params).forEach((key) => params[key] == null && delete params[key]);
 
-    searchPermits(params);
+    setSearchFilters(params);
   };
 
   const columns = [
-    { title: t("form.permitNumber"), dataIndex: "permitNumber", key: "permitNumber" },
-    { title: t("form.permitType"), dataIndex: "permitType", key: "permitType" },
-    { title: t("form.plateNumber"), dataIndex: "plateNumber", key: "plateNumber" },
+    { title: t("form.permitNumber"), dataIndex: "permitNumber", key: "permitNumber", sorter: true },
+    { title: t("form.permitType"), dataIndex: "permitType", key: "permitType", sorter: true },
+    { title: t("form.plateNumber"), dataIndex: "plateNumber", key: "plateNumber", sorter: true },
     { title: t("form.phoneNumber"), dataIndex: "phoneNumber", key: "phoneNumber" },
     {
       title: t("form.fromDate"),
       dataIndex: "validFrom",
       key: "validFrom",
       render: (text: string) => dayjs(text).format("YYYY-MM-DD"),
+      sorter: true,
     },
     {
       title: t("form.toDate"),
       dataIndex: "validTo",
       key: "validTo",
       render: (text: string) => dayjs(text).format("YYYY-MM-DD"),
+      sorter: true,
     },
     { title: t("form.authorizedAreas"), dataIndex: "authorizedAreas", key: "authorizedAreas" },
   ];
@@ -90,33 +99,43 @@ const PermitsPage: React.FC = () => {
                 <RangePicker style={{ width: "100%" }} />
               </Form.Item>
             </Col>
-
-            {/* Buttons aligned to the right */}
-            <Col xs={24} sm={12} md={8} style={{ textAlign: "right", marginTop: 30 }}>
-              <Space>
-                <Button onClick={() => form.resetFields()}>{t("common.reset")}</Button>
-                <Button type="primary" htmlType="submit" loading={isFetching}>
-                  {t("common.search")}
-                </Button>
-              </Space>
+            <Col xs={24} sm={12} md={8} style={{ textAlign: "right", alignSelf: "flex-end" }}>
+              <Form.Item>
+                <Space>
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                      setSearchFilters({});
+                    }}
+                  >
+                    {t("common.reset")}
+                  </Button>
+                  <Button type="primary" htmlType="submit" loading={isFetching}>
+                    {t("common.search")}
+                  </Button>
+                </Space>
+              </Form.Item>
             </Col>
           </Row>
         </Form>
       </Card>
 
       <Card bordered={false} bodyStyle={{ padding: "5px 5px 0 5px" }}>
-        <Spin spinning={isLoading || isFetching}>
-          <Table
-            rowSelection={{ type: "checkbox" }}
-            columns={columns}
-            dataSource={searchResults}
-            rowKey="id"
-            locale={{ emptyText: <Empty description={t("common.noData")} /> }}
-            pagination={{
-              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
-            }}
-          />
-        </Spin>
+        <Table
+          rowSelection={{ type: "checkbox" }}
+          columns={columns}
+          dataSource={searchResults}
+          rowKey="id"
+          loading={isLoading || isFetching}
+          onChange={handleTableChange}
+          pagination={{
+            current: apiParams.PageNumber,
+            pageSize: apiParams.PageSize,
+            total: totalRecords,
+            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
+          }}
+          locale={{ emptyText: <Empty description={t("common.noData")} /> }}
+        />
       </Card>
     </Space>
   );

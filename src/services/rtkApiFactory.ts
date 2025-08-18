@@ -1,5 +1,4 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { pageConfigs } from "../config/pageConfigs";
 
 const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
 
@@ -14,112 +13,158 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
+const transformListResponse = (response: any) => ({
+  data: response.data || [],
+  total: response.totalCount || 0,
+});
+
 export const dynamicApi = createApi({
   reducerPath: "dynamicApi",
   baseQuery: baseQuery,
-  tagTypes: Object.keys(pageConfigs).concat(["PermitSearch"]),
-  endpoints: (builder) => {
-    const endpoints: Record<string, unknown> = {};
+  tagTypes: [
+    "WhitelistPlate",
+    "WhitelistTradeLicense",
+    "Pledge",
+    "InspectionObstacle",
+    "Dispute",
+    "PermitSearch",
+    "FineSearch",
+    "ParkonicSearch",
+  ],
+  endpoints: (builder) => ({
+    // Whitelist Plates
+    getPlates: builder.query({
+      query: (params) => ({ url: "/api/WhitelistPlate", params }),
+      transformResponse: transformListResponse,
+      providesTags: ["WhitelistPlate"],
+    }),
+    addPlate: builder.mutation({
+      query: (body) => ({ url: "/api/WhitelistPlate", method: "POST", body }),
+      invalidatesTags: ["WhitelistPlate"],
+    }),
+    updatePlate: builder.mutation({
+      query: (body) => ({ url: "/api/WhitelistPlate", method: "PUT", body }),
+      invalidatesTags: ["WhitelistPlate"],
+    }),
+    deletePlate: builder.mutation({
+      query: (id) => ({ url: `/api/WhitelistPlate/${id}`, method: "DELETE" }),
+      invalidatesTags: ["WhitelistPlate"],
+    }),
 
-    for (const [entity, config] of Object.entries(pageConfigs)) {
-      const singular = config.name.singular.replace(/\s/g, "");
-      const plural = config.name.plural.replace(/\s/g, "");
+    // Whitelist Trade Licenses
+    getTradeLicenses: builder.query({
+      query: (params) => ({ url: "/api/WhitelistTradeLicense", params }),
+      transformResponse: transformListResponse,
+      providesTags: ["WhitelistTradeLicense"],
+    }),
+    addTradeLicense: builder.mutation({
+      query: (body) => ({ url: "/api/WhitelistTradeLicense", method: "POST", body }),
+      invalidatesTags: ["WhitelistTradeLicense"],
+    }),
+    updateTradeLicense: builder.mutation({
+      query: (body) => ({ url: "/api/WhitelistTradeLicense/update", method: "PUT", body }),
+      invalidatesTags: ["WhitelistTradeLicense"],
+    }),
+    deleteTradeLicense: builder.mutation({
+      query: (id) => ({ url: `/api/WhitelistTradeLicense/${id}`, method: "DELETE" }),
+      invalidatesTags: ["WhitelistTradeLicense"],
+    }),
 
-      endpoints[`get${plural}`] = builder.query({
-        query: () => config.api.get,
-        providesTags: [entity],
-        transformResponse: (response: { data?: unknown[] }) => response.data || [],
-      });
+    // Pledges
+    getPledges: builder.query({
+      query: (params) => ({ url: "/api/Pledge", params }),
+      transformResponse: transformListResponse,
+      providesTags: ["Pledge"],
+    }),
+    addPledge: builder.mutation({
+      query: (body) => ({ url: "/api/Pledge", method: "POST", body }),
+      invalidatesTags: ["Pledge"],
+    }),
+    updatePledge: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `/api/Pledge/${id}`, method: "PUT", body }),
+      invalidatesTags: ["Pledge"],
+    }),
+    deletePledge: builder.mutation({
+      query: (id) => ({ url: `/api/Pledge/${id}`, method: "DELETE" }),
+      invalidatesTags: ["Pledge"],
+    }),
 
-      endpoints[`add${singular}`] = builder.mutation({
-        query: (body: unknown) => {
-          return {
-            url: config.api.post,
-            method: "POST",
-            body,
-          };
-        },
-        invalidatesTags: [entity],
-      });
+    // Inspection Obstacles
+    getInspectionObstacles: builder.query({
+      query: (params) => ({ url: "/api/InspectionObstacle", params }),
+      transformResponse: transformListResponse,
+      providesTags: ["InspectionObstacle"],
+    }),
+    addInspectionObstacle: builder.mutation({
+      query: (formData) => ({ url: "/api/InspectionObstacle", method: "POST", body: formData }),
+      invalidatesTags: ["InspectionObstacle"],
+    }),
+    updateInspectionObstacle: builder.mutation({
+      query: ({ id, ...params }) => ({ url: `/api/InspectionObstacle/markremoved/${id}`, method: "PUT", params }),
+      invalidatesTags: ["InspectionObstacle"],
+    }),
 
-      endpoints[`update${singular}`] = builder.mutation({
-        query: ({ id, ...body }: { id: string | number; [key: string]: unknown }) => ({
-          url: config.api.put.includes(":id") ? config.api.put.replace(":id", id) : config.api.put,
-          method: "PUT",
-          body: { id, ...body },
-        }),
-        invalidatesTags: [entity],
-      });
+    // Disputes
+    getDisputes: builder.query({
+      query: (params) => ({ url: "/api/Dispute/GetAll", params }),
+      transformResponse: transformListResponse,
+      providesTags: ["Dispute"],
+    }),
+    addDispute: builder.mutation({
+      query: (body) => ({ url: "/api/Dispute/Create", method: "POST", body }),
+      invalidatesTags: ["Dispute"],
+    }),
+    updateDispute: builder.mutation({
+      query: (body) => ({ url: "/api/Dispute/Update", method: "PUT", body }),
+      invalidatesTags: ["Dispute"],
+    }),
 
-      if (config.api.delete) {
-        endpoints[`delete${singular}`] = builder.mutation({
-          query: (id: string | number) => ({
-            url: config.api.delete.replace(":id", id),
-            method: "DELETE",
-          }),
-          invalidatesTags: [entity],
-        });
-      }
-    }
-
-    endpoints.searchPermits = builder.query({
-      query: (params: Record<string, unknown>) => ({
-        url: "/api/Permit/search",
-        params,
-      }),
+    // Search Endpoints
+    searchPermits: builder.query({
+      query: (params) => ({ url: "/api/Permit/search", params }),
       providesTags: ["PermitSearch"],
-      transformResponse: (response: { data?: unknown[] }) => response.data || [],
-    });
-
-    endpoints.searchFines = builder.query({
-      query: (params: Record<string, unknown>) => ({
-        url: "/api/FineManagement/search",
-        method: "GET",
-        params,
-      }),
+      transformResponse: (response: any) => ({ data: response.data || [], total: response.data?.length || 0 }),
+    }),
+    searchFines: builder.query({
+      query: (params) => ({ url: "/api/FineManagement/search", params }),
       providesTags: ["FineSearch"],
-      transformResponse: (response: any) => {
-        // If the API sometimes returns a single object instead of array, normalize it
-        const data = response?.data;
-        return Array.isArray(data) ? data : [data];
-      },
-    });
-
-    endpoints.searchParkonics = builder.query({
-      query: (params: Record<string, unknown>) => ({
-        url: "/api/Parkonic",
-        method: "GET",
-        params,
-      }),
+      transformResponse: transformListResponse,
+    }),
+    searchParkonics: builder.query({
+      query: (params) => ({ url: "/api/Parkonic", params }),
       providesTags: ["ParkonicSearch"],
-      transformResponse: (response: any) => {
-        const data = response?.data;
-        return Array.isArray(data) ? data : [data];
-      },
-    });
-    endpoints.reviewParkonic = builder.mutation({
-      query: (body: {
-        fineId: string;
-        reviewerName: string;
-        reviewTimestamp: string;
-        reviewStatus: number;
-        updatedby: string;
-        rejectionReason?: string;
-      }) => ({
-        url: "/api/Parkonic/Review",
-        method: "PUT",
-        body,
-      }),
-      invalidatesTags: ["ParkonicSearch"], // refresh Parkonic list after review
-    });
+      transformResponse: transformListResponse,
+    }),
 
-    return endpoints;
-  },
+    // Parkonic Review
+    reviewParkonic: builder.mutation({
+      query: (body) => ({ url: "/api/Parkonic/Review", method: "PUT", body }),
+      invalidatesTags: ["ParkonicSearch"],
+    }),
+  }),
 });
 
 export const {
-  useLazySearchPermitsQuery,
-  useLazySearchFinesQuery,
-  useLazySearchParkonicsQuery,
+  useGetPlatesQuery,
+  useAddPlateMutation,
+  useUpdatePlateMutation,
+  useDeletePlateMutation,
+  useGetTradeLicensesQuery,
+  useAddTradeLicenseMutation,
+  useUpdateTradeLicenseMutation,
+  useDeleteTradeLicenseMutation,
+  useGetPledgesQuery,
+  useAddPledgeMutation,
+  useUpdatePledgeMutation,
+  useDeletePledgeMutation,
+  useGetInspectionObstaclesQuery,
+  useAddInspectionObstacleMutation,
+  useUpdateInspectionObstacleMutation,
+  useGetDisputesQuery,
+  useAddDisputeMutation,
+  useUpdateDisputeMutation,
+  useSearchPermitsQuery,
+  useSearchFinesQuery,
+  useSearchParkonicsQuery,
   useReviewParkonicMutation,
 } = dynamicApi;

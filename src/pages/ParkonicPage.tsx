@@ -1,140 +1,107 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Table, Card, Space, Tag, Button, Tooltip, Dropdown, App, Input, DatePicker } from "antd";
-import {
-  EyeOutlined,
-  MoreOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
-  DownloadOutlined,
-} from "@ant-design/icons";
+import { Table, Card, Space, Tag, Button, Dropdown, Input, DatePicker } from "antd";
+import { EyeOutlined, MoreOutlined, DownloadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
-import { useLazySearchParkonicsQuery } from "../services/rtkApiFactory";
+import { useSearchParkonicsQuery } from "../services/rtkApiFactory";
+import useTableParams from "../hooks/useTableParams";
 import ParkonicViewDrawer from "../components/parkonic/ParkonicViewDrawer";
 
 const { RangePicker } = DatePicker;
 
-interface ParkonicRecord {
-  id: string;
-  vehicleNumber: string;
-  area: string;
-  status: string;
-  issuedAt: string;
-}
-
 const ParkonicPage: React.FC = () => {
   const { t } = useTranslation();
   const { setPageTitle } = usePage();
-  const { message } = App.useApp();
+  const { apiParams, handleTableChange, setSearchFilters } = useTableParams();
 
-  const [tableData, setTableData] = useState<ParkonicRecord[]>([]);
-  const [filteredData, setFilteredData] = useState<ParkonicRecord[]>([]);
-  const [tableSize, setTableSize] = useState<"small" | "middle">("middle");
-  const [selectedRecord, setSelectedRecord] = useState<ParkonicRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const [searchParkonics, { data, isLoading }] = useLazySearchParkonicsQuery();
+  const { data, isLoading, isFetching } = useSearchParkonicsQuery(apiParams, {
+    refetchOnMountOrArgChange: true,
+  });
 
-  // Fetch data on mount
+  const tableData = data?.data || [];
+  const totalRecords = data?.total || 0;
+
   useEffect(() => {
     setPageTitle(t("page.title.parkonic"));
-    searchParkonics({});
-  }, [searchParkonics, setPageTitle, t]);
+  }, [setPageTitle, t]);
 
-  // Update table when API data changes
-  useEffect(() => {
-    if (data) {
-      setTableData(data);
-      setFilteredData(data);
-    }
-  }, [data]);
-
-  // Global search
   const handleGlobalSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toLowerCase();
-    const filtered = tableData.filter(
-      (item) => item.vehicleNumber.toLowerCase().includes(value) || item.area.toLowerCase().includes(value),
-    );
-    setFilteredData(filtered);
+    setSearchFilters({ searchTerm: e.target.value });
   };
 
-  // Date filter (placeholder)
   const handleDateFilter = (dates: any) => {
-    if (!dates || dates.length === 0) {
-      setFilteredData(tableData);
-      return;
-    }
-    message.info(`Filtering from ${dates[0].format("YYYY-MM-DD")} to ${dates[1].format("YYYY-MM-DD")}`);
+    setSearchFilters({
+      ...apiParams.filters,
+      dateFrom: dates ? dates[0].toISOString() : undefined,
+      dateTo: dates ? dates[1].toISOString() : undefined,
+    });
   };
 
-  // Show drawer
-  const showDrawer = (record: ParkonicRecord) => {
+  const showDrawer = (record: any) => {
     setSelectedRecord(record);
     setDrawerOpen(true);
   };
 
-  // Table columns
-  const columns: ColumnsType<ParkonicRecord> = useMemo(
+  const columns: ColumnsType<any> = useMemo(
     () => [
       {
         title: t("form.vehicleNumber"),
         dataIndex: "plateNumber",
-        key: "vehicleNumber",
+        key: "plateNumber",
+        sorter: true,
       },
-
       {
         title: t("form.reviewStatus"),
         dataIndex: "reviewStatus",
         key: "reviewStatus",
+        sorter: true,
         render: (status: number) => {
-          const labelMap = {
-            0: "Rejected",
-            1: "Approved",
-          } as const;
-
-          const colorMap = {
-            0: "red",
-            1: "green",
-          } as const;
-
-          return <Tag color={colorMap[status] || "blue"}>{labelMap[status] || "Unknown"}</Tag>;
+          const statusMap: Record<number, { text: string; color: string }> = {
+            0: { text: "Rejected", color: "red" },
+            1: { text: "Approved", color: "green" },
+            2: { text: "Pending", color: "blue" },
+          };
+          const { text, color } = statusMap[status] || { text: "Unknown", color: "default" };
+          return <Tag color={color}>{text}</Tag>;
         },
       },
       {
         title: t("form.entryDateTime"),
         dataIndex: "entryDateTime",
-        key: "issuedAt",
+        key: "entryDateTime",
+        sorter: true,
       },
       {
         title: t("form.exitDateTime"),
         dataIndex: "exitDateTime",
-        key: "area",
+        key: "exitDateTime",
+        sorter: true,
       },
       {
-        title: "",
+        title: t("common.action"),
         key: "actions",
         width: 100,
         align: "center",
-        fixed: "left",
         render: (_, record) => (
-          <Space size="small">
-            <Dropdown
-              menu={{
-                items: [
-                  {
-                    key: "view",
-                    icon: <EyeOutlined />,
-                    label: "View ",
-                    onClick: () => showDrawer(record),
-                  },
-                ],
-              }}
-              trigger={["click"]}
-            >
-              <Button type="text" icon={<MoreOutlined />} />
-            </Dropdown>
-          </Space>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: "view",
+                  icon: <EyeOutlined />,
+                  label: t("common.view"),
+                  onClick: () => showDrawer(record),
+                },
+              ],
+            }}
+            trigger={["click"]}
+          >
+            <Button type="text" icon={<MoreOutlined />} />
+          </Dropdown>
         ),
       },
     ],
@@ -143,23 +110,17 @@ const ParkonicPage: React.FC = () => {
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <Card variant="borderless">
+      <Card bordered={false}>
         <Space wrap style={{ width: "100%", justifyContent: "space-between" }} size="middle">
           <Space wrap size="middle">
             <Input.Search
-              placeholder="Search..."
+              placeholder={t("common.searchPlaceholder")}
               style={{ minWidth: "300px" }}
+              onSearch={(value) => setSearchFilters({ searchTerm: value })}
               onChange={handleGlobalSearch}
               allowClear
             />
             <RangePicker onChange={handleDateFilter} />
-            <Tooltip title={tableSize === "middle" ? "Compact view" : "Standard view"}>
-              <Button
-                icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
-                type="text"
-                onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
-              />
-            </Tooltip>
           </Space>
           <Button icon={<DownloadOutlined />}>{t("common.downloadCsv")}</Button>
         </Space>
@@ -168,23 +129,23 @@ const ParkonicPage: React.FC = () => {
       <Card bordered={false} bodyStyle={{ padding: "5px 5px 0 5px" }}>
         <Table
           rowSelection={{ type: "checkbox" }}
-          rowKey="id"
+          rowKey="fineId"
           columns={columns}
-          dataSource={filteredData}
-          size={tableSize}
-          loading={isLoading}
+          dataSource={tableData}
+          loading={isLoading || isFetching}
+          onChange={handleTableChange}
           pagination={{
-            defaultPageSize: 10,
+            current: apiParams.PageNumber,
+            pageSize: apiParams.PageSize,
+            total: totalRecords,
             showSizeChanger: true,
             pageSizeOptions: ["10", "20", "50"],
-            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
           }}
           scroll={{ x: 1000 }}
-          sticky={{ offsetHeader: 64 }}
         />
       </Card>
 
-      {/* Drawer */}
       <ParkonicViewDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} record={selectedRecord} />
     </Space>
   );

@@ -12,7 +12,6 @@ import {
 import { Line, Pie } from "@ant-design/plots";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
-import usePageLoader from "../hooks/usePageLoader";
 
 const { Title, Text } = Typography;
 const { useToken } = theme;
@@ -76,7 +75,6 @@ const DashboardPage = () => {
   const { t } = useTranslation();
   const { setPageTitle } = usePage();
   const { token } = useToken();
-  const loading = usePageLoader(800);
 
   useEffect(() => {
     setPageTitle(t("sidebar.dashboard"));
@@ -138,90 +136,88 @@ const DashboardPage = () => {
   };
 
   return (
-    <Skeleton loading={loading} active paragraph={{ rows: 12 }}>
-      <Row gutter={[24, 24]}>
-        {stats.map((stat) => (
-          <Col xs={24} sm={12} lg={6} key={stat.title}>
-            <Card bordered={false}>
-              <Statistic title={stat.title} value={stat.value} prefix={stat.icon} />
-              <Space
-                className="no-margin"
-                style={{
-                  marginTop: 8,
-                  color: stat.trend > 0 ? token.colorSuccess : token.colorError,
-                }}
+    <Row gutter={[24, 24]}>
+      {stats.map((stat) => (
+        <Col xs={24} sm={12} lg={6} key={stat.title}>
+          <Card bordered={false}>
+            <Statistic title={stat.title} value={stat.value} prefix={stat.icon} />
+            <Space
+              className="no-margin"
+              style={{
+                marginTop: 8,
+                color: stat.trend > 0 ? token.colorSuccess : token.colorError,
+              }}
+            >
+              {stat.trend > 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+              <Text style={{ color: "inherit", fontSize: "12px" }}>
+                {stat.trend}% {t("dashboard.last30days")}
+              </Text>
+            </Space>
+          </Card>
+        </Col>
+      ))}
+
+      <Col xs={24} lg={16}>
+        <Card bordered={false} title={<Title level={5}>{t("dashboard.finesOverTime")}</Title>}>
+          <Line {...lineConfig} />
+        </Card>
+      </Col>
+      <Col xs={24} lg={8}>
+        <Card bordered={false} title={<Title level={5}>{t("dashboard.whitelistStatus")}</Title>}>
+          <Pie {...pieConfig} />
+        </Card>
+      </Col>
+
+      <Col xs={24} lg={12}>
+        <Card bordered={false} title={<Title level={5}>{t("dashboard.pendingApprovals")}</Title>}>
+          <List
+            itemLayout="horizontal"
+            dataSource={pendingApprovals}
+            renderItem={(item) => (
+              <List.Item
+                actions={[
+                  <Button type="primary" size="small">
+                    {t("dashboard.approve")}
+                  </Button>,
+                  <Button size="small">{t("dashboard.reject")}</Button>,
+                ]}
               >
-                {stat.trend > 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-                <Text style={{ color: "inherit", fontSize: "12px" }}>
-                  {stat.trend}% {t("dashboard.last30days")}
-                </Text>
-              </Space>
-            </Card>
-          </Col>
-        ))}
-
-        <Col xs={24} lg={16}>
-          <Card bordered={false} title={<Title level={5}>{t("dashboard.finesOverTime")}</Title>}>
-            <Line {...lineConfig} />
-          </Card>
-        </Col>
-        <Col xs={24} lg={8}>
-          <Card bordered={false} title={<Title level={5}>{t("dashboard.whitelistStatus")}</Title>}>
-            <Pie {...pieConfig} />
-          </Card>
-        </Col>
-
-        <Col xs={24} lg={12}>
-          <Card bordered={false} title={<Title level={5}>{t("dashboard.pendingApprovals")}</Title>}>
-            <List
-              itemLayout="horizontal"
-              dataSource={pendingApprovals}
-              renderItem={(item) => (
-                <List.Item
-                  actions={[
-                    <Button type="primary" size="small">
-                      {t("dashboard.approve")}
-                    </Button>,
-                    <Button size="small">{t("dashboard.reject")}</Button>,
-                  ]}
-                >
-                  <List.Item.Meta
-                    avatar={<Avatar icon={item.type === "Trade" ? <FileDoneOutlined /> : <CarOutlined />} />}
-                    title={<a href="#">{item.name}</a>}
-                    description={item.date}
-                  />
-                </List.Item>
-              )}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} lg={12}>
-          <Card bordered={false} title={<Title level={5}>{t("dashboard.recentActivity")}</Title>}>
-            <Timeline
-              items={recentActivity.map((item) => ({
-                color:
-                  item.status === "critical"
-                    ? "red"
-                    : item.status === "success"
-                      ? "green"
-                      : item.status === "warning"
-                        ? "gold"
-                        : "blue",
-                dot: item.status === "info" ? <SearchOutlined /> : undefined,
-                children: (
-                  <Space>
-                    <Text strong>{item.user}</Text>
-                    <Text type="secondary">{t(`dashboard.activity.${item.action}`)}</Text>
-                    <Text strong>{item.target}</Text>
-                    <Text type="secondary">({item.time})</Text>
-                  </Space>
-                ),
-              }))}
-            />
-          </Card>
-        </Col>
-      </Row>
-    </Skeleton>
+                <List.Item.Meta
+                  avatar={<Avatar icon={item.type === "Trade" ? <FileDoneOutlined /> : <CarOutlined />} />}
+                  title={<a href="#">{item.name}</a>}
+                  description={item.date}
+                />
+              </List.Item>
+            )}
+          />
+        </Card>
+      </Col>
+      <Col xs={24} lg={12}>
+        <Card bordered={false} title={<Title level={5}>{t("dashboard.recentActivity")}</Title>}>
+          <Timeline
+            items={recentActivity.map((item) => ({
+              color:
+                item.status === "critical"
+                  ? "red"
+                  : item.status === "success"
+                    ? "green"
+                    : item.status === "warning"
+                      ? "gold"
+                      : "blue",
+              dot: item.status === "info" ? <SearchOutlined /> : undefined,
+              children: (
+                <Space>
+                  <Text strong>{item.user}</Text>
+                  <Text type="secondary">{t(`dashboard.activity.${item.action}`)}</Text>
+                  <Text strong>{item.target}</Text>
+                  <Text type="secondary">({item.time})</Text>
+                </Space>
+              ),
+            }))}
+          />
+        </Card>
+      </Col>
+    </Row>
   );
 };
 
