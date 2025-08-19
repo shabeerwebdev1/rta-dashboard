@@ -1,5 +1,5 @@
 * {
-  font-family: "NoirPro", "Helvetica Neue" !important;
+  font-family: "NoirPro", "Helvetica Neue", sans-serif !important;
 }
 
 html,
@@ -11,13 +11,11 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  min-width: 1024px;
-  overflow-x: hidden;
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -25,37 +23,16 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #a0a0a0;
-  border-radius: 3px;
+  background: #c1c1c1;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #808080;
+  background: #a8a8a8;
 }
 
 .no-margin {
-  margin: 0;
-}
-
-/* use styled compoennts */
-.ant-space-gap-col-middle .ant-space-item:last-child {
-  margin-left: auto !important;
-}
-
-.ant-layout-sider .ant-layout-sider-trigger {
-  background-color: transparent;
-}
-
-.ant-table-wrapper .ant-table-pagination.ant-pagination {
-  margin: 16px;
-}
-
-html[lang="en"] .ant-pagination-total-text {
-  margin-right: auto !important;
-}
-
-html[lang="ar"] .ant-pagination-total-text {
-  margin-left: auto !important;
+  margin: 0 !important;
 }
 
 .ant-form-item-label > label.ant-form-item-required::before {
@@ -69,7 +46,10 @@ html[lang="ar"] .ant-pagination-total-text {
   margin: 0;
 }
 
-.ant-form-item-label > label {
-  display: inline-flex;
-  align-items: flex-start;
+.ant-table-wrapper .ant-table-thead > tr > th {
+  border-bottom: 1px solid #e6e6e6 !important;
+}
+
+.ant-table-wrapper .ant-checkbox:not(.ant-checkbox-checked) .ant-checkbox-inner {
+  border-color: #bbbbbb !important;
 }

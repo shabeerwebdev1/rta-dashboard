@@ -1,23 +1,9 @@
 import type { WhitelistRecord } from "../types";
 import dayjs from "dayjs";
 
-const names = [
-  "ABC Traders",
-  "XYZ Logistics",
-  "EFG Corp",
-  "Dubai Solutions",
-  "Global Exports",
-  "Innovate Tech",
-];
+const names = ["ABC Traders", "XYZ Logistics", "EFG Corp", "Dubai Solutions", "Global Exports", "Innovate Tech"];
 
-const users = [
-  "Ali Ahmed",
-  "Fatima Khan",
-  "John Doe",
-  "Jane Smith",
-  "Yusuf Ibrahim",
-  "Aisha Al Mansoori",
-];
+const users = ["Ali Ahmed", "Fatima Khan", "John Doe", "Jane Smith", "Yusuf Ibrahim", "Aisha Al Mansoori"];
 
 const cityCoordinates = [
   { lat: 25.276987, lng: 55.296249 },

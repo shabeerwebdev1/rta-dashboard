@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Layout, Menu, theme, type MenuProps } from "antd";
+import { Layout, Menu } from "antd";
 import {
   CarOutlined,
   FileTextOutlined,
@@ -12,131 +12,125 @@ import {
   IdcardOutlined,
   PushpinOutlined,
   DashboardOutlined,
+  AuditOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
+import { FULL_PATHS } from "../../constants/paths";
 
 const { Sider } = Layout;
-const { useToken } = theme;
 
 const AppSidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { t } = useTranslation();
   const location = useLocation();
-  const { token } = useToken();
 
-  const menuItems: MenuProps["items"] = [
+  const menuItems: Array<{
+    key: string;
+    icon: React.ReactNode;
+    label: React.ReactNode;
+    children?: Array<{ key: string; label: React.ReactNode }>;
+  }> = [
     {
-      key: "/dashboard",
+      key: FULL_PATHS.DASHBOARD,
       icon: <DashboardOutlined />,
-      label: <Link to="/dashboard">{t("sidebar.dashboard")}</Link>,
+      label: <Link to={FULL_PATHS.DASHBOARD}>{t("sidebar.dashboard")}</Link>,
     },
     {
-      key: "/whitelist",
+      key: "whitelist",
       icon: <FileTextOutlined />,
       label: t("sidebar.whitelist"),
       children: [
         {
-          key: "/whitelist/plates",
-          label: (
-            <Link to="/whitelist/plates">{t("whitelist.plate.title")}</Link>
-          ),
+          key: FULL_PATHS.WHITELIST_PLATES,
+          label: <Link to={FULL_PATHS.WHITELIST_PLATES}>{t("sidebar.plates")}</Link>,
         },
         {
-          key: "/whitelist/tradelicenses",
-          label: (
-            <Link to="/whitelist/tradelicenses">
-              {t("whitelist.trade.title")}
-            </Link>
-          ),
+          key: FULL_PATHS.WHITELIST_TRADELICENSES,
+          label: <Link to={FULL_PATHS.WHITELIST_TRADELICENSES}>{t("sidebar.tradelicenses")}</Link>,
         },
       ],
     },
-    { key: "/parking", icon: <PushpinOutlined />, label: t("sidebar.parking") },
-    { key: "/fleet", icon: <CarOutlined />, label: t("sidebar.fleet") },
-    { key: "/permits", icon: <IdcardOutlined />, label: t("sidebar.permits") },
-    { key: "/hrms", icon: <TeamOutlined />, label: t("sidebar.hrms") },
     {
-      key: "/inspections",
+      key: FULL_PATHS.INSPECTIONS,
       icon: <SearchOutlined />,
-      label: t("sidebar.inspections"),
+      label: <Link to={FULL_PATHS.INSPECTIONS}>{t("sidebar.inspections")}</Link>,
     },
-    { key: "/fines", icon: <DollarOutlined />, label: t("sidebar.fines") },
     {
-      key: "/dispute",
+      key: FULL_PATHS.PLEDGES,
+      icon: <AuditOutlined />,
+      label: <Link to={FULL_PATHS.PLEDGES}>{t("sidebar.pledges")}</Link>,
+    },
+    {
+      key: FULL_PATHS.PERMITS,
+      icon: <IdcardOutlined />,
+      label: <Link to={FULL_PATHS.PERMITS}>{t("sidebar.permits")}</Link>,
+    },
+    {
+      key: FULL_PATHS.PARKONIC,
+      icon: <PushpinOutlined />,
+      label: <Link to={FULL_PATHS.PARKONIC}>{t("sidebar.parkonic")}</Link>,
+    },
+    {
+      key: FULL_PATHS.FINES,
+      icon: <DollarOutlined />,
+      label: <Link to={FULL_PATHS.FINES}>{t("sidebar.fines")}</Link>,
+    },
+    {
+      key: FULL_PATHS.DISPUTE,
       icon: <ExclamationCircleOutlined />,
-      label: t("sidebar.dispute"),
+      label: <Link to={FULL_PATHS.DISPUTE}>{t("sidebar.dispute")}</Link>,
     },
-    { key: "/towing", icon: <CarOutlined />, label: t("sidebar.towing") },
-    { key: "/team", icon: <UsergroupAddOutlined />, label: t("sidebar.team") },
+    { key: FULL_PATHS.HRMS, icon: <TeamOutlined />, label: t("sidebar.hrms") },
+
+    { key: FULL_PATHS.TOWING, icon: <CarOutlined />, label: t("sidebar.towing") },
+    { key: FULL_PATHS.TEAM, icon: <UsergroupAddOutlined />, label: t("sidebar.team") },
     {
-      key: "/analytics",
+      key: FULL_PATHS.ANALYTICS,
       icon: <BarChartOutlined />,
       label: t("sidebar.analytics"),
     },
   ];
 
-  const selectedKey =
-    menuItems
-      .flatMap((item) => (item && "children" in item ? item.children : item))
-      .find((item) => item && location.pathname.startsWith(item.key as string))
-      ?.key ||
-    menuItems.find((item) => location.pathname.startsWith(item?.key as string))
-      ?.key ||
-    "/dashboard";
+  const getSelectedKeys = () => {
+    const path = location.pathname;
+    let bestMatch = "";
+    for (const item of menuItems.flatMap((i) => i.children || i)) {
+      if (path.startsWith(item.key) && item.key.length > bestMatch.length) {
+        bestMatch = item.key;
+      }
+    }
+    return [bestMatch || FULL_PATHS.DASHBOARD];
+  };
 
-  const defaultOpenKeys = menuItems
-    .filter(
-      (item) =>
-        item &&
-        "children" in item &&
-        item.children?.some((child) =>
-          location.pathname.startsWith(child?.key as string),
-        ),
-    )
-    .map((item) => item?.key as string);
+  console.log(getSelectedKeys(), "getSelectedKeys 99");
+
+  const getDefaultOpenKeys = () => {
+    const path = location.pathname;
+    const parent = menuItems.find((item) => item.children?.some((child) => path.startsWith(child.key)));
+    return parent ? [parent.key] : [];
+  };
 
   return (
-    <Sider
-      collapsible
-      collapsed={collapsed}
-      onCollapse={(value) => setCollapsed(value)}
-      width={250}
-      style={{
-        position: "sticky",
-        top: "0",
-        left: "0",
-        height: "100vh",
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          height: "64px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderBottom: `1px solid ${token.colorBorderSecondary}`,
-        }}
-      >
+    <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} width={250} className="app-sidebar">
+      <div className="sidebar-logo-container">
         <img
-          src="https://upload.wikimedia.org/wikipedia/en/d/dd/RTA_Dubai_logo.png"
+          src={
+            collapsed
+              ? "https://images.seeklogo.com/logo-png/4/2/dubai-roads-transport-authority-logo-png_seeklogo-44110.png"
+              : "https://upload.wikimedia.org/wikipedia/en/d/dd/RTA_Dubai_logo.png"
+          }
           alt="RTA Logo"
-          style={{
-            width: "100%",
-            transition: "all 0.2s",
-            backgroundColor: "white",
-            padding: "2px",
-            objectFit: "cover",
-          }}
+          className={`sidebar-logo ${collapsed ? "collapsed" : ""}`}
         />
       </div>
       <Menu
-        style={{ height: "calc(100% - 64px)", marginTop: 20, borderRight: 0 }}
-        defaultOpenKeys={defaultOpenKeys}
-        selectedKeys={[selectedKey as string]}
+        theme="light"
         mode="inline"
+        selectedKeys={getSelectedKeys()}
+        defaultOpenKeys={getDefaultOpenKeys()}
         items={menuItems}
+        style={{ height: "calc(100% - 64px)", borderRight: 0 }}
       />
     </Sider>
   );

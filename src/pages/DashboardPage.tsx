@@ -1,19 +1,5 @@
 import { useEffect } from "react";
-import {
-  Card,
-  Col,
-  Row,
-  Statistic,
-  Skeleton,
-  List,
-  Avatar,
-  Button,
-  Space,
-  Typography,
-  Tag,
-  Timeline,
-  theme,
-} from "antd";
+import { Card, Col, Row, Statistic, Skeleton, List, Avatar, Button, Space, Typography, Timeline, theme } from "antd";
 import {
   CarOutlined,
   FileDoneOutlined,
@@ -137,7 +123,7 @@ const DashboardPage = () => {
     line: { style: { stroke: token.colorPrimary, strokeWidth: 2 } },
     tooltip: {
       title: "Date",
-      formatter: (datum: any) => ({ name: "Fines", value: datum.count }),
+      formatter: (datum: { count: number }) => ({ name: "Fines", value: datum.count }),
     },
   };
 
@@ -157,11 +143,7 @@ const DashboardPage = () => {
         {stats.map((stat) => (
           <Col xs={24} sm={12} lg={6} key={stat.title}>
             <Card bordered={false}>
-              <Statistic
-                title={stat.title}
-                value={stat.value}
-                prefix={stat.icon}
-              />
+              <Statistic title={stat.title} value={stat.value} prefix={stat.icon} />
               <Space
                 className="no-margin"
                 style={{
@@ -179,27 +161,18 @@ const DashboardPage = () => {
         ))}
 
         <Col xs={24} lg={16}>
-          <Card
-            bordered={false}
-            title={<Title level={5}>{t("dashboard.finesOverTime")}</Title>}
-          >
+          <Card bordered={false} title={<Title level={5}>{t("dashboard.finesOverTime")}</Title>}>
             <Line {...lineConfig} />
           </Card>
         </Col>
         <Col xs={24} lg={8}>
-          <Card
-            bordered={false}
-            title={<Title level={5}>{t("dashboard.whitelistStatus")}</Title>}
-          >
+          <Card bordered={false} title={<Title level={5}>{t("dashboard.whitelistStatus")}</Title>}>
             <Pie {...pieConfig} />
           </Card>
         </Col>
 
         <Col xs={24} lg={12}>
-          <Card
-            bordered={false}
-            title={<Title level={5}>{t("dashboard.pendingApprovals")}</Title>}
-          >
+          <Card bordered={false} title={<Title level={5}>{t("dashboard.pendingApprovals")}</Title>}>
             <List
               itemLayout="horizontal"
               dataSource={pendingApprovals}
@@ -213,17 +186,7 @@ const DashboardPage = () => {
                   ]}
                 >
                   <List.Item.Meta
-                    avatar={
-                      <Avatar
-                        icon={
-                          item.type === "Trade" ? (
-                            <FileDoneOutlined />
-                          ) : (
-                            <CarOutlined />
-                          )
-                        }
-                      />
-                    }
+                    avatar={<Avatar icon={item.type === "Trade" ? <FileDoneOutlined /> : <CarOutlined />} />}
                     title={<a href="#">{item.name}</a>}
                     description={item.date}
                   />
@@ -233,10 +196,7 @@ const DashboardPage = () => {
           </Card>
         </Col>
         <Col xs={24} lg={12}>
-          <Card
-            bordered={false}
-            title={<Title level={5}>{t("dashboard.recentActivity")}</Title>}
-          >
+          <Card bordered={false} title={<Title level={5}>{t("dashboard.recentActivity")}</Title>}>
             <Timeline
               items={recentActivity.map((item) => ({
                 color:
@@ -251,9 +211,7 @@ const DashboardPage = () => {
                 children: (
                   <Space>
                     <Text strong>{item.user}</Text>
-                    <Text type="secondary">
-                      {t(`dashboard.activity.${item.action}`)}
-                    </Text>
+                    <Text type="secondary">{t(`dashboard.activity.${item.action}`)}</Text>
                     <Text strong>{item.target}</Text>
                     <Text type="secondary">({item.time})</Text>
                   </Space>

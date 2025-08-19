@@ -1,13 +1,15 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
-import { whitelistApi } from "./api/whitelistApi";
+import { dynamicApi } from "../services/rtkApiFactory";
+import { fileApi } from "../services/fileApi";
 
 export const store = configureStore({
   reducer: {
-    [whitelistApi.reducerPath]: whitelistApi.reducer,
+    [dynamicApi.reducerPath]: dynamicApi.reducer,
+    [fileApi.reducerPath]: fileApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(whitelistApi.middleware),
+    getDefaultMiddleware({ serializableCheck: false }).concat(dynamicApi.middleware).concat(fileApi.middleware),
 });
 
 setupListeners(store.dispatch);

@@ -1,57 +1,51 @@
 {
   "sidebar": {
     "dashboard": "لوحة التحكم",
-    "parking": "إدارة المواقف",
-    "fleet": "إدارة الأسطول",
     "whitelist": "إدارة القائمة البيضاء",
+    "inspections": "معوقات التفتيش",
+    "pledges": "إدارة التعهدات",
     "permits": "التصاريح",
-    "hrms": "إدارة الموارد البشرية",
-    "inspections": "التفتيش",
     "fines": "إدارة الغرامات",
+    "parkonic": "إدارة باركونيك",
+    "hrms": "إدارة الموارد البشرية",
     "dispute": "إدارة النزاعات",
     "towing": "سحب المركبات",
     "team": "تقييم الفريق",
-    "analytics": "التحليلات والرؤى"
+    "analytics": "التحليلات والرؤى",
+    "plates": "لوحات",
+    "tradelicenses": "رخص تجارية"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
     "standardMode": "الوضع القياسي"
   },
-  "whitelist": {
-    "title": "إدارة القائمة البيضاء",
-    "addNew": "إضافة جديدة",
-    "downloadCsv": "تنزيل CSV",
-    "searchPlaceholder": "بحث في جميع الحقول...",
-    "edit": "تعديل",
-    "delete": "حذف",
-    "view": "عرض",
-    "plate": {
-      "title": "القائمة البيضاء للوحات",
-      "addTitle": "إضافة لوحة جديدة إلى القائمة البيضاء"
+  "page": {
+    "title": {
+      "whitelist-plates": "القائمة البيضاء للوحات",
+      "whitelist-tradelicenses": "القائمة البيضاء للرخص التجارية",
+      "inspection-obstacles": "معوقات التفتيش",
+      "pledges": "إدارة التعهدات",
+      "dispute-management": "إدارة النزاعات",
+      "permits": "بحث التصاريح",
+      "fines": "إدارة الغرامات",
+      "parkonic": "إدارة باركونيك"
     },
-    "trade": {
-      "title": "القائمة البيضاء للرخص التجارية",
-      "addTitle": "إضافة رخصة تجارية جديدة إلى القائمة البيضاء"
-    }
+    "addTitle": "إضافة {{entity}} جديد",
+    "editTitle": "تعديل {{entity}}",
+    "viewTitle": "تفاصيل {{entity}}"
   },
-  "dashboard": {
-    "totalVehicles": "إجمالي المركبات",
-    "activePledges": "القوائم البيضاء النشطة",
-    "finesIssued": "الغرامات الصادرة (شهريًا)",
-    "openDisputes": "النزاعات المفتوحة",
-    "finesOverTime": "الغرامات مع مرور الوقت",
-    "whitelistStatus": "حالة القائمة البيضاء",
-    "pendingApprovals": "الموافقات المعلقة للقائمة البيضاء",
-    "recentActivity": "موجز النشاط الأخير",
-    "last30days": "آخر 30 يومًا",
-    "approve": "موافقة",
-    "reject": "رفض",
-    "activity": {
-      "fineIssued": "أصدر غرامة لـ",
-      "whitelistApproved": "وافق على القائمة البيضاء لـ",
-      "disputeOpened": "فتح نزاعًا لـ",
-      "vehicleInspected": "فحص المركبة"
-    }
+  "messages": {
+    "addSuccess": "تمت إضافة {{entity}} بنجاح!",
+    "updateSuccess": "{{entity}} تم التحديث بنجاح!",
+    "deleteSuccess": "تم حذف {{entity}} بنجاح.",
+    "deleteConfirmTitle": "تأكيد الحذف",
+    "deleteConfirmContent": "هل أنت متأكد أنك تريد حذف هذا {{entity}}؟",
+    "csvDownloaded": "تم تنزيل ملف CSV بنجاح!",
+    "csvConfirmTitle": "تأكيد تنزيل CSV",
+    "csvConfirmContent": "أنت على وشك تنزيل البيانات المحددة.",
+    "selectRows": "يرجى تحديد صف واحد على الأقل للتنزيل.",
+    "fileUploadSuccess": "تم رفع الملف بنجاح: {fileName}",
+    "fileUploadError": "فشل رفع الملف: {fileName}"
   },
   "form": {
     "plateNumber": "رقم اللوحة",
@@ -59,20 +53,58 @@
     "plateType": "نوع اللوحة",
     "plateColor": "لون اللوحة",
     "tradeLicenseNumber": "رقم الرخصة التجارية",
-    "tradeLicense_EN_Name": "اسم الرخصة التجارية (إنجليزي)",
-    "tradeLicense_AR_Name": "اسم الرخصة التجارية (عربي)",
+    "tradeLicense_EN_Name": "اسم الرخصة (إنجليزي)",
+    "tradeLicense_AR_Name": "اسم الرخصة (عربي)",
     "plotNumber": "رقم قطعة الأرض",
-    "startDate": "تاريخ البدء",
-    "endDate": "تاريخ الانتهاء",
+    "fromDate": "تاريخ البدء",
+    "toDate": "تاريخ الانتهاء",
     "dateRange": "الفترة الزمنية",
+    "status": "الحالة",
     "plateStatus": "الحالة",
-    "exemptionReason_EN": "سبب الاستثناء (إنجليزي)",
-    "exemptionReason_AR": "سبب الاستثناء (عربي)"
-  },
-  "status": {
-    "active": "نشط",
-    "expired": "منتهي الصلاحية",
-    "pending": "قيد الانتظار"
+    "exemptionReason": "سبب الإعفاء",
+    "exemptionReason_ID": "رمز سبب الإعفاء",
+    "pledgeNumber": "رقم التعهد",
+    "pledgeType": "نوع التعهد",
+    "businessName": "اسم العمل",
+    "remarks": "ملاحظات",
+    "document": "مستند",
+    "obstacleNumber": "رقم العائق",
+    "zone": "المنطقة",
+    "area": "المساحة",
+    "sourceOfObstacle": "مصدر العائق",
+    "closestPaymentDevice": "أقرب جهاز دفع",
+    "comments": "تعليقات",
+    "photo": "صورة (صور)",
+    "reportedBy": "تم الإبلاغ بواسطة",
+    "permitType": "نوع التصريح",
+    "permitNumber": "رقم التصريح",
+    "phoneNumber": "رقم الهاتف",
+    "department": "القسم",
+    "paymentType": "نوع الدفع",
+    "crmReference": "مرجع CRM",
+    "authorizedAreas": "المناطق المصرح بها",
+    "fineNumber": "رقم الغرامة",
+    "supervisorName": "اسم المشرف",
+    "issuer": "المُصدر",
+    "fineType": "نوع الغرامة",
+    "section": "القسم",
+    "issuedBy": "المُصدر",
+    "issuedAmount": "المبلغ المُصدر",
+    "amount": "المبلغ",
+    "date": "التاريخ",
+    "vehicleColor": "لون المركبة",
+    "vehicleType": "نوع المركبة",
+    "vehicleBrand": "ماركة المركبة",
+    "vehicleOwnerName": "اسم مالك المركبة",
+    "finedetails": "تفاصيل الغرامة",
+    "vehicleDetails": "تفاصيل المركبة",
+    "FineLocation": "موقع الغرامة",
+    "AttachedPhotos": "الصور المرفقة",
+    "ActivityLog": "سجل النشاطات",
+    "vehicleNumber": "رقم المركبة",
+    "exitDateTime": "تاريخ ووقت الخروج",
+    "reviewStatus": "حالة المراجعة",
+    "entryDateTime": "تاريخ ووقت الدخول"
   },
   "common": {
     "action": "إجراء",
@@ -83,19 +115,32 @@
     "delete": "حذف",
     "cancel": "إلغاء",
     "download": "تنزيل",
-    "submit": "إرسال"
+    "submit": "إرسال",
+    "update": "تحديث",
+    "edit": "تعديل",
+    "view": "عرض",
+    "downloadCsv": "تنزيل CSV",
+    "addNew": "إضافة جديد",
+    "searchPlaceholder": "بحث...",
+    "location": "الموقع",
+    "noData": "لا توجد بيانات",
+    "selectFile": "Select File",
+    "share": "مشاركة"
   },
-  "messages": {
-    "csvDownloaded": "تم تنزيل ملف CSV بنجاح!",
-    "whitelistAdded": "تمت إضافة الإدخال بنجاح!",
-    "confirmDeleteTitle": "تأكيد الحذف",
-    "confirmDeleteContent": "هل أنت متأكد أنك تريد حذف",
-    "deletedSuccess": "تم الحذف بنجاح.",
-    "csvConfirmTitle": "تأكيد تنزيل CSV",
-    "csvConfirmContent": "أنت على وشك تنزيل ملف CSV بالبيانات التالية:",
-    "totalEntries": "إجمالي الإدخالات",
+  "entity": {
+    "plate": "لوحة",
+    "tradeLicense": "رخصة تجارية",
+    "pledge": "تعهد",
+    "inspectionObstacle": "عائق تفتيش"
+  },
+  "status": {
     "active": "نشط",
+    "inactive": "غير نشط",
     "expired": "منتهي الصلاحية",
-    "pending": "قيد الانتظار"
+    "pending": "قيد الانتظار",
+    "removed": "تمت الإزالة",
+    "reported": "Reported",
+    "submitting": "جارٍ الإرسال",
+    "updating": "جارٍ التحديث"
   }
 }

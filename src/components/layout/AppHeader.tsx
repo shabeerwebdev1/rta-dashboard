@@ -1,33 +1,16 @@
-import {
-  Layout,
-  Space,
-  Avatar,
-  Badge,
-  Dropdown,
-  type MenuProps,
-  Button,
-  Typography,
-  Tooltip,
-} from "antd";
-import {
-  BellOutlined,
-  UserOutlined,
-  LogoutOutlined,
-  CompressOutlined,
-  ExpandOutlined,
-} from "@ant-design/icons";
+import { Layout, Space, Avatar, Badge, Dropdown, type MenuProps, Button, Typography } from "antd";
+import { BellOutlined, UserOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import ThemeSwitcher from "../ThemeSwitcher";
 import LanguageSwitcher from "../LanguageSwitcher";
 import { usePage } from "../../contexts/PageContext";
-import { useCompactMode } from "../../contexts/CompactModeContext";
 
 const { Header } = Layout;
 const { Title } = Typography;
 
 const AppHeader = () => {
   const { pageTitle } = usePage();
-  const { isCompact, toggleCompactMode } = useCompactMode();
+
   const { t } = useTranslation();
 
   const userMenuItems: MenuProps["items"] = [
@@ -38,7 +21,7 @@ const AppHeader = () => {
   return (
     <Header
       style={{
-        padding: "0 24px",
+        padding: "15px 24px 0",
         background: "inherit",
         display: "flex",
         alignItems: "center",
