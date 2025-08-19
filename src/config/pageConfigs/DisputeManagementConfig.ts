@@ -1,4 +1,6 @@
 import type { PageConfig } from "../../types/config";
+import { SearchOutlined } from "@ant-design/icons";
+import React from "react";
 
 export const disputeManagementConfig: PageConfig = {
   key: "dispute-management",
@@ -10,6 +12,14 @@ export const disputeManagementConfig: PageConfig = {
     put: "/api/Dispute/Update",
     delete: "",
   },
+
+  statsConfig: [
+    {
+      title: "Total Disputes",
+      icon: React.createElement(SearchOutlined),
+      value: (data) => data.length,
+    },
+  ],
 
   tableConfig: {
     columns: [

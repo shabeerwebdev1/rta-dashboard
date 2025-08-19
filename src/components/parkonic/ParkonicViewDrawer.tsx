@@ -1,8 +1,21 @@
-// components/ParkonicViewDrawer.tsx
 import React, { useState } from "react";
-import { Drawer, Descriptions, Tag, Space, Image, Timeline, Empty, Button, Select, Input, message } from "antd";
+import {
+  Drawer,
+  Descriptions,
+  Tag,
+  Space,
+  Image,
+  Timeline,
+  Empty,
+  Button,
+  Select,
+  Input,
+  App,
+} from "antd";
+import { ShareAltOutlined } from "@ant-design/icons";
 import { getFileUrl } from "../../services/fileApi";
 import { useReviewParkonicMutation } from "../../services/rtkApiFactory";
+import { useAppNotification } from "./../../utils/notificationManager";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -14,9 +27,11 @@ interface ParkonicViewDrawerProps {
 }
 
 const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, record }) => {
+  const { message } = App.useApp();
   const [reviewParkonic, { isLoading }] = useReviewParkonicMutation();
   const [reviewStatus, setReviewStatus] = useState<number>(record?.reviewStatus || 0);
   const [rejectionReason, setRejectionReason] = useState<string>(record?.rejectionReason || "");
+  const notification = useAppNotification();
 
   const handleSubmitReview = async () => {
     if (reviewStatus === 0 && !rejectionReason) {
@@ -27,18 +42,33 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
     try {
       await reviewParkonic({
         fineId: record.fineId,
-        reviewerName: "CurrentUser", // replace with actual user
+        reviewerName: "CurrentUser",
         reviewTimestamp: new Date().toISOString(),
         reviewStatus,
-        updatedby: "CurrentUser", // replace with actual user
+        updatedby: "CurrentUser",
         rejectionReason,
       }).unwrap();
 
       message.success("Review submitted successfully");
-      onClose(); // close drawer after review
+      onClose();
     } catch (error: any) {
       message.error(error?.data?.message || "Failed to submit review");
     }
+  };
+
+  const handleShare = () => {
+    if (!record) return;
+    const shareUrl = `${window.location.origin}${window.location.pathname}?view=${record.fineId}`;
+
+    navigator.clipboard.writeText(shareUrl).then(
+      () => {
+        notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!");
+      },
+      (err) => {
+        notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed");
+        console.error("Could not copy text: ", err);
+      },
+    );
   };
 
   return (
@@ -47,6 +77,13 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
       onClose={onClose}
       width={500}
       title="Parkonic Details"
+      extra={
+        record && (
+          <Button icon={<ShareAltOutlined />} onClick={handleShare}>
+            Share
+          </Button>
+        )
+      }
       bodyStyle={{ overflowY: "auto", height: "calc(100vh - 64px)" }}
       footer={
         <div style={{ textAlign: "right" }}>
@@ -72,9 +109,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                 {record.reviewStatus === 1 ? "Approved" : record.reviewStatus === 0 ? "Rejected" : "Unknown"}
               </Tag>
             </Descriptions.Item>
-
             <Descriptions.Item label="Entry Date Time">{record.entryDateTime || "No Data"}</Descriptions.Item>
-
             <Descriptions.Item label="Exit Date Time">{record.exitDateTime || "No Data"}</Descriptions.Item>
           </Descriptions>
 
