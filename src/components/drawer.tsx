@@ -2,11 +2,10 @@ import React from "react";
 import { Drawer, Descriptions, Tag, Typography, Badge, Image, Empty, Space, Button } from "antd";
 import { useTranslation } from "react-i18next";
 import { ShareAltOutlined } from "@ant-design/icons";
-import type { PageConfig } from "../../types/config";
-import { getFileUrl } from "../../services/fileApi";
 import dayjs from "dayjs";
-import MapComponent from "./MapComponent";
-import { STATUS_COLORS } from "../../constants/ui";
+import type { PageConfig } from "../types/config";
+import { STATUS_COLORS } from "../constants/ui";
+import { getFileUrl } from "../services/fileApi";
 
 interface DynamicViewDrawerProps {
   open: boolean;
@@ -75,7 +74,7 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, re
                     return <Badge color={String(text).toLowerCase()} text={String(text)} />;
 
                   default:
-                    //  If field is a select, show label instead of value
+                    
                     if (field.type === "select") {
                       const formFieldConfig = config.formConfig.fields.find(
                         (f) => f.name.toLowerCase() === field.key.toLowerCase(),
@@ -121,7 +120,7 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, re
         </>
       )}
 
-      {(record.location || (record.lat && record.lng)) && (
+      {/* {(record.location || (record.lat && record.lng)) && (
         <div style={{ marginTop: 24 }}>
           <Typography.Title level={5}>{t("common.location")}</Typography.Title>
           <MapComponent
@@ -129,7 +128,7 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, re
             lng={(record.location as { lng: number })?.lng || (record.lng as number)}
           />
         </div>
-      )}
+      )} */}
     </Drawer>
   );
 };

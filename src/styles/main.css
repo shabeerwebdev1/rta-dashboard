@@ -107,8 +107,8 @@ html[lang="ar"] .ant-pagination-total-text {
 
 /* styles/global.css or in your main CSS file */
 .ant-table-cell {
-  max-width: 200px;
+  /* max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: nowrap; */
 }

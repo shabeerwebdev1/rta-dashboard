@@ -10,13 +10,19 @@ export const disputeManagementConfig: PageConfig = {
     put: "/api/Dispute/Update",
     delete: "",
   },
-
+  searchConfig: {
+    globalSearchKeys: ["fine_Number", "crM_Ref", "phone", "email"],
+    columnFilterKeys: ["department", "payment_Type"],
+    dateRangeKey: "createdAt", // Assuming API supports this, otherwise it will be ignored
+  },
   tableConfig: {
+    rowKey: "dispute_Id",
     columns: [
       {
         key: "department",
         title: "form.department",
         type: "select",
+        filterable: true,
         options: [
           { label: "Parking", value: 1 },
           { label: "Traffic", value: 2 },
@@ -28,6 +34,7 @@ export const disputeManagementConfig: PageConfig = {
         key: "payment_Type",
         title: "form.paymentType",
         type: "select",
+        filterable: true,
         options: [
           { label: "Cash", value: 1 },
           { label: "Credit Card", value: 2 },
@@ -35,13 +42,11 @@ export const disputeManagementConfig: PageConfig = {
         ],
       },
       { key: "phone", title: "form.phoneNumber", type: "string" },
-      { key: "crM_Ref", title: "form.crmReference", type: "string" },
+      { key: "crM_Ref", title: "form.crmReference", type: "string", sortable: true },
     ],
-
     viewRecord: true,
-    showEdit: false,
+    showEdit: true,
   },
-
   formConfig: {
     modalWidth: "720px",
     fields: [

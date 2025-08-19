@@ -1,28 +1,14 @@
 import React, { useEffect, useState } from "react";
-import {
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Button,
-  Row,
-  Col,
-  Space,
-  Card,
-  Table,
-  Spin,
-  Empty,
-  Dropdown,
-  Image,
-} from "antd";
+import { Form, Input, Select, DatePicker, Button, Row, Col, Space, Card, Table, Empty, Dropdown } from "antd";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { MoreOutlined, EyeOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import dayjs from "dayjs";
-import { useLazySearchFinesQuery } from "../services/rtkApiFactory";
+import { useSearchFinesQuery } from "../services/rtkApiFactory";
+import { useTableParams } from "../hooks/useTableParams";
 import FinesViewDrawer from "../components/fines/FinesViewDrawer";
-import { getFileUrl } from "../services/fileApi";
+import { searchConfig } from "../config/searchConfig";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -31,19 +17,23 @@ const FinesPage: React.FC = () => {
   const { t } = useTranslation();
   const { setPageTitle } = usePage();
   const [form] = Form.useForm();
+  const pageKey = "fines";
+  const { apiParams, handleTableChange, setSearchFilters } = useTableParams(searchConfig[pageKey]);
 
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedFine, setSelectedFine] = useState<any>(null);
   const [focusSection, setFocusSection] = useState<"details" | "photos" | "location" | null>(null);
 
-  // lazy query usage
-  const [searchFines, { data: searchResults = [], isFetching }] = useLazySearchFinesQuery();
+  const { data, isFetching, isLoading } = useSearchFinesQuery(apiParams, {
+    refetchOnMountOrArgChange: true,
+  });
+
+  const searchResults = data?.data || [];
+  const totalRecords = data?.total || 0;
 
   useEffect(() => {
     setPageTitle(t("page.title.fines"));
   }, [setPageTitle, t]);
-
-  const disablePastDates = (current: dayjs.Dayjs) => current && current < dayjs().startOf("day");
 
   const onFinish = (values: Record<string, unknown>) => {
     const params: Record<string, unknown> = {
@@ -53,7 +43,7 @@ const FinesPage: React.FC = () => {
     };
     delete params.dateRange;
 
-    searchFines(params);
+    setSearchFilters(params);
   };
 
   const handleView = (record: any, section: "details" | "photos" | "location" = "details") => {
@@ -63,26 +53,26 @@ const FinesPage: React.FC = () => {
   };
 
   const columns = [
-    { title: t("form.fineNumber"), dataIndex: "fineNo", key: "fineNo" },
-    { title: t("form.supervisorName"), dataIndex: "supervisor", key: "supervisor" },
+    { title: t("form.fineNumber"), dataIndex: "fineNo", key: "fineNo", sorter: true },
+    { title: t("form.supervisorName"), dataIndex: "supervisor", key: "supervisor", sorter: true },
     {
       title: t("form.amount"),
       dataIndex: "fineAmount",
       key: "fineAmount",
+      sorter: true,
       render: (amount: number) => (amount != null ? `${amount} AED` : t("common.noData")),
     },
     {
       title: t("form.date"),
       dataIndex: "createdAt",
       key: "createdAt",
+      sorter: true,
       render: (date: string) => (date ? dayjs(date).format("YYYY-MM-DD ") : t("common.noData")),
     },
-
-    // Action column with location icon
     {
-      title: "",
+      title: t("common.action"),
       key: "action",
-      align: "center",
+      align: "center" as const,
       width: 100,
       render: (_: any, record: any) => {
         const menuItems: MenuProps["items"] = [
@@ -109,77 +99,81 @@ const FinesPage: React.FC = () => {
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      {/* Search Form */}
       <Card bordered={false}>
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Row gutter={24}>
             <Col xs={24} sm={12} md={6}>
-              <Form.Item name="fineNo" label={t("form.fineNumber")}>
+              <Form.Item name="FineNo" label={t("form.fineNumber")}>
                 <Input placeholder={t("form.fineNumber")} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={6}>
-              <Form.Item name="supervisor" label={t("form.supervisorName")}>
-                <Select placeholder={t("form.supervisorName")} allowClear>
-                  <Option value="admin">admin</Option>
-                  <Option value="user">User</Option>
+              <Form.Item name="Supervisor" label={t("form.supervisorName")}>
+                <Input placeholder={t("form.supervisorName")} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item name="Issuer" label={t("form.issuer")}>
+                <Input placeholder={t("form.issuer")} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Form.Item name="InspectionType" label={t("form.fineType")}>
+                <Select placeholder={t("form.fineType")} allowClear>
+                  <Option value={0}>Parking Violation</Option>
+                  <Option value={1}>Over Speeding</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={6}>
-              <Form.Item name="createdBy" label={t("form.issuer")}>
-                <Select placeholder={t("form.issuer")} allowClear>
-                  <Option value="issuer1">Issuer 1</Option>
-                  <Option value="issuer2">Issuer 2</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Form.Item name="inspectionType" label={t("form.fineType")}>
-                <Input placeholder={t("form.fineType")} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Form.Item name="section" label={t("form.section")}>
+              <Form.Item name="Section" label={t("form.section")}>
                 <Input placeholder={t("form.section")} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={6}>
               <Form.Item name="dateRange" label={t("form.dateRange")}>
-                <RangePicker style={{ width: "100%" }} disabledDate={disablePastDates} />
+                <RangePicker style={{ width: "100%" }} />
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} md={12} style={{ textAlign: "right", marginTop: 30 }}>
-              <Space>
-                <Button onClick={() => form.resetFields()}>{t("common.reset")}</Button>
-                <Button type="primary" htmlType="submit" loading={isFetching}>
-                  {t("common.search")}
-                </Button>
-              </Space>
+            <Col xs={24} sm={12} md={12} style={{ textAlign: "right", alignSelf: "flex-end" }}>
+              <Form.Item>
+                <Space>
+                  <Button
+                    onClick={() => {
+                      form.resetFields();
+                      setSearchFilters({});
+                    }}
+                  >
+                    {t("common.reset")}
+                  </Button>
+                  <Button type="primary" htmlType="submit" loading={isFetching}>
+                    {t("common.search")}
+                  </Button>
+                </Space>
+              </Form.Item>
             </Col>
           </Row>
         </Form>
       </Card>
 
-      {/* Results Table */}
       <Card bordered={false} bodyStyle={{ padding: "5px 5px 0 5px" }}>
-        <Spin spinning={isFetching}>
-          <Table
-            rowSelection={{ type: "checkbox" }}
-            columns={columns}
-            dataSource={searchResults}
-            rowKey="id"
-            locale={{
-              emptyText: <Empty description={t("common.noData")} />,
-            }}
-            pagination={{
-              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
-            }}
-          />
-        </Spin>
+        <Table
+          rowSelection={{ type: "checkbox" }}
+          columns={columns}
+          dataSource={searchResults}
+          rowKey="id"
+          loading={isLoading || isFetching}
+          onChange={handleTableChange}
+          pagination={{
+            current: apiParams.PageNumber,
+            pageSize: apiParams.PageSize,
+            total: totalRecords,
+            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
+          }}
+          locale={{ emptyText: <Empty description={t("common.noData")} /> }}
+        />
       </Card>
 
-      {/* View Drawer */}
       <FinesViewDrawer
         open={drawerVisible}
         onClose={() => setDrawerVisible(false)}

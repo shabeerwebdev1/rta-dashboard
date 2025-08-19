@@ -7,19 +7,18 @@ import { PATHS, FULL_PATHS } from "./constants/paths";
 // --- Lazy-loaded Page Components ---
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const PermitsPage = lazy(() => import("./pages/PermitsPage"));
-const WhitelistPlatesPage = lazy(() => import("./pages/entity/WhitelistPlatesPage"));
-const WhitelistTradeLicensesPage = lazy(() => import("./pages/entity/WhitelistTradeLicensesPage"));
-const PledgesPage = lazy(() => import("./pages/entity/PledgesPage"));
-const InspectionObstaclesPage = lazy(() => import("./pages/entity/InspectionObstaclesPage"));
+const WhitelistPlatesPage = lazy(() => import("./pages/WhitelistPlatesPage"));
+const WhitelistTradeLicensesPage = lazy(() => import("./pages/WhitelistTradeLicensesPage"));
+const PledgesPage = lazy(() => import("./pages/PledgesPage"));
+const InspectionObstaclesPage = lazy(() => import("./pages/InspectionObstaclesPage"));
 const FinesPage = lazy(() => import("./pages/FinesPage"));
 const ParkonicPage = lazy(() => import("./pages/ParkonicPage"));
-const DisputeManagementPage = lazy(() => import("./pages/entity/DisputeManagementPage"));
+const DisputeManagementPage = lazy(() => import("./pages/DisputeManagementPage"));
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<MainLayout />}>
-        {/* Correctly wrap the page routes in a Suspense-powered layout route */}
         <Route
           element={
             <Suspense fallback={<PageLoader />}>

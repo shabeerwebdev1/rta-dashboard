@@ -11,6 +11,11 @@ export const whitelistPlateConfig: PageConfig = {
     put: "/api/WhitelistPlate",
     delete: "/api/WhitelistPlate/:id",
   },
+  searchConfig: {
+    globalSearchKeys: ["plateNumber", "plateSource"],
+    columnFilterKeys: ["plateSource", "plateType", "plateColor", "plateStatus"],
+    dateRangeKey: "fromDate",
+  },
   statsConfig: [
     { title: "Total Plates", icon: <IdcardOutlined />, value: (data) => data.length },
     {
@@ -28,12 +33,12 @@ export const whitelistPlateConfig: PageConfig = {
   ],
   tableConfig: {
     columns: [
-      { key: "plateNumber", title: "form.plateNumber", type: "string" },
-      { key: "plateSource", title: "form.plateSource", type: "string", filterable: true },
+      { key: "plateNumber", title: "form.plateNumber", type: "string", sortable: true },
+      { key: "plateSource", title: "form.plateSource", type: "string", sortable: true, filterable: true },
       { key: "plateType", title: "form.plateType", type: "string", filterable: true },
       { key: "plateColor", title: "form.plateColor", type: "badge" },
-      { key: "fromDate", title: "form.fromDate", type: "date" },
-      { key: "toDate", title: "form.toDate", type: "date" },
+      { key: "fromDate", title: "form.fromDate", type: "date", sortable: true },
+      { key: "toDate", title: "form.toDate", type: "date", sortable: true },
       { key: "plateStatus", title: "form.status", type: "tag", filterable: true },
     ],
     viewRecord: true,

@@ -128,7 +128,12 @@
     "location": "Location",
     "noData": "No Data",
     "selectFile": "Select File",
-    "share": "Share"
+    "share": "Share",
+    "activeFilters": "Active Filters",
+    "sortBy": "Sort Order",
+    "ascending": "Asc",
+    "descending": "Desc",
+    "clearAll": "Clear All"
   },
   "entity": {
     "plate": "Plate",
