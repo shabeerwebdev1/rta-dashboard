@@ -12,6 +12,11 @@ export const inspectionObstacleConfig: PageConfig = {
     put: "/api/InspectionObstacle/markremoved/:id",
     delete: "",
   },
+  searchConfig: {
+    globalSearchKeys: ["obstacleNumber", "zone", "area", "reportedBy"],
+    columnFilterKeys: ["sourceOfObstacle", "status"],
+    dateRangeKey: "reportedAt",
+  },
   statsConfig: [
     { title: "Reported Obstacles", icon: <SearchOutlined />, value: (data) => data.length },
     {
@@ -23,13 +28,13 @@ export const inspectionObstacleConfig: PageConfig = {
   ],
   tableConfig: {
     columns: [
-      { key: "obstacleNumber", title: "form.obstacleNumber", type: "string" },
-      { key: "zone", title: "form.zone", type: "string" },
-      { key: "area", title: "form.area", type: "string" },
-      { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "string" },
-      { key: "reportedAt", title: "form.date", type: "date" },
+      { key: "obstacleNumber", title: "form.obstacleNumber", type: "string", sortable: true },
+      { key: "zone", title: "form.zone", type: "string", sortable: true },
+      { key: "area", title: "form.area", type: "string", sortable: true },
+      { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "string", filterable: true },
+      { key: "reportedAt", title: "form.date", type: "date", sortable: true },
       { key: "reportedBy", title: "form.reportedBy", type: "string" },
-      { key: "status", title: "form.status", type: "tag" },
+      { key: "status", title: "form.status", type: "tag", filterable: true },
     ],
     viewRecord: true,
     showEdit: false,

@@ -12,6 +12,11 @@ export const whitelistTradeLicenseConfig: PageConfig = {
     put: "/api/WhitelistTradeLicense/update",
     delete: "/api/WhitelistTradeLicense/:id",
   },
+  searchConfig: {
+    globalSearchKeys: ["tradeLicenseNumber", "tradeLicense_EN_Name", "plotNumber"],
+    columnFilterKeys: ["plateStatus"],
+    dateRangeKey: "fromDate",
+  },
   statsConfig: [
     { title: "Total Licenses", icon: <IdcardOutlined />, value: (data) => data.length },
     {
@@ -29,12 +34,12 @@ export const whitelistTradeLicenseConfig: PageConfig = {
   ],
   tableConfig: {
     columns: [
-      { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "string" },
-      { key: "tradeLicense_EN_Name", title: "form.tradeLicense_EN_Name", type: "string" },
-      { key: "plotNumber", title: "form.plotNumber", type: "string" },
-      { key: "fromDate", title: "form.fromDate", type: "date" },
-      { key: "toDate", title: "form.toDate", type: "date" },
-      { key: "plateStatus", title: "form.status", type: "tag" },
+      { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "string", sortable: true },
+      { key: "tradeLicense_EN_Name", title: "form.tradeLicense_EN_Name", type: "string", sortable: true },
+      { key: "plotNumber", title: "form.plotNumber", type: "string", sortable: true },
+      { key: "fromDate", title: "form.fromDate", type: "date", sortable: true },
+      { key: "toDate", title: "form.toDate", type: "date", sortable: true },
+      { key: "plateStatus", title: "form.status", type: "tag", filterable: true },
     ],
     viewRecord: true,
   },

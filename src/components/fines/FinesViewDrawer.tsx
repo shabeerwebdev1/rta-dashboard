@@ -31,7 +31,6 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({ open, onClose, fine }
         <Empty description="No Data" />
       ) : (
         <>
-          {/* Fine Details */}
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label={t("form.fineNumber")}>{fine.fineNo || "No Data"}</Descriptions.Item>
             <Descriptions.Item label={t("form.supervisorName")}>{fine.supervisor || "No Data"}</Descriptions.Item>
@@ -49,7 +48,6 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({ open, onClose, fine }
             </Descriptions.Item>
           </Descriptions>
 
-          {/* Vehicle Details */}
           <h4 style={{ marginTop: 16 }}>{t("form.vehicleDetails")}</h4>
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label={t("form.plateNumber")}>
@@ -72,7 +70,6 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({ open, onClose, fine }
             </Descriptions.Item>
           </Descriptions>
 
-          {/* Map */}
           <h4 style={{ marginTop: 16 }}>{t("form.FineLocation")}</h4>
           {fine.latitude && fine.longitude ? (
             <iframe
@@ -88,7 +85,6 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({ open, onClose, fine }
             <Empty description="No Location Data" />
           )}
 
-          {/* Photos */}
           <h4 style={{ marginTop: 16 }}>{t("form.AttachedPhotos")}</h4>
           {fine.documents && (Array.isArray(fine.documents) ? fine.documents : [fine.documents]).length ? (
             <Image.PreviewGroup>
@@ -102,7 +98,6 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({ open, onClose, fine }
             <Empty description="No Photos" />
           )}
 
-          {/* Activity Log */}
           {/* <h4 style={{ marginTop: 16 }}>{t("form.ActivityLog")}</h4>
           {fine.activities?.length ? (
             <Timeline>

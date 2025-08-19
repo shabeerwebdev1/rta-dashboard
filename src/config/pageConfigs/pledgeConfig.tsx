@@ -11,6 +11,11 @@ export const pledgeConfig: PageConfig = {
     put: "/api/Pledge/:id",
     delete: "/api/Pledge/:id",
   },
+  searchConfig: {
+    globalSearchKeys: ["pledgeNumber", "tradeLicenseNumber", "businessName"],
+    columnFilterKeys: ["pledgeType"],
+    dateRangeKey: "submittedAt",
+  },
   statsConfig: [
     { title: "Total Pledges", icon: <AuditOutlined />, value: (data) => data.length },
     {
@@ -21,11 +26,11 @@ export const pledgeConfig: PageConfig = {
   ],
   tableConfig: {
     columns: [
-      { key: "pledgeNumber", title: "form.pledgeNumber", type: "string" },
-      { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "string" },
-      { key: "businessName", title: "form.businessName", type: "string" },
-      { key: "pledgeType", title: "form.pledgeType", type: "string" },
-      { key: "submittedAt", title: "form.fromDate", type: "date" },
+      { key: "pledgeNumber", title: "form.pledgeNumber", type: "string", sortable: true },
+      { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "string", sortable: true },
+      { key: "businessName", title: "form.businessName", type: "string", sortable: true },
+      { key: "pledgeType", title: "form.pledgeType", type: "string", filterable: true },
+      { key: "submittedAt", title: "form.fromDate", type: "date", sortable: true },
     ],
     viewRecord: true,
     showEdit: false,

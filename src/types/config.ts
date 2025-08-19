@@ -26,21 +26,23 @@ export interface FormConfig {
   fields: FormField[];
 }
 
-// Added "select" so table columns can be dropdown-based
-export type TableColumnType = "string" | "date" | "tag" | "badge" | "select";
+export type TableColumnType = "string" | "date" | "tag" | "badge" | "select" | "custom";
 
 export interface TableColumn {
   key: string;
   title: string;
   type: TableColumnType;
-  //  Updated to allow same structure as formConfig.options
   options?: string[] | { label: string; value: unknown }[];
   filterable?: boolean;
+  sortable?: boolean;
+  render?: (text: any, record: any) => React.ReactNode;
 }
 
 export interface TableConfig {
   columns: TableColumn[];
   viewRecord: boolean;
+  rowKey?: string;
+  showEdit?: boolean;
 }
 
 export interface StatConfig {
@@ -48,6 +50,12 @@ export interface StatConfig {
   icon: ReactNode;
   value: (data: any[]) => number | string;
   color?: string;
+}
+
+export interface SearchConfig {
+  globalSearchKeys: string[];
+  columnFilterKeys: string[];
+  dateRangeKey: string;
 }
 
 export interface PageConfig {
@@ -66,6 +74,7 @@ export interface PageConfig {
     delete: string;
     search?: string;
   };
+  searchConfig?: SearchConfig;
   tableConfig: TableConfig;
   formConfig: FormConfig;
   statsConfig?: StatConfig[];
