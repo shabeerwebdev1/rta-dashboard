@@ -12,7 +12,7 @@ const baseQuery = fetchBaseQuery({
     }
     return headers;
   },
-  paramsSerializer: serializeParams, // Use the custom serializer
+  paramsSerializer: serializeParams, 
 });
 
 const transformListResponse = (response: any) => ({
@@ -130,8 +130,13 @@ export const dynamicApi = createApi({
     searchFines: builder.query({
       query: (params) => ({ url: "/api/FineManagement/search", params }),
       providesTags: ["FineSearch"],
-      transformResponse: transformListResponse,
+      transformResponse: (response: any) => {
+        // If the API sometimes returns a single object instead of array, normalize it
+        const data = response?.data;
+        return Array.isArray(data) ? data : [data];
+      },
     }),
+
     searchParkonics: builder.query({
       query: (params) => ({ url: "/api/Parkonic", params }),
       providesTags: ["ParkonicSearch"],
@@ -166,7 +171,7 @@ export const {
   useAddDisputeMutation,
   useUpdateDisputeMutation,
   useSearchPermitsQuery,
-  useSearchFinesQuery,
+  useLazySearchFinesQuery,   
   useSearchParkonicsQuery,
   useReviewParkonicMutation,
 } = dynamicApi;

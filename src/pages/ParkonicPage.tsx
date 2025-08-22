@@ -1,6 +1,14 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Table, Card, Space, Tag, Button, Dropdown, Input, DatePicker, Row, Col, Select, Tooltip, App } from "antd";
-import { EyeOutlined, DownloadOutlined, AppstoreOutlined, UnorderedListOutlined, CheckCircleOutlined, CloseCircleOutlined, IdcardOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  DownloadOutlined,
+  AppstoreOutlined,
+  UnorderedListOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  IdcardOutlined,
+} from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { useSearchParkonicsQuery } from "../services/rtkApiFactory";
@@ -76,8 +84,16 @@ const ParkonicPage: React.FC = () => {
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const config = parkonicPageConfig;
-  const { apiParams, handleTableChange, handlePaginationChange, setGlobalSearch, setDateRange, clearFilter, clearAll, state } =
-    useTableParams(config.searchConfig!);
+  const {
+    apiParams,
+    handleTableChange,
+    handlePaginationChange,
+    setGlobalSearch,
+    setDateRange,
+    clearFilter,
+    clearAll,
+    state,
+  } = useTableParams(config.searchConfig!);
 
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
