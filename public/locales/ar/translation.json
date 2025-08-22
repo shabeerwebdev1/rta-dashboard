@@ -13,7 +13,8 @@
     "team": "تقييم الفريق",
     "analytics": "التحليلات والرؤى",
     "plates": "لوحات",
-    "tradelicenses": "رخص تجارية"
+    "tradelicenses": "رخص تجارية",
+    "generalsearch": "البحث العام"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -104,7 +105,10 @@
     "vehicleNumber": "رقم المركبة",
     "exitDateTime": "تاريخ ووقت الخروج",
     "reviewStatus": "حالة المراجعة",
-    "entryDateTime": "تاريخ ووقت الدخول"
+    "entryDateTime": "تاريخ ووقت الدخول",
+    "isByLaw": "هل هو قانوني؟",
+    "UploadJPG/JPEG": "رفع JPG/JPEG"
+
   },
   "common": {
     "action": "إجراء",
@@ -142,5 +146,38 @@
     "reported": "Reported",
     "submitting": "جارٍ الإرسال",
     "updating": "جارٍ التحديث"
+  },
+
+  "placeholders": {
+    "plateNumber": "أدخل رقم اللوحة",
+    "plateSource": "اختر مصدر اللوحة",
+    "plateType": "اختر نوع اللوحة",
+    "plateColor": "اختر لون اللوحة",
+    "startDate": "تاريخ البدء",
+    "endDate": "تاريخ الانتهاء",
+    "exemptionReason": "اختر سبب الاستثناء",
+    "status": "اختر الحالة",
+    "isByLaw": "اختر صحيح أو خاطئ",
+    "obstacleNumber": "أدخل رقم العائق",
+    "zone": "اختر المنطقة",
+    "area": "اختر المنطقة",
+    "sourceOfObstacle": "اختر مصدر العائق",
+    "closestPaymentDevice": "أدخل أقرب جهاز دفع",
+    "reportedBy": "أدخل اسم المبلغ",
+    "comments": "أضف التعليقات (اختياري)",
+    "pledgeNumber": "أدخل رقم التعهد",
+    "pledgeType": "اختر نوع التعهد",
+    "tradeLicenseNumber": "أدخل رقم رخصة التجارة",
+    "businessName": "أدخل اسم العمل",
+    "document": "رفع المستند ذي الصلة",
+    "remarks": "أدخل أي ملاحظات إضافية",
+    "fineNumber": "أدخل رقم الغرامة",
+    "department": "اختر القسم",
+    "paymentType": "اختر نوع الدفع",
+    "reason": "أدخل سبب النزاع",
+    "crmReference": "أدخل مرجع CRM",
+    "email": "أدخل عنوان بريدك الإلكتروني",
+    "phoneNumber": "أدخل رقم هاتفك",
+    "address": "أدخل عنوانك"
   }
 }

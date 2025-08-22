@@ -1,5 +1,20 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Dropdown, Modal, Form, Row, Col, Select, App, Upload, DatePicker, Tooltip } from "antd";
+import {
+  Space,
+  Card,
+  Input,
+  Button,
+  Dropdown,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Select,
+  App,
+  Upload,
+  DatePicker,
+  Tooltip,
+} from "antd";
 import {
   PlusOutlined,
   EyeOutlined,
@@ -31,8 +46,16 @@ const InspectionObstaclesPage: React.FC = () => {
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const config = pageConfigs[pageKey];
-  const { apiParams, handleTableChange, handlePaginationChange, setGlobalSearch, setDateRange, clearFilter, clearAll, state } =
-    useTableParams(config.searchConfig!);
+  const {
+    apiParams,
+    handleTableChange,
+    handlePaginationChange,
+    setGlobalSearch,
+    setDateRange,
+    clearFilter,
+    clearAll,
+    state,
+  } = useTableParams(config.searchConfig!);
   const [form] = Form.useForm();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -142,8 +165,7 @@ const InspectionObstaclesPage: React.FC = () => {
   };
 
   const columnLabels = useMemo(
-    () =>
-      Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
+    () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
     [t, config.tableConfig.columns],
   );
 
@@ -226,6 +248,9 @@ const InspectionObstaclesPage: React.FC = () => {
         onCancel={handleModalClose}
         width="720px"
         footer={[
+          <Button key="reset" onClick={() => form.resetFields()}>
+            {t("common.reset")}
+          </Button>,
           <Button key="back" onClick={handleModalClose}>
             {t("common.cancel")}
           </Button>,
@@ -238,22 +263,29 @@ const InspectionObstaclesPage: React.FC = () => {
           <Row gutter={24}>
             <Col span={12}>
               <Form.Item name="ObstacleNumber" label={t("form.obstacleNumber")} rules={[{ required: true }]}>
-                <Input />
+                <Input placeholder={t("placeholders.obstacleNumber")} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="Zone" label={t("form.zone")} rules={[{ required: true }]}>
-                <Select options={["North", "South", "East", "West"].map((o) => ({ label: o, value: o }))} />
+                <Select
+                  placeholder={t("placeholders.zone")}
+                  options={["North", "South", "East", "West"].map((o) => ({ label: o, value: o }))}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="Area" label={t("form.area")} rules={[{ required: true }]}>
-                <Select options={["Residential", "Commercial", "Industrial"].map((o) => ({ label: o, value: o }))} />
+                <Select
+                  placeholder={t("placeholders.area")}
+                  options={["Residential", "Commercial", "Industrial"].map((o) => ({ label: o, value: o }))}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="SourceOfObstacle" label={t("form.sourceOfObstacle")} rules={[{ required: true }]}>
                 <Select
+                  placeholder={t("placeholders.sourceOfObstacle")}
                   options={["Construction", "Parked Vehicle", "Natural Obstacle", "Road Work"].map((o) => ({
                     label: o,
                     value: o,
@@ -262,13 +294,17 @@ const InspectionObstaclesPage: React.FC = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="ClosestPaymentDevice" label={t("form.closestPaymentDevice")} rules={[{ required: true }]}>
-                <Input />
+              <Form.Item
+                name="ClosestPaymentDevice"
+                label={t("form.closestPaymentDevice")}
+                rules={[{ required: true }]}
+              >
+                <Input placeholder={t("placeholders.closestPaymentDevice")} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="ReportedBy" label={t("form.reportedBy")} rules={[{ required: true }]}>
-                <Input />
+                <Input placeholder={t("placeholders.reportedBy")} />
               </Form.Item>
             </Col>
             <Col span={24}>
@@ -279,17 +315,17 @@ const InspectionObstaclesPage: React.FC = () => {
                 valuePropName="fileList"
                 getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
               >
-                <Upload listType="picture-card" beforeUpload={() => false} maxCount={1}>
+                <Upload listType="picture-card" beforeUpload={() => false} multiple={true} accept=".jpg,.jpeg">
                   <div>
                     <PlusOutlined />
-                    <div style={{ marginTop: 8 }}>{t("common.selectFile")}</div>
+                    <div style={{ marginTop: 8 }}>{t("form.UploadJPG/JPEG")}</div>
                   </div>
                 </Upload>
               </Form.Item>
             </Col>
             <Col span={24}>
               <Form.Item name="Comments" label={t("form.comments")}>
-                <Input.TextArea />
+                <Input.TextArea placeholder={t("placeholders.comments")} />
               </Form.Item>
             </Col>
           </Row>

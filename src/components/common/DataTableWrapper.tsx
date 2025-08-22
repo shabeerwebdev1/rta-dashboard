@@ -1,5 +1,5 @@
 import React from "react";
-import { Table, Pagination, Card, Tag, Badge, Dropdown, Button, theme } from "antd";
+import { Table, Pagination, Card, Tag, Button, Dropdown, theme } from "antd";
 import type { TableProps } from "antd";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
@@ -16,7 +16,7 @@ interface DataTableWrapperProps {
   handleTableChange: TableProps<any>["onChange"];
   handlePaginationChange: (page: number, pageSize: number) => void;
   rowSelection?: any;
-  actionMenuItems: (record: any) => any[];
+  actionMenuItems?: (record: any) => any[];
   tableSize: "middle" | "small";
   rowKey?: string;
 }
@@ -61,13 +61,18 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
         antdCol.filterSearch = true;
       }
 
-      if (!antdCol.render) {
+      // 🔹 Respect custom render if provided in config
+      if (col.render) {
+        antdCol.render = col.render;
+      } else {
+        // 🔹 Fallback render logic
         antdCol.render = (text: any) => {
           if (text === null || text === undefined || text === "") return t("common.noData");
 
           switch (col.type) {
             case "date":
               return dayjs(text as string).isValid() ? dayjs(text as string).format("YYYY-MM-DD") : String(text);
+
             case "tag": {
               const statusKey = String(text).toLowerCase();
               return (
@@ -76,13 +81,16 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
                 </Tag>
               );
             }
+
             case "badge":
-              return <Badge color={String(text).toLowerCase()} text={String(text)} />;
+              return String(text);
+
             case "select": {
               const options = (col.options as { label: string; value: unknown }[]) || [];
-              const option = options.find((opt) => opt.value === text);
+              const option = options.find((opt) => String(opt.value) === String(text));
               return option ? option.label : String(text);
             }
+
             default:
               return String(text);
           }

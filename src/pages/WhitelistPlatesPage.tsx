@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Dropdown, Modal, Form, Row, Col, Select, DatePicker, App, Tooltip } from "antd";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, DatePicker, App, Tooltip } from "antd";
 import {
   PlusOutlined,
   EyeOutlined,
   EditOutlined,
-  DeleteOutlined,
   DownloadOutlined,
   AppstoreOutlined,
   UnorderedListOutlined,
@@ -31,11 +30,51 @@ import DataTableWrapper from "../components/common/DataTableWrapper";
 const { Option } = Select;
 const pageKey = "whitelist-plates";
 
+// Dropdown options with numeric values
+const plateSourceOptions = [
+  { label: "Dubai", value: 1 },
+  { label: "Abu Dhabi", value: 2 },
+  { label: "Sharjah", value: 3 },
+  { label: "Ajman", value: 4 },
+  { label: "Ras Al Khaimah", value: 5 },
+  { label: "Fujairah", value: 6 },
+  { label: "Umm Al Quwain", value: 7 },
+];
+
+const plateTypeOptions = [
+  { label: "Private", value: 1 },
+  { label: "Commercial", value: 2 },
+  { label: "Motorcycle", value: 3 },
+  { label: "Taxi", value: 4 },
+];
+
+const plateColorOptions = [
+  { label: "White", value: 1 },
+  { label: "Red", value: 2 },
+  { label: "Blue", value: 3 },
+  { label: "Green", value: 4 },
+  { label: "Black", value: 5 },
+  { label: "Yellow", value: 6 },
+  { label: "Orange", value: 7 },
+  { label: "Purple", value: 8 },
+];
+
+const plateStatusOptions = [
+  { label: "Active", value: 1 },
+  { label: "Inactive", value: 0 },
+];
+
 const exemptionReasons = [
   { label: "Government Vehicle", value: 1 },
   { label: "Diplomatic Vehicle", value: 2 },
   { label: "Emergency Vehicle", value: 3 },
 ];
+
+// Helper function to get label from value
+const getLabelFromValue = (value, options) => {
+  const option = options.find(opt => opt.value === value);
+  return option ? option.label : value;
+};
 
 const WhitelistPlatesPage: React.FC = () => {
   const { t } = useTranslation();
@@ -43,8 +82,16 @@ const WhitelistPlatesPage: React.FC = () => {
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const config = pageConfigs[pageKey];
-  const { apiParams, handleTableChange, handlePaginationChange, setGlobalSearch, setDateRange, clearFilter, clearAll, state } =
-    useTableParams(config.searchConfig!);
+  const {
+    apiParams,
+    handleTableChange,
+    handlePaginationChange,
+    setGlobalSearch,
+    setDateRange,
+    clearFilter,
+    clearAll,
+    state,
+  } = useTableParams(config.searchConfig!);
   const [form] = Form.useForm();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -173,16 +220,47 @@ const WhitelistPlatesPage: React.FC = () => {
     [t, config.tableConfig.columns],
   );
 
+  // Enhanced table config with render functions for numeric values
+  const enhancedTableConfig = useMemo(() => ({
+    ...config.tableConfig,
+    columns: config.tableConfig.columns.map(column => {
+      if (column.key === 'plateSource') {
+        return {
+          ...column,
+          render: (value) => getLabelFromValue(value, plateSourceOptions)
+        };
+      }
+      if (column.key === 'plateType') {
+        return {
+          ...column,
+          render: (value) => getLabelFromValue(value, plateTypeOptions)
+        };
+      }
+      if (column.key === 'plateColor') {
+        return {
+          ...column,
+          render: (value) => getLabelFromValue(value, plateColorOptions)
+        };
+      }
+      if (column.key === 'plateStatus') {
+        return {
+          ...column,
+          render: (value) => getLabelFromValue(value, plateStatusOptions)
+        };
+      }
+      if (column.key === 'exemptionReason_ID') {
+        return {
+          ...column,
+          render: (value) => getLabelFromValue(value, exemptionReasons)
+        };
+      }
+      return column;
+    })
+  }), [config.tableConfig]);
+
   const actionMenuItems = (record: any) => [
     { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
     { key: "edit", label: t("common.edit"), icon: <EditOutlined />, onClick: () => handleModalOpen("edit", record) },
-    {
-      key: "delete",
-      label: t("common.delete"),
-      icon: <DeleteOutlined />,
-      danger: true,
-      onClick: () => handleDelete(record.id),
-    },
   ];
 
   const searchAddon = (
@@ -242,7 +320,7 @@ const WhitelistPlatesPage: React.FC = () => {
       </Card>
 
       <DataTableWrapper
-        pageConfig={config}
+        pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
         data={data?.data || []}
         total={data?.total || 0}
         isLoading={isLoading || isFetching || isDeleting}
@@ -260,9 +338,13 @@ const WhitelistPlatesPage: React.FC = () => {
         onCancel={handleModalClose}
         width="720px"
         footer={[
+          <Button key="reset" onClick={() => form.resetFields()}>
+            {t("common.reset")}
+          </Button>,
           <Button key="back" onClick={handleModalClose}>
             {t("common.cancel")}
           </Button>,
+
           <Button key="submit" type="primary" loading={isAdding || isUpdating} onClick={() => form.submit()}>
             {t(modalMode === "add" ? "common.submit" : "common.update")}
           </Button>,
@@ -272,39 +354,22 @@ const WhitelistPlatesPage: React.FC = () => {
           <Row gutter={24}>
             <Col span={12}>
               <Form.Item name="plateNumber" label={t("form.plateNumber")} rules={[{ required: true }]}>
-                <Input />
+                <Input placeholder={t("placeholders.plateNumber")} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="plateSource" label={t("form.plateSource")} rules={[{ required: true }]}>
-                <Select
-                  options={[
-                    "Dubai",
-                    "Abu Dhabi",
-                    "Sharjah",
-                    "Ajman",
-                    "Ras Al Khaimah",
-                    "Fujairah",
-                    "Umm Al Quwain",
-                  ].map((o) => ({ label: o, value: o }))}
-                />
+              <Form.Item name="plateSource_Id" label={t("form.plateSource")} rules={[{ required: true }]}>
+                <Select placeholder={t("placeholders.plateSource")} options={plateSourceOptions} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="plateType" label={t("form.plateType")} rules={[{ required: true }]}>
-                <Select
-                  options={["Private", "Commercial", "Motorcycle", "Taxi"].map((o) => ({ label: o, value: o }))}
-                />
+              <Form.Item name="plateType_Id" label={t("form.plateType")} rules={[{ required: true }]}>
+                <Select placeholder={t("placeholders.plateType")} options={plateTypeOptions} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="plateColor" label={t("form.plateColor")} rules={[{ required: true }]}>
-                <Select
-                  options={["White", "Red", "Blue", "Green", "Black", "Yellow", "Orange", "Purple"].map((o) => ({
-                    label: o,
-                    value: o,
-                  }))}
-                />
+              <Form.Item name="plateColor_Id" label={t("form.plateColor")} rules={[{ required: true }]}>
+                <Select placeholder={t("placeholders.plateColor")} options={plateColorOptions} />
               </Form.Item>
             </Col>
             <Col span={24}>
@@ -312,17 +377,29 @@ const WhitelistPlatesPage: React.FC = () => {
                 <DatePicker.RangePicker
                   style={{ width: "100%" }}
                   disabledDate={(d) => d && d < dayjs().startOf("day")}
+                  placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="exemptionReason_ID" label={t("form.exemptionReason_ID")} rules={[{ required: true }]}>
-                <Select options={exemptionReasons} />
+              <Form.Item name="exemptionReason_ID" label={t("form.exemptionReason")} rules={[{ required: true }]}>
+                <Select placeholder={t("placeholders.exemptionReason")} options={exemptionReasons} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="plateStatus" label={t("form.status")} rules={[{ required: true }]}>
-                <Select options={["Active", "Inactive"].map((o) => ({ label: o, value: o }))} />
+              <Form.Item name="plateStatus_Id" label={t("form.status")} rules={[{ required: true }]}>
+                <Select placeholder={t("placeholders.status")} options={plateStatusOptions} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="isByLaw" label={t("form.isByLaw")}>
+                <Select
+                  placeholder={t("placeholders.isByLaw")}
+                  options={[
+                    { label: "True", value: true },
+                    { label: "False", value: false },
+                  ]}
+                />
               </Form.Item>
             </Col>
           </Row>

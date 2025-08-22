@@ -40,6 +40,19 @@ export const whitelistPlateConfig: PageConfig = {
       { key: "fromDate", title: "form.fromDate", type: "date", sortable: true },
       { key: "toDate", title: "form.toDate", type: "date", sortable: true },
       { key: "plateStatus", title: "form.status", type: "tag", filterable: true },
+      // {
+      //   key: "exemptionReason_ID",
+      //   title: "form.exemptionReason",
+      //   type: "string",
+      //   render: (value: number) => {
+      //     const reason = [
+      //       { label: "Government Vehicle", value: 1 },
+      //       { label: "Diplomatic Vehicle", value: 2 },
+      //       { label: "Emergency Vehicle", value: 3 },
+      //     ].find((r) => r.value === value);
+      //     return reason ? reason.label : "-";
+      //   },
+      // },
     ],
     viewRecord: true,
   },

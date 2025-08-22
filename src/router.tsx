@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import PageLoader from "./components/common/PageLoader";
 import { PATHS, FULL_PATHS } from "./constants/paths";
+import GeneralSearchPage from "./pages/GeneralSearchPage";
 
 // --- Lazy-loaded Page Components ---
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -32,6 +33,7 @@ const AppRoutes = () => {
           <Route path={PATHS.FINES} element={<FinesPage />} />
           <Route path={PATHS.PARKONIC} element={<ParkonicPage />} />
           <Route path={PATHS.DISPUTE} element={<DisputeManagementPage />} />
+          <Route path={PATHS.GENERAL} element={<GeneralSearchPage />} />
 
           <Route path={PATHS.WHITELIST}>
             <Route index element={<Navigate to={PATHS.PLATES} replace />} />

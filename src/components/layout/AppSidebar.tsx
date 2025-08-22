@@ -37,19 +37,9 @@ const AppSidebar: React.FC = () => {
       label: <Link to={FULL_PATHS.DASHBOARD}>{t("sidebar.dashboard")}</Link>,
     },
     {
-      key: "whitelist",
+      key: FULL_PATHS.WHITELIST_PLATES,
       icon: <FileTextOutlined />,
-      label: t("sidebar.whitelist"),
-      children: [
-        {
-          key: FULL_PATHS.WHITELIST_PLATES,
-          label: <Link to={FULL_PATHS.WHITELIST_PLATES}>{t("sidebar.plates")}</Link>,
-        },
-        {
-          key: FULL_PATHS.WHITELIST_TRADELICENSES,
-          label: <Link to={FULL_PATHS.WHITELIST_TRADELICENSES}>{t("sidebar.tradelicenses")}</Link>,
-        },
-      ],
+      label: <Link to={FULL_PATHS.WHITELIST_PLATES}>{t("sidebar.whitelist")}</Link>,
     },
     {
       key: FULL_PATHS.INSPECTIONS,
@@ -61,10 +51,15 @@ const AppSidebar: React.FC = () => {
       icon: <AuditOutlined />,
       label: <Link to={FULL_PATHS.PLEDGES}>{t("sidebar.pledges")}</Link>,
     },
+    // {
+    //   key: FULL_PATHS.PERMITS,
+    //   icon: <IdcardOutlined />,
+    //   label: <Link to={FULL_PATHS.PERMITS}>{t("sidebar.permits")}</Link>,
+    // },
     {
-      key: FULL_PATHS.PERMITS,
-      icon: <IdcardOutlined />,
-      label: <Link to={FULL_PATHS.PERMITS}>{t("sidebar.permits")}</Link>,
+      key: FULL_PATHS.GENERAL,
+      icon: <SearchOutlined />,
+      label: <Link to={FULL_PATHS.GENERAL}>{t("sidebar.general")}</Link>,
     },
     {
       key: FULL_PATHS.PARKONIC,
