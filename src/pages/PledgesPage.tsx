@@ -1,5 +1,20 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Dropdown, Modal, Form, Row, Col, Select, App, Upload, DatePicker, Tooltip } from "antd";
+import {
+  Space,
+  Card,
+  Input,
+  Button,
+  Dropdown,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Select,
+  App,
+  Upload,
+  DatePicker,
+  Tooltip,
+} from "antd";
 import {
   PlusOutlined,
   EyeOutlined,
@@ -32,8 +47,16 @@ const PledgesPage: React.FC = () => {
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const config = pageConfigs[pageKey];
-  const { apiParams, handleTableChange, handlePaginationChange, setGlobalSearch, setDateRange, clearFilter, clearAll, state } =
-    useTableParams(config.searchConfig!);
+  const {
+    apiParams,
+    handleTableChange,
+    handlePaginationChange,
+    setGlobalSearch,
+    setDateRange,
+    clearFilter,
+    clearAll,
+    state,
+  } = useTableParams(config.searchConfig!);
   const [form] = Form.useForm();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -152,13 +175,13 @@ const PledgesPage: React.FC = () => {
 
   const actionMenuItems = (record: any) => [
     { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
-    {
-      key: "delete",
-      label: t("common.delete"),
-      icon: <DeleteOutlined />,
-      danger: true,
-      onClick: () => handleDelete(record.id),
-    },
+    // {
+    //   key: "delete",
+    //   label: t("common.delete"),
+    //   icon: <DeleteOutlined />,
+    //   danger: true,
+    //   onClick: () => handleDelete(record.id),
+    // },
   ];
 
   const searchAddon = (
@@ -236,6 +259,9 @@ const PledgesPage: React.FC = () => {
         onCancel={handleModalClose}
         width="720px"
         footer={[
+          <Button key="reset" onClick={() => form.resetFields()}>
+            {t("common.reset")}
+          </Button>,
           <Button key="back" onClick={handleModalClose}>
             {t("common.cancel")}
           </Button>,
@@ -248,22 +274,25 @@ const PledgesPage: React.FC = () => {
           <Row gutter={24}>
             <Col span={12}>
               <Form.Item name="pledgeNumber" label={t("form.pledgeNumber")} rules={[{ required: true }]}>
-                <Input />
+                <Input placeholder={t("placeholders.pledgeNumber")} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="pledgeType" label={t("form.pledgeType")} rules={[{ required: true }]}>
-                <Select options={["Corporate", "Individual"].map((o) => ({ label: o, value: o }))} />
+                <Select
+                  placeholder={t("placeholders.pledgeType")}
+                  options={["Corporate", "Individual"].map((o) => ({ label: o, value: o }))}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="tradeLicenseNumber" label={t("form.tradeLicenseNumber")} rules={[{ required: true }]}>
-                <Input />
+                <Input placeholder={t("placeholders.tradeLicenseNumber")} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="businessName" label={t("form.businessName")} rules={[{ required: true }]}>
-                <Input />
+                <Input placeholder={t("placeholders.businessName")} />
               </Form.Item>
             </Col>
             <Col span={24}>
@@ -274,17 +303,17 @@ const PledgesPage: React.FC = () => {
                 valuePropName="fileList"
                 getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
               >
-                <Upload listType="picture-card" beforeUpload={() => false} maxCount={1}>
+                <Upload listType="picture-card" beforeUpload={() => false} multiple={true} accept=".jpg,.jpeg">
                   <div>
                     <PlusOutlined />
-                    <div style={{ marginTop: 8 }}>{t("common.selectFile")}</div>
+                    <div style={{ marginTop: 8 }}>{t("form.Upload JPG/JPEG")}</div>
                   </div>
                 </Upload>
               </Form.Item>
             </Col>
             <Col span={24}>
               <Form.Item name="remarks" label={t("form.remarks")}>
-                <Input.TextArea />
+                <Input.TextArea placeholder={t("placeholders.remarks")} />
               </Form.Item>
             </Col>
           </Row>

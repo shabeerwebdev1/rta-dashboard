@@ -9,12 +9,14 @@ export const PATHS = {
   FINES: "fines",
   PARKONIC: "parkonic",
   DISPUTE: "dispute",
+  GENERAL: "general",
 };
 
 export const FULL_PATHS = {
   ROOT: "/",
   DASHBOARD: "/dashboard",
   PERMITS: "/permits",
+  GENERAL: "/general",
   WHITELIST: "/whitelist",
   WHITELIST_PLATES: "/whitelist/plates",
   WHITELIST_TRADELICENSES: "/whitelist/tradelicenses",

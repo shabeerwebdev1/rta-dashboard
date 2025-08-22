@@ -1,4 +1,6 @@
+import { SearchOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
+import React from "react";
 
 export const disputeManagementConfig: PageConfig = {
   key: "dispute-management",
@@ -13,8 +15,15 @@ export const disputeManagementConfig: PageConfig = {
   searchConfig: {
     globalSearchKeys: ["fine_Number", "crM_Ref", "phone", "email"],
     columnFilterKeys: ["department", "payment_Type"],
-    dateRangeKey: "createdAt", // Assuming API supports this, otherwise it will be ignored
+    dateRangeKey: "createdAt", 
   },
+  statsConfig: [
+    {
+      title: "Total Disputes",
+      icon: React.createElement(SearchOutlined),
+      value: (data) => data.length,
+    },
+  ],
   tableConfig: {
     rowKey: "dispute_Id",
     columns: [

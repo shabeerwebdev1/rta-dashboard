@@ -13,7 +13,8 @@
     "team": "Team Assessment",
     "analytics": "Analytics & Insights",
     "plates": "Plates",
-    "tradelicenses": "Trade Licenses"
+    "tradelicenses": "Trade Licenses",
+    "general": "General Search"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -107,7 +108,9 @@
     "vehicleNumber": "Vehicle Number",
     "exitDateTime": "Exit Date & Time",
     "reviewStatus": "Review Status",
-    "entryDateTime": "Entry Date & Time"
+    "entryDateTime": "Entry Date & Time",
+    "isByLaw": "Is By-Law",
+    "UploadJPG/JPEG": "Upload JPG/JPEG"
   },
   "common": {
     "action": "Action",
@@ -150,5 +153,38 @@
     "reported": "Reported",
     "submitting": "Submitting",
     "updating": "Updating"
+  },
+
+  "placeholders": {
+    "plateNumber": "Enter the plate number",
+    "plateSource": "Select the plate source",
+    "plateType": "Select the plate type",
+    "plateColor": "Select the plate color",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "exemptionReason": "Select exemption reason",
+    "status": "Select status",
+    "isByLaw": "Select True or False",
+    "obstacleNumber": "Enter the obstacle number",
+    "zone": "Select the zone",
+    "area": "Select the area",
+    "sourceOfObstacle": "Select the source of obstacle",
+    "closestPaymentDevice": "Enter the closest payment device",
+    "reportedBy": "Enter the reporter's name",
+    "comments": "Add comments (optional)",
+    "pledgeNumber": "Enter the pledge number",
+    "pledgeType": "Select the pledge type",
+    "tradeLicenseNumber": "Enter the trade license number",
+    "businessName": "Enter the business name",
+    "document": "Upload relevant document",
+    "remarks": "Enter any additional remarks",
+    "fineNumber": "Enter the fine number",
+    "department": "Select the department",
+    "paymentType": "Select the payment type",
+    "reason": "Enter the dispute reason",
+    "crmReference": "Enter the CRM reference",
+    "email": "Enter your email address",
+    "phoneNumber": "Enter your phone number",
+    "address": "Enter your address"
   }
 }

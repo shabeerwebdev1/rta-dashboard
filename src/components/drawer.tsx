@@ -71,10 +71,9 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, re
                     return <Tag color={tagColor}>{t(`status.${statusKey}`, statusKey)}</Tag>;
 
                   case "badge":
-                    return <Badge color={String(text).toLowerCase()} text={String(text)} />;
+                    return String(text);
 
                   default:
-                    
                     if (field.type === "select") {
                       const formFieldConfig = config.formConfig.fields.find(
                         (f) => f.name.toLowerCase() === field.key.toLowerCase(),

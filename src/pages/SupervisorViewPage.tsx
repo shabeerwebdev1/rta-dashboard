@@ -12,7 +12,7 @@ import {
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
-import DashboardViewDrawer from "../components/dashboard/DashboardViewDrawer";
+import DashboardViewDrawer from "../components/dashboard/DashboardViewDrawer"; // Import the drawer component
 
 const { Title, Text } = Typography;
 
@@ -21,8 +21,6 @@ const SupervisorViewPage: React.FC = () => {
   const [activeTable, setActiveTable] = useState("checkInStatus");
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedInspector, setSelectedInspector] = useState<any>(null);
-  const [showObstacles, setShowObstacles] = useState(false);
-  const [mapTitle, setMapTitle] = useState("Inspectors Location");
 
   // Dummy data for check-in status table
   const checkInData = [
@@ -164,58 +162,14 @@ const SupervisorViewPage: React.FC = () => {
     },
   ];
 
-  // Dummy obstacle locations
-  const obstacleLocations = [
-    { id: 1, lat: 25.1975, lng: 55.2735, type: "construction", description: "Road construction" },
-    { id: 2, lat: 25.197, lng: 55.274, type: "accident", description: "Traffic accident" },
-    { id: 3, lat: 25.1968, lng: 55.2732, type: "parking", description: "Illegal parking" },
-    { id: 4, lat: 25.1973, lng: 55.2725, type: "construction", description: "Sidewalk repair" },
-    { id: 5, lat: 25.1962, lng: 55.2738, type: "accident", description: "Car breakdown" },
-    { id: 6, lat: 25.1978, lng: 55.2728, type: "parking", description: "Blocking driveway" },
-    { id: 7, lat: 25.1965, lng: 55.2745, type: "construction", description: "Utility work" },
-    { id: 8, lat: 25.1971, lng: 55.273, type: "accident", description: "Minor collision" },
-    { id: 9, lat: 25.1969, lng: 55.2742, type: "parking", description: "No parking zone" },
-    { id: 10, lat: 25.1976, lng: 55.2733, type: "construction", description: "Road closure" },
-  ];
-
   const handleAvatarClick = (inspector: any) => {
     setSelectedInspector(inspector);
     setDrawerVisible(true);
   };
 
-  const handleObstaclesClick = () => {
-    setShowObstacles(!showObstacles);
-    setMapTitle(showObstacles ? "Inspectors Location" : "Obstacles Location");
-  };
-
   const handleDrawerClose = () => {
     setDrawerVisible(false);
     setSelectedInspector(null);
-  };
-
-  const handleViewClick = (record: any) => {
-    // Find the inspector based on the record data
-    const inspector = inspectorAvatars.find(
-      (insp) => insp.id === record.inspectorId || insp.name === record.inspectorName,
-    );
-
-    if (inspector) {
-      setSelectedInspector(inspector);
-      setDrawerVisible(true);
-    }
-  };
-
-  const getObstacleIcon = (type: string) => {
-    switch (type) {
-      case "construction":
-        return "🚧";
-      case "accident":
-        return "🚨";
-      case "parking":
-        return "🅿️";
-      default:
-        return "⚠️";
-    }
   };
 
   const checkInColumns = [
@@ -245,7 +199,6 @@ const SupervisorViewPage: React.FC = () => {
             key: "view",
             label: "View",
             icon: <EyeOutlined />,
-            onClick: () => handleViewClick(record),
           },
         ];
 
@@ -288,7 +241,6 @@ const SupervisorViewPage: React.FC = () => {
             key: "view",
             label: "View",
             icon: <EyeOutlined />,
-            onClick: () => handleViewClick(record),
           },
         ];
 
@@ -330,7 +282,6 @@ const SupervisorViewPage: React.FC = () => {
             key: "view",
             label: "View",
             icon: <EyeOutlined />,
-            onClick: () => handleViewClick(record),
           },
         ];
 
@@ -453,7 +404,6 @@ const SupervisorViewPage: React.FC = () => {
                 position: "relative",
               }}
             >
-              {/* Map Embed */}
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3609.390625704501!2d55.271884315011004!3d25.197197983897892!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f6820a963b18f%3A0xe9a72e1e0eaa2d17!2sBurj%20Khalifa!5e0!3m2!1sen!2sae!4v1692546354283!5m2!1sen!2sae"
                 width="100%"
@@ -464,26 +414,7 @@ const SupervisorViewPage: React.FC = () => {
                 referrerPolicy="no-referrer-when-downgrade"
               ></iframe>
 
-              {/* Title inside the map */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: 10,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  backgroundColor: "rgba(255, 255, 255, 0.9)",
-                  padding: "6px 12px",
-                  borderRadius: 6,
-                  fontWeight: "bold",
-                  fontSize: "14px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-                  zIndex: 1200,
-                }}
-              >
-                {mapTitle}
-              </div>
-
-              {/* Inspector Avatars */}
+              {/* Inspector Avatars on Map */}
               {inspectorAvatars.map((inspector) => (
                 <div
                   key={inspector.id}
@@ -523,56 +454,6 @@ const SupervisorViewPage: React.FC = () => {
                   </div>
                 </div>
               ))}
-
-              {/* Obstacle Markers */}
-              {showObstacles &&
-                obstacleLocations.map((obstacle) => (
-                  <div
-                    key={obstacle.id}
-                    style={{
-                      position: "absolute",
-                      top: `${((25.1985 - obstacle.lat) / 0.003) * 100}%`,
-                      left: `${((obstacle.lng - 55.271) / 0.004) * 100}%`,
-                      transform: "translate(-50%, -50%)",
-                      zIndex: 900,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div
-                      style={{
-                        backgroundColor: "#ff4d4f",
-                        color: "white",
-                        borderRadius: "50%",
-                        width: 30,
-                        height: 30,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: "2px solid white",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-                        fontSize: "16px",
-                      }}
-                    >
-                      {getObstacleIcon(obstacle.type)}
-                    </div>
-                    <div
-                      style={{
-                        backgroundColor: "white",
-                        padding: "2px 6px",
-                        borderRadius: 4,
-                        marginTop: 4,
-                        fontSize: "10px",
-                        fontWeight: "bold",
-                        boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
-                        textAlign: "center",
-                        whiteSpace: "nowrap",
-                        maxWidth: "100px",
-                      }}
-                    >
-                      {obstacle.description}
-                    </div>
-                  </div>
-                ))}
             </div>
           </Card>
         </Col>
@@ -738,11 +619,9 @@ const SupervisorViewPage: React.FC = () => {
             <Col span={24}>
               <Card
                 style={{
-                  backgroundColor: showObstacles ? "#fff2e8" : "#FDF1F0",
-                  border: showObstacles ? "2px solid #ffbb96" : "1px solid #F6A395",
-                  cursor: "pointer",
+                  backgroundColor: "#FDF1F0",
+                  border: "1px solid #F6A395",
                 }}
-                onClick={handleObstaclesClick}
               >
                 <div
                   style={{
@@ -757,9 +636,6 @@ const SupervisorViewPage: React.FC = () => {
                   </Title>
                   <WarningOutlined style={{ fontSize: "24px", color: "#ff4d4f" }} />
                 </div>
-                {showObstacles && (
-                  <div style={{ marginTop: 8, color: "#ff4d4f", fontSize: "12px" }}>Click to hide obstacles on map</div>
-                )}
               </Card>
             </Col>
           </Row>
@@ -772,8 +648,8 @@ const SupervisorViewPage: React.FC = () => {
         extra={
           <>
             <Button
-              type={activeTable === "checkInStatus" ? "primary" : "default"}
-              onClick={() => setActiveTable("checkInStatus")}
+              type={activeTable === "Inspectors Status" ? "primary" : "default"}
+              onClick={() => setActiveTable("Inspectors Status")}
               icon={<UserOutlined />}
               style={{ marginRight: 8 }}
             >

@@ -32,8 +32,16 @@ const DisputeManagementPage: React.FC = () => {
   const notification = useAppNotification();
   const config = pageConfigs[pageKey];
 
-  const { apiParams, handleTableChange, handlePaginationChange, setGlobalSearch, setDateRange, clearFilter, clearAll, state } =
-    useTableParams(config.searchConfig!);
+  const {
+    apiParams,
+    handleTableChange,
+    handlePaginationChange,
+    setGlobalSearch,
+    setDateRange,
+    clearFilter,
+    clearAll,
+    state,
+  } = useTableParams(config.searchConfig!);
   const [form] = Form.useForm();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -222,6 +230,9 @@ const DisputeManagementPage: React.FC = () => {
         onCancel={handleModalClose}
         width="720px"
         footer={[
+          <Button key="reset" onClick={() => form.resetFields()}>
+            {t("common.reset")}
+          </Button>,
           <Button key="back" onClick={handleModalClose}>
             {t("common.cancel")}
           </Button>,
@@ -234,56 +245,48 @@ const DisputeManagementPage: React.FC = () => {
           <Row gutter={24}>
             <Col span={12}>
               <Form.Item name="fine_Number" label={t("form.fineNumber")} rules={[{ required: true }]}>
-                <Input />
+                <Input placeholder={t("placeholders.fineNumber")} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="department" label={t("form.department")} rules={[{ required: true }]}>
                 <Select
-                  options={
-                    config.formConfig.fields.find((f) => f.name === "department")?.options as {
-                      label: string;
-                      value: unknown;
-                    }[]
-                  }
+                  placeholder={t("placeholders.department")}
+                  options={config.formConfig.fields.find((f) => f.name === "department")?.options || []}
                 />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="payment_Type" label={t("form.paymentType")} rules={[{ required: true }]}>
                 <Select
-                  options={
-                    config.formConfig.fields.find((f) => f.name === "payment_Type")?.options as {
-                      label: string;
-                      value: unknown;
-                    }[]
-                  }
+                  placeholder={t("placeholders.paymentType")}
+                  options={config.formConfig.fields.find((f) => f.name === "payment_Type")?.options || []}
                 />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="dispute_Reason" label={t("form.reason")} rules={[{ required: true }]}>
-                <Input />
+                <Input placeholder={t("placeholders.reason")} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="crM_Ref" label={t("form.crmReference")} rules={[{ required: true }]}>
-                <Input />
+                <Input placeholder={t("placeholders.crmReference")} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="email" label={t("form.email")} rules={[{ required: true, type: "email" }]}>
-                <Input />
+                <Input placeholder={t("placeholders.email")} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="phone" label={t("form.phoneNumber")}>
-                <Input />
+              <Form.Item name="phone" label={t("form.phoneNumber")} rules={[{ required: true }]}>
+                <Input placeholder={t("placeholders.phoneNumber")} maxLength={10} type="number" />
               </Form.Item>
             </Col>
             <Col span={24}>
               <Form.Item name="address" label={t("form.address")} rules={[{ required: true }]}>
-                <Input.TextArea />
+                <Input.TextArea placeholder={t("placeholders.address")} />
               </Form.Item>
             </Col>
           </Row>
