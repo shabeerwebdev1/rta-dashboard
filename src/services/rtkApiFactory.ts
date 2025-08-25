@@ -12,7 +12,7 @@ const baseQuery = fetchBaseQuery({
     }
     return headers;
   },
-  paramsSerializer: serializeParams, 
+  paramsSerializer: serializeParams,
 });
 
 const transformListResponse = (response: any) => ({
@@ -40,6 +40,9 @@ export const dynamicApi = createApi({
       transformResponse: transformListResponse,
       providesTags: ["WhitelistPlate"],
     }),
+    getPlateById: builder.query({
+      query: (id) => `/api/WhitelistPlate/${id}`,
+    }),
     addPlate: builder.mutation({
       query: (body) => ({ url: "/api/WhitelistPlate", method: "POST", body }),
       invalidatesTags: ["WhitelistPlate"],
@@ -58,6 +61,9 @@ export const dynamicApi = createApi({
       query: (params) => ({ url: "/api/WhitelistTradeLicense", params }),
       transformResponse: transformListResponse,
       providesTags: ["WhitelistTradeLicense"],
+    }),
+    getTradeLicenseById: builder.query({
+      query: (id) => `/api/WhitelistTradeLicense/${id}`,
     }),
     addTradeLicense: builder.mutation({
       query: (body) => ({ url: "/api/WhitelistTradeLicense", method: "POST", body }),
@@ -78,6 +84,9 @@ export const dynamicApi = createApi({
       transformResponse: transformListResponse,
       providesTags: ["Pledge"],
     }),
+    getPledgeById: builder.query({
+      query: (id) => `/api/Pledge/${id}`,
+    }),
     addPledge: builder.mutation({
       query: (body) => ({ url: "/api/Pledge", method: "POST", body }),
       invalidatesTags: ["Pledge"],
@@ -97,6 +106,9 @@ export const dynamicApi = createApi({
       transformResponse: transformListResponse,
       providesTags: ["InspectionObstacle"],
     }),
+    getInspectionObstacleById: builder.query({
+      query: (id) => `/api/InspectionObstacle/${id}`,
+    }),
     addInspectionObstacle: builder.mutation({
       query: (body) => ({ url: "/api/InspectionObstacle", method: "POST", body }),
       invalidatesTags: ["InspectionObstacle"],
@@ -112,6 +124,9 @@ export const dynamicApi = createApi({
       transformResponse: transformListResponse,
       providesTags: ["Dispute"],
     }),
+    getDisputeById: builder.query({
+      query: (id) => `/api/Dispute/GetById/${id}`,
+    }),
     addDispute: builder.mutation({
       query: (body) => ({ url: "/api/Dispute/Create", method: "POST", body }),
       invalidatesTags: ["Dispute"],
@@ -121,7 +136,7 @@ export const dynamicApi = createApi({
       invalidatesTags: ["Dispute"],
     }),
 
-    // Search Endpoints (Note: these might not support the new filtering yet, depends on backend)
+    // Search Endpoints
     searchPermits: builder.query({
       query: (params) => ({ url: "/api/Permit/search", params }),
       providesTags: ["PermitSearch"],
@@ -131,7 +146,6 @@ export const dynamicApi = createApi({
       query: (params) => ({ url: "/api/FineManagement/search", params }),
       providesTags: ["FineSearch"],
       transformResponse: (response: any) => {
-        // If the API sometimes returns a single object instead of array, normalize it
         const data = response?.data;
         return Array.isArray(data) ? data : [data];
       },
@@ -153,25 +167,30 @@ export const dynamicApi = createApi({
 
 export const {
   useGetPlatesQuery,
+  useLazyGetPlateByIdQuery,
   useAddPlateMutation,
   useUpdatePlateMutation,
   useDeletePlateMutation,
   useGetTradeLicensesQuery,
+  useLazyGetTradeLicenseByIdQuery,
   useAddTradeLicenseMutation,
   useUpdateTradeLicenseMutation,
   useDeleteTradeLicenseMutation,
   useGetPledgesQuery,
+  useLazyGetPledgeByIdQuery,
   useAddPledgeMutation,
   useUpdatePledgeMutation,
   useDeletePledgeMutation,
   useGetInspectionObstaclesQuery,
+  useLazyGetInspectionObstacleByIdQuery,
   useAddInspectionObstacleMutation,
   useUpdateInspectionObstacleMutation,
   useGetDisputesQuery,
+  useLazyGetDisputeByIdQuery,
   useAddDisputeMutation,
   useUpdateDisputeMutation,
   useSearchPermitsQuery,
-  useLazySearchFinesQuery,   
+  useLazySearchFinesQuery,
   useSearchParkonicsQuery,
   useReviewParkonicMutation,
 } = dynamicApi;

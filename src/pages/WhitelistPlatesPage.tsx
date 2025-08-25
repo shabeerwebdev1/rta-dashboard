@@ -9,6 +9,7 @@ import {
   UnorderedListOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -19,6 +20,7 @@ import {
   useAddPlateMutation,
   useUpdatePlateMutation,
   useDeletePlateMutation,
+  useLazyGetPlateByIdQuery,
 } from "../services/rtkApiFactory";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
@@ -82,6 +84,7 @@ const WhitelistPlatesPage: React.FC = () => {
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const config = pageConfigs[pageKey];
+  const [searchParams] = useSearchParams();
   const {
     apiParams,
     handleTableChange,
@@ -109,6 +112,21 @@ const WhitelistPlatesPage: React.FC = () => {
   const [addPlate, { isLoading: isAdding }] = useAddPlateMutation();
   const [updatePlate, { isLoading: isUpdating }] = useUpdatePlateMutation();
   const [deletePlate, { isLoading: isDeleting }] = useDeletePlateMutation();
+  const [triggerGetPlate, { data: singleRecordData, isSuccess: isSingleRecordSuccess }] = useLazyGetPlateByIdQuery();
+
+   useEffect(() => {
+    const recordId = state.viewRecordId;
+    if (recordId && !isDrawerOpen) {
+      triggerGetPlate(recordId);
+    }
+  }, [state.viewRecordId, triggerGetPlate, isDrawerOpen]);
+
+  useEffect(() => {
+    if (isSingleRecordSuccess && singleRecordData) {
+      setViewRecord(singleRecordData.data);
+      setIsDrawerOpen(true);
+    }
+  }, [isSingleRecordSuccess, singleRecordData]);
 
   useEffect(() => {
     setPageTitle(t(config.title));
@@ -192,7 +210,10 @@ const WhitelistPlatesPage: React.FC = () => {
   };
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href).then(
+    const params = new URLSearchParams(searchParams);
+    params.set("viewRecord", viewRecord.id);
+    const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    navigator.clipboard.writeText(shareUrl).then(
       () => notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!"),
       () => notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed"),
     );
@@ -330,6 +351,7 @@ const WhitelistPlatesPage: React.FC = () => {
         rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
+        state={state}
       />
 
       <Modal

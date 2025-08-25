@@ -33,19 +33,19 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
   if (state.sortBy && state.sortOrder) {
     const sortLabel = columnLabels[state.sortBy] || state.sortBy;
     filterGroups.push(
-        <>
+      <Space key="sorter_group">
         <Text>{t("common.sortBy")}: </Text>
-      <Tag
-        color="#ee3a41"
-        key="sorter"
-        closable
-        onClose={() => onClearFilter("sorter")}
-        icon={state.sortOrder === "ascend" ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-        style={{ userSelect: "none" }}
-      >
-        <>{sortLabel}</>
-      </Tag>
-      </>
+        <Tag
+          color="#ee3a41"
+          key="sorter"
+          closable
+          onClose={() => onClearFilter("sorter")}
+          icon={state.sortOrder === "ascend" ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+          style={{ userSelect: "none" }}
+        >
+          <>{sortLabel}</>
+        </Tag>
+      </Space>,
     );
   }
 
@@ -53,12 +53,12 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
   if (state.searchKey && state.searchValue) {
     const searchLabel = columnLabels[state.searchKey] || state.searchKey;
     filterGroups.push(
-        <>
+      <Space key="search_group">
         <Text>{searchLabel}: </Text>
-      <Tag color="#ee3a41" key="search" closable onClose={() => onClearFilter("search")} style={{ userSelect: "none" }}>
-        < >{state.searchValue}</>
-      </Tag>
-      </>
+        <Tag color="#ee3a41" key="search" closable onClose={() => onClearFilter("search")} style={{ userSelect: "none" }}>
+          <>{state.searchValue}</>
+        </Tag>
+      </Space>,
     );
   }
 
@@ -67,12 +67,12 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     const from = state.dateRange[0].format("YYYY-MM-DD");
     const to = state.dateRange[1].format("YYYY-MM-DD");
     filterGroups.push(
-        <>
+      <Space key="date_group">
         <Text> {t("form.dateRange")}: </Text>
-      <Tag color="#ee3a41" key="date" closable onClose={() => onClearFilter("date")} style={{ userSelect: "none" }}>
-        < >{`${from} to ${to}`}</>
-      </Tag>
-      </>
+        <Tag color="#ee3a41" key="date" closable onClose={() => onClearFilter("date")} style={{ userSelect: "none" }}>
+          <>{`${from} to ${to}`}</>
+        </Tag>
+      </Space>,
     );
   }
 
@@ -83,19 +83,12 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
       const groupLabel = columnLabels[key] || key;
       const groupTags = (
         <Space key={key} size={[0, 8]} wrap>
-          <Text style={{marginRight: 10}}>{groupLabel}: </Text>
+          <Text style={{ marginRight: 10 }}>{groupLabel}: </Text>
           {values.map((value) => (
             <Tag color="#ee3a41" style={{}} key={String(value)} closable onClose={() => onClearFilter("column", key, value)}>
               {String(value)}
             </Tag>
           ))}
-          {/* <Button
-            type="text"
-            size="small"
-            icon={<CloseOutlined />}
-            onClick={() => onClearFilter("column", key)}
-            title={`Clear all ${groupLabel} filters`}
-          /> */}
         </Space>
       );
       filterGroups.push(groupTags);
@@ -107,16 +100,21 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
   }
 
   return (
-    <div style={{ position: "relative", padding: "0 16px 8px 4px", borderTop: "1px solid var(--ant-color-border-secondary)" }}>
-      <Space wrap>
-        {/* <Text strong>{t("common.activeFilters")}:</Text> */}
-        {filterGroups}
-        <div style={{marginLeft: "auto", position: "absolute", bottom: 0, right: 0 }}>
-        <Button style={{marginLeft: 0}} type="link" danger onClick={onClearAll}>
-          {t("common.clearAll")}
-        </Button>
-        </div>
-      </Space>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        flexWrap: "wrap",
+        rowGap: 8,
+        padding: "8px 4px",
+        borderTop: "1px solid var(--ant-color-border-secondary)",
+      }}
+    >
+      <Space wrap>{filterGroups}</Space>
+      <Button type="link" danger onClick={onClearAll} style={{ whiteSpace: "nowrap", paddingRight: 0 }}>
+        {t("common.clearAll")}
+      </Button>
     </div>
   );
 };

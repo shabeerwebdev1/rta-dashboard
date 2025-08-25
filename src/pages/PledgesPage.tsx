@@ -251,6 +251,7 @@ const PledgesPage: React.FC = () => {
         rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
+        state={state}
       />
 
       <Modal
