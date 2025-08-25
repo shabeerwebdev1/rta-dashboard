@@ -222,6 +222,7 @@ const DisputeManagementPage: React.FC = () => {
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
         rowKey={config.tableConfig.rowKey}
+        state={state}
       />
 
       <Modal

@@ -14,6 +14,7 @@ interface TableState {
   searchKey: string;
   searchValue: string;
   dateRange: [Dayjs, Dayjs] | null;
+  viewRecordId: string | null;
 }
 
 const serializeParams = (params: Record<string, any>): string => {
@@ -21,7 +22,7 @@ const serializeParams = (params: Record<string, any>): string => {
   for (const key in params) {
     if (params.hasOwnProperty(key)) {
       const value = params[key];
-      if (value === null || value === undefined) continue;
+      if (value === null || value === undefined || value === "") continue;
       if (key === "orFilters" && typeof value === "object") {
         for (const filterKey in value) {
           if (value.hasOwnProperty(filterKey)) {
@@ -56,7 +57,23 @@ const serializeParams = (params: Record<string, any>): string => {
 const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: string }, initialPageSize = 10) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const getBlankState = useCallback(
+    (): TableState => ({
+      page: 1,
+      pageSize: initialPageSize,
+      sortBy: undefined,
+      sortOrder: undefined,
+      columnFilters: {},
+      searchKey: pageConfig.globalSearchKeys[0],
+      searchValue: "",
+      dateRange: null,
+      viewRecordId: null,
+    }),
+    [initialPageSize, pageConfig],
+  );
+
   const getInitialState = (): TableState => {
+    const blankState = getBlankState();
     const orFilters: Record<string, string[]> = {};
     const betweens: Record<string, { From?: string; To?: string }> = {};
 
@@ -80,32 +97,35 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
       }
     });
 
-    const searchKey = pageConfig.globalSearchKeys.find((key) => orFilters[key]) || pageConfig.globalSearchKeys[0];
-    const searchValue = orFilters[searchKey]?.[0] || "";
-
     const columnFilters: Record<string, string[] | null> = {};
     for (const key in orFilters) {
-      if (key !== searchKey) {
-        columnFilters[key] = orFilters[key];
-      }
+      columnFilters[key] = orFilters[key];
     }
 
     const dateRange = betweens[pageConfig.dateRangeKey];
 
     return {
+      ...blankState,
       page: Number(searchParams.get("PageNumber")) || 1,
       pageSize: Number(searchParams.get("PageSize")) || initialPageSize,
       sortBy: searchParams.get("SortBy") || undefined,
       sortOrder:
         searchParams.get("SortDescending") === "true" ? "descend" : searchParams.get("SortBy") ? "ascend" : undefined,
-      searchKey,
-      searchValue,
       columnFilters,
       dateRange: dateRange ? [dayjs(dateRange.From), dayjs(dateRange.To)] : null,
+      viewRecordId: searchParams.get("viewRecord"),
     };
   };
 
   const [state, setState] = useState<TableState>(getInitialState);
+
+  const setViewRecordId = useCallback((id: string) => {
+    setState((prev) => ({ ...prev, viewRecordId: id }));
+  }, []);
+
+  const clearViewRecordId = useCallback(() => {
+    setState((prev) => ({ ...prev, viewRecordId: null }));
+  }, []);
 
   const handleTableChange: TableProps["onChange"] = (pagination, tableColumnFilters, sorter) => {
     const s = (Array.isArray(sorter) ? sorter[0] : sorter) as SorterResult<any>;
@@ -113,7 +133,7 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
       ...prev,
       page: pagination.current || 1,
       pageSize: pagination.pageSize || initialPageSize,
-      sortBy: s.field as string,
+      sortBy: s.order ? (s.field as string) : undefined,
       sortOrder: s.order,
       columnFilters: tableColumnFilters as Record<string, (string | number)[] | null>,
     }));
@@ -177,8 +197,8 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
   );
 
   const clearAll = useCallback(() => {
-    setState(getInitialState());
-  }, []);
+    setState(getBlankState());
+  }, [getBlankState]);
 
   const apiParams = useMemo(() => {
     const params: Record<string, any> = { PageNumber: state.page, PageSize: state.pageSize };
@@ -189,11 +209,15 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
       params.SortBy = state.sortBy;
       params.SortDescending = state.sortOrder === "descend";
     }
-    if (state.searchKey && state.searchValue) orFilters[state.searchKey] = state.searchValue;
+
     for (const key in state.columnFilters) {
       const value = state.columnFilters[key];
       if (value && value.length > 0) orFilters[key] = value;
     }
+    if (state.searchKey && state.searchValue) {
+      orFilters[state.searchKey] = state.searchValue;
+    }
+
     if (state.dateRange) {
       betweens[pageConfig.dateRangeKey] = {
         From: state.dateRange[0].format("YYYY-MM-DD"),
@@ -207,8 +231,13 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
 
   useEffect(() => {
     const newSearchParams = new URLSearchParams(serializeParams(apiParams));
+    if (state.viewRecordId) {
+      newSearchParams.set("viewRecord", state.viewRecordId);
+    } else {
+      newSearchParams.delete("viewRecord");
+    }
     setSearchParams(newSearchParams, { replace: true });
-  }, [apiParams, setSearchParams]);
+  }, [apiParams, state.viewRecordId, setSearchParams]);
 
   return {
     state,
@@ -219,6 +248,8 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
     setDateRange,
     clearFilter,
     clearAll,
+    setViewRecordId,
+    clearViewRecordId,
   };
 };
 
