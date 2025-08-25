@@ -223,6 +223,7 @@ const ParkonicPage: React.FC = () => {
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
         rowKey={config.tableConfig.rowKey}
+        state={state}
       />
 
       <ParkonicViewDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} record={selectedRecord} />

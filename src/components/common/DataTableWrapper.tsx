@@ -19,6 +19,11 @@ interface DataTableWrapperProps {
   actionMenuItems?: (record: any) => any[];
   tableSize: "middle" | "small";
   rowKey?: string;
+  state: {
+    columnFilters: Record<string, (string | number)[] | null>;
+    sortBy?: string;
+    sortOrder?: "ascend" | "descend";
+  };
 }
 
 const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
@@ -33,6 +38,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
   actionMenuItems,
   tableSize,
   rowKey = "id",
+  state,
 }) => {
   const { t } = useTranslation();
   const { token } = theme.useToken();
@@ -53,10 +59,14 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
 
       if (col.sortable) {
         antdCol.sorter = true;
+        if (state.sortBy === col.key) {
+          antdCol.sortOrder = state.sortOrder;
+        }
       }
 
       if (col.filterable) {
         antdCol.filters = getUniqueFilters(col.key);
+        antdCol.filteredValue = state.columnFilters?.[col.key] || null;
         antdCol.filterMode = "tree";
         antdCol.filterSearch = true;
       }
@@ -115,7 +125,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
     }
 
     return generatedColumns;
-  }, [pageConfig.tableConfig.columns, t, data, actionMenuItems]);
+  }, [pageConfig.tableConfig.columns, t, data, actionMenuItems, state.columnFilters, state.sortBy, state.sortOrder]);
 
   return (
     <Card bordered={false} bodyStyle={{ padding: 0 }}>

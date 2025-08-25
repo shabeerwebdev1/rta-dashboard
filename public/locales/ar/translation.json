@@ -129,7 +129,8 @@
     "location": "الموقع",
     "noData": "لا توجد بيانات",
     "selectFile": "Select File",
-    "share": "مشاركة"
+    "share": "مشاركة",
+    "clearAll": "مسح الكل"
   },
   "entity": {
     "plate": "لوحة",
