@@ -4,7 +4,6 @@ import {
   Card,
   Input,
   Button,
-  Dropdown,
   Modal,
   Form,
   Row,
@@ -14,6 +13,7 @@ import {
   Upload,
   DatePicker,
   Tooltip,
+  Spin,
 } from "antd";
 import {
   PlusOutlined,
@@ -28,7 +28,11 @@ import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
-import { useGetInspectionObstaclesQuery, useAddInspectionObstacleMutation } from "../services/rtkApiFactory";
+import {
+  useGetInspectionObstaclesQuery,
+  useAddInspectionObstacleMutation,
+  useLazyGetLookupsQuery,
+} from "../services/rtkApiFactory";
 import { useUploadFilesMutation } from "../services/fileApi";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
@@ -36,12 +40,25 @@ import { exportToCsv } from "../utils/csvExporter";
 import DynamicViewDrawer from "../components/drawer";
 import { pageConfigs } from "../config/pageConfigs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
+import InspectionObstaclesViewDrawer from "../components/inspectionobstacle/InspectionObstaclesViewDrawer";
 
 const { Option } = Select;
 const pageKey = "inspection-obstacles";
 
+// Helper function to get label from value based on current language
+const getLabelFromValue = (value: number, options: any[], i18n: any) => {
+  const option = options.find((opt) => opt.value === value);
+  if (!option) return value;
+  return i18n.language === "ar" ? option.labelAr : option.labelEn;
+};
+
+// Helper function to filter options by category
+const filterOptionsByCategory = (options: any[], categoryId: number) => {
+  return options.filter((option) => option.categoryId === categoryId);
+};
+
 const InspectionObstaclesPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
@@ -63,6 +80,8 @@ const InspectionObstaclesPage: React.FC = () => {
   const [viewRecord, setViewRecord] = useState<any>(null);
   const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [lookupOptions, setLookupOptions] = useState<any[]>([]);
+  const [isLoadingLookups, setIsLoadingLookups] = useState(false);
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
@@ -72,19 +91,64 @@ const InspectionObstaclesPage: React.FC = () => {
   });
   const [addObstacle, { isLoading: isAdding }] = useAddInspectionObstacleMutation();
   const [uploadFiles, { isLoading: isUploading }] = useUploadFilesMutation();
+  const [triggerGetLookups] = useLazyGetLookupsQuery();
+
+  // Fetch lookup data when language changes
+  useEffect(() => {
+    fetchLookupData();
+  }, [i18n.language]);
+
+  const fetchLookupData = async () => {
+    setIsLoadingLookups(true);
+    try {
+      const result = await triggerGetLookups([600, 700, 800]).unwrap();
+      setLookupOptions(result);
+    } catch (error) {
+      console.error("Failed to fetch lookup data:", error);
+      notification.error({ data: { en_Msg: "Failed to load dropdown options" } }, "Load Failed");
+    } finally {
+      setIsLoadingLookups(false);
+    }
+  };
+
+  // Options with labels
+  const zoneOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 600).map((option) => ({
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      })),
+    [lookupOptions, i18n.language],
+  );
+
+  const areaOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 700).map((option) => ({
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      })),
+    [lookupOptions, i18n.language],
+  );
+
+  const sourceOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 800).map((option) => ({
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      })),
+    [lookupOptions, i18n.language],
+  );
 
   useEffect(() => {
     setPageTitle(t(config.title));
-  }, [setPageTitle, t, config.title]);
+  }, [setPageTitle, t, config.title, i18n.language]);
 
   useEffect(() => {
     setGlobalSearch(state.searchKey, debouncedSearchValue);
   }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
 
   const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
-    if (type === "search") {
-      setSearchValue("");
-    }
+    if (type === "search") setSearchValue("");
     clearFilter(type, key, value);
   };
 
@@ -93,10 +157,7 @@ const InspectionObstaclesPage: React.FC = () => {
     clearAll();
   };
 
-  const handleModalOpen = () => {
-    setIsModalOpen(true);
-  };
-
+  const handleModalOpen = () => setIsModalOpen(true);
   const handleModalClose = () => {
     setIsModalOpen(false);
     form.resetFields();
@@ -107,24 +168,33 @@ const InspectionObstaclesPage: React.FC = () => {
     let finalPayload: Record<string, any> = {};
 
     try {
-      let savedFileName = "";
-      if (Photo && Photo.length > 0 && Photo[0].originFileObj) {
+      let savedFileNames: string[] = [];
+
+      if (Photo && Photo.length > 0) {
         const formData = new FormData();
         formData.append("Category", "Obstacles");
-        formData.append("Files", Photo[0].originFileObj);
+
+        // Append all selected files
+        Photo.forEach((file: any) => {
+          if (file.originFileObj) {
+            formData.append("Files", file.originFileObj);
+          }
+        });
+
+        // Upload multiple files
         const uploadResult = await uploadFiles(formData).unwrap();
-        savedFileName = (uploadResult as any[])[0].savedAs;
+
+        // Collect all saved file names returned from the server
+        savedFileNames = (uploadResult as any[]).map((f) => f.savedAs);
       }
 
       finalPayload = {
-        obstacleNumber: values.ObstacleNumber,
         zone: values.Zone,
         area: values.Area,
         sourceOfObstacle: values.SourceOfObstacle,
         closestPaymentDevice: values.ClosestPaymentDevice,
-        reportedBy: values.ReportedBy,
         comments: values.Comments,
-        photo: savedFileName,
+        photoPath: savedFileNames.join(";"), // join with semicolon for drawer
       };
 
       const response = await addObstacle(finalPayload).unwrap();
@@ -135,8 +205,21 @@ const InspectionObstaclesPage: React.FC = () => {
     }
   };
 
+  const statusLabels: Record<number, string> = {
+    0: t("status.reported"),
+    1: t("status.removed"),
+  };
+
+  // Map IDs to labels before showing in drawer
   const handleView = (record: any) => {
-    setViewRecord(record);
+    const mappedRecord = {
+      ...record,
+      zone: getLabelFromValue(record.zone, zoneOptions, i18n),
+      area: getLabelFromValue(record.area, areaOptions, i18n),
+      sourceOfObstacle: getLabelFromValue(record.sourceOfObstacle, sourceOptions, i18n),
+      status: statusLabels[record.status] || record.status,
+    };
+    setViewRecord(mappedRecord);
     setIsDrawerOpen(true);
   };
 
@@ -156,7 +239,7 @@ const InspectionObstaclesPage: React.FC = () => {
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = data.data.filter((item: any) => selectedRowKeys.includes(item.id));
+        const selectedData = data?.data.filter((item: any) => selectedRowKeys.includes(item.id));
         exportToCsv(selectedData, `obstacles_export.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
@@ -166,7 +249,23 @@ const InspectionObstaclesPage: React.FC = () => {
 
   const columnLabels = useMemo(
     () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
-    [t, config.tableConfig.columns],
+    [t, config.tableConfig.columns, i18n.language],
+  );
+
+  // Enhanced table config with proper renderers
+  const enhancedTableConfig = useMemo(
+    () => ({
+      ...config.tableConfig,
+      columns: config.tableConfig.columns.map((column) => {
+        if (column.key === "zone") return { ...column, render: (v: any) => getLabelFromValue(v, zoneOptions, i18n) };
+        if (column.key === "area") return { ...column, render: (v: any) => getLabelFromValue(v, areaOptions, i18n) };
+        if (column.key === "sourceOfObstacle")
+          return { ...column, render: (v: any) => getLabelFromValue(v, sourceOptions, i18n) };
+        if (column.key === "status") return { ...column, render: (v: number) => statusLabels[v] || v };
+        return column;
+      }),
+    }),
+    [config.tableConfig, zoneOptions, areaOptions, sourceOptions, i18n, t],
   );
 
   const actionMenuItems = (record: any) => [
@@ -209,7 +308,7 @@ const InspectionObstaclesPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
-              <Tooltip title={tableSize === "middle" ? "Compact view" : "Standard view"}>
+              <Tooltip title={tableSize === "middle" ? t("common.compactView") : t("common.standardView")}>
                 <Button
                   icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
                   onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
@@ -226,11 +325,13 @@ const InspectionObstaclesPage: React.FC = () => {
           onClearFilter={handleClearFilter}
           onClearAll={handleClearAll}
           columnLabels={columnLabels}
+          lookupOptions={lookupOptions}
+          getLabelFromValue={getLabelFromValue}
         />
       </Card>
 
       <DataTableWrapper
-        pageConfig={config}
+        pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
         data={data?.data || []}
         total={data?.total || 0}
         isLoading={isLoading || isFetching}
@@ -241,6 +342,8 @@ const InspectionObstaclesPage: React.FC = () => {
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
         state={state}
+        lookupOptions={lookupOptions}
+        getLabelFromValue={getLabelFromValue}
       />
 
       <Modal
@@ -255,86 +358,80 @@ const InspectionObstaclesPage: React.FC = () => {
           <Button key="back" onClick={handleModalClose}>
             {t("common.cancel")}
           </Button>,
-          <Button key="submit" type="primary" loading={isAdding || isUploading} onClick={() => form.submit()}>
+          <Button
+            key="submit"
+            type="primary"
+            loading={isAdding || isUploading || isLoadingLookups}
+            onClick={() => form.submit()}
+          >
             {t("common.submit")}
           </Button>,
         ]}
       >
-        <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-          <Row gutter={24}>
-            <Col span={12}>
-              <Form.Item name="ObstacleNumber" label={t("form.obstacleNumber")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.obstacleNumber")} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="Zone" label={t("form.zone")} rules={[{ required: true }]}>
-                <Select
-                  placeholder={t("placeholders.zone")}
-                  options={["North", "South", "East", "West"].map((o) => ({ label: o, value: o }))}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="Area" label={t("form.area")} rules={[{ required: true }]}>
-                <Select
-                  placeholder={t("placeholders.area")}
-                  options={["Residential", "Commercial", "Industrial"].map((o) => ({ label: o, value: o }))}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="SourceOfObstacle" label={t("form.sourceOfObstacle")} rules={[{ required: true }]}>
-                <Select
-                  placeholder={t("placeholders.sourceOfObstacle")}
-                  options={["Construction", "Parked Vehicle", "Natural Obstacle", "Road Work"].map((o) => ({
-                    label: o,
-                    value: o,
-                  }))}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="ClosestPaymentDevice"
-                label={t("form.closestPaymentDevice")}
-                rules={[{ required: true }]}
-              >
-                <Input placeholder={t("placeholders.closestPaymentDevice")} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="ReportedBy" label={t("form.reportedBy")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.reportedBy")} />
-              </Form.Item>
-            </Col>
-            <Col span={24}>
-              <Form.Item
-                name="Photo"
-                label={t("form.photo")}
-                rules={[{ required: true }]}
-                valuePropName="fileList"
-                getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
-              >
-                <Upload listType="picture-card" beforeUpload={() => false} multiple={true} accept=".jpg,.jpeg">
-                  <div>
-                    <PlusOutlined />
-                    <div style={{ marginTop: 8 }}>{t("form.UploadJPG/JPEG")}</div>
-                  </div>
-                </Upload>
-              </Form.Item>
-            </Col>
-            <Col span={24}>
-              <Form.Item name="Comments" label={t("form.comments")}>
-                <Input.TextArea placeholder={t("placeholders.comments")} />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
+        <Spin spinning={isLoadingLookups}>
+          <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
+            <Row gutter={24}>
+              <Col span={12}>
+                <Form.Item name="Zone" label={t("form.zone")} rules={[{ required: true }]}>
+                  <Select
+                    placeholder={t("placeholders.zone")}
+                    options={zoneOptions.map((option) => ({ label: option.label, value: option.value }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="Area" label={t("form.area")} rules={[{ required: true }]}>
+                  <Select
+                    placeholder={t("placeholders.area")}
+                    options={areaOptions.map((option) => ({ label: option.label, value: option.value }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="SourceOfObstacle" label={t("form.sourceOfObstacle")} rules={[{ required: true }]}>
+                  <Select
+                    placeholder={t("placeholders.sourceOfObstacle")}
+                    options={sourceOptions.map((option) => ({ label: option.label, value: option.value }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="ClosestPaymentDevice"
+                  label={t("form.closestPaymentDevice")}
+                  rules={[{ required: true }]}
+                >
+                  <Input placeholder={t("placeholders.closestPaymentDevice")} />
+                </Form.Item>
+              </Col>
+              <Col span={24}>
+                <Form.Item
+                  name="Photo"
+                  label={t("form.photo")}
+                  rules={[{ required: true }]}
+                  valuePropName="fileList"
+                  getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+                >
+                  <Upload listType="picture-card" beforeUpload={() => false} multiple={true} accept=".jpg,.jpeg">
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>{t("form.UploadJPG/JPEG")}</div>
+                    </div>
+                  </Upload>
+                </Form.Item>
+              </Col>
+              <Col span={24}>
+                <Form.Item name="Comments" label={t("form.comments")}>
+                  <Input.TextArea placeholder={t("placeholders.comments")} />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
+        </Spin>
       </Modal>
 
       {viewRecord && (
-        <DynamicViewDrawer
+        <InspectionObstaclesViewDrawer
           open={isDrawerOpen}
           onClose={() => {
             setIsDrawerOpen(false);
@@ -343,6 +440,10 @@ const InspectionObstaclesPage: React.FC = () => {
           record={viewRecord}
           config={config}
           onShare={handleShare}
+          onStatusChange={() => {
+            // This will trigger a refetch of the data
+            // You might need to add a refetch function to your query hook
+          }}
         />
       )}
     </Space>

@@ -18,6 +18,9 @@ interface ActiveFiltersDisplayProps {
   onClearFilter: (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => void;
   onClearAll: () => void;
   columnLabels: Record<string, string>;
+  // Add these props for lookup data
+  lookupOptions?: any[];
+  getLabelFromValue?: (value: number, options: any[], i18n: any) => string;
 }
 
 const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
@@ -25,9 +28,40 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
   onClearFilter,
   onClearAll,
   columnLabels,
+  lookupOptions = [],
+  getLabelFromValue,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const filterGroups: React.ReactNode[] = [];
+
+  // Helper to get lookup options for a specific column
+  const getLookupOptionsForColumn = (columnKey: string) => {
+    const columnToCategoryMap: Record<string, number> = {
+      plateSource_Id: 200,
+      plateType_Id: 300,
+      plateColor_Id: 400,
+      plateStatus_Id: 500,
+      exemptionReason_ID: 100,
+      sourceOfObstacle: 800,
+      pledgeType: 900,
+    };
+
+    const categoryId = columnToCategoryMap[columnKey];
+    if (!categoryId) return [];
+
+    return lookupOptions.filter((option) => option.categoryId === categoryId);
+  };
+
+  // Helper to get label for a filter value
+  const getFilterLabel = (columnKey: string, value: string | number) => {
+    if (getLabelFromValue && lookupOptions.length > 0) {
+      const lookupOptionsForColumn = getLookupOptionsForColumn(columnKey);
+      if (lookupOptionsForColumn.length > 0) {
+        return getLabelFromValue(Number(value), lookupOptionsForColumn, i18n);
+      }
+    }
+    return String(value);
+  };
 
   // 1. Sorter
   if (state.sortBy && state.sortOrder) {
@@ -85,8 +119,14 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
         <Space key={key} size={[0, 8]} wrap>
           <Text style={{ marginRight: 10 }}>{groupLabel}: </Text>
           {values.map((value) => (
-            <Tag color="#ee3a41" style={{}} key={String(value)} closable onClose={() => onClearFilter("column", key, value)}>
-              {String(value)}
+            <Tag 
+              color="#ee3a41" 
+              style={{}} 
+              key={String(value)} 
+              closable 
+              onClose={() => onClearFilter("column", key, value)}
+            >
+              {getFilterLabel(key, value)}
             </Tag>
           ))}
         </Space>

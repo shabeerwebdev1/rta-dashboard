@@ -1,5 +1,20 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Dropdown, Modal, Form, Row, Col, Select, App, DatePicker, Tooltip } from "antd";
+import {
+  Space,
+  Card,
+  Input,
+  Button,
+  Dropdown,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Select,
+  App,
+  DatePicker,
+  Tooltip,
+  Spin,
+} from "antd";
 import {
   PlusOutlined,
   EyeOutlined,
@@ -13,20 +28,46 @@ import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
-import { useGetDisputesQuery, useAddDisputeMutation, useUpdateDisputeMutation } from "../services/rtkApiFactory";
+import {
+  useGetDisputesQuery,
+  useAddDisputeMutation,
+  useUpdateDisputeMutation,
+  useLazyGetLookupsQuery,
+} from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
-import DynamicViewDrawer from "../components/drawer";
 import { pageConfigs } from "../config/pageConfigs";
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
+import DisputeViewModal from "../components/dispute/DisputeViewModal";
 
 const { Option } = Select;
 const pageKey = "dispute-management";
 
+// Helper function to get label from value based on current language
+const getLabelFromValue = (value: number, options: any[], i18n: any) => {
+  const option = options.find((opt) => opt.value === value);
+  if (!option) return value;
+
+  // Use Arabic label if language is Arabic, otherwise English
+  return i18n.language === "ar" ? option.labelAr : option.labelEn;
+};
+
+// Helper function to filter options by category
+const filterOptionsByCategory = (options: any[], categoryId: number) => {
+  return options.filter((option) => option.categoryId === categoryId);
+};
+
+// Category mapping for dispute management - UPDATED CATEGORY IDs
+const columnToCategoryMap: Record<string, number> = {
+  department: 1000, // Department dropdown
+  payment_Type: 1100, // Payment Type dropdown - CHANGED FROM 1001 TO 1100
+  dispute_Status: 1002, // Dispute Status dropdown
+};
+
 const DisputeManagementPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
@@ -51,6 +92,8 @@ const DisputeManagementPage: React.FC = () => {
   const [viewRecord, setViewRecord] = useState<any>(null);
   const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [lookupOptions, setLookupOptions] = useState<any[]>([]);
+  const [isLoadingLookups, setIsLoadingLookups] = useState(false);
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
@@ -58,10 +101,51 @@ const DisputeManagementPage: React.FC = () => {
   const { data, isLoading, isFetching } = useGetDisputesQuery(apiParams, { refetchOnMountOrArgChange: true });
   const [addDispute, { isLoading: isAdding }] = useAddDisputeMutation();
   const [updateDispute, { isLoading: isUpdating }] = useUpdateDisputeMutation();
+  const [triggerGetLookups] = useLazyGetLookupsQuery();
+
+  // Fetch lookup data when modal opens or language changes
+  useEffect(() => {
+    fetchLookupData();
+  }, [i18n.language]);
+
+  const fetchLookupData = async () => {
+    setIsLoadingLookups(true);
+    try {
+      // Use category IDs for dispute management (1000, 1100, 1002) - UPDATED
+      const categoryIds = Object.values(columnToCategoryMap);
+      const result = await triggerGetLookups(categoryIds).unwrap();
+      setLookupOptions(result);
+    } catch (error) {
+      console.error("Failed to fetch lookup data:", error);
+      notification.error({ data: { en_Msg: "Failed to load dropdown options" } }, "Load Failed");
+    } finally {
+      setIsLoadingLookups(false);
+    }
+  };
+
+  // Get options for each category with proper labels based on current language
+  const departmentOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 1000).map((option) => ({
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      })),
+    [lookupOptions, i18n.language],
+  );
+
+  const paymentTypeOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 1100).map((option) => ({
+        // CHANGED FROM 1001 TO 1100
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      })),
+    [lookupOptions, i18n.language],
+  );
 
   useEffect(() => {
     setPageTitle(t(config.title));
-  }, [setPageTitle, t, config.title]);
+  }, [setPageTitle, t, config.title, i18n.language]);
 
   useEffect(() => {
     setGlobalSearch(state.searchKey, debouncedSearchValue);
@@ -146,7 +230,26 @@ const DisputeManagementPage: React.FC = () => {
           .map((f) => [f.name, t(f.label)])
           .concat(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
       ),
-    [t, config],
+    [t, config, i18n.language],
+  );
+
+  // Enhanced table config with render functions for dropdown values
+  const enhancedTableConfig = useMemo(
+    () => ({
+      ...config.tableConfig,
+      columns: config.tableConfig.columns.map((column) => {
+        const categoryId = columnToCategoryMap[column.key];
+        if (categoryId) {
+          const options = filterOptionsByCategory(lookupOptions, categoryId);
+          return {
+            ...column,
+            render: (value: any) => getLabelFromValue(value, options, i18n),
+          };
+        }
+        return column;
+      }),
+    }),
+    [config.tableConfig, lookupOptions, i18n],
   );
 
   const actionMenuItems = (record: any) => [
@@ -190,7 +293,7 @@ const DisputeManagementPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
-              <Tooltip title={tableSize === "middle" ? "Compact view" : "Standard view"}>
+              <Tooltip title={tableSize === "middle" ? t("common.compactView") : t("common.standardView")}>
                 <Button
                   icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
                   onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
@@ -211,7 +314,7 @@ const DisputeManagementPage: React.FC = () => {
       </Card>
 
       <DataTableWrapper
-        pageConfig={config}
+        pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
         data={data?.data || []}
         total={data?.total || 0}
         isLoading={isLoading || isFetching}
@@ -237,73 +340,86 @@ const DisputeManagementPage: React.FC = () => {
           <Button key="back" onClick={handleModalClose}>
             {t("common.cancel")}
           </Button>,
-          <Button key="submit" type="primary" loading={isAdding || isUpdating} onClick={() => form.submit()}>
+          <Button
+            key="submit"
+            type="primary"
+            loading={isAdding || isUpdating || isLoadingLookups}
+            onClick={() => form.submit()}
+          >
             {t(modalMode === "add" ? "common.submit" : "common.update")}
           </Button>,
         ]}
       >
-        <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-          <Row gutter={24}>
-            <Col span={12}>
-              <Form.Item name="fine_Number" label={t("form.fineNumber")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.fineNumber")} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="department" label={t("form.department")} rules={[{ required: true }]}>
-                <Select
-                  placeholder={t("placeholders.department")}
-                  options={config.formConfig.fields.find((f) => f.name === "department")?.options || []}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="payment_Type" label={t("form.paymentType")} rules={[{ required: true }]}>
-                <Select
-                  placeholder={t("placeholders.paymentType")}
-                  options={config.formConfig.fields.find((f) => f.name === "payment_Type")?.options || []}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="dispute_Reason" label={t("form.reason")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.reason")} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="crM_Ref" label={t("form.crmReference")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.crmReference")} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="email" label={t("form.email")} rules={[{ required: true, type: "email" }]}>
-                <Input placeholder={t("placeholders.email")} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="phone" label={t("form.phoneNumber")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.phoneNumber")} maxLength={10} type="number" />
-              </Form.Item>
-            </Col>
-            <Col span={24}>
-              <Form.Item name="address" label={t("form.address")} rules={[{ required: true }]}>
-                <Input.TextArea placeholder={t("placeholders.address")} />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
+        <Spin spinning={isLoadingLookups}>
+          <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
+            <Row gutter={24}>
+              <Col span={12}>
+                <Form.Item name="fine_Number" label={t("form.fineNumber")} rules={[{ required: true }]}>
+                  <Input placeholder={t("placeholders.fineNumber")} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="department" label={t("form.department")} rules={[{ required: true }]}>
+                  <Select
+                    placeholder={t("placeholders.department")}
+                    loading={isLoadingLookups}
+                    options={departmentOptions.map((option) => ({
+                      label: option.label,
+                      value: option.value,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="payment_Type" label={t("form.paymentType")} rules={[{ required: true }]}>
+                  <Select
+                    placeholder={t("placeholders.paymentType")}
+                    loading={isLoadingLookups}
+                    options={paymentTypeOptions.map((option) => ({
+                      label: option.label,
+                      value: option.value,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="dispute_Reason" label={t("form.reason")} rules={[{ required: true }]}>
+                  <Input placeholder={t("placeholders.reason")} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="crM_Ref" label={t("form.crmReference")} rules={[{ required: true }]}>
+                  <Input placeholder={t("placeholders.crmReference")} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="email" label={t("form.email")} rules={[{ required: true, type: "email" }]}>
+                  <Input placeholder={t("placeholders.email")} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="phone" label={t("form.phoneNumber")} rules={[{ required: true }]}>
+                  <Input placeholder={t("placeholders.phoneNumber")} maxLength={10} type="number" />
+                </Form.Item>
+              </Col>
+              <Col span={24}>
+                <Form.Item name="address" label={t("form.address")} rules={[{ required: true }]}>
+                  <Input.TextArea placeholder={t("placeholders.address")} />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
+        </Spin>
       </Modal>
 
       {viewRecord && (
-        <DynamicViewDrawer
+        <DisputeViewModal
           open={isDrawerOpen}
           onClose={() => {
             setIsDrawerOpen(false);
             setViewRecord(null);
           }}
-          record={viewRecord}
-          config={config}
-          onShare={handleShare}
+          dispute={viewRecord}
         />
       )}
     </Space>

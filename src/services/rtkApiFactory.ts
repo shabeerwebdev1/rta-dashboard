@@ -32,8 +32,32 @@ export const dynamicApi = createApi({
     "PermitSearch",
     "FineSearch",
     "ParkonicSearch",
+    "VLookups",
   ],
   endpoints: (builder) => ({
+    getLookups: builder.query({
+      query: (ids: number[]) => ({
+        url: "/api/VLookups",
+        method: "POST",
+        body: ids, // 👈 must be an array like [100] or [100,200,300]
+      }),
+      transformResponse: (response: any) => {
+        if (!response?.data) return [];
+
+        return response.data.flatMap(
+          (catg: any) =>
+            catg.ddItems?.map((item: any) => ({
+              categoryId: catg.ddiCatgId,
+              categoryName: catg.ddiCatgName,
+              value: item.ddiCode,
+              labelEn: item.ddiDispText_En,
+              labelAr: item.ddiDispText_Ar,
+            })) || [],
+        );
+      },
+      providesTags: ["VLookups"],
+    }),
+
     // Whitelist Plates
     getPlates: builder.query({
       query: (params) => ({ url: "/api/WhitelistPlate", params }),
@@ -193,4 +217,5 @@ export const {
   useLazySearchFinesQuery,
   useSearchParkonicsQuery,
   useReviewParkonicMutation,
+  useLazyGetLookupsQuery,
 } = dynamicApi;

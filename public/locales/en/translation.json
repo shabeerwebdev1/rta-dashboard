@@ -136,7 +136,12 @@
     "sortBy": "Sort Order",
     "ascending": "Asc",
     "descending": "Desc",
-    "clearAll": "Clear All"
+    "clearAll": "Clear All",
+    "true": "True",
+    "false": "False",
+    "remove obstacle": "Remove Obstacle",
+    "remove": "Remove"
+  
   },
   "entity": {
     "plate": "Plate",

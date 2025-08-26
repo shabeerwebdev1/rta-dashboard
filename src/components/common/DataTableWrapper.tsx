@@ -24,6 +24,9 @@ interface DataTableWrapperProps {
     sortBy?: string;
     sortOrder?: "ascend" | "descend";
   };
+  // Add these new props for lookup data
+  lookupOptions?: any[];
+  getLabelFromValue?: (value: number, options: any[], i18n: any) => string;
 }
 
 const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
@@ -39,10 +42,50 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
   tableSize,
   rowKey = "id",
   state,
+  // New props for lookup data
+  lookupOptions = [],
+  getLabelFromValue,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { token } = theme.useToken();
 
+  // Helper to get lookup options for a specific column
+  const getLookupOptionsForColumn = (columnKey: string) => {
+    // Map column keys to their corresponding lookup categories
+    const columnToCategoryMap: Record<string, number> = {
+      plateSource_Id: 200,
+      plateType_Id: 300,
+      plateColor_Id: 400,
+      plateStatus_Id: 500,
+      exemptionReason_ID: 100,
+      sourceOfObstacle: 800,
+      pledgeType: 900,
+    };
+
+    const categoryId = columnToCategoryMap[columnKey];
+    if (!categoryId) return [];
+
+    return lookupOptions.filter((option) => option.categoryId === categoryId);
+  };
+
+  // Helper to get filter options with labels from lookup data
+  const getFilterOptionsWithLabels = (columnKey: string) => {
+    const lookupOptionsForColumn = getLookupOptionsForColumn(columnKey);
+
+    if (lookupOptionsForColumn.length > 0) {
+      return lookupOptionsForColumn.map((option) => ({
+        text: i18n.language === "ar" ? option.labelAr || option.label : option.labelEn || option.label,
+        value: option.value || option.id,
+      }));
+    }
+
+    // Fallback: unique values from data
+    if (!data) return [];
+    const uniqueValues = [...new Set(data.map((item: any) => item[columnKey]).filter(Boolean))];
+    return uniqueValues.map((value) => ({ text: String(value), value }));
+  };
+
+  // helper for unique filters (fallback if no lookup data available)
   const getUniqueFilters = (key: string) => {
     if (!data) return [];
     const uniqueValues = [...new Set(data.map((item: any) => item[key]).filter(Boolean))];
@@ -55,8 +98,11 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
         key: col.key,
         title: t(col.title),
         dataIndex: col.key,
+        // Add this to control filter state - CRITICAL FIX
+        filteredValue: state.columnFilters[col.key] || null,
       };
 
+      // enable sorter if requested
       if (col.sortable) {
         antdCol.sorter = true;
         if (state.sortBy === col.key) {
@@ -64,20 +110,42 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
         }
       }
 
+      // ✅ Updated filter logic - use lookup data for labels
       if (col.filterable) {
-        antdCol.filters = getUniqueFilters(col.key);
-        antdCol.filteredValue = state.columnFilters?.[col.key] || null;
+        if (col.type === "select" && col.options) {
+          // use provided options (label/value) for filters
+          antdCol.filters = (col.options as { label: string; value: unknown }[]).map((opt) => ({
+            text: opt.label,
+            value: opt.value,
+          }));
+        } else if (lookupOptions.length > 0) {
+          // use lookup data for filter options with labels
+          antdCol.filters = getFilterOptionsWithLabels(col.key);
+        } else {
+          // fallback: unique raw values from data
+          antdCol.filters = getUniqueFilters(col.key);
+        }
         antdCol.filterMode = "tree";
         antdCol.filterSearch = true;
       }
 
-      // 🔹 Respect custom render if provided in config
+      // ✅ Updated render logic - use lookup data for labels
       if (col.render) {
+        // respect custom render from config
         antdCol.render = col.render;
       } else {
-        // 🔹 Fallback render logic
+        // default render behavior with lookup support
         antdCol.render = (text: any) => {
           if (text === null || text === undefined || text === "") return t("common.noData");
+
+          // Use lookup data to display labels instead of values
+          if (getLabelFromValue && lookupOptions.length > 0) {
+            const lookupOptionsForColumn = getLookupOptionsForColumn(col.key);
+            if (lookupOptionsForColumn.length > 0) {
+              const label = getLabelFromValue(text, lookupOptionsForColumn, i18n);
+              text = label; // Replace value with label for display
+            }
+          }
 
           switch (col.type) {
             case "date":
@@ -110,6 +178,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
       return antdCol;
     });
 
+    // ✅ add action column if menu items provided
     if (actionMenuItems) {
       generatedColumns.push({
         key: "action",
@@ -125,7 +194,18 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
     }
 
     return generatedColumns;
-  }, [pageConfig.tableConfig.columns, t, data, actionMenuItems, state.columnFilters, state.sortBy, state.sortOrder]);
+  }, [
+    pageConfig.tableConfig.columns,
+    t,
+    data,
+    actionMenuItems,
+    state.columnFilters, // Add this dependency
+    state.sortBy,
+    state.sortOrder,
+    lookupOptions,
+    getLabelFromValue,
+    i18n,
+  ]);
 
   return (
     <Card bordered={false} bodyStyle={{ padding: 0 }}>
@@ -140,6 +220,12 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
         onChange={handleTableChange}
         rowSelection={rowSelection}
         size={tableSize}
+        // Add controlled sorting
+        sortDirections={['ascend', 'descend']}
+        {...(state.sortBy && {
+          sortOrder: state.sortOrder,
+          sortColumn: state.sortBy,
+        })}
       />
       <div
         style={{

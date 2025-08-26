@@ -12,7 +12,7 @@ export const pledgeConfig: PageConfig = {
     delete: "/api/Pledge/:id",
   },
   searchConfig: {
-    globalSearchKeys: ["pledgeNumber", "tradeLicenseNumber", "businessName"],
+    globalSearchKeys: ["tradeLicenseNumber", "businessName"],
     columnFilterKeys: ["pledgeType"],
     dateRangeKey: "submittedAt",
   },
@@ -26,7 +26,6 @@ export const pledgeConfig: PageConfig = {
   ],
   tableConfig: {
     columns: [
-      { key: "pledgeNumber", title: "form.pledgeNumber", type: "string", sortable: true },
       { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "string", sortable: true },
       { key: "businessName", title: "form.businessName", type: "string", sortable: true },
       { key: "pledgeType", title: "form.pledgeType", type: "string", filterable: true },
