@@ -130,7 +130,12 @@
     "noData": "لا توجد بيانات",
     "selectFile": "Select File",
     "share": "مشاركة",
-    "clearAll": "مسح الكل"
+    "clearAll": "مسح الكل",
+    "true": "صحيح",
+    "false": "خاطئ",
+    "remove obstacle": "إزالة العائق",
+    "remove": "إزالة"
+
   },
   "entity": {
     "plate": "لوحة",

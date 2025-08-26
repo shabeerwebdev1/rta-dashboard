@@ -129,13 +129,20 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
 
   const handleTableChange: TableProps["onChange"] = (pagination, tableColumnFilters, sorter) => {
     const s = (Array.isArray(sorter) ? sorter[0] : sorter) as SorterResult<any>;
+
+    // Convert table filters to our state format
+    const columnFilters: Record<string, (string | number)[] | null> = {};
+    for (const key in tableColumnFilters) {
+      columnFilters[key] = tableColumnFilters[key] || null;
+    }
+
     setState((prev) => ({
       ...prev,
       page: pagination.current || 1,
       pageSize: pagination.pageSize || initialPageSize,
       sortBy: s.order ? (s.field as string) : undefined,
       sortOrder: s.order,
-      columnFilters: tableColumnFilters as Record<string, (string | number)[] | null>,
+      columnFilters, // Use the converted filters
     }));
   };
 
@@ -155,6 +162,7 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
     setState((prev) => ({ ...prev, page: 1, dateRange: dates }));
   }, []);
 
+  // In your useTableParams hook, update the clearFilter function:
   const clearFilter = useCallback(
     (type: "search" | "date" | "column" | "sorter", key?: string, valueToRemove?: string | number) => {
       setState((prev) => {

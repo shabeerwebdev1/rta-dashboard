@@ -13,7 +13,7 @@ export const inspectionObstacleConfig: PageConfig = {
     delete: "",
   },
   searchConfig: {
-    globalSearchKeys: ["obstacleNumber", "zone", "area", "reportedBy"],
+    globalSearchKeys: ["zone", "area"],
     columnFilterKeys: ["sourceOfObstacle", "status"],
     dateRangeKey: "reportedAt",
   },
@@ -22,18 +22,17 @@ export const inspectionObstacleConfig: PageConfig = {
     {
       title: "Removed Obstacles",
       icon: <CheckSquareOutlined />,
-      value: (data) => data.filter((d) => d.status?.toLowerCase() === "removed").length,
+      value: (data) => data.filter((d) => String(d.status ?? "").toLowerCase() === "removed").length,
       color: "#52c41a",
     },
   ],
+
   tableConfig: {
     columns: [
-      { key: "obstacleNumber", title: "form.obstacleNumber", type: "string", sortable: true },
       { key: "zone", title: "form.zone", type: "string", sortable: true },
       { key: "area", title: "form.area", type: "string", sortable: true },
       { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "string", filterable: true },
-      { key: "reportedAt", title: "form.date", type: "date", sortable: true },
-      { key: "reportedBy", title: "form.reportedBy", type: "string" },
+
       { key: "status", title: "form.status", type: "tag", filterable: true },
     ],
     viewRecord: true,

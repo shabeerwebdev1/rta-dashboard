@@ -61,6 +61,7 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, re
                 if (text === null || text === undefined || text === "") return t("common.noData");
                 const statusKey = typeof text === "string" ? text.toLowerCase() : "";
                 const tagColor = STATUS_COLORS[statusKey as keyof typeof STATUS_COLORS] || "default";
+
                 switch (field.type) {
                   case "date":
                     return dayjs(text as string).isValid()
@@ -73,20 +74,25 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, re
                   case "badge":
                     return String(text);
 
-                  default:
-                    if (field.type === "select") {
-                      const formFieldConfig = config.formConfig.fields.find(
-                        (f) => f.name.toLowerCase() === field.key.toLowerCase(),
+                  case "select":
+                    // 🔹 First check if mapped label exists
+                    const mappedKey = field.key.replace(/_id$/i, ""); // remove '_Id' suffix
+                    if (record[mappedKey]) return String(record[mappedKey]);
+
+                    // fallback to original options
+                    const formFieldConfig = config.formConfig.fields.find(
+                      (f) => f.name.toLowerCase() === field.key.toLowerCase(),
+                    );
+                    if (formFieldConfig?.options) {
+                      const selectedOption = formFieldConfig.options.find(
+                        (opt: any) => (typeof opt === "object" ? opt.value : opt) === text,
                       );
-                      if (formFieldConfig?.options) {
-                        const selectedOption = formFieldConfig.options.find(
-                          (opt: any) => (typeof opt === "object" ? opt.value : opt) === text,
-                        );
-                        if (selectedOption) {
-                          return typeof selectedOption === "object" ? selectedOption.label : selectedOption;
-                        }
-                      }
+                      if (selectedOption)
+                        return typeof selectedOption === "object" ? selectedOption.label : selectedOption;
                     }
+                    return String(text);
+
+                  default:
                     return String(text);
                 }
               })()}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, DatePicker, App, Tooltip } from "antd";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, DatePicker, App, Tooltip, Spin } from "antd";
 import {
   PlusOutlined,
   EyeOutlined,
@@ -19,74 +19,42 @@ import {
   useGetPlatesQuery,
   useAddPlateMutation,
   useUpdatePlateMutation,
-  useDeletePlateMutation,
   useLazyGetPlateByIdQuery,
+  useLazyGetLookupsQuery,
 } from "../services/rtkApiFactory";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
-import DynamicViewDrawer from "../components/drawer";
 import { pageConfigs } from "../config/pageConfigs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
+import WhitelistPlatesViewDrawer from "../components/whitelist/WhitelistPlatesViewDrawer";
 
 const { Option } = Select;
 const pageKey = "whitelist-plates";
 
-// Dropdown options with numeric values
-const plateSourceOptions = [
-  { label: "Dubai", value: 1 },
-  { label: "Abu Dhabi", value: 2 },
-  { label: "Sharjah", value: 3 },
-  { label: "Ajman", value: 4 },
-  { label: "Ras Al Khaimah", value: 5 },
-  { label: "Fujairah", value: 6 },
-  { label: "Umm Al Quwain", value: 7 },
-];
+// Helper function to get label from value based on current language
+const getLabelFromValue = (value: number, options: any[], i18n: any) => {
+  const option = options.find((opt) => opt.value === value);
+  if (!option) return value;
 
-const plateTypeOptions = [
-  { label: "Private", value: 1 },
-  { label: "Commercial", value: 2 },
-  { label: "Motorcycle", value: 3 },
-  { label: "Taxi", value: 4 },
-];
+  // Use Arabic label if language is Arabic, otherwise English
+  return i18n.language === "ar" ? option.labelAr : option.labelEn;
+};
 
-const plateColorOptions = [
-  { label: "White", value: 1 },
-  { label: "Red", value: 2 },
-  { label: "Blue", value: 3 },
-  { label: "Green", value: 4 },
-  { label: "Black", value: 5 },
-  { label: "Yellow", value: 6 },
-  { label: "Orange", value: 7 },
-  { label: "Purple", value: 8 },
-];
-
-const plateStatusOptions = [
-  { label: "Active", value: 1 },
-  { label: "Inactive", value: 0 },
-];
-
-const exemptionReasons = [
-  { label: "Government Vehicle", value: 1 },
-  { label: "Diplomatic Vehicle", value: 2 },
-  { label: "Emergency Vehicle", value: 3 },
-];
-
-// Helper function to get label from value
-const getLabelFromValue = (value, options) => {
-  const option = options.find(opt => opt.value === value);
-  return option ? option.label : value;
+// Helper function to filter options by category
+const filterOptionsByCategory = (options: any[], categoryId: number) => {
+  return options.filter((option) => option.categoryId === categoryId);
 };
 
 const WhitelistPlatesPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation(); // 👈 Get i18n instance
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const config = pageConfigs[pageKey];
   const [searchParams] = useSearchParams();
   const {
-    apiParams,
+    apiParams: rawApiParams,
     handleTableChange,
     handlePaginationChange,
     setGlobalSearch,
@@ -95,6 +63,12 @@ const WhitelistPlatesPage: React.FC = () => {
     clearAll,
     state,
   } = useTableParams(config.searchConfig!);
+
+  const apiParams = {
+    PageNumber: rawApiParams.PageNumber || 1,
+    PageSize: rawApiParams.PageSize || 10,
+    ...rawApiParams,
+  };
   const [form] = Form.useForm();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -104,6 +78,8 @@ const WhitelistPlatesPage: React.FC = () => {
   const [viewRecord, setViewRecord] = useState<any>(null);
   const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [lookupOptions, setLookupOptions] = useState<any[]>([]);
+  const [isLoadingLookups, setIsLoadingLookups] = useState(false);
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
@@ -111,10 +87,74 @@ const WhitelistPlatesPage: React.FC = () => {
   const { data, isLoading, isFetching } = useGetPlatesQuery(apiParams, { refetchOnMountOrArgChange: true });
   const [addPlate, { isLoading: isAdding }] = useAddPlateMutation();
   const [updatePlate, { isLoading: isUpdating }] = useUpdatePlateMutation();
-  const [deletePlate, { isLoading: isDeleting }] = useDeletePlateMutation();
   const [triggerGetPlate, { data: singleRecordData, isSuccess: isSingleRecordSuccess }] = useLazyGetPlateByIdQuery();
+  const [triggerGetLookups] = useLazyGetLookupsQuery();
 
-   useEffect(() => {
+  // Fetch lookup data when modal opens or language changes
+  useEffect(() => {
+    fetchLookupData();
+  }, [i18n.language]); // 👈 Refetch when language changes
+
+  const fetchLookupData = async () => {
+    setIsLoadingLookups(true);
+    try {
+      const result = await triggerGetLookups([100, 200, 300, 400, 500]).unwrap();
+      setLookupOptions(result);
+    } catch (error) {
+      console.error("Failed to fetch lookup data:", error);
+      notification.error({ data: { en_Msg: "Failed to load dropdown options" } }, "Load Failed");
+    } finally {
+      setIsLoadingLookups(false);
+    }
+  };
+
+  // Get options for each category with proper labels based on current language
+  const exemptionReasons = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 100).map((option) => ({
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      })),
+    [lookupOptions, i18n.language],
+  );
+
+  const plateSourceOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 200).map((option) => ({
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      })),
+    [lookupOptions, i18n.language],
+  );
+
+  const plateTypeOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 300).map((option) => ({
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      })),
+    [lookupOptions, i18n.language],
+  );
+
+  const plateColorOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 400).map((option) => ({
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      })),
+    [lookupOptions, i18n.language],
+  );
+
+  const plateStatusOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 500).map((option) => ({
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      })),
+    [lookupOptions, i18n.language],
+  );
+
+  useEffect(() => {
     const recordId = state.viewRecordId;
     if (recordId && !isDrawerOpen) {
       triggerGetPlate(recordId);
@@ -130,7 +170,7 @@ const WhitelistPlatesPage: React.FC = () => {
 
   useEffect(() => {
     setPageTitle(t(config.title));
-  }, [setPageTitle, t, config.title]);
+  }, [setPageTitle, t, config.title, i18n.language]); // 👈 Update title when language changes
 
   useEffect(() => {
     setGlobalSearch(state.searchKey, debouncedSearchValue);
@@ -189,23 +229,8 @@ const WhitelistPlatesPage: React.FC = () => {
     }
   };
 
-  const handleDelete = (id: number) => {
-    modal.confirm({
-      title: t("messages.deleteConfirmTitle"),
-      content: t("messages.deleteConfirmContent", { entity: t(config.name.singular) }),
-      onOk: async () => {
-        try {
-          const response = await deletePlate(id).unwrap();
-          notification.success(response, t("messages.deleteSuccess", { entity: t(config.name.singular) }));
-        } catch (err) {
-          notification.error(err as any, "Delete Failed");
-        }
-      },
-    });
-  };
-
   const handleView = (record: any) => {
-    setViewRecord(record);
+    setViewRecord(record); // Pass the raw record, not the mapped one
     setIsDrawerOpen(true);
   };
 
@@ -224,11 +249,24 @@ const WhitelistPlatesPage: React.FC = () => {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
       return;
     }
+
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = data.data.filter((item: any) => selectedRowKeys.includes(item.id));
+        const selectedData = data?.data
+          .filter((item: any) => selectedRowKeys.includes(item.id))
+          .map((item: any) => ({
+            ...item,
+            // Map numeric values to their corresponding labels
+            plateSource_Id: getLabelFromValue(item.plateSource_Id, plateSourceOptions, i18n),
+            plateType_Id: getLabelFromValue(item.plateType_Id, plateTypeOptions, i18n),
+            plateColor_Id: getLabelFromValue(item.plateColor_Id, plateColorOptions, i18n),
+            plateStatus_Id: getLabelFromValue(item.plateStatus_Id, plateStatusOptions, i18n),
+            exemptionReason_ID: getLabelFromValue(item.exemptionReason_ID, exemptionReasons, i18n),
+            isByLaw: item.isByLaw ? t("common.true") : t("common.false"),
+          }));
+
         exportToCsv(selectedData, `whitelist-plates_export.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
@@ -238,46 +276,64 @@ const WhitelistPlatesPage: React.FC = () => {
 
   const columnLabels = useMemo(
     () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
-    [t, config.tableConfig.columns],
+    [t, config.tableConfig.columns, i18n.language], // 👈 Update when language changes
   );
 
   // Enhanced table config with render functions for numeric values
-  const enhancedTableConfig = useMemo(() => ({
-    ...config.tableConfig,
-    columns: config.tableConfig.columns.map(column => {
-      if (column.key === 'plateSource') {
-        return {
-          ...column,
-          render: (value) => getLabelFromValue(value, plateSourceOptions)
-        };
-      }
-      if (column.key === 'plateType') {
-        return {
-          ...column,
-          render: (value) => getLabelFromValue(value, plateTypeOptions)
-        };
-      }
-      if (column.key === 'plateColor') {
-        return {
-          ...column,
-          render: (value) => getLabelFromValue(value, plateColorOptions)
-        };
-      }
-      if (column.key === 'plateStatus') {
-        return {
-          ...column,
-          render: (value) => getLabelFromValue(value, plateStatusOptions)
-        };
-      }
-      if (column.key === 'exemptionReason_ID') {
-        return {
-          ...column,
-          render: (value) => getLabelFromValue(value, exemptionReasons)
-        };
-      }
-      return column;
-    })
-  }), [config.tableConfig]);
+  const enhancedTableConfig = useMemo(
+    () => ({
+      ...config.tableConfig,
+      columns: config.tableConfig.columns.map((column) => {
+        if (column.key === "plateSource_Id") {
+          return {
+            ...column,
+            render: (value: any) => getLabelFromValue(value, plateSourceOptions, i18n),
+          };
+        }
+        if (column.key === "plateType_Id") {
+          return {
+            ...column,
+            render: (value: any) => getLabelFromValue(value, plateTypeOptions, i18n),
+          };
+        }
+        if (column.key === "plateColor_Id") {
+          return {
+            ...column,
+            render: (value: any) => getLabelFromValue(value, plateColorOptions, i18n),
+          };
+        }
+        if (column.key === "plateStatus_Id") {
+          return {
+            ...column,
+            render: (value: any) => getLabelFromValue(value, plateStatusOptions, i18n),
+          };
+        }
+        if (column.key === "exemptionReason_ID") {
+          return {
+            ...column,
+            render: (value: any) => getLabelFromValue(value, exemptionReasons, i18n),
+          };
+        }
+        if (column.key === "isByLaw") {
+          return {
+            ...column,
+            render: (value: any) => (value ? t("common.true") : t("common.false")),
+          };
+        }
+        return column;
+      }),
+    }),
+    [
+      config.tableConfig,
+      plateSourceOptions,
+      plateTypeOptions,
+      plateColorOptions,
+      plateStatusOptions,
+      exemptionReasons,
+      i18n,
+      t,
+    ],
+  );
 
   const actionMenuItems = (record: any) => [
     { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
@@ -320,7 +376,7 @@ const WhitelistPlatesPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
-              <Tooltip title={tableSize === "middle" ? "Compact view" : "Standard view"}>
+              <Tooltip title={tableSize === "middle" ? t("common.compactView") : t("common.standardView")}>
                 <Button
                   icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
                   onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
@@ -337,6 +393,8 @@ const WhitelistPlatesPage: React.FC = () => {
           onClearFilter={handleClearFilter}
           onClearAll={handleClearAll}
           columnLabels={columnLabels}
+          lookupOptions={lookupOptions}
+          getLabelFromValue={getLabelFromValue}
         />
       </Card>
 
@@ -344,7 +402,7 @@ const WhitelistPlatesPage: React.FC = () => {
         pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
         data={data?.data || []}
         total={data?.total || 0}
-        isLoading={isLoading || isFetching || isDeleting}
+        isLoading={isLoading || isFetching}
         apiParams={apiParams}
         handleTableChange={handleTableChange}
         handlePaginationChange={handlePaginationChange}
@@ -352,6 +410,8 @@ const WhitelistPlatesPage: React.FC = () => {
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
         state={state}
+        lookupOptions={lookupOptions}
+        getLabelFromValue={getLabelFromValue}
       />
 
       <Modal
@@ -366,70 +426,101 @@ const WhitelistPlatesPage: React.FC = () => {
           <Button key="back" onClick={handleModalClose}>
             {t("common.cancel")}
           </Button>,
-
           <Button key="submit" type="primary" loading={isAdding || isUpdating} onClick={() => form.submit()}>
             {t(modalMode === "add" ? "common.submit" : "common.update")}
           </Button>,
         ]}
       >
-        <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-          <Row gutter={24}>
-            <Col span={12}>
-              <Form.Item name="plateNumber" label={t("form.plateNumber")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.plateNumber")} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="plateSource_Id" label={t("form.plateSource")} rules={[{ required: true }]}>
-                <Select placeholder={t("placeholders.plateSource")} options={plateSourceOptions} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="plateType_Id" label={t("form.plateType")} rules={[{ required: true }]}>
-                <Select placeholder={t("placeholders.plateType")} options={plateTypeOptions} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="plateColor_Id" label={t("form.plateColor")} rules={[{ required: true }]}>
-                <Select placeholder={t("placeholders.plateColor")} options={plateColorOptions} />
-              </Form.Item>
-            </Col>
-            <Col span={24}>
-              <Form.Item name="dateRange" label={t("form.dateRange")} rules={[{ required: true }]}>
-                <DatePicker.RangePicker
-                  style={{ width: "100%" }}
-                  disabledDate={(d) => d && d < dayjs().startOf("day")}
-                  placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="exemptionReason_ID" label={t("form.exemptionReason")} rules={[{ required: true }]}>
-                <Select placeholder={t("placeholders.exemptionReason")} options={exemptionReasons} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="plateStatus_Id" label={t("form.status")} rules={[{ required: true }]}>
-                <Select placeholder={t("placeholders.status")} options={plateStatusOptions} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="isByLaw" label={t("form.isByLaw")}>
-                <Select
-                  placeholder={t("placeholders.isByLaw")}
-                  options={[
-                    { label: "True", value: true },
-                    { label: "False", value: false },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
+        <Spin spinning={isLoadingLookups}>
+          <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
+            <Row gutter={24}>
+              <Col span={12}>
+                <Form.Item name="plateNumber" label={t("form.plateNumber")} rules={[{ required: true }]}>
+                  <Input placeholder={t("placeholders.plateNumber")} />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="plateSource_Id" label={t("form.plateSource")} rules={[{ required: true }]}>
+                  <Select
+                    placeholder={t("placeholders.plateSource")}
+                    options={plateSourceOptions.map((option) => ({
+                      label: option.label,
+                      value: option.value,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="plateType_Id" label={t("form.plateType")} rules={[{ required: true }]}>
+                  <Select
+                    placeholder={t("placeholders.plateType")}
+                    options={plateTypeOptions.map((option) => ({
+                      label: option.label,
+                      value: option.value,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="plateColor_Id" label={t("form.plateColor")} rules={[{ required: true }]}>
+                  <Select
+                    placeholder={t("placeholders.plateColor")}
+                    options={plateColorOptions.map((option) => ({
+                      label: option.label,
+                      value: option.value,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={24}>
+                <Form.Item name="dateRange" label={t("form.dateRange")} rules={[{ required: true }]}>
+                  <DatePicker.RangePicker
+                    style={{ width: "100%" }}
+                    disabledDate={(d) => d && d < dayjs().startOf("day")}
+                    placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="exemptionReason_ID" label={t("form.exemptionReason")} rules={[{ required: true }]}>
+                  <Select
+                    placeholder={t("placeholders.exemptionReason")}
+                    options={exemptionReasons.map((option) => ({
+                      label: option.label,
+                      value: option.value,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="plateStatus_Id" label={t("form.status")} rules={[{ required: true }]}>
+                  <Select
+                    placeholder={t("placeholders.status")}
+                    options={plateStatusOptions.map((option) => ({
+                      label: option.label,
+                      value: option.value,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="isByLaw" label={t("form.isByLaw")}>
+                  <Select
+                    placeholder={t("placeholders.isByLaw")}
+                    options={[
+                      { label: t("common.true"), value: true },
+                      { label: t("common.false"), value: false },
+                    ]}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
+        </Spin>
       </Modal>
 
       {viewRecord && (
-        <DynamicViewDrawer
+        <WhitelistPlatesViewDrawer
           open={isDrawerOpen}
           onClose={() => {
             setIsDrawerOpen(false);
