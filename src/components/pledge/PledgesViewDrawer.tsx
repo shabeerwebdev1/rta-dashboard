@@ -14,6 +14,7 @@ interface PledgesViewDrawerProps {
   record: Record<string, unknown> | null;
   config: PageConfig;
   onShare: () => void;
+  isLoading?: boolean;
 }
 
 // Helper function to get label from value based on current language
@@ -28,7 +29,14 @@ const filterOptionsByCategory = (options: any[], categoryId: number): any[] => {
   return options.filter((option) => option.categoryId === categoryId);
 };
 
-const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({ open, onClose, record, config, onShare }) => {
+const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({ 
+  open, 
+  onClose, 
+  record, 
+  config, 
+  onShare, 
+  isLoading = false 
+}) => {
   const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
@@ -38,21 +46,22 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({ open, onClose, re
   const [triggerGetPledge, { data: singleRecordData, isSuccess: isSingleRecordSuccess, isLoading: isPledgeLoading }] =
     useLazyGetPledgeByIdQuery();
 
-  // Check if we need to fetch the record by ID (for shared links)
+  // Get record ID from URL
+  const recordId = searchParams.get("viewRecord");
+
+  // Fetch record data when drawer opens
   useEffect(() => {
     if (open) {
-      const recordId = searchParams.get("viewRecord");
-
       // If we have a record object with data, use it directly
       if (record && record.id) {
         fetchLookupData();
       }
-      // If we have a record ID from URL but no data, fetch the record
+      // If we have a record ID from URL but no record data, fetch the record
       else if (recordId) {
         triggerGetPledge(recordId);
       }
     }
-  }, [open, record, searchParams]);
+  }, [open, record, recordId]);
 
   // Handle the fetched record data
   useEffect(() => {
@@ -119,7 +128,7 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({ open, onClose, re
         </Space>
       }
     >
-      <Spin spinning={isLoadingLookups || isPledgeLoading}>
+      <Spin spinning={isLoadingLookups || isPledgeLoading || isLoading}>
         {mappedRecord ? (
           <>
             <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>

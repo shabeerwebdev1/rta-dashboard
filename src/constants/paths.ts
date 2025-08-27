@@ -1,5 +1,7 @@
 export const PATHS = {
+  LOGIN: "login",
   DASHBOARD: "dashboard",
+  SPLASH: "splash", // 👈 added
   PERMITS: "permits",
   WHITELIST: "whitelist",
   PLATES: "plates",
@@ -10,11 +12,15 @@ export const PATHS = {
   PARKONIC: "parkonic",
   DISPUTE: "dispute",
   GENERAL: "general",
+  ZONELINKING: "UserZoneLinking",
+  SHIFTPLANNING: "ShiftPlanning",
 };
 
 export const FULL_PATHS = {
   ROOT: "/",
+  LOGIN: "/login",
   DASHBOARD: "/dashboard",
+  SPLASH: "/splash", // 👈 added
   PERMITS: "/permits",
   GENERAL: "/general",
   WHITELIST: "/whitelist",
@@ -29,4 +35,6 @@ export const FULL_PATHS = {
   TOWING: "/towing",
   TEAM: "/team",
   ANALYTICS: "/analytics",
+  ZONELINKING: "/UserZoneLinking",
+  SHIFTPLANNING: "/ShiftPlanning",
 };

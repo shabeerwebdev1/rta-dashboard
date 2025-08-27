@@ -159,6 +159,14 @@ export const dynamicApi = createApi({
       query: (body) => ({ url: "/api/Dispute/Update", method: "PUT", body }),
       invalidatesTags: ["Dispute"],
     }),
+    updateDisputeStatus: builder.mutation({
+      query: (body) => ({
+        url: "/api/Dispute/UpdateStatusFields",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Dispute"],
+    }),
 
     // Search Endpoints
     searchPermits: builder.query({
@@ -209,13 +217,14 @@ export const {
   useLazyGetInspectionObstacleByIdQuery,
   useAddInspectionObstacleMutation,
   useUpdateInspectionObstacleMutation,
-  useGetDisputesQuery,
-  useLazyGetDisputeByIdQuery,
-  useAddDisputeMutation,
-  useUpdateDisputeMutation,
   useSearchPermitsQuery,
   useLazySearchFinesQuery,
   useSearchParkonicsQuery,
   useReviewParkonicMutation,
   useLazyGetLookupsQuery,
+  useGetDisputesQuery,
+  useLazyGetDisputeByIdQuery,
+  useAddDisputeMutation,
+  useUpdateDisputeMutation,
+  useUpdateDisputeStatusMutation,
 } = dynamicApi;

@@ -1,3 +1,4 @@
+// DisputeManagementPage.tsx
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Space,
@@ -33,6 +34,7 @@ import {
   useAddDisputeMutation,
   useUpdateDisputeMutation,
   useLazyGetLookupsQuery,
+  useLazyGetDisputeByIdQuery, // Add this import
 } from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
@@ -45,25 +47,21 @@ import DisputeViewModal from "../components/dispute/DisputeViewModal";
 const { Option } = Select;
 const pageKey = "dispute-management";
 
-// Helper function to get label from value based on current language
+// Helper functions remain the same
 const getLabelFromValue = (value: number, options: any[], i18n: any) => {
   const option = options.find((opt) => opt.value === value);
   if (!option) return value;
-
-  // Use Arabic label if language is Arabic, otherwise English
   return i18n.language === "ar" ? option.labelAr : option.labelEn;
 };
 
-// Helper function to filter options by category
 const filterOptionsByCategory = (options: any[], categoryId: number) => {
   return options.filter((option) => option.categoryId === categoryId);
 };
 
-// Category mapping for dispute management - UPDATED CATEGORY IDs
 const columnToCategoryMap: Record<string, number> = {
-  department: 1000, // Department dropdown
-  payment_Type: 1100, // Payment Type dropdown - CHANGED FROM 1001 TO 1100
-  dispute_Status: 1002, // Dispute Status dropdown
+  department: 1000,
+  payment_Type: 1100,
+  dispute_Status: 1002,
 };
 
 const DisputeManagementPage: React.FC = () => {
@@ -98,10 +96,13 @@ const DisputeManagementPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
-  const { data, isLoading, isFetching } = useGetDisputesQuery(apiParams, { refetchOnMountOrArgChange: true });
+  const { data, isLoading, isFetching, refetch } = useGetDisputesQuery(apiParams, {
+    refetchOnMountOrArgChange: true,
+  });
   const [addDispute, { isLoading: isAdding }] = useAddDisputeMutation();
   const [updateDispute, { isLoading: isUpdating }] = useUpdateDisputeMutation();
   const [triggerGetLookups] = useLazyGetLookupsQuery();
+  const [triggerGetDisputeById] = useLazyGetDisputeByIdQuery(); // Add this
 
   // Fetch lookup data when modal opens or language changes
   useEffect(() => {
@@ -111,7 +112,6 @@ const DisputeManagementPage: React.FC = () => {
   const fetchLookupData = async () => {
     setIsLoadingLookups(true);
     try {
-      // Use category IDs for dispute management (1000, 1100, 1002) - UPDATED
       const categoryIds = Object.values(columnToCategoryMap);
       const result = await triggerGetLookups(categoryIds).unwrap();
       setLookupOptions(result);
@@ -123,7 +123,7 @@ const DisputeManagementPage: React.FC = () => {
     }
   };
 
-  // Get options for each category with proper labels based on current language
+  // Get options for each category
   const departmentOptions = useMemo(
     () =>
       filterOptionsByCategory(lookupOptions, 1000).map((option) => ({
@@ -136,7 +136,6 @@ const DisputeManagementPage: React.FC = () => {
   const paymentTypeOptions = useMemo(
     () =>
       filterOptionsByCategory(lookupOptions, 1100).map((option) => ({
-        // CHANGED FROM 1001 TO 1100
         ...option,
         label: i18n.language === "ar" ? option.labelAr : option.labelEn,
       })),
@@ -163,12 +162,33 @@ const DisputeManagementPage: React.FC = () => {
     clearAll();
   };
 
-  const handleModalOpen = (mode: "add" | "edit", record?: any) => {
+  const handleModalOpen = async (mode: "add" | "edit", record?: any) => {
     setModalMode(mode);
     setSelectedRecord(record || null);
     setIsModalOpen(true);
+
     if (mode === "edit" && record) {
-      form.setFieldsValue(record);
+      try {
+        // Fetch the latest dispute data for editing
+        const result = await triggerGetDisputeById(record.dispute_Id).unwrap();
+        if (result.data) {
+          form.setFieldsValue({
+            fineId: result.data.fine_Number, // Map fine_Number to fineId
+            department: result.data.department,
+            payment_Type: result.data.payment_Type,
+            dispute_Reason: result.data.dispute_Reason,
+            crM_Ref: result.data.crM_Ref,
+            email: result.data.email,
+            phone: result.data.phone,
+            address: result.data.address,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch dispute details:", error);
+        notification.error({ data: { en_Msg: "Failed to load dispute details" } }, "Load Failed");
+      }
+    } else {
+      form.resetFields();
     }
   };
 
@@ -181,16 +201,35 @@ const DisputeManagementPage: React.FC = () => {
   const handleFormSubmit = async (values: any) => {
     try {
       let response;
+
+      // Prepare the payload according to API structure
+      const payload = {
+        fineId: Number(values.fineId), // Changed from fine_Number to fineId
+        department: values.department,
+        payment_Type: values.payment_Type,
+        dispute_Reason: values.dispute_Reason,
+        crM_Ref: values.crM_Ref,
+        email: values.email,
+        phone: values.phone,
+        address: values.address,
+      };
+
       if (modalMode === "add") {
-        response = await addDispute(values).unwrap();
+        response = await addDispute(payload).unwrap();
         notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
       } else {
-        response = await updateDispute({ ...values, dispute_Id: selectedRecord.dispute_Id }).unwrap();
+        // For update, include dispute_Id in the payload
+        response = await updateDispute({
+          ...payload,
+          dispute_Id: selectedRecord.dispute_Id,
+        }).unwrap();
         notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
       }
+
       handleModalClose();
-    } catch (err) {
-      notification.error(err as any, "Operation Failed");
+      refetch(); // Refresh the table data
+    } catch (err: any) {
+      notification.error(err, "Operation Failed");
     }
   };
 
@@ -215,7 +254,7 @@ const DisputeManagementPage: React.FC = () => {
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = data.data.filter((item: any) => selectedRowKeys.includes(item.dispute_Id));
+        const selectedData = data?.data?.filter((item: any) => selectedRowKeys.includes(item.dispute_Id)) || [];
         exportToCsv(selectedData, `disputes_export.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
@@ -353,13 +392,22 @@ const DisputeManagementPage: React.FC = () => {
         <Spin spinning={isLoadingLookups}>
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
             <Row gutter={24}>
+              {/* Change fine_Number to fineId to match API payload */}
               <Col span={12}>
-                <Form.Item name="fine_Number" label={t("form.fineNumber")} rules={[{ required: true }]}>
-                  <Input placeholder={t("placeholders.fineNumber")} />
+                <Form.Item
+                  name="fineId"
+                  label={t("form.fineNumber")}
+                  rules={[{ required: true, message: t("messages.requiredField") }]}
+                >
+                  <Input placeholder={t("placeholders.fineNumber")} type="number" />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="department" label={t("form.department")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="department"
+                  label={t("form.department")}
+                  rules={[{ required: true, message: t("messages.requiredField") }]}
+                >
                   <Select
                     placeholder={t("placeholders.department")}
                     loading={isLoadingLookups}
@@ -371,7 +419,11 @@ const DisputeManagementPage: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="payment_Type" label={t("form.paymentType")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="payment_Type"
+                  label={t("form.paymentType")}
+                  rules={[{ required: true, message: t("messages.requiredField") }]}
+                >
                   <Select
                     placeholder={t("placeholders.paymentType")}
                     loading={isLoadingLookups}
@@ -383,28 +435,54 @@ const DisputeManagementPage: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="dispute_Reason" label={t("form.reason")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="dispute_Reason"
+                  label={t("form.reason")}
+                  rules={[{ required: true, message: t("messages.requiredField") }]}
+                >
                   <Input placeholder={t("placeholders.reason")} />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="crM_Ref" label={t("form.crmReference")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="crM_Ref"
+                  label={t("form.crmReference")}
+                  rules={[{ required: true, message: t("messages.requiredField") }]}
+                >
                   <Input placeholder={t("placeholders.crmReference")} />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="email" label={t("form.email")} rules={[{ required: true, type: "email" }]}>
+                <Form.Item
+                  name="email"
+                  label={t("form.email")}
+                  rules={[
+                    { required: true, message: t("messages.requiredField") },
+                    { type: "email", message: t("messages.invalidEmail") },
+                  ]}
+                >
                   <Input placeholder={t("placeholders.email")} />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="phone" label={t("form.phoneNumber")} rules={[{ required: true }]}>
-                  <Input placeholder={t("placeholders.phoneNumber")} maxLength={10} type="number" />
+                <Form.Item
+                  name="phone"
+                  label={t("form.phoneNumber")}
+                  rules={[
+                    { required: true, message: t("messages.requiredField") },
+                    { pattern: /^[0-9]+$/, message: t("messages.numbersOnly") },
+                  ]}
+                >
+                  <Input placeholder={t("placeholders.phoneNumber")} maxLength={10} />
                 </Form.Item>
               </Col>
               <Col span={24}>
-                <Form.Item name="address" label={t("form.address")} rules={[{ required: true }]}>
-                  <Input.TextArea placeholder={t("placeholders.address")} />
+                <Form.Item
+                  name="address"
+                  label={t("form.address")}
+                  rules={[{ required: true, message: t("messages.requiredField") }]}
+                >
+                  <Input.TextArea placeholder={t("placeholders.address")} rows={3} />
                 </Form.Item>
               </Col>
             </Row>
@@ -419,7 +497,8 @@ const DisputeManagementPage: React.FC = () => {
             setIsDrawerOpen(false);
             setViewRecord(null);
           }}
-          dispute={viewRecord}
+          disputeId={viewRecord.dispute_Id}
+          onStatusUpdate={refetch}
         />
       )}
     </Space>
