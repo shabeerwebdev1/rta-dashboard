@@ -14,7 +14,9 @@
     "analytics": "Analytics & Insights",
     "plates": "Plates",
     "tradelicenses": "Trade Licenses",
-    "general": "General Search"
+    "general": "General Search",
+    "zonelinking": "Zone Linking",
+    "shiftplanning": "Shift Planning"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -29,7 +31,9 @@
       "permits": "Permits Search",
       "dispute-management": "Dispute Management",
       "fines": "Fines Management",
-      "parkonic": "Parkonic Management"
+      "parkonic": "Parkonic Management",
+      "zonelinking": "Zone Linking",
+      "shiftplanning": "Shift Planning"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",
@@ -137,11 +141,8 @@
     "ascending": "Asc",
     "descending": "Desc",
     "clearAll": "Clear All",
-    "true": "True",
-    "false": "False",
     "remove obstacle": "Remove Obstacle",
     "remove": "Remove"
-  
   },
   "entity": {
     "plate": "Plate",

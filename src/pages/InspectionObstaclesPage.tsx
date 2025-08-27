@@ -209,7 +209,17 @@ const InspectionObstaclesPage: React.FC = () => {
       content: t("messages.csvConfirmContent"),
       onOk: () => {
         const selectedData = data?.data.filter((item: any) => selectedRowKeys.includes(item.id));
-        exportToCsv(selectedData, `obstacles_export.csv`);
+
+        // ✅ Map values → labels before exporting
+        const formattedData = selectedData.map((item: any) => ({
+          ...item,
+          zone: getLabelFromValue(item.zone, zoneOptions, i18n),
+          area: getLabelFromValue(item.area, areaOptions, i18n),
+          sourceOfObstacle: getLabelFromValue(item.sourceOfObstacle, sourceOptions, i18n),
+          status: statusLabels[item.status] || item.status,
+        }));
+
+        exportToCsv(formattedData, `obstacles_export.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
       },

@@ -34,6 +34,7 @@ import {
   useDeletePledgeMutation,
   useLazyGetLookupsQuery,
   useLazyGetPledgeByIdQuery,
+  useLazyGetPledgeByIdQuery,
 } from "../services/rtkApiFactory";
 import { useUploadFilesMutation } from "../services/fileApi";
 import StatsDisplay from "../components/common/StatsDisplay";
@@ -42,6 +43,7 @@ import { exportToCsv } from "../utils/csvExporter";
 import { pageConfigs } from "../config/pageConfigs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import DynamicViewDrawer from "../components/drawer";
+import { useSearchParams } from "react-router-dom";
 
 const { Option } = Select;
 const pageKey = "pledges";
@@ -64,6 +66,7 @@ const PledgesPage: React.FC = () => {
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const config = pageConfigs[pageKey];
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const {
     apiParams,
@@ -95,9 +98,18 @@ const PledgesPage: React.FC = () => {
   const [addPledge, { isLoading: isAdding }] = useAddPledgeMutation();
   const [deletePledge, { isLoading: isDeleting }] = useDeletePledgeMutation();
   const [uploadFiles, { isLoading: isUploading }] = useUploadFilesMutation();
-  const [triggerGetPledge, { data: singleRecordData, isSuccess: isSingleRecordSuccess }] = useLazyGetPledgeByIdQuery();
+  const [triggerGetPledge, { data: singleRecordData, isSuccess: isSingleRecordSuccess, isLoading: isPledgeLoading }] =
+    useLazyGetPledgeByIdQuery();
 
   const [triggerGetLookups] = useLazyGetLookupsQuery();
+
+  // Check for viewRecord parameter in URL on component mount
+  useEffect(() => {
+    const recordId = searchParams.get("viewRecord");
+    if (recordId) {
+      triggerGetPledge(recordId);
+    }
+  }, []);
 
   useEffect(() => {
     fetchLookupData();
@@ -125,17 +137,20 @@ const PledgesPage: React.FC = () => {
     [lookupOptions, i18n.language],
   );
 
-  useEffect(() => {
-    const recordId = state.viewRecordId;
-    if (recordId && !isDrawerOpen) {
-      triggerGetPledge(recordId);
-    }
-  }, [state.viewRecordId, triggerGetPledge, isDrawerOpen]);
+  // Handle record view from table
+  const handleViewFromTable = (recordId: string) => {
+    triggerGetPledge(recordId);
+  };
 
   useEffect(() => {
     if (isSingleRecordSuccess && singleRecordData) {
       setViewRecord(singleRecordData.data);
       setIsDrawerOpen(true);
+
+      // Update URL with viewRecord parameter
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set("viewRecord", singleRecordData.data.id);
+      setSearchParams(newSearchParams);
     }
   }, [isSingleRecordSuccess, singleRecordData]);
 
@@ -222,8 +237,7 @@ const PledgesPage: React.FC = () => {
   };
 
   const handleView = (record: any) => {
-    setViewRecord(record);
-    setIsDrawerOpen(true);
+    handleViewFromTable(record.id);
   };
 
   const handleShare = () => {
@@ -245,12 +259,20 @@ const PledgesPage: React.FC = () => {
       content: t("messages.csvConfirmContent"),
       onOk: () => {
         const selectedData = data?.data.filter((item: any) => selectedRowKeys.includes(item.id));
-        exportToCsv(selectedData, `pledges_export.csv`);
+  
+        // ✅ Map values to labels before exporting
+        const formattedData = selectedData.map((item: any) => ({
+          ...item,
+          pledgeType: getLabelFromValue(item.pledgeType, pledgeTypeOptions, i18n),
+        }));
+  
+        exportToCsv(formattedData, `pledges_export.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
       },
     });
   };
+  
 
   const columnLabels = useMemo(
     () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
@@ -270,6 +292,16 @@ const PledgesPage: React.FC = () => {
       ))}
     </Select>
   );
+
+  const handleDrawerClose = () => {
+    setIsDrawerOpen(false);
+    setViewRecord(null);
+
+    // Remove viewRecord parameter from URL
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete("viewRecord");
+    setSearchParams(newSearchParams);
+  };
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -411,18 +443,14 @@ const PledgesPage: React.FC = () => {
         </Spin>
       </Modal>
 
-      {viewRecord && (
-        <DynamicViewDrawer
-          open={isDrawerOpen}
-          onClose={() => {
-            setIsDrawerOpen(false);
-            setViewRecord(null);
-          }}
-          record={viewRecord}
-          config={config}
-          onShare={handleShare}
-        />
-      )}
+      <PledgesViewDrawer
+        open={isDrawerOpen}
+        onClose={handleDrawerClose}
+        record={viewRecord}
+        config={config}
+        onShare={() => handleShare(viewRecord)}
+        isLoading={isPledgeLoading}
+      />
     </Space>
   );
 };

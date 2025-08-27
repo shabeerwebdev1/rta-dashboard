@@ -12,6 +12,7 @@ import {
   PushpinOutlined,
   DashboardOutlined,
   AuditOutlined,
+  LinkOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
@@ -79,7 +80,17 @@ const AppSidebar: React.FC = () => {
     {
       key: FULL_PATHS.ANALYTICS,
       icon: <BarChartOutlined />,
-      label: t("sidebar.analytics"),
+      label: <Link to={FULL_PATHS.ANALYTICS}>{t("sidebar.analytics")}</Link>,
+    },
+    { 
+      key: FULL_PATHS.ZONELINKING, 
+      icon: <LinkOutlined />, 
+      label: <Link to={FULL_PATHS.ZONELINKING}>{t("sidebar.zonelinking")}</Link>,
+    },
+    { 
+      key: FULL_PATHS.SHIFTPLANNING, 
+      icon: <AuditOutlined />,
+      label: <Link to={FULL_PATHS.SHIFTPLANNING}>{t("sidebar.shiftplanning")}</Link>,
     },
   ];
 
