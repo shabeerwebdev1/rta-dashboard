@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Row, Select, Table, Tag, Typography, Button, Space, Dropdown, Avatar } from "antd";
+import { Card, Col, Row, Select, Table, Tag, Typography, Button, Space, Dropdown, Avatar, Statistic } from "antd";
 import {
   UserOutlined,
   CheckCircleOutlined,
@@ -446,7 +446,7 @@ const SupervisorViewPage: React.FC = () => {
           <Card bodyStyle={{ padding: 0 }}>
             <div
               style={{
-                height: 530,
+                height: "575px",
                 borderRadius: 8,
                 overflow: "hidden",
                 boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
@@ -576,190 +576,83 @@ const SupervisorViewPage: React.FC = () => {
             </div>
           </Card>
         </Col>
-
         <Col span={8}>
-          <Row gutter={[0, 12]}>
-            {/* Inspectors Card */}
+          <Row gutter={[16, 16]}>
+            {/* Inspectors */}
             <Col span={24}>
-              <Card
-                style={{
-                  backgroundColor: "#EBF5FE",
-                  border: "1px solid #9ACCFF",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    borderBottom: "1px solid #f0f0f0",
-                    paddingBottom: "10px",
-                  }}
-                >
-                  <Title level={5} style={{ margin: 0 }}>
-                    20 Inspectors
-                  </Title>
-                  <UserOutlined style={{ fontSize: "24px", color: "#1890ff" }} />
+              <Card className="dashboard-stat-card" style={{ borderColor: "#1890ff" }}>
+                <div className="inline-statistic">
+                  <Statistic title="Total Inspectors" value={20} />
                 </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginTop: "10px",
-                    textAlign: "center",
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <Text type="secondary">Checked In</Text>
-                    <br />
-                    <Text type="success" strong>
-                      10
-                    </Text>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <Text type="secondary">Missing</Text>
-                    <br />
-                    <Text type="danger" strong>
-                      8
-                    </Text>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <Text type="secondary">On Leave</Text>
-                    <br />
-                    <Text type="warning" strong>
-                      2
-                    </Text>
-                  </div>
-                </div>
+                <Space size="large" style={{ marginTop: 8 }}>
+                  <Statistic
+                    className="sub-statistic"
+                    title="Checked In"
+                    value={10}
+                    valueStyle={{ color: "#52c41a" }}
+                  />
+                  <Statistic className="sub-statistic" title="Missing" value={8} valueStyle={{ color: "#ff4d4f" }} />
+                  <Statistic className="sub-statistic" title="On Leave" value={2} valueStyle={{ color: "#faad14" }} />
+                </Space>
+                <Avatar size={56} icon={<UserOutlined />} style={{ backgroundColor: "#e6f7ff", color: "#1890ff" }} />
               </Card>
             </Col>
 
-            {/* Approvals Card */}
+            {/* Approvals */}
             <Col span={24}>
-              <Card
-                style={{
-                  backgroundColor: "#ECFDF3",
-                  border: "1px solid red",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    borderBottom: "1px solid #f0f0f0",
-                    paddingBottom: "10px",
-                  }}
-                >
-                  <Title level={5} style={{ margin: 0 }}>
-                    12 Approvals
-                  </Title>
-                  <CheckCircleOutlined style={{ fontSize: "24px", color: "#52c41a" }} />
+              <Card className="dashboard-stat-card" style={{ borderColor: "#52c41a" }}>
+                <div className="inline-statistic">
+                  <Statistic title="Total Approvals" value={12} />
                 </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginTop: "10px",
-                    textAlign: "center",
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <Text type="secondary">Leave Requests</Text>
-                    <br />
-                    <Text type="success" strong>
-                      10
-                    </Text>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <Text type="secondary">Towing Requests</Text>
-                    <br />
-                    <Text type="success" strong>
-                      2
-                    </Text>
-                  </div>
-                </div>
+                <Row gutter={16} style={{ marginTop: 8 }}>
+                  <Col>
+                    <Statistic className="sub-statistic" title="Leave" value={10} />
+                  </Col>
+                  <Col>
+                    <Statistic className="sub-statistic" title="Towing" value={2} />
+                  </Col>
+                </Row>
+                <Avatar
+                  size={56}
+                  icon={<CheckCircleOutlined />}
+                  style={{ backgroundColor: "#f6ffed", color: "#52c41a" }}
+                />
               </Card>
             </Col>
 
-            {/* Inspections Card */}
+            {/* Inspections */}
             <Col span={24}>
-              <Card
-                style={{
-                  backgroundColor: "#FAF3FE",
-                  border: "1px solid #DDB5FF",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    borderBottom: "1px solid #f0f0f0",
-                    paddingBottom: "10px",
-                  }}
-                >
-                  <Title level={5} style={{ margin: 0 }}>
-                    20 Inspections
-                  </Title>
-                  <SafetyCertificateOutlined style={{ fontSize: "24px", color: "#faad14" }} />
+              <Card className="dashboard-stat-card" style={{ borderColor: "#faad14" }}>
+                <div className="inline-statistic">
+                  <Statistic title="Total Inspections" value={20} />
                 </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginTop: "10px",
-                    textAlign: "center",
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <Text type="secondary">Fines Issued</Text>
-                    <br />
-                    <Text strong>10</Text>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <Text type="secondary">Total Amount</Text>
-                    <br />
-                    <Text strong>100,000 AED</Text>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <Text type="secondary">Disputes</Text>
-                    <br />
-                    <Text strong>2</Text>
-                  </div>
-                </div>
+                <Row gutter={16} style={{ marginTop: 8 }}>
+                  <Col>
+                    <Statistic className="sub-statistic" title="Fines" value={10} />
+                  </Col>
+                  <Col>
+                    <Statistic className="sub-statistic" title="Amount" value={100000} suffix="AED" />
+                  </Col>
+                </Row>
+                <Avatar
+                  size={56}
+                  icon={<SafetyCertificateOutlined />}
+                  style={{ backgroundColor: "#fffbe6", color: "#faad14" }}
+                />
               </Card>
             </Col>
 
-            {/* Obstacles Card */}
+            {/* Obstacles */}
             <Col span={24}>
               <Card
-                style={{
-                  backgroundColor: showObstacles ? "#fff2e8" : "#FDF1F0",
-                  border: showObstacles ? "2px solid #ffbb96" : "1px solid #F6A395",
-                  cursor: "pointer",
-                }}
+                className="dashboard-stat-card"
+                style={{ borderColor: "#ff4d4f", cursor: "pointer" }}
                 onClick={handleObstaclesClick}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    paddingBottom: "6px",
-                  }}
-                >
-                  <Title level={5} style={{ margin: 0 }}>
-                    10 Obstacles
-                  </Title>
-                  <WarningOutlined style={{ fontSize: "24px", color: "#ff4d4f" }} />
+                <div className="inline-statistic">
+                  <Statistic title="Total Obstacles" value={10} />
                 </div>
-                {showObstacles && (
-                  <div style={{ marginTop: 8, color: "#ff4d4f", fontSize: "12px" }}>Click to hide obstacles on map</div>
-                )}
+                <Avatar size={56} icon={<WarningOutlined />} style={{ backgroundColor: "#fff1f0", color: "#ff4d4f" }} />
               </Card>
             </Col>
           </Row>

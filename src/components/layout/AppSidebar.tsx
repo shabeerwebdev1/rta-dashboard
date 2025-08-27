@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Layout, Menu } from "antd";
+import { Layout, Menu, MenuProps } from "antd";
 import {
   CarOutlined,
   FileTextOutlined,
@@ -9,10 +9,10 @@ import {
   SearchOutlined,
   BarChartOutlined,
   UsergroupAddOutlined,
-  IdcardOutlined,
   PushpinOutlined,
   DashboardOutlined,
   AuditOutlined,
+  SettingOutlined,
   LinkOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
@@ -26,84 +26,69 @@ const AppSidebar: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
 
-  const menuItems: Array<{
-    key: string;
-    icon: React.ReactNode;
-    label: React.ReactNode;
-    children?: Array<{ key: string; label: React.ReactNode }>;
-  }> = [
+  const menuItems: MenuProps["items"] = [
     {
       key: FULL_PATHS.DASHBOARD,
       icon: <DashboardOutlined />,
       label: <Link to={FULL_PATHS.DASHBOARD}>{t("sidebar.dashboard")}</Link>,
     },
     {
-      key: FULL_PATHS.WHITELIST_PLATES,
-      icon: <FileTextOutlined />,
-      label: <Link to={FULL_PATHS.WHITELIST_PLATES}>{t("sidebar.whitelist")}</Link>,
-    },
-    {
-      key: FULL_PATHS.INSPECTIONS,
-      icon: <SearchOutlined />,
-      label: <Link to={FULL_PATHS.INSPECTIONS}>{t("sidebar.inspections")}</Link>,
-    },
-    {
-      key: FULL_PATHS.PLEDGES,
-      icon: <AuditOutlined />,
-      label: <Link to={FULL_PATHS.PLEDGES}>{t("sidebar.pledges")}</Link>,
-    },
-    // {
-    //   key: FULL_PATHS.PERMITS,
-    //   icon: <IdcardOutlined />,
-    //   label: <Link to={FULL_PATHS.PERMITS}>{t("sidebar.permits")}</Link>,
-    // },
-    {
       key: FULL_PATHS.GENERAL,
       icon: <SearchOutlined />,
       label: <Link to={FULL_PATHS.GENERAL}>{t("sidebar.general")}</Link>,
     },
     {
-      key: FULL_PATHS.PARKONIC,
-      icon: <PushpinOutlined />,
-      label: <Link to={FULL_PATHS.PARKONIC}>{t("sidebar.parkonic")}</Link>,
+      key: "configuration",
+      icon: <SettingOutlined />,
+      label: "Configuration",
+      children: [
+        {
+          key: FULL_PATHS.WHITELIST,
+          icon: <FileTextOutlined />,
+          label: <Link to={FULL_PATHS.WHITELIST_PLATES}>{t("sidebar.whitelist")}</Link>,
+        },
+        {
+          key: FULL_PATHS.INSPECTIONS,
+          icon: <SearchOutlined />,
+          label: <Link to={FULL_PATHS.INSPECTIONS}>{t("sidebar.inspections")}</Link>,
+        },
+        {
+          key: FULL_PATHS.PLEDGES,
+          icon: <AuditOutlined />,
+          label: <Link to={FULL_PATHS.PLEDGES}>{t("sidebar.pledges")}</Link>,
+        },
+        {
+          key: FULL_PATHS.PARKONIC,
+          icon: <PushpinOutlined />,
+          label: <Link to={FULL_PATHS.PARKONIC}>{t("sidebar.parkonic")}</Link>,
+        },
+        {
+          key: FULL_PATHS.FINES,
+          icon: <DollarOutlined />,
+          label: <Link to={FULL_PATHS.FINES}>{t("sidebar.fines")}</Link>,
+        },
+        {
+          key: FULL_PATHS.DISPUTE,
+          icon: <ExclamationCircleOutlined />,
+          label: <Link to={FULL_PATHS.DISPUTE}>{t("sidebar.dispute")}</Link>,
+        },
+      ],
     },
-    {
-      key: FULL_PATHS.FINES,
-      icon: <DollarOutlined />,
-      label: <Link to={FULL_PATHS.FINES}>{t("sidebar.fines")}</Link>,
-    },
-    {
-      key: FULL_PATHS.DISPUTE,
-      icon: <ExclamationCircleOutlined />,
-      label: <Link to={FULL_PATHS.DISPUTE}>{t("sidebar.dispute")}</Link>,
-    },
-    { 
-      key: FULL_PATHS.HRMS, 
-      icon: <TeamOutlined />, 
-      label: <Link to={FULL_PATHS.HRMS}>{t("sidebar.hrms")}</Link> 
-    },
-    { 
-      key: FULL_PATHS.TOWING, 
-      icon: <CarOutlined />, 
-      label: <Link to={FULL_PATHS.TOWING}>{t("sidebar.towing")}</Link> 
-    },
-    { 
-      key: FULL_PATHS.TEAM, 
-      icon: <UsergroupAddOutlined />, 
-      label: <Link to={FULL_PATHS.TEAM}>{t("sidebar.team")}</Link> 
-    },
+    { key: FULL_PATHS.HRMS, icon: <TeamOutlined />, label: t("sidebar.hrms") },
+    { key: FULL_PATHS.TOWING, icon: <CarOutlined />, label: t("sidebar.towing") },
+    { key: FULL_PATHS.TEAM, icon: <UsergroupAddOutlined />, label: t("sidebar.team") },
     {
       key: FULL_PATHS.ANALYTICS,
       icon: <BarChartOutlined />,
       label: <Link to={FULL_PATHS.ANALYTICS}>{t("sidebar.analytics")}</Link>,
     },
-    { 
-      key: FULL_PATHS.ZONELINKING, 
-      icon: <LinkOutlined />, 
+    {
+      key: FULL_PATHS.ZONELINKING,
+      icon: <LinkOutlined />,
       label: <Link to={FULL_PATHS.ZONELINKING}>{t("sidebar.zonelinking")}</Link>,
     },
-    { 
-      key: FULL_PATHS.SHIFTPLANNING, 
+    {
+      key: FULL_PATHS.SHIFTPLANNING,
       icon: <AuditOutlined />,
       label: <Link to={FULL_PATHS.SHIFTPLANNING}>{t("sidebar.shiftplanning")}</Link>,
     },
@@ -112,7 +97,18 @@ const AppSidebar: React.FC = () => {
   const getSelectedKeys = () => {
     const path = location.pathname;
     let bestMatch = "";
-    for (const item of menuItems.flatMap((i) => i.children || i)) {
+    const flattenItems = (items: any[]): any[] => {
+      let flat: any[] = [];
+      items.forEach((item) => {
+        if (item.children) {
+          flat = flat.concat(flattenItems(item.children));
+        } else {
+          flat.push(item);
+        }
+      });
+      return flat;
+    };
+    for (const item of flattenItems(menuItems as any[])) {
       if (path.startsWith(item.key) && item.key.length > bestMatch.length) {
         bestMatch = item.key;
       }
@@ -120,12 +116,23 @@ const AppSidebar: React.FC = () => {
     return [bestMatch || FULL_PATHS.DASHBOARD];
   };
 
-  console.log(getSelectedKeys(), "getSelectedKeys 99");
-
   const getDefaultOpenKeys = () => {
     const path = location.pathname;
-    const parent = menuItems.find((item) => item.children?.some((child) => path.startsWith(child.key)));
-    return parent ? [parent.key] : [];
+    const openKeys: string[] = [];
+
+    const findParents = (items: any[], currentPath: string) => {
+      for (const item of items) {
+        if (item.children) {
+          if (item.children.some((child: any) => currentPath.startsWith(child.key))) {
+            openKeys.push(item.key);
+            findParents(item.children, currentPath);
+          }
+        }
+      }
+    };
+
+    findParents(menuItems as any[], path);
+    return openKeys;
   };
 
   return (

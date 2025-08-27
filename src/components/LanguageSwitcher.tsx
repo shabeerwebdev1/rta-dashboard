@@ -18,7 +18,7 @@ const LanguageSwitcher = () => {
 
   return (
     <Dropdown menu={{ items }} placement="bottomRight">
-      <Button type="text" icon={<GlobalOutlined />} />
+      <Button type="text" icon={<GlobalOutlined />} className="header-action-btn" />
     </Dropdown>
   );
 };
