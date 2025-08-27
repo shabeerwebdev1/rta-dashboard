@@ -12,7 +12,7 @@ const baseQuery = fetchBaseQuery({
     }
     return headers;
   },
-  paramsSerializer: serializeParams, // Use the custom serializer
+  paramsSerializer: serializeParams,
 });
 
 const transformListResponse = (response: any) => ({
@@ -32,13 +32,40 @@ export const dynamicApi = createApi({
     "PermitSearch",
     "FineSearch",
     "ParkonicSearch",
+    "VLookups",
   ],
   endpoints: (builder) => ({
+    getLookups: builder.query({
+      query: (ids: number[]) => ({
+        url: "/api/VLookups",
+        method: "POST",
+        body: ids, // 👈 must be an array like [100] or [100,200,300]
+      }),
+      transformResponse: (response: any) => {
+        if (!response?.data) return [];
+
+        return response.data.flatMap(
+          (catg: any) =>
+            catg.ddItems?.map((item: any) => ({
+              categoryId: catg.ddiCatgId,
+              categoryName: catg.ddiCatgName,
+              value: item.ddiCode,
+              labelEn: item.ddiDispText_En,
+              labelAr: item.ddiDispText_Ar,
+            })) || [],
+        );
+      },
+      providesTags: ["VLookups"],
+    }),
+
     // Whitelist Plates
     getPlates: builder.query({
       query: (params) => ({ url: "/api/WhitelistPlate", params }),
       transformResponse: transformListResponse,
       providesTags: ["WhitelistPlate"],
+    }),
+    getPlateById: builder.query({
+      query: (id) => `/api/WhitelistPlate/${id}`,
     }),
     addPlate: builder.mutation({
       query: (body) => ({ url: "/api/WhitelistPlate", method: "POST", body }),
@@ -59,6 +86,9 @@ export const dynamicApi = createApi({
       transformResponse: transformListResponse,
       providesTags: ["WhitelistTradeLicense"],
     }),
+    getTradeLicenseById: builder.query({
+      query: (id) => `/api/WhitelistTradeLicense/${id}`,
+    }),
     addTradeLicense: builder.mutation({
       query: (body) => ({ url: "/api/WhitelistTradeLicense", method: "POST", body }),
       invalidatesTags: ["WhitelistTradeLicense"],
@@ -77,6 +107,9 @@ export const dynamicApi = createApi({
       query: (params) => ({ url: "/api/Pledge", params }),
       transformResponse: transformListResponse,
       providesTags: ["Pledge"],
+    }),
+    getPledgeById: builder.query({
+      query: (id) => `/api/Pledge/${id}`,
     }),
     addPledge: builder.mutation({
       query: (body) => ({ url: "/api/Pledge", method: "POST", body }),
@@ -97,6 +130,9 @@ export const dynamicApi = createApi({
       transformResponse: transformListResponse,
       providesTags: ["InspectionObstacle"],
     }),
+    getInspectionObstacleById: builder.query({
+      query: (id) => `/api/InspectionObstacle/${id}`,
+    }),
     addInspectionObstacle: builder.mutation({
       query: (body) => ({ url: "/api/InspectionObstacle", method: "POST", body }),
       invalidatesTags: ["InspectionObstacle"],
@@ -112,6 +148,9 @@ export const dynamicApi = createApi({
       transformResponse: transformListResponse,
       providesTags: ["Dispute"],
     }),
+    getDisputeById: builder.query({
+      query: (id) => `/api/Dispute/GetById/${id}`,
+    }),
     addDispute: builder.mutation({
       query: (body) => ({ url: "/api/Dispute/Create", method: "POST", body }),
       invalidatesTags: ["Dispute"],
@@ -121,7 +160,7 @@ export const dynamicApi = createApi({
       invalidatesTags: ["Dispute"],
     }),
 
-    // Search Endpoints (Note: these might not support the new filtering yet, depends on backend)
+    // Search Endpoints
     searchPermits: builder.query({
       query: (params) => ({ url: "/api/Permit/search", params }),
       providesTags: ["PermitSearch"],
@@ -130,8 +169,12 @@ export const dynamicApi = createApi({
     searchFines: builder.query({
       query: (params) => ({ url: "/api/FineManagement/search", params }),
       providesTags: ["FineSearch"],
-      transformResponse: transformListResponse,
+      transformResponse: (response: any) => {
+        const data = response?.data;
+        return Array.isArray(data) ? data : [data];
+      },
     }),
+
     searchParkonics: builder.query({
       query: (params) => ({ url: "/api/Parkonic", params }),
       providesTags: ["ParkonicSearch"],
@@ -148,25 +191,31 @@ export const dynamicApi = createApi({
 
 export const {
   useGetPlatesQuery,
+  useLazyGetPlateByIdQuery,
   useAddPlateMutation,
   useUpdatePlateMutation,
   useDeletePlateMutation,
   useGetTradeLicensesQuery,
+  useLazyGetTradeLicenseByIdQuery,
   useAddTradeLicenseMutation,
   useUpdateTradeLicenseMutation,
   useDeleteTradeLicenseMutation,
   useGetPledgesQuery,
+  useLazyGetPledgeByIdQuery,
   useAddPledgeMutation,
   useUpdatePledgeMutation,
   useDeletePledgeMutation,
   useGetInspectionObstaclesQuery,
+  useLazyGetInspectionObstacleByIdQuery,
   useAddInspectionObstacleMutation,
   useUpdateInspectionObstacleMutation,
   useGetDisputesQuery,
+  useLazyGetDisputeByIdQuery,
   useAddDisputeMutation,
   useUpdateDisputeMutation,
   useSearchPermitsQuery,
-  useSearchFinesQuery,
+  useLazySearchFinesQuery,
   useSearchParkonicsQuery,
   useReviewParkonicMutation,
+  useLazyGetLookupsQuery,
 } = dynamicApi;

@@ -1,5 +1,46 @@
+import React from "react";
+import { Button } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
 import { SearchOutlined, CheckSquareOutlined } from "@ant-design/icons";
+import { useUpdateInspectionObstacleMutation } from "../../services/rtkApiFactory";
+import { useAppNotification } from "../../utils/notificationManager";
+import { useTranslation } from "react-i18next";
+
+const RemoveObstacleButton = ({
+  record,
+  onClose,
+  refetch,
+}: {
+  record: any;
+  onClose: () => void;
+  refetch: () => void;
+}) => {
+  const { t } = useTranslation();
+  const notification = useAppNotification();
+  const [updateObstacle, { isLoading: isUpdating }] = useUpdateInspectionObstacleMutation();
+
+  const handleRemove = async () => {
+    try {
+      await updateObstacle({ id: record.id, status: 1 }).unwrap();
+      notification.success(null, t("messages.updateSuccess", { entity: t("entity.inspectionObstacle") }));
+      refetch();
+      onClose();
+    } catch (err) {
+      notification.error(err as any, "Operation Failed");
+    }
+  };
+
+  if (record.status === 1 || record.status === "Removed") return null;
+
+  return (
+    <div style={{ marginTop: 16, textAlign: "right" }}>
+      <Button icon={<DeleteOutlined />} onClick={handleRemove} loading={isUpdating} danger>
+        {t("common.remove obstacle")}
+      </Button>
+    </div>
+  );
+};
 
 export const inspectionObstacleConfig: PageConfig = {
   key: "inspection-obstacles",
@@ -13,7 +54,7 @@ export const inspectionObstacleConfig: PageConfig = {
     delete: "",
   },
   searchConfig: {
-    globalSearchKeys: ["obstacleNumber", "zone", "area", "reportedBy"],
+    globalSearchKeys: ["zone", "area"],
     columnFilterKeys: ["sourceOfObstacle", "status"],
     dateRangeKey: "reportedAt",
   },
@@ -22,71 +63,59 @@ export const inspectionObstacleConfig: PageConfig = {
     {
       title: "Removed Obstacles",
       icon: <CheckSquareOutlined />,
-      value: (data) => data.filter((d) => d.status?.toLowerCase() === "removed").length,
+      value: (data) => data.filter((d) => String(d.status ?? "").toLowerCase() === "removed").length,
       color: "#52c41a",
     },
   ],
   tableConfig: {
     columns: [
-      { key: "obstacleNumber", title: "form.obstacleNumber", type: "string", sortable: true },
-      { key: "zone", title: "form.zone", type: "string", sortable: true },
-      { key: "area", title: "form.area", type: "string", sortable: true },
-      { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "string", filterable: true },
-      { key: "reportedAt", title: "form.date", type: "date", sortable: true },
-      { key: "reportedBy", title: "form.reportedBy", type: "string" },
+      { key: "zone", title: "form.zone", type: "string", sortable: true, lookupCategory: 600 },
+      { key: "area", title: "form.area", type: "string", sortable: true, lookupCategory: 700 },
+      {
+        key: "sourceOfObstacle",
+        title: "form.sourceOfObstacle",
+        type: "string",
+        filterable: true,
+        lookupCategory: 800,
+      },
       { key: "status", title: "form.status", type: "tag", filterable: true },
     ],
     viewRecord: true,
     showEdit: false,
+    drawerConfig: {
+      sections: [
+        {
+          type: "descriptions",
+          fields: ["zone", "area", "sourceOfObstacle", "closestPaymentDevice", "comments", "status"],
+        },
+        {
+          type: "images",
+          title: "form.photo",
+          imageSourceKey: "photoPath",
+        },
+        {
+          type: "custom",
+          render: (record, onClose, refetch) => (
+            <RemoveObstacleButton record={record} onClose={onClose} refetch={refetch} />
+          ),
+        },
+      ],
+    },
   },
   formConfig: {
     modalWidth: "720px",
     fields: [
-      {
-        name: "ObstacleNumber",
-        label: "form.obstacleNumber",
-        type: "text",
-        required: true,
-        span: 12,
-      },
-      {
-        name: "Zone",
-        label: "form.zone",
-        type: "select",
-        required: true,
-        span: 12,
-        options: ["North", "South", "East", "West"],
-      },
-      {
-        name: "Area",
-        label: "form.area",
-        type: "select",
-        required: true,
-        span: 12,
-        options: ["Residential", "Commercial", "Industrial"],
-      },
+      { name: "Zone", label: "form.zone", type: "select", required: true, span: 12, lookupCategory: 600 },
+      { name: "Area", label: "form.area", type: "select", required: true, span: 12, lookupCategory: 700 },
       {
         name: "SourceOfObstacle",
         label: "form.sourceOfObstacle",
         type: "select",
         required: true,
         span: 12,
-        options: ["Construction", "Parked Vehicle", "Natural Obstacle", "Road Work"],
+        lookupCategory: 800,
       },
-      {
-        name: "ClosestPaymentDevice",
-        label: "form.closestPaymentDevice",
-        type: "text",
-        required: true,
-        span: 12,
-      },
-      {
-        name: "ReportedBy",
-        label: "form.reportedBy",
-        type: "text",
-        required: true,
-        span: 12,
-      },
+      { name: "ClosestPaymentDevice", label: "form.closestPaymentDevice", type: "text", required: true, span: 12 },
       {
         name: "Photo",
         label: "form.photo",
@@ -96,13 +125,7 @@ export const inspectionObstacleConfig: PageConfig = {
         fileCategory: "Obstacles",
         responseKey: "photoPath",
       },
-      {
-        name: "Comments",
-        label: "form.comments",
-        type: "textarea",
-        required: false,
-        span: 24,
-      },
+      { name: "Comments", label: "form.comments", type: "textarea", required: false, span: 24 },
     ],
   },
 };

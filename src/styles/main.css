@@ -3,7 +3,7 @@
 .dynamic-drawer .ant-drawer-content {
   display: flex;
   flex-direction: column;
-  max-height: 75vh;
+  max-height: 85vh;
 }
 
 .dynamic-modal .ant-modal-body,
@@ -11,6 +11,12 @@
   overflow-y: auto;
   overflow-x: hidden; /* fix later */
   flex-grow: 1;
+}
+
+.dynamic-drawer .ant-drawer-content-wrapper {
+  width: 40vw !important;
+  max-width: 600px !important;
+  min-width: 450px !important;
 }
 
 /* TABLE STYLES */
@@ -55,6 +61,11 @@ html[lang="ar"] .ant-pagination-total-text {
   border-bottom: 1px solid var(--ant-color-border-secondary);
 }
 
+.header-action-btn {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+}
+
 /* LAYOUT STYLES */
 .main-content {
   margin: 0;
@@ -77,7 +88,7 @@ html[lang="ar"] .ant-pagination-total-text {
 }
 
 .sidebar-logo-container {
-  height: 64px;
+  height: 92px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -103,6 +114,74 @@ html[lang="ar"] .ant-pagination-total-text {
 .ant-menu-vertical,
 .ant-menu-vertical-left {
   border-right: 0;
+}
+
+/* Dashboard Stats Cards */
+.dashboard-stat-card .ant-card-body {
+  display: flex;
+  flex-direction: column;
+  padding: 10px !important;
+  border-radius: 12px;
+  position: relative;
+}
+
+.dashboard-stat-card {
+  border-left: 6px solid;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease-in-out;
+}
+
+.dashboard-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Avatar in top right */
+.dashboard-stat-card .ant-avatar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+/* Inline Statistic */
+.inline-statistic {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* margin-bottom: 12px; */
+}
+
+.inline-statistic .ant-statistic-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6c757d;
+  margin-right: 8px;
+}
+
+.inline-statistic .ant-statistic-content {
+  font-size: 24px;
+  font-weight: 600;
+  color: #141414;
+}
+
+/* Sub statistics (row items) */
+.sub-statistic .ant-statistic-title {
+  font-size: 13px;
+  color: #6c757d;
+}
+.sub-statistic .ant-statistic-content {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .inline-statistic .ant-statistic-content {
+    font-size: 20px;
+  }
+  .sub-statistic .ant-statistic-content {
+    font-size: 16px;
+  }
 }
 
 /* styles/global.css or in your main CSS file */

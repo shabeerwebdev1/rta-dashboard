@@ -19,6 +19,7 @@ export interface FormField {
   validationType?: "plateNumber" | "alphanumeric_hyphen_uppercase" | "arabic";
   disablePastDates?: boolean;
   showLabel?: boolean;
+  lookupCategory?: number;
 }
 
 export interface FormConfig {
@@ -36,6 +37,18 @@ export interface TableColumn {
   filterable?: boolean;
   sortable?: boolean;
   render?: (text: any, record: any) => React.ReactNode;
+  lookupCategory?: number;
+}
+
+export type DrawerSectionType = "descriptions" | "images" | "map" | "custom";
+
+export interface DrawerSection {
+  type: DrawerSectionType;
+  title?: string;
+  fields?: string[];
+  imageSourceKey?: string;
+  mapSourceKeys?: { lat: string; lng: string };
+  render?: (record: any, onClose: () => void, refetch: () => void) => React.ReactNode;
 }
 
 export interface TableConfig {
@@ -43,6 +56,9 @@ export interface TableConfig {
   viewRecord: boolean;
   rowKey?: string;
   showEdit?: boolean;
+  drawerConfig?: {
+    sections: DrawerSection[];
+  };
 }
 
 export interface StatConfig {

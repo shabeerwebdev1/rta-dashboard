@@ -11,7 +11,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [themeName, setThemeName] = useState<ThemeName>("corporateRed");
+  const [themeName, setThemeName] = useState<ThemeName>("corporateIndigo");
 
   const value = useMemo(() => ({ themeName, setThemeName }), [themeName]);
 

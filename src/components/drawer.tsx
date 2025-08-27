@@ -1,11 +1,12 @@
-import React from "react";
-import { Drawer, Descriptions, Tag, Typography, Badge, Image, Empty, Space, Button } from "antd";
+import React, { useState, useEffect, useMemo } from "react";
+import { Drawer, Descriptions, Tag, Typography, Button, Space, Image, Empty, Spin } from "antd";
 import { useTranslation } from "react-i18next";
 import { ShareAltOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import type { PageConfig } from "../types/config";
-import { STATUS_COLORS } from "../constants/ui";
 import { getFileUrl } from "../services/fileApi";
+import { useLazyGetLookupsQuery } from "../services/rtkApiFactory";
+import { STATUS_COLORS } from "../constants/ui";
 
 interface DynamicViewDrawerProps {
   open: boolean;
@@ -13,35 +14,93 @@ interface DynamicViewDrawerProps {
   record: Record<string, unknown> | null;
   config: PageConfig;
   onShare: () => void;
+  refetch?: () => void;
 }
 
-const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, record, config, onShare }) => {
-  const { t } = useTranslation();
-  if (!record) return null;
+const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({
+  open,
+  onClose,
+  record,
+  config,
+  onShare,
+  refetch = () => {},
+}) => {
+  const { t, i18n } = useTranslation();
+  const [lookupOptions, setLookupOptions] = useState<any[]>([]);
+  const [isLoadingLookups, setIsLoadingLookups] = useState(false);
+  const [triggerGetLookups] = useLazyGetLookupsQuery();
 
-  const tableKeysLower = new Set(config.tableConfig.columns.map((c) => c.key.toLowerCase()));
+  const allFields = useMemo(() => {
+    const tableColsMap = new Map(config.tableConfig.columns.map((col) => [col.key, col]));
+    config.formConfig.fields.forEach((field) => {
+      if (!tableColsMap.has(field.name)) {
+        tableColsMap.set(field.name, {
+          key: field.name,
+          title: field.label,
+          type: "custom",
+          lookupCategory: field.lookupCategory,
+        });
+      }
+    });
+    return Array.from(tableColsMap.values());
+  }, [config]);
 
-  const additionalFormFields = config.formConfig.fields
-    .filter((ff) => !tableKeysLower.has(ff.name.toLowerCase()) && ff.type !== "hidden")
-    .map((ff) => ({
-      key: ff.name.charAt(0).toLowerCase() + ff.name.slice(1),
-      title: ff.label,
-      type: ff.type,
-    }));
+  useEffect(() => {
+    if (open && record) {
+      const lookupCategories = [...new Set(allFields.map((f) => f.lookupCategory).filter(Boolean))];
+      if (lookupCategories.length > 0) {
+        fetchLookupData(lookupCategories as number[]);
+      }
+    }
+  }, [open, record, allFields]);
 
-  const displayFields = [...config.tableConfig.columns, ...additionalFormFields];
+  const fetchLookupData = async (categoryIds: number[]) => {
+    setIsLoadingLookups(true);
+    try {
+      const result = await triggerGetLookups(categoryIds).unwrap();
+      setLookupOptions(result);
+    } catch (error) {
+      console.error("Failed to fetch lookup data:", error);
+    } finally {
+      setIsLoadingLookups(false);
+    }
+  };
 
-  const fileField = config.formConfig.fields.find((f) => f.type === "file");
-  const fileDataKey = fileField
-    ? fileField.responseKey || fileField.name.charAt(0).toLowerCase() + fileField.name.slice(1)
-    : null;
-  const imageNames = fileDataKey && record[fileDataKey] ? String(record[fileDataKey]).split(";").filter(Boolean) : [];
+  const getDisplayValue = (fieldKey: string, value: any) => {
+    if (value === null || value === undefined || value === "") return t("common.noData");
+
+    const field = allFields.find((f) => f.key === fieldKey);
+    if (!field) return String(value);
+
+    if (field.lookupCategory && lookupOptions.length > 0) {
+      const options = lookupOptions.filter((opt) => opt.categoryId === field.lookupCategory);
+      const option = options.find((opt) => opt.value === value);
+      if (option) return i18n.language === "ar" ? option.labelAr : option.labelEn;
+    }
+
+    if (typeof value === "boolean") return value ? t("common.true") : t("common.false");
+
+    switch (field.type) {
+      case "date":
+        return dayjs(value as string).isValid() ? dayjs(value as string).format("DD MMM YYYY, h:mm A") : String(value);
+      case "tag":
+        const statusKey = String(value).toLowerCase();
+        return (
+          <Tag color={STATUS_COLORS[statusKey] || "default"}>
+            {t(`status.${statusKey}`, { defaultValue: String(value) })}
+          </Tag>
+        );
+      default:
+        return String(value);
+    }
+  };
+
+  const drawerSections = config.tableConfig.drawerConfig?.sections || [];
 
   return (
     <Drawer
       open={open}
       onClose={onClose}
-      width={500}
       title={t("page.viewTitle", { entity: t(config.name.singular) })}
       className="dynamic-drawer"
       extra={
@@ -50,85 +109,60 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, re
         </Button>
       }
     >
-      <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
-        {displayFields.map((field) => {
-          if (field.type === "file") return null;
-          const text = record[field.key];
-
-          return (
-            <Descriptions.Item label={t(field.title)} key={field.key}>
-              {(() => {
-                if (text === null || text === undefined || text === "") return t("common.noData");
-                const statusKey = typeof text === "string" ? text.toLowerCase() : "";
-                const tagColor = STATUS_COLORS[statusKey as keyof typeof STATUS_COLORS] || "default";
-                switch (field.type) {
-                  case "date":
-                    return dayjs(text as string).isValid()
-                      ? dayjs(text as string).format("DD MMM YYYY, h:mm A")
-                      : String(text);
-
-                  case "tag":
-                    return <Tag color={tagColor}>{t(`status.${statusKey}`, statusKey)}</Tag>;
-
-                  case "badge":
-                    return <Badge color={String(text).toLowerCase()} text={String(text)} />;
-
-                  default:
-                    
-                    if (field.type === "select") {
-                      const formFieldConfig = config.formConfig.fields.find(
-                        (f) => f.name.toLowerCase() === field.key.toLowerCase(),
-                      );
-                      if (formFieldConfig?.options) {
-                        const selectedOption = formFieldConfig.options.find(
-                          (opt: any) => (typeof opt === "object" ? opt.value : opt) === text,
+      <Spin spinning={isLoadingLookups}>
+        {!record ? (
+          <Empty />
+        ) : (
+          drawerSections.map((section, index) => {
+            switch (section.type) {
+              case "descriptions":
+                return (
+                  <div key={index} style={{ marginBottom: 24 }}>
+                    {section.title && <Typography.Title level={5}>{t(section.title)}</Typography.Title>}
+                    <Descriptions bordered column={1} size="small">
+                      {section.fields?.map((fieldKey) => {
+                        const field = allFields.find((f) => f.key === fieldKey);
+                        return (
+                          <Descriptions.Item label={t(field?.title || fieldKey)} key={fieldKey}>
+                            {getDisplayValue(fieldKey, record[fieldKey])}
+                          </Descriptions.Item>
                         );
-                        if (selectedOption) {
-                          return typeof selectedOption === "object" ? selectedOption.label : selectedOption;
-                        }
-                      }
-                    }
-                    return String(text);
-                }
-              })()}
-            </Descriptions.Item>
-          );
-        })}
-      </Descriptions>
+                      })}
+                    </Descriptions>
+                  </div>
+                );
 
-      {fileField && (
-        <>
-          <Typography.Title level={5}>{t(fileField.label)}</Typography.Title>
-          {imageNames.length > 0 ? (
-            <Image.PreviewGroup>
-              <Space wrap>
-                {imageNames.map((name: string, index: number) => (
-                  <Image
-                    key={index}
-                    width={100}
-                    height={100}
-                    src={getFileUrl(name)}
-                    alt={name}
-                    style={{ objectFit: "cover", borderRadius: "4px" }}
-                  />
-                ))}
-              </Space>
-            </Image.PreviewGroup>
-          ) : (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
-          )}
-        </>
-      )}
+              case "images":
+                const imageNames =
+                  section.imageSourceKey && record[section.imageSourceKey]
+                    ? String(record[section.imageSourceKey]).split(";").filter(Boolean)
+                    : [];
+                return (
+                  <div key={index} style={{ marginBottom: 24 }}>
+                    {section.title && <Typography.Title level={5}>{t(section.title)}</Typography.Title>}
+                    {imageNames.length > 0 ? (
+                      <Image.PreviewGroup>
+                        <Space wrap>
+                          {imageNames.map((name, idx) => (
+                            <Image key={idx} width={100} height={100} src={getFileUrl(name)} alt={name} />
+                          ))}
+                        </Space>
+                      </Image.PreviewGroup>
+                    ) : (
+                      <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
+                    )}
+                  </div>
+                );
 
-      {/* {(record.location || (record.lat && record.lng)) && (
-        <div style={{ marginTop: 24 }}>
-          <Typography.Title level={5}>{t("common.location")}</Typography.Title>
-          <MapComponent
-            lat={(record.location as { lat: number })?.lat || (record.lat as number)}
-            lng={(record.location as { lng: number })?.lng || (record.lng as number)}
-          />
-        </div>
-      )} */}
+              case "custom":
+                return <div key={index}>{section.render && section.render(record, onClose, refetch)}</div>;
+
+              default:
+                return null;
+            }
+          })
+        )}
+      </Spin>
     </Drawer>
   );
 };
