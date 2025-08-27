@@ -55,7 +55,7 @@ const AppRoutes = () => {
 
           <Route path={PATHS.PLEDGES} element={<PledgesPage />} />
           <Route path={PATHS.INSPECTIONS} element={<InspectionObstaclesPage />} />
-          <Route path={PATHS.ZONELINKING} element={<UserZoneLinking />} />
+          <Route path={PATHS.INSPECTOR_MANAGEMENT} element={<UserZoneLinking />} />
           <Route path={PATHS.SHIFTPLANNING} element={<ShiftPlanning />} />
 
 

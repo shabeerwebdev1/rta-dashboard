@@ -11,16 +11,16 @@ const ThemeSwitcher = () => {
 
   const items: MenuProps["items"] = [
     {
-      key: "corporateRed",
-      label: "Red",
-      icon: <BgColorsOutlined style={{ color: "#ee3a41" }} />,
-      onClick: () => handleThemeChange("corporateRed"),
-    },
-    {
       key: "corporateIndigo",
       label: "Indigo",
       icon: <BgColorsOutlined style={{ color: "#171B7D" }} />,
       onClick: () => handleThemeChange("corporateIndigo"),
+    },
+    {
+      key: "corporateRed",
+      label: "Red",
+      icon: <BgColorsOutlined style={{ color: "#ee3a41" }} />,
+      onClick: () => handleThemeChange("corporateRed"),
     },
     {
       type: "divider",

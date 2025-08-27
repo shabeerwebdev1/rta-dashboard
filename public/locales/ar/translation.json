@@ -2,20 +2,26 @@
   "sidebar": {
     "dashboard": "لوحة التحكم",
     "whitelist": "إدارة القائمة البيضاء",
-    "inspections": "معوقات التفتيش",
+    "inspections": "التفتيش",
+    "inspectionsObstacles": "معوقات",
     "pledges": "إدارة التعهدات",
     "permits": "التصاريح",
     "fines": "إدارة الغرامات",
     "parkonic": "إدارة باركونيك",
     "hrms": "إدارة الموارد البشرية",
+    "leaveManagement": "إدارة الإجازات",
     "dispute": "إدارة النزاعات",
     "towing": "سحب المركبات",
-    "team": "تقييم الفريق",
     "analytics": "التحليلات والرؤى",
     "plates": "لوحات",
     "tradelicenses": "رخص تجارية",
     "generalsearch": "البحث العام",
-    "zonelinking": "قم بتوصيل المنطقة"
+    "inspectorManagement": "إدارة المشتري",
+    "supervisorManagement": "إدارة المشرفين",
+    "teamAssesment": "تقييم الفريق",
+    "traningAndEvaluation": "التدريب والتقييم",
+    "teamEvaluation": "تقييم الفريق",
+    "training": "التدريب"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -31,7 +37,8 @@
       "permits": "بحث التصاريح",
       "fines": "إدارة الغرامات",
       "parkonic": "إدارة باركونيك",
-       "zonelinking": "قم بتوصيل المنطق"
+      "inspectorManagement":"إدارة المشتري",
+      "supervisorManagement": "إدارة المشرفين"
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",

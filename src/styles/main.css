@@ -88,26 +88,33 @@ html[lang="ar"] .ant-pagination-total-text {
 }
 
 .sidebar-logo-container {
-  height: 92px;
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 8px;
-  background-color: #fff; /* Always white for RTA logo visibility */
-  border-bottom: 1px solid var(--ant-color-border-secondary);
+  align-items: center;
+  position: relative;
+  height: 80px;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(254, 254, 254, 0.2);
 }
 
-.sidebar-logo {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  transition: all 0.2s;
-  padding: 0 16px;
+.logo-wrapper {
+  position: absolute;
+  opacity: 0;
+  margin-top: 10px;
+  transform: scale(0.95) rotate(-1deg);
+  transition:
+    opacity 0.6s ease-in,
+    transform 0.6s ease-in;
 }
 
-.sidebar-logo.collapsed {
-  padding: 0;
-  max-width: 40px;
+.logo-wrapper.visible {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.logo-wrapper.hidden {
+  opacity: 0;
+  transform: scale(0.95) rotate(1deg);
 }
 
 .ant-menu-inline,

@@ -12,7 +12,8 @@ export const PATHS = {
   PARKONIC: "parkonic",
   DISPUTE: "dispute",
   GENERAL: "general",
-  ZONELINKING: "UserZoneLinking",
+  INSPECTOR_MANAGEMENT: "inspector-management",
+  SUPERVISROR_MANGEMENT: "supervisor-management",
   SHIFTPLANNING: "ShiftPlanning",
 };
 
@@ -28,13 +29,17 @@ export const FULL_PATHS = {
   WHITELIST_TRADELICENSES: "/whitelist/tradelicenses",
   PLEDGES: "/pledges",
   INSPECTIONS: "/inspections",
+  INSPECTIONS_OBSTACLES: "/inspections-obstacles",
   PARKONIC: "/parkonic",
   FINES: "/fines",
   HRMS: "/hrms",
   DISPUTE: "/dispute",
+  SUPERVISROR_MANGEMENT: "/supervisor-management",
+  LEAVE_MANGEMENT: "/leave-management",
   TOWING: "/towing",
   TEAM: "/team",
+  TEAM_ASSESSMENT: "/team-assessment",
   ANALYTICS: "/analytics",
-  ZONELINKING: "/UserZoneLinking",
+  INSPECTOR_MANAGEMENT: "/inspector-management",
   SHIFTPLANNING: "/ShiftPlanning",
 };

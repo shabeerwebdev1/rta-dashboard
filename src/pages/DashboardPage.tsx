@@ -589,10 +589,9 @@ const SupervisorViewPage: React.FC = () => {
                     className="sub-statistic"
                     title="Checked In"
                     value={10}
-                    valueStyle={{ color: "#52c41a" }}
                   />
-                  <Statistic className="sub-statistic" title="Missing" value={8} valueStyle={{ color: "#ff4d4f" }} />
-                  <Statistic className="sub-statistic" title="On Leave" value={2} valueStyle={{ color: "#faad14" }} />
+                  <Statistic className="sub-statistic" title="Missing" value={8} />
+                  <Statistic className="sub-statistic" title="On Leave" value={2} />
                 </Space>
                 <Avatar size={56} icon={<UserOutlined />} style={{ backgroundColor: "#e6f7ff", color: "#1890ff" }} />
               </Card>

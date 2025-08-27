@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Layout, Menu, MenuProps } from "antd";
+import { Image, Layout, Menu, MenuProps } from "antd";
 import {
   CarOutlined,
   FileTextOutlined,
@@ -48,15 +48,28 @@ const AppSidebar: React.FC = () => {
           label: <Link to={FULL_PATHS.WHITELIST_PLATES}>{t("sidebar.whitelist")}</Link>,
         },
         {
-          key: FULL_PATHS.INSPECTIONS,
+          key: FULL_PATHS.INSPECTIONS_OBSTACLES,
           icon: <SearchOutlined />,
-          label: <Link to={FULL_PATHS.INSPECTIONS}>{t("sidebar.inspections")}</Link>,
+          label: <Link to={FULL_PATHS.INSPECTIONS_OBSTACLES}>{t("sidebar.inspectionsObstacles")}</Link>,
         },
         {
           key: FULL_PATHS.PLEDGES,
           icon: <AuditOutlined />,
           label: <Link to={FULL_PATHS.PLEDGES}>{t("sidebar.pledges")}</Link>,
         },
+        { key: FULL_PATHS.LEAVE_MANGEMENT, icon: <TeamOutlined />, label: t("sidebar.leaveManagement") },
+        {
+          key: FULL_PATHS.SUPERVISROR_MANGEMENT,
+          icon: <ExclamationCircleOutlined />,
+          label: <Link to={FULL_PATHS.SUPERVISROR_MANGEMENT}>{t("sidebar.supervisorManagement")}</Link>,
+        },
+      ],
+    },
+    {
+      key: FULL_PATHS.INSPECTIONS,
+      icon: <SearchOutlined />,
+      label: <Link to={FULL_PATHS.INSPECTIONS}>{t("sidebar.inspections")}</Link>,
+      children: [
         {
           key: FULL_PATHS.PARKONIC,
           icon: <PushpinOutlined />,
@@ -67,25 +80,32 @@ const AppSidebar: React.FC = () => {
           icon: <DollarOutlined />,
           label: <Link to={FULL_PATHS.FINES}>{t("sidebar.fines")}</Link>,
         },
-        {
-          key: FULL_PATHS.DISPUTE,
-          icon: <ExclamationCircleOutlined />,
-          label: <Link to={FULL_PATHS.DISPUTE}>{t("sidebar.dispute")}</Link>,
-        },
       ],
     },
-    { key: FULL_PATHS.HRMS, icon: <TeamOutlined />, label: t("sidebar.hrms") },
+    {
+      key: FULL_PATHS.DISPUTE,
+      icon: <ExclamationCircleOutlined />,
+      label: <Link to={FULL_PATHS.DISPUTE}>{t("sidebar.dispute")}</Link>,
+    },
     { key: FULL_PATHS.TOWING, icon: <CarOutlined />, label: t("sidebar.towing") },
-    { key: FULL_PATHS.TEAM, icon: <UsergroupAddOutlined />, label: t("sidebar.team") },
+    {
+      key: FULL_PATHS.TEAM_ASSESSMENT,
+      icon: <UsergroupAddOutlined />,
+      label: t("sidebar.traningAndEvaluation"),
+      children: [
+        { key: FULL_PATHS.TEAM_ASSESSMENT, icon: <UsergroupAddOutlined />, label: t("sidebar.teamEvaluation") },
+        { key: FULL_PATHS.TEAM_ASSESSMENT, icon: <UsergroupAddOutlined />, label: t("sidebar.training") },
+      ],
+    },
     {
       key: FULL_PATHS.ANALYTICS,
       icon: <BarChartOutlined />,
       label: <Link to={FULL_PATHS.ANALYTICS}>{t("sidebar.analytics")}</Link>,
     },
     {
-      key: FULL_PATHS.ZONELINKING,
+      key: FULL_PATHS.INSPECTOR_MANAGEMENT,
       icon: <LinkOutlined />,
-      label: <Link to={FULL_PATHS.ZONELINKING}>{t("sidebar.zonelinking")}</Link>,
+      label: <Link to={FULL_PATHS.INSPECTOR_MANAGEMENT}>{t("sidebar.inspectorManagement")}</Link>,
     },
     {
       key: FULL_PATHS.SHIFTPLANNING,
@@ -138,23 +158,39 @@ const AppSidebar: React.FC = () => {
   return (
     <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} width={250} className="app-sidebar">
       <div className="sidebar-logo-container">
-        <img
-          src={
-            collapsed
-              ? "https://images.seeklogo.com/logo-png/4/2/dubai-roads-transport-authority-logo-png_seeklogo-44110.png"
-              : "https://upload.wikimedia.org/wikipedia/en/d/dd/RTA_Dubai_logo.png"
-          }
-          alt="RTA Logo"
-          className={`sidebar-logo ${collapsed ? "collapsed" : ""}`}
-        />
+        <div className={`logo-wrapper ${collapsed ? "hidden" : "visible"}`}>
+          <Image
+            src="/images/rta_logo_full.png"
+            alt="Full Logo"
+            preview={false}
+            style={{
+              height: 58,
+              width: "auto",
+              objectFit: "contain",
+            }}
+          />
+        </div>
+
+        <div className={`logo-wrapper ${collapsed ? "visible" : "hidden"}`}>
+          <Image
+            src="/images/rta_logo_mini.png"
+            alt="Mini Logo"
+            preview={false}
+            style={{
+              height: 72,
+              width: "auto",
+              objectFit: "contain",
+            }}
+          />
+        </div>
       </div>
+
       <Menu
-        theme="light"
         mode="inline"
         selectedKeys={getSelectedKeys()}
         defaultOpenKeys={getDefaultOpenKeys()}
         items={menuItems}
-        style={{ height: "calc(100% - 64px)", borderRight: 0 }}
+        style={{ height: "calc(100% - 80px)", overflowY: "auto", borderRight: 0 }}
       />
     </Sider>
   );

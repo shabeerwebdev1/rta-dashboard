@@ -49,6 +49,11 @@ const corporateIndigoTheme: ThemeConfig = {
       itemHoverColor: indigoPalette.offWhite,
       itemSelectedColor: indigoPalette.offWhite,
       itemSelectedBg: indigoPalette.deepIndigo,
+      subMenuItemBg: indigoPalette.offBlack,
+      subMenuItemSelectedColor: indigoPalette.offWhite,
+      popupBg: indigoPalette.offBlack,
+      darkItemColor: indigoPalette.offBlack,
+      darkItemHoverColor: indigoPalette.deepIndigo,
     },
     Button: { primaryShadow: "none" },
     Modal: {
