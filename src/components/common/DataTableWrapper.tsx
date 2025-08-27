@@ -221,7 +221,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
         rowSelection={rowSelection}
         size={tableSize}
         // Add controlled sorting
-        sortDirections={['ascend', 'descend']}
+        sortDirections={["ascend", "descend"]}
         {...(state.sortBy && {
           sortOrder: state.sortOrder,
           sortColumn: state.sortBy,

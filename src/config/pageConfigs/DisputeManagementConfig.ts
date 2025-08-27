@@ -15,7 +15,7 @@ export const disputeManagementConfig: PageConfig = {
   searchConfig: {
     globalSearchKeys: ["fine_Number", "crM_Ref", "phone", "email"],
     columnFilterKeys: ["department", "payment_Type"],
-    dateRangeKey: "createdAt", 
+    dateRangeKey: "createdAt",
   },
   statsConfig: [
     {
@@ -52,8 +52,7 @@ export const disputeManagementConfig: PageConfig = {
       },
       { key: "phone", title: "form.phoneNumber", type: "string" },
       { key: "crM_Ref", title: "form.crmReference", type: "string", sortable: true },
-      {key: "fine_Number", title: "form.fineNumber", type: "string", sortable: true },
-      
+      { key: "fine_Number", title: "form.fineNumber", type: "string", sortable: true },
     ],
     viewRecord: true,
     showEdit: true,

@@ -89,7 +89,13 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     filterGroups.push(
       <Space key="search_group">
         <Text>{searchLabel}: </Text>
-        <Tag color="#ee3a41" key="search" closable onClose={() => onClearFilter("search")} style={{ userSelect: "none" }}>
+        <Tag
+          color="#ee3a41"
+          key="search"
+          closable
+          onClose={() => onClearFilter("search")}
+          style={{ userSelect: "none" }}
+        >
           <>{state.searchValue}</>
         </Tag>
       </Space>,
@@ -119,11 +125,11 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
         <Space key={key} size={[0, 8]} wrap>
           <Text style={{ marginRight: 10 }}>{groupLabel}: </Text>
           {values.map((value) => (
-            <Tag 
-              color="#ee3a41" 
-              style={{}} 
-              key={String(value)} 
-              closable 
+            <Tag
+              color="#ee3a41"
+              style={{}}
+              key={String(value)}
+              closable
               onClose={() => onClearFilter("column", key, value)}
             >
               {getFilterLabel(key, value)}

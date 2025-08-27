@@ -37,8 +37,16 @@ const WhitelistTradeLicensesPage: React.FC = () => {
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const config = pageConfigs[pageKey];
-  const { apiParams, handleTableChange, handlePaginationChange, setGlobalSearch, setDateRange, clearFilter, clearAll, state } =
-    useTableParams(config.searchConfig!);
+  const {
+    apiParams,
+    handleTableChange,
+    handlePaginationChange,
+    setGlobalSearch,
+    setDateRange,
+    clearFilter,
+    clearAll,
+    state,
+  } = useTableParams(config.searchConfig!);
   const [form] = Form.useForm();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -270,12 +278,20 @@ const WhitelistTradeLicensesPage: React.FC = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="tradeLicense_EN_Name" label={t("form.tradeLicense_EN_Name")} rules={[{ required: true }]}>
+              <Form.Item
+                name="tradeLicense_EN_Name"
+                label={t("form.tradeLicense_EN_Name")}
+                rules={[{ required: true }]}
+              >
                 <Input />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="tradeLicense_AR_Name" label={t("form.tradeLicense_AR_Name")} rules={[{ required: true }]}>
+              <Form.Item
+                name="tradeLicense_AR_Name"
+                label={t("form.tradeLicense_AR_Name")}
+                rules={[{ required: true }]}
+              >
                 <Input />
               </Form.Item>
             </Col>
@@ -286,7 +302,10 @@ const WhitelistTradeLicensesPage: React.FC = () => {
             </Col>
             <Col span={24}>
               <Form.Item name="dateRange" label={t("form.dateRange")} rules={[{ required: true }]}>
-                <DatePicker.RangePicker style={{ width: "100%" }} disabledDate={(d) => d && d < dayjs().startOf("day")} />
+                <DatePicker.RangePicker
+                  style={{ width: "100%" }}
+                  disabledDate={(d) => d && d < dayjs().startOf("day")}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>

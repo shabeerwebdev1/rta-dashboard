@@ -21,6 +21,7 @@ import {
   DownloadOutlined,
   AppstoreOutlined,
   UnorderedListOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
@@ -32,15 +33,15 @@ import {
   useGetInspectionObstaclesQuery,
   useAddInspectionObstacleMutation,
   useLazyGetLookupsQuery,
+  useUpdateInspectionObstacleMutation,
 } from "../services/rtkApiFactory";
 import { useUploadFilesMutation } from "../services/fileApi";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
-import DynamicViewDrawer from "../components/drawer";
 import { pageConfigs } from "../config/pageConfigs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
-import InspectionObstaclesViewDrawer from "../components/inspectionobstacle/InspectionObstaclesViewDrawer";
+import DynamicViewDrawer from "../components/drawer";
 
 const { Option } = Select;
 const pageKey = "inspection-obstacles";
@@ -86,14 +87,14 @@ const InspectionObstaclesPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
-  const { data, isLoading, isFetching } = useGetInspectionObstaclesQuery(apiParams, {
+  const { data, isLoading, isFetching, refetch } = useGetInspectionObstaclesQuery(apiParams, {
     refetchOnMountOrArgChange: true,
   });
   const [addObstacle, { isLoading: isAdding }] = useAddInspectionObstacleMutation();
+  const [updateObstacle, { isLoading: isUpdating }] = useUpdateInspectionObstacleMutation();
   const [uploadFiles, { isLoading: isUploading }] = useUploadFilesMutation();
   const [triggerGetLookups] = useLazyGetLookupsQuery();
 
-  // Fetch lookup data when language changes
   useEffect(() => {
     fetchLookupData();
   }, [i18n.language]);
@@ -111,7 +112,6 @@ const InspectionObstaclesPage: React.FC = () => {
     }
   };
 
-  // Options with labels
   const zoneOptions = useMemo(
     () =>
       filterOptionsByCategory(lookupOptions, 600).map((option) => ({
@@ -120,7 +120,6 @@ const InspectionObstaclesPage: React.FC = () => {
       })),
     [lookupOptions, i18n.language],
   );
-
   const areaOptions = useMemo(
     () =>
       filterOptionsByCategory(lookupOptions, 700).map((option) => ({
@@ -129,7 +128,6 @@ const InspectionObstaclesPage: React.FC = () => {
       })),
     [lookupOptions, i18n.language],
   );
-
   const sourceOptions = useMemo(
     () =>
       filterOptionsByCategory(lookupOptions, 800).map((option) => ({
@@ -164,39 +162,23 @@ const InspectionObstaclesPage: React.FC = () => {
   };
 
   const handleFormSubmit = async (values: any) => {
-    const { Photo } = values;
-    let finalPayload: Record<string, any> = {};
-
     try {
       let savedFileNames: string[] = [];
-
-      if (Photo && Photo.length > 0) {
+      if (values.Photo && values.Photo.length > 0) {
         const formData = new FormData();
         formData.append("Category", "Obstacles");
-
-        // Append all selected files
-        Photo.forEach((file: any) => {
-          if (file.originFileObj) {
-            formData.append("Files", file.originFileObj);
-          }
-        });
-
-        // Upload multiple files
+        values.Photo.forEach((file: any) => file.originFileObj && formData.append("Files", file.originFileObj));
         const uploadResult = await uploadFiles(formData).unwrap();
-
-        // Collect all saved file names returned from the server
         savedFileNames = (uploadResult as any[]).map((f) => f.savedAs);
       }
-
-      finalPayload = {
+      const finalPayload = {
         zone: values.Zone,
         area: values.Area,
         sourceOfObstacle: values.SourceOfObstacle,
         closestPaymentDevice: values.ClosestPaymentDevice,
         comments: values.Comments,
-        photoPath: savedFileNames.join(";"), // join with semicolon for drawer
+        photoPath: savedFileNames.join(";"),
       };
-
       const response = await addObstacle(finalPayload).unwrap();
       notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
       handleModalClose();
@@ -205,21 +187,8 @@ const InspectionObstaclesPage: React.FC = () => {
     }
   };
 
-  const statusLabels: Record<number, string> = {
-    0: t("status.reported"),
-    1: t("status.removed"),
-  };
-
-  // Map IDs to labels before showing in drawer
   const handleView = (record: any) => {
-    const mappedRecord = {
-      ...record,
-      zone: getLabelFromValue(record.zone, zoneOptions, i18n),
-      area: getLabelFromValue(record.area, areaOptions, i18n),
-      sourceOfObstacle: getLabelFromValue(record.sourceOfObstacle, sourceOptions, i18n),
-      status: statusLabels[record.status] || record.status,
-    };
-    setViewRecord(mappedRecord);
+    setViewRecord(record);
     setIsDrawerOpen(true);
   };
 
@@ -252,21 +221,26 @@ const InspectionObstaclesPage: React.FC = () => {
     [t, config.tableConfig.columns, i18n.language],
   );
 
-  // Enhanced table config with proper renderers
-  const enhancedTableConfig = useMemo(
-    () => ({
-      ...config.tableConfig,
-      columns: config.tableConfig.columns.map((column) => {
-        if (column.key === "zone") return { ...column, render: (v: any) => getLabelFromValue(v, zoneOptions, i18n) };
-        if (column.key === "area") return { ...column, render: (v: any) => getLabelFromValue(v, areaOptions, i18n) };
-        if (column.key === "sourceOfObstacle")
-          return { ...column, render: (v: any) => getLabelFromValue(v, sourceOptions, i18n) };
-        if (column.key === "status") return { ...column, render: (v: number) => statusLabels[v] || v };
-        return column;
-      }),
-    }),
-    [config.tableConfig, zoneOptions, areaOptions, sourceOptions, i18n, t],
-  );
+  const handleRemoveObstacle = async () => {
+    if (!viewRecord) return;
+    try {
+      const response = await updateObstacle({ id: viewRecord.id as number, status: 1 }).unwrap();
+      notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
+      refetch();
+      setIsDrawerOpen(false);
+    } catch (err) {
+      notification.error(err as any, "Operation Failed");
+    }
+  };
+
+  const drawerFooter =
+    viewRecord && (viewRecord.status === 0 || viewRecord.status === "Reported") ? (
+      <div style={{ textAlign: "right" }}>
+        <Button icon={<DeleteOutlined />} onClick={handleRemoveObstacle} loading={isUpdating} danger>
+          {t("common.remove obstacle")}
+        </Button>
+      </div>
+    ) : null;
 
   const actionMenuItems = (record: any) => [
     { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
@@ -331,7 +305,7 @@ const InspectionObstaclesPage: React.FC = () => {
       </Card>
 
       <DataTableWrapper
-        pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
+        pageConfig={config}
         data={data?.data || []}
         total={data?.total || 0}
         isLoading={isLoading || isFetching}
@@ -375,7 +349,7 @@ const InspectionObstaclesPage: React.FC = () => {
                 <Form.Item name="Zone" label={t("form.zone")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.zone")}
-                    options={zoneOptions.map((option) => ({ label: option.label, value: option.value }))}
+                    options={zoneOptions.map((o) => ({ label: o.label, value: o.value }))}
                   />
                 </Form.Item>
               </Col>
@@ -383,7 +357,7 @@ const InspectionObstaclesPage: React.FC = () => {
                 <Form.Item name="Area" label={t("form.area")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.area")}
-                    options={areaOptions.map((option) => ({ label: option.label, value: option.value }))}
+                    options={areaOptions.map((o) => ({ label: o.label, value: o.value }))}
                   />
                 </Form.Item>
               </Col>
@@ -391,7 +365,7 @@ const InspectionObstaclesPage: React.FC = () => {
                 <Form.Item name="SourceOfObstacle" label={t("form.sourceOfObstacle")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.sourceOfObstacle")}
-                    options={sourceOptions.map((option) => ({ label: option.label, value: option.value }))}
+                    options={sourceOptions.map((o) => ({ label: o.label, value: o.value }))}
                   />
                 </Form.Item>
               </Col>
@@ -415,7 +389,7 @@ const InspectionObstaclesPage: React.FC = () => {
                   <Upload listType="picture-card" beforeUpload={() => false} multiple={true} accept=".jpg,.jpeg">
                     <div>
                       <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>{t("form.UploadJPG/JPEG")}</div>
+                      <div style={{ marginTop: 8 }}>{t("form.Upload JPG/JPEG")}</div>
                     </div>
                   </Upload>
                 </Form.Item>
@@ -431,7 +405,7 @@ const InspectionObstaclesPage: React.FC = () => {
       </Modal>
 
       {viewRecord && (
-        <InspectionObstaclesViewDrawer
+        <DynamicViewDrawer
           open={isDrawerOpen}
           onClose={() => {
             setIsDrawerOpen(false);
@@ -440,10 +414,7 @@ const InspectionObstaclesPage: React.FC = () => {
           record={viewRecord}
           config={config}
           onShare={handleShare}
-          onStatusChange={() => {
-            // This will trigger a refetch of the data
-            // You might need to add a refetch function to your query hook
-          }}
+          refetch={refetch}
         />
       )}
     </Space>

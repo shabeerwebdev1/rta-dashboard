@@ -4,7 +4,6 @@ import {
   Card,
   Input,
   Button,
-  Dropdown,
   Modal,
   Form,
   Row,
@@ -34,16 +33,15 @@ import {
   useAddPledgeMutation,
   useDeletePledgeMutation,
   useLazyGetLookupsQuery,
-  useLazyGetPledgeByIdQuery, // 👈 Add this import
+  useLazyGetPledgeByIdQuery,
 } from "../services/rtkApiFactory";
 import { useUploadFilesMutation } from "../services/fileApi";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
-import DynamicViewDrawer from "../components/drawer";
 import { pageConfigs } from "../config/pageConfigs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
-import PledgesViewDrawer from "../components/pledge/PledgesViewDrawer";
+import DynamicViewDrawer from "../components/drawer";
 
 const { Option } = Select;
 const pageKey = "pledges";
@@ -52,8 +50,6 @@ const pageKey = "pledges";
 const getLabelFromValue = (value: number, options: any[], i18n: any) => {
   const option = options.find((opt) => opt.value === value);
   if (!option) return value;
-
-  // Use Arabic label if language is Arabic, otherwise English
   return i18n.language === "ar" ? option.labelAr : option.labelEn;
 };
 
@@ -63,7 +59,7 @@ const filterOptionsByCategory = (options: any[], categoryId: number) => {
 };
 
 const PledgesPage: React.FC = () => {
-  const { t, i18n } = useTranslation(); // 👈 Get i18n instance
+  const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
@@ -101,9 +97,8 @@ const PledgesPage: React.FC = () => {
   const [uploadFiles, { isLoading: isUploading }] = useUploadFilesMutation();
   const [triggerGetPledge, { data: singleRecordData, isSuccess: isSingleRecordSuccess }] = useLazyGetPledgeByIdQuery();
 
-  const [triggerGetLookups] = useLazyGetLookupsQuery(); // 👈 Add the lookup hook
+  const [triggerGetLookups] = useLazyGetLookupsQuery();
 
-  // Fetch lookup data when modal opens or language changes
   useEffect(() => {
     fetchLookupData();
   }, [i18n.language]);
@@ -111,7 +106,6 @@ const PledgesPage: React.FC = () => {
   const fetchLookupData = async () => {
     setIsLoadingLookups(true);
     try {
-      // Use category ID 900 for pledge types
       const result = await triggerGetLookups([900]).unwrap();
       setLookupOptions(result);
     } catch (error) {
@@ -122,7 +116,6 @@ const PledgesPage: React.FC = () => {
     }
   };
 
-  // Get pledge type options with proper labels based on current language
   const pledgeTypeOptions = useMemo(
     () =>
       filterOptionsByCategory(lookupOptions, 900).map((option) => ({
@@ -145,6 +138,7 @@ const PledgesPage: React.FC = () => {
       setIsDrawerOpen(true);
     }
   }, [isSingleRecordSuccess, singleRecordData]);
+
   useEffect(() => {
     setPageTitle(t(config.title));
   }, [setPageTitle, t, config.title, i18n.language]);
@@ -175,7 +169,7 @@ const PledgesPage: React.FC = () => {
   };
 
   const handleFormSubmit = async (values: any) => {
-    let payload: Record<string, any> = {
+    const payload: Record<string, any> = {
       PledgeNumber: values.pledgeNumber,
       PledgeType: values.pledgeType,
       TradeLicenseNumber: values.tradeLicenseNumber,
@@ -189,7 +183,6 @@ const PledgesPage: React.FC = () => {
         const formData = new FormData();
         formData.append("Category", "PledgeDocuments");
 
-        // Append all selected files
         values.document.forEach((file: any) => {
           if (file.originFileObj) {
             formData.append("Files", file.originFileObj);
@@ -197,11 +190,9 @@ const PledgesPage: React.FC = () => {
         });
 
         const uploadResult = await uploadFiles(formData).unwrap();
-
-        // Collect all uploaded file names
         const savedFileNames = (uploadResult as any[]).map((f) => f.savedAs);
 
-        payload.DocumentPath = savedFileNames.join(";"); // matches drawer parsing
+        payload.documentPath = savedFileNames.join(";");
         payload.DocumentUploaded = true;
       }
 
@@ -235,13 +226,10 @@ const PledgesPage: React.FC = () => {
     setIsDrawerOpen(true);
   };
 
-  const handleShare = (record: any) => {
-    // Create URL with record ID parameter
+  const handleShare = () => {
     const url = new URL(window.location.href);
-    url.searchParams.set("viewRecord", record.id);
-    const shareUrl = url.toString();
-
-    navigator.clipboard.writeText(shareUrl).then(
+    url.searchParams.set("viewRecord", viewRecord.id);
+    navigator.clipboard.writeText(url.toString()).then(
       () => notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!"),
       () => notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed"),
     );
@@ -267,23 +255,6 @@ const PledgesPage: React.FC = () => {
   const columnLabels = useMemo(
     () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
     [t, config.tableConfig.columns, i18n.language],
-  );
-
-  // Enhanced table config with render functions for dropdown values
-  const enhancedTableConfig = useMemo(
-    () => ({
-      ...config.tableConfig,
-      columns: config.tableConfig.columns.map((column) => {
-        if (column.key === "pledgeType") {
-          return {
-            ...column,
-            render: (value: any) => getLabelFromValue(value, pledgeTypeOptions, i18n),
-          };
-        }
-        return column;
-      }),
-    }),
-    [config.tableConfig, pledgeTypeOptions, i18n],
   );
 
   const actionMenuItems = (record: any) => [
@@ -349,7 +320,7 @@ const PledgesPage: React.FC = () => {
       </Card>
 
       <DataTableWrapper
-        pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
+        pageConfig={config}
         data={data?.data || []}
         total={data?.total || 0}
         isLoading={isLoading || isFetching || isDeleting}
@@ -441,7 +412,7 @@ const PledgesPage: React.FC = () => {
       </Modal>
 
       {viewRecord && (
-        <PledgesViewDrawer
+        <DynamicViewDrawer
           open={isDrawerOpen}
           onClose={() => {
             setIsDrawerOpen(false);

@@ -13,52 +13,19 @@ const GeneralSearchPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("permits");
   const [form] = Form.useForm();
 
-  const { data, isLoading, isFetching } = useSearchPermitsQuery({
-    refetchOnMountOrArgChange: true,
-  });
-
-  // dummy data
-  const dummyPlate = [
+  const { data, isLoading, isFetching } = useSearchPermitsQuery(
+    {},
     {
-      key: "1",
-      plateNumber: "1234",
-      plateCode: "ABCD",
-      vehicleType: "Car",
-      ownerName: "John Doe",
-      phoneNumber: "1234567890",
+      refetchOnMountOrArgChange: true,
+      skip: activeTab !== "permits",
     },
-  ];
-
-  const dummyTrade = [
-    {
-      key: "2",
-      tradeLicense: "TL123456",
-      companyName: "Example Company",
-      ownerName: "Jane Smith",
-      phoneNumber: "0987654321",
-    },
-  ];
-
-  const dummyEtraffic = [
-    {
-      key: "3",
-      plateNumber: "5678",
-      plateCode: "EFGH",
-      violationType: "Speeding",
-      fineAmount: 500,
-      violationDate: "2023-10-01",
-    },
-  ];
+  );
 
   useEffect(() => {
     if (activeTab === "permits") {
       setPageTitle("Permit Search");
-    } else if (activeTab === "plate") {
-      setPageTitle("Plate Search");
-    } else if (activeTab === "e-traffic") {
-      setPageTitle("E-Traffic Search");
-    } else if (activeTab === "trade") {
-      setPageTitle("Trade License Search");
+    } else if (activeTab === "inspection-obstacles") {
+      setPageTitle("Inspection Obstacles Search");
     }
   }, [activeTab, setPageTitle]);
 
@@ -100,10 +67,38 @@ const GeneralSearchPage: React.FC = () => {
     },
   ];
 
+  const obstacleColumns = [
+    { title: "Zone", dataIndex: "zone", key: "zone" },
+    { title: "Area", dataIndex: "area", key: "area" },
+    { title: "Source", dataIndex: "sourceOfObstacle", key: "sourceOfObstacle" },
+    { title: "Status", dataIndex: "status", key: "status" },
+  ];
+
+  const getActiveColumns = () => {
+    switch (activeTab) {
+      case "permits":
+        return permitColumns;
+      case "inspection-obstacles":
+        return obstacleColumns;
+      default:
+        return [];
+    }
+  };
+
+  const getActiveDataSource = () => {
+    switch (activeTab) {
+      case "permits":
+        return data?.data || [];
+      case "inspection-obstacles":
+        return [];
+      default:
+        return [];
+    }
+  };
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Card bordered={false}>
-        {/* Tabs above form fields */}
         <Tabs
           activeKey={activeTab}
           onChange={(key) => {
@@ -113,12 +108,9 @@ const GeneralSearchPage: React.FC = () => {
           type="card"
         >
           <TabPane tab="Permits" key="permits" />
-          <TabPane tab="Plate" key="plate" />
-          <TabPane tab="E-Traffic" key="e-traffic" />
-          <TabPane tab="Trade" key="trade" />
+          <TabPane tab="Inspection Obstacles" key="inspection-obstacles" />
         </Tabs>
 
-        {/* Form */}
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Row gutter={24}>
             {activeTab === "permits" && (
@@ -155,37 +147,21 @@ const GeneralSearchPage: React.FC = () => {
               </>
             )}
 
-            {activeTab === "plate" && (
+            {activeTab === "inspection-obstacles" && (
               <>
                 <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="plateNumber" label="Plate Number">
-                    <Input placeholder="Enter Plate Number" />
+                  <Form.Item name="zone" label="Zone">
+                    <Input placeholder="Enter Zone" />
                   </Form.Item>
                 </Col>
                 <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="plateCode" label="Plate Code">
-                    <Input placeholder="Enter Plate Code" />
+                  <Form.Item name="area" label="Area">
+                    <Input placeholder="Enter Area" />
                   </Form.Item>
                 </Col>
               </>
             )}
 
-            {activeTab === "trade" && (
-              <>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="tradeLicense" label="Trade License">
-                    <Input placeholder="Enter Trade License" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="companyName" label="Company Name">
-                    <Input placeholder="Enter Company Name" />
-                  </Form.Item>
-                </Col>
-              </>
-            )}
-
-            {/* Buttons at end */}
             <Col xs={24} style={{ textAlign: "right", marginTop: 30 }}>
               <Space>
                 <Button onClick={() => form.resetFields()}>Reset</Button>
@@ -198,21 +174,12 @@ const GeneralSearchPage: React.FC = () => {
         </Form>
       </Card>
 
-      {/* Table */}
       <Card bordered={false} bodyStyle={{ padding: "5px 5px 0 5px" }}>
         <Spin spinning={activeTab === "permits" && (isLoading || isFetching)}>
           <Table
             rowSelection={{ type: "checkbox" }}
-            columns={permitColumns}
-            dataSource={
-              activeTab === "permits"
-                ? data?.data || []
-                : activeTab === "plate"
-                  ? dummyPlate
-                  : activeTab === "trade"
-                    ? dummyTrade
-                    : dummyEtraffic
-            }
+            columns={getActiveColumns()}
+            dataSource={getActiveDataSource()}
             rowKey="key"
             locale={{ emptyText: <Empty description="No Data" /> }}
             pagination={{

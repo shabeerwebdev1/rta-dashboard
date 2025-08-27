@@ -55,9 +55,9 @@ const DashboardViewDrawer: React.FC<DashboardViewDrawerProps> = ({ open, onClose
     <Drawer
       open={open}
       onClose={onClose}
-      width={500}
       title="Inspector Details"
       bodyStyle={{ overflowY: "auto", padding: 16 }}
+      className="dynamic-drawer"
     >
       <div style={{ marginBottom: 24 }}>
         <h2 style={{ margin: 0, padding: 0 }}>{inspector?.name || inspectorData.name}</h2>

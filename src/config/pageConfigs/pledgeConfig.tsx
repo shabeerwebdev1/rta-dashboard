@@ -28,46 +28,33 @@ export const pledgeConfig: PageConfig = {
     columns: [
       { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "string", sortable: true },
       { key: "businessName", title: "form.businessName", type: "string", sortable: true },
-      { key: "pledgeType", title: "form.pledgeType", type: "string", filterable: true },
+      { key: "pledgeType", title: "form.pledgeType", type: "string", filterable: true, lookupCategory: 900 },
       { key: "submittedAt", title: "form.fromDate", type: "date", sortable: true },
     ],
     viewRecord: true,
     showEdit: false,
+    drawerConfig: {
+      sections: [
+        {
+          type: "descriptions",
+          fields: ["pledgeType", "tradeLicenseNumber", "businessName", "remarks", "submittedAt"],
+        },
+        {
+          type: "images",
+          title: "form.document",
+          imageSourceKey: "documentPath",
+        },
+      ],
+    },
   },
   formConfig: {
     modalWidth: "720px",
     fields: [
+      { name: "pledgeType", label: "form.pledgeType", type: "select", required: true, span: 12, lookupCategory: 900 },
+      { name: "tradeLicenseNumber", label: "form.tradeLicenseNumber", type: "text", required: true, span: 12 },
+      { name: "businessName", label: "form.businessName", type: "text", required: true, span: 12 },
       {
-        name: "pledgeNumber",
-        label: "form.pledgeNumber",
-        type: "text",
-        required: true,
-        span: 12,
-      },
-      {
-        name: "pledgeType",
-        label: "form.pledgeType",
-        type: "select",
-        required: true,
-        span: 12,
-        options: ["Corporate", "Individual"],
-      },
-      {
-        name: "tradeLicenseNumber",
-        label: "form.tradeLicenseNumber",
-        type: "text",
-        required: true,
-        span: 12,
-      },
-      {
-        name: "businessName",
-        label: "form.businessName",
-        type: "text",
-        required: true,
-        span: 12,
-      },
-      {
-        name: "documentPath",
+        name: "document",
         label: "form.document",
         type: "file",
         required: true,
@@ -75,15 +62,7 @@ export const pledgeConfig: PageConfig = {
         fileCategory: "PledgeDocuments",
         responseKey: "documentPath",
       },
-      {
-        name: "remarks",
-        label: "form.remarks",
-        type: "textarea",
-        required: false,
-        span: 24,
-      },
-      { name: "documentUploaded", label: "", type: "hidden", span: 0 },
-      { name: "submittedBy", label: "", type: "hidden", span: 0 },
+      { name: "remarks", label: "form.remarks", type: "textarea", required: false, span: 24 },
     ],
   },
 };

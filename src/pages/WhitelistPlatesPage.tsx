@@ -9,7 +9,6 @@ import {
   UnorderedListOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -27,7 +26,7 @@ import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
 import { pageConfigs } from "../config/pageConfigs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
-import WhitelistPlatesViewDrawer from "../components/whitelist/WhitelistPlatesViewDrawer";
+import DynamicViewDrawer from "../components/drawer";
 
 const { Option } = Select;
 const pageKey = "whitelist-plates";
@@ -36,8 +35,6 @@ const pageKey = "whitelist-plates";
 const getLabelFromValue = (value: number, options: any[], i18n: any) => {
   const option = options.find((opt) => opt.value === value);
   if (!option) return value;
-
-  // Use Arabic label if language is Arabic, otherwise English
   return i18n.language === "ar" ? option.labelAr : option.labelEn;
 };
 
@@ -47,12 +44,11 @@ const filterOptionsByCategory = (options: any[], categoryId: number) => {
 };
 
 const WhitelistPlatesPage: React.FC = () => {
-  const { t, i18n } = useTranslation(); // 👈 Get i18n instance
+  const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const config = pageConfigs[pageKey];
-  const [searchParams] = useSearchParams();
   const {
     apiParams: rawApiParams,
     handleTableChange,
@@ -90,10 +86,9 @@ const WhitelistPlatesPage: React.FC = () => {
   const [triggerGetPlate, { data: singleRecordData, isSuccess: isSingleRecordSuccess }] = useLazyGetPlateByIdQuery();
   const [triggerGetLookups] = useLazyGetLookupsQuery();
 
-  // Fetch lookup data when modal opens or language changes
   useEffect(() => {
     fetchLookupData();
-  }, [i18n.language]); // 👈 Refetch when language changes
+  }, [i18n.language]);
 
   const fetchLookupData = async () => {
     setIsLoadingLookups(true);
@@ -108,7 +103,6 @@ const WhitelistPlatesPage: React.FC = () => {
     }
   };
 
-  // Get options for each category with proper labels based on current language
   const exemptionReasons = useMemo(
     () =>
       filterOptionsByCategory(lookupOptions, 100).map((option) => ({
@@ -170,7 +164,7 @@ const WhitelistPlatesPage: React.FC = () => {
 
   useEffect(() => {
     setPageTitle(t(config.title));
-  }, [setPageTitle, t, config.title, i18n.language]); // 👈 Update title when language changes
+  }, [setPageTitle, t, config.title, i18n.language]);
 
   useEffect(() => {
     setGlobalSearch(state.searchKey, debouncedSearchValue);
@@ -230,12 +224,12 @@ const WhitelistPlatesPage: React.FC = () => {
   };
 
   const handleView = (record: any) => {
-    setViewRecord(record); // Pass the raw record, not the mapped one
+    setViewRecord(record);
     setIsDrawerOpen(true);
   };
 
   const handleShare = () => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams();
     params.set("viewRecord", viewRecord.id);
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     navigator.clipboard.writeText(shareUrl).then(
@@ -258,7 +252,6 @@ const WhitelistPlatesPage: React.FC = () => {
           .filter((item: any) => selectedRowKeys.includes(item.id))
           .map((item: any) => ({
             ...item,
-            // Map numeric values to their corresponding labels
             plateSource_Id: getLabelFromValue(item.plateSource_Id, plateSourceOptions, i18n),
             plateType_Id: getLabelFromValue(item.plateType_Id, plateTypeOptions, i18n),
             plateColor_Id: getLabelFromValue(item.plateColor_Id, plateColorOptions, i18n),
@@ -276,63 +269,7 @@ const WhitelistPlatesPage: React.FC = () => {
 
   const columnLabels = useMemo(
     () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
-    [t, config.tableConfig.columns, i18n.language], // 👈 Update when language changes
-  );
-
-  // Enhanced table config with render functions for numeric values
-  const enhancedTableConfig = useMemo(
-    () => ({
-      ...config.tableConfig,
-      columns: config.tableConfig.columns.map((column) => {
-        if (column.key === "plateSource_Id") {
-          return {
-            ...column,
-            render: (value: any) => getLabelFromValue(value, plateSourceOptions, i18n),
-          };
-        }
-        if (column.key === "plateType_Id") {
-          return {
-            ...column,
-            render: (value: any) => getLabelFromValue(value, plateTypeOptions, i18n),
-          };
-        }
-        if (column.key === "plateColor_Id") {
-          return {
-            ...column,
-            render: (value: any) => getLabelFromValue(value, plateColorOptions, i18n),
-          };
-        }
-        if (column.key === "plateStatus_Id") {
-          return {
-            ...column,
-            render: (value: any) => getLabelFromValue(value, plateStatusOptions, i18n),
-          };
-        }
-        if (column.key === "exemptionReason_ID") {
-          return {
-            ...column,
-            render: (value: any) => getLabelFromValue(value, exemptionReasons, i18n),
-          };
-        }
-        if (column.key === "isByLaw") {
-          return {
-            ...column,
-            render: (value: any) => (value ? t("common.true") : t("common.false")),
-          };
-        }
-        return column;
-      }),
-    }),
-    [
-      config.tableConfig,
-      plateSourceOptions,
-      plateTypeOptions,
-      plateColorOptions,
-      plateStatusOptions,
-      exemptionReasons,
-      i18n,
-      t,
-    ],
+    [t, config.tableConfig.columns, i18n.language],
   );
 
   const actionMenuItems = (record: any) => [
@@ -399,7 +336,7 @@ const WhitelistPlatesPage: React.FC = () => {
       </Card>
 
       <DataTableWrapper
-        pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
+        pageConfig={config}
         data={data?.data || []}
         total={data?.total || 0}
         isLoading={isLoading || isFetching}
@@ -520,7 +457,7 @@ const WhitelistPlatesPage: React.FC = () => {
       </Modal>
 
       {viewRecord && (
-        <WhitelistPlatesViewDrawer
+        <DynamicViewDrawer
           open={isDrawerOpen}
           onClose={() => {
             setIsDrawerOpen(false);
