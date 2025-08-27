@@ -14,7 +14,8 @@
     "analytics": "التحليلات والرؤى",
     "plates": "لوحات",
     "tradelicenses": "رخص تجارية",
-    "generalsearch": "البحث العام"
+    "generalsearch": "البحث العام",
+    "zonelinking": "قم بتوصيل المنطقة"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -29,7 +30,8 @@
       "dispute-management": "إدارة النزاعات",
       "permits": "بحث التصاريح",
       "fines": "إدارة الغرامات",
-      "parkonic": "إدارة باركونيك"
+      "parkonic": "إدارة باركونيك",
+       "zonelinking": "قم بتوصيل المنطق"
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",
@@ -135,8 +137,7 @@
     "false": "خاطئ",
     "remove obstacle": "إزالة العائق",
     "remove": "إزالة"
-
-  },
+    },
   "entity": {
     "plate": "لوحة",
     "tradeLicense": "رخصة تجارية",

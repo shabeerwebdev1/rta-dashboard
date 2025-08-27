@@ -15,10 +15,20 @@ const InspectionObstaclesPage = lazy(() => import("./pages/InspectionObstaclesPa
 const FinesPage = lazy(() => import("./pages/FinesPage"));
 const ParkonicPage = lazy(() => import("./pages/ParkonicPage"));
 const DisputeManagementPage = lazy(() => import("./pages/DisputeManagementPage"));
+const UserZoneLinking = lazy(() => import("./pages/UserZoneLinking"));
+const LoginPage = lazy(() => import("./pages/LoginPage")); // 👈 added
+const SplashPage = lazy(() => import("./pages/SplashPage"));
+const ShiftPlanning = lazy(() => import("./pages/ShiftPlanning"));
+
 
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* --- Public Routes (Login) --- */}
+      <Route path={PATHS.LOGIN} element={<LoginPage />} />
+      <Route path={PATHS.SPLASH} element={<SplashPage />} />
+
+      {/* --- Protected Routes (Main Layout) --- */}
       <Route path="/" element={<MainLayout />}>
         <Route
           element={
@@ -27,7 +37,9 @@ const AppRoutes = () => {
             </Suspense>
           }
         >
-          <Route index element={<Navigate to={FULL_PATHS.DASHBOARD} replace />} />
+          {/* At root, redirect to login */}
+          <Route index element={<Navigate to={FULL_PATHS.LOGIN} replace />} />
+
           <Route path={PATHS.DASHBOARD} element={<DashboardPage />} />
           <Route path={PATHS.PERMITS} element={<PermitsPage />} />
           <Route path={PATHS.FINES} element={<FinesPage />} />
@@ -43,8 +55,12 @@ const AppRoutes = () => {
 
           <Route path={PATHS.PLEDGES} element={<PledgesPage />} />
           <Route path={PATHS.INSPECTIONS} element={<InspectionObstaclesPage />} />
+          <Route path={PATHS.ZONELINKING} element={<UserZoneLinking />} />
+          <Route path={PATHS.SHIFTPLANNING} element={<ShiftPlanning />} />
 
-          <Route path="*" element={<Navigate to={FULL_PATHS.DASHBOARD} replace />} />
+
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to={FULL_PATHS.LOGIN} replace />} />
         </Route>
       </Route>
     </Routes>

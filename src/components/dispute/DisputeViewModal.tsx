@@ -1,292 +1,26 @@
-// import React from "react";
-// import { Modal, Card, Row, Col, Typography, Divider, Image, Timeline, Button, Input, Select } from "antd";
-// import { ClockCircleOutlined, CloseOutlined } from "@ant-design/icons";
-
-// const { Title, Text } = Typography;
-// const { TextArea } = Input;
-
-// const DisputeViewModal: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClose }) => {
-//   return (
-//     <Modal
-//       open={open}
-//       onCancel={onClose}
-//       width={1200}
-//       footer={null}
-//       title={null} // remove default header
-//       closable={false} // hide default close btn
-//       bodyStyle={{ padding: 0 }}
-//     >
-//       <Card bordered={false} style={{ borderRadius: 12 }} bodyStyle={{ padding: 0 }}>
-//         {/* Custom Header */}
-//         <Row justify="space-between" align="middle" style={{ marginBottom: 8 }}>
-//           <Title level={4} style={{ margin: 0 }}>
-//             Dispute Review <Text type="danger">#FN000111</Text>
-//           </Title>
-//           <Button type="text" icon={<CloseOutlined />} onClick={onClose} style={{ fontSize: 16 }} />
-//         </Row>
-
-//         <Row gutter={16}>
-//           {/* LEFT SIDE */}
-//           <Col span={18}>
-//             <Row gutter={16}>
-//               {/* Dispute Details */}
-//               <Col span={12}>
-//                 <Card title="Dispute Details" size="small" headStyle={{ background: "#fafafa", fontWeight: 600 }}>
-//                   <Row gutter={[0, 8]}>
-//                     <Col span={12}>
-//                       <Text strong>Department:</Text>
-//                     </Col>
-//                     <Col span={12}>Traffic Management</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Payment Type:</Text>
-//                     </Col>
-//                     <Col span={12}>Online</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Reason:</Text>
-//                     </Col>
-//                     <Col span={12}>Parking in a non-designated area.</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Fine Type:</Text>
-//                     </Col>
-//                     <Col span={12}>Traffic Violation</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Email:</Text>
-//                     </Col>
-//                     <Col span={12}>Email123@gmail.com</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Phone Number:</Text>
-//                     </Col>
-//                     <Col span={12}>1234567897</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>CRM Reference:</Text>
-//                     </Col>
-//                     <Col span={12}>Reference</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Address:</Text>
-//                     </Col>
-//                     <Col span={12}>123 Sheikh Zayed Road, Dubai</Col>
-//                   </Row>
-//                 </Card>
-//               </Col>
-
-//               {/* Vehicle Fine Details */}
-//               <Col span={12}>
-//                 <Card
-//                   title="Vehicle & Fine Details"
-//                   size="small"
-//                   style={{ borderRadius: 12, marginBottom: 16 }}
-//                   headStyle={{ background: "#fafafa", fontWeight: 600 }}
-//                 >
-//                   <Row gutter={[0, 8]}>
-//                     <Col span={12}>
-//                       <Text strong>Plate Code:</Text>
-//                     </Col>
-//                     <Col span={12}>DXB</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Plate Type:</Text>
-//                     </Col>
-//                     <Col span={12}>Private</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Plate Number:</Text>
-//                     </Col>
-//                     <Col span={12}>A12345</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Vehicle Type:</Text>
-//                     </Col>
-//                     <Col span={12}>Lamborghini</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Brand:</Text>
-//                     </Col>
-//                     <Col span={12}>Lamborghini</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Color:</Text>
-//                     </Col>
-//                     <Col span={12}>Silver</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Fine Type:</Text>
-//                     </Col>
-//                     <Col span={12}>Over Speeding</Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Fine Amount:</Text>
-//                     </Col>
-//                     <Col span={12}>
-//                       <Text type="danger">5000 AED</Text>
-//                     </Col>
-
-//                     <Col span={12}>
-//                       <Text strong>Owner Name:</Text>
-//                     </Col>
-//                     <Col span={12}>Name</Col>
-//                   </Row>
-//                 </Card>
-//               </Col>
-//             </Row>
-
-//             {/* More Details */}
-//             <Card
-//               title="More Details"
-//               size="small"
-//               style={{ borderRadius: 12, marginBottom: 16 }}
-//               headStyle={{ background: "#fafafa", fontWeight: 600 }}
-//             >
-//               <Row gutter={16}>
-//                 <Col span={4}>
-//                   <Text strong>Area:</Text> Area
-//                 </Col>
-//                 <Col span={4}>
-//                   <Text strong>Zone:</Text> Zone
-//                 </Col>
-//                 <Col span={4}>
-//                   <Text strong>Time:</Text> Time
-//                 </Col>
-//                 <Col span={4}>
-//                   <Text strong>Date:</Text> Date
-//                 </Col>
-//                 <Col span={4}>
-//                   <Text strong>Inspector:</Text> Name
-//                 </Col>
-//                 <Col span={4}>
-//                   <Text strong>Supervisor:</Text> Name
-//                 </Col>
-//               </Row>
-//             </Card>
-
-//             {/* Evidence & Location */}
-//             <Row gutter={16}>
-//               <Col span={12}>
-//                 <Card
-//                   title="Evidence"
-//                   size="small"
-//                   style={{ borderRadius: 12, marginBottom: 16 }}
-//                   headStyle={{ background: "#fafafa", fontWeight: 600 }}
-//                 >
-//                   <Row gutter={[8, 8]}>
-//                     {[
-//                       "https://picsum.photos/200/120?random=1",
-//                       "https://picsum.photos/200/120?random=2",
-//                       "https://picsum.photos/200/120?random=3",
-//                       "https://picsum.photos/200/120?random=4",
-//                       "https://picsum.photos/200/120?random=5",
-//                       "https://picsum.photos/200/120?random=6",
-//                     ].map((src, i) => (
-//                       <Col span={8} key={i}>
-//                         <Image src={src} style={{ borderRadius: 8, objectFit: "cover" }} />
-//                       </Col>
-//                     ))}
-//                   </Row>
-//                 </Card>
-//               </Col>
-//               <Col span={12}>
-//                 <Card
-//                   title="Location"
-//                   size="small"
-//                   style={{ borderRadius: 12, marginBottom: 16 }}
-//                   headStyle={{ background: "#fafafa", fontWeight: 600 }}
-//                 >
-//                   <iframe
-//                     title="map"
-//                     width="100%"
-//                     height="200"
-//                     style={{ border: 0, borderRadius: 8 }}
-//                     src="https://www.google.com/maps?q=25.276987,55.296249&z=15&output=embed"
-//                   />
-//                 </Card>
-//               </Col>
-//             </Row>
-//           </Col>
-
-//           {/* RIGHT SIDE TIMELINE */}
-//           <Col span={6}>
-//             <Card
-//               title="Review Timeline"
-//               size="small"
-//               style={{
-//                 borderRadius: 12,
-//                 background: "#f0f7ff",
-//                 marginBottom: 16,
-//               }}
-//               headStyle={{ background: "#e6f2ff", fontWeight: 600 }}
-//             >
-//               <Timeline mode="left">
-//                 <Timeline.Item dot={<ClockCircleOutlined />} color="blue">
-//                   <Text strong>Created</Text>
-//                   <br />
-//                   <Text type="secondary">2023-10-18 10:30 AM</Text>
-//                 </Timeline.Item>
-//                 <Timeline.Item dot={<ClockCircleOutlined />} color="blue">
-//                   <Text strong>Review 1</Text>
-//                   <br />
-//                   <Text type="secondary">2023-10-19 11:30 AM</Text>
-//                 </Timeline.Item>
-//                 <Timeline.Item dot={<ClockCircleOutlined />} color="blue">
-//                   <Text strong>Review 2</Text>
-//                   <br />
-//                   <Text type="secondary">2023-10-20 10:30 AM</Text>
-//                 </Timeline.Item>
-//                 <Timeline.Item dot={<ClockCircleOutlined />} color="blue">
-//                   <Text strong>Review 3</Text>
-//                   <br />
-//                   <Text type="secondary">2023-10-21 10:30 AM</Text>
-//                 </Timeline.Item>
-//                 <Timeline.Item dot={<ClockCircleOutlined />} color="blue">
-//                   <Text strong>Review 4</Text>
-//                   <br />
-//                   <Text type="secondary">2023-10-22 10:30 AM</Text>
-//                 </Timeline.Item>
-//               </Timeline>
-//             </Card>
-//           </Col>
-//         </Row>
-
-//         {/* FOOTER */}
-//         <Divider />
-//         <Row gutter={16} align="middle" justify="space-between">
-//           <Col span={8}>
-//             <Text strong>Comment *</Text>
-//             <TextArea placeholder="Enter your comment" rows={2} />
-//           </Col>
-//           <Col span={8}>
-//             <Text strong>Select Supervisor</Text>
-//             <Select style={{ width: "100%" }} placeholder="Select Supervisor">
-//               <Select.Option value="1">Supervisor 1</Select.Option>
-//               <Select.Option value="2">Supervisor 2</Select.Option>
-//             </Select>
-//           </Col>
-//           <Col span={8} style={{ textAlign: "right" }}>
-//             <Button onClick={onClose} style={{ marginRight: 8 }}>
-//               Cancel
-//             </Button>
-//             <Button type="primary" style={{ marginRight: 8 }}>
-//               Approve
-//             </Button>
-//             <Button danger>Reject</Button>
-//           </Col>
-//         </Row>
-//       </Card>
-//     </Modal>
-//   );
-// };
-
-// export default DisputeViewModal;
-
-import React from "react";
-import { Modal, Card, Row, Col, Typography, Divider, Image, Timeline, Button, Input, Select, Empty } from "antd";
+import React, { useState, useEffect } from "react";
+import {
+  Modal,
+  Card,
+  Row,
+  Col,
+  Typography,
+  Divider,
+  Image,
+  Timeline,
+  Button,
+  Input,
+  Select,
+  Empty,
+  Spin,
+  Tag,
+  Form,
+  App,
+} from "antd";
 import { ClockCircleOutlined, CloseOutlined } from "@ant-design/icons";
-import { getFileUrl } from "../../services/fileApi";
+import { useTranslation } from "react-i18next";
+import { useLazyGetDisputeByIdQuery, useUpdateDisputeStatusMutation } from "../../services/rtkApiFactory";
+import { useAppNotification } from "../../utils/notificationManager";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -294,10 +28,99 @@ const { TextArea } = Input;
 interface DisputeViewModalProps {
   open: boolean;
   onClose: () => void;
-  dispute?: any; // API data
+  disputeId: string;
+  onStatusUpdate?: () => void;
 }
 
-const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, dispute }) => {
+const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disputeId, onStatusUpdate }) => {
+  const { t, i18n } = useTranslation();
+  const { modal } = App.useApp();
+  const notification = useAppNotification();
+  const [form] = Form.useForm();
+
+  const [triggerGetDisputeById, { data: disputeData, isLoading }] = useLazyGetDisputeByIdQuery();
+  const [updateDisputeStatus, { isLoading: isUpdating }] = useUpdateDisputeStatusMutation();
+
+  const [reviewAction, setReviewAction] = useState<number>(1); // 1=Approve, 2=Reject, 3=Escalate
+
+  // Fetch dispute data when modal opens
+  useEffect(() => {
+    if (open && disputeId) {
+      triggerGetDisputeById(disputeId);
+    }
+  }, [open, disputeId, triggerGetDisputeById]);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!open) {
+      form.resetFields();
+      setReviewAction(1);
+    }
+  }, [open, form]);
+
+  const dispute = disputeData?.data;
+
+  const handleStatusUpdate = async (action: number) => {
+    try {
+      const values = await form.validateFields();
+
+      const payload = {
+        dispute_Id: disputeId,
+        review_Action: action,
+        review_Comments: values.review_Comments,
+        assignedTo: values.assignedTo || "",
+        action_type: action === 1 ? "Approved" : action === 2 ? "Rejected" : "Escalated",
+      };
+
+      const response = await updateDisputeStatus(payload).unwrap();
+      notification.success(response, t("messages.updateSuccess", { entity: "Dispute Status" }));
+
+      onStatusUpdate?.();
+      onClose();
+    } catch (error: any) {
+      if (error.errorFields) {
+        // Validation errors
+        return;
+      }
+      notification.error(error, "Status Update Failed");
+    }
+  };
+
+  const getStatusColor = (status: number) => {
+    switch (status) {
+      case 0:
+        return "orange"; // Pending
+      case 1:
+        return "green"; // Approved
+      case 2:
+        return "red"; // Rejected
+      case 3:
+        return "blue"; // Under Review
+      default:
+        return "default";
+    }
+  };
+
+  const getStatusText = (status: number) => {
+    switch (status) {
+      case 0:
+        return "Pending";
+      case 1:
+        return "Approved";
+      case 2:
+        return "Rejected";
+      case 3:
+        return "Under Review";
+      default:
+        return "Unknown";
+    }
+  };
+
+  const formatDateTime = (dateString: string) => {
+    if (!dateString) return "No Date";
+    return new Date(dateString).toLocaleString();
+  };
+
   return (
     <Modal
       open={open}
@@ -306,268 +129,343 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
       footer={null}
       title={null}
       closable={false}
-      bodyStyle={{ padding: 0 }}
+      bodyStyle={{ padding: 24 }}
     >
-      <Card bordered={false} style={{ borderRadius: 12 }} bodyStyle={{ padding: 0 }}>
-        {/* Custom Header */}
-        <Row justify="space-between" align="middle" style={{ marginBottom: 8 }}>
-          <Title level={4} style={{ margin: 0 }}>
-            Dispute Review <Text type="danger">#{dispute?.disputeNo || "No Data"}</Text>
-          </Title>
-          <Button type="text" icon={<CloseOutlined />} onClick={onClose} style={{ fontSize: 16 }} />
-        </Row>
-
-        {!dispute ? (
-          <Empty description="No Data" />
-        ) : (
-          <Row gutter={16}>
-            {/* LEFT SIDE */}
-            <Col span={18}>
-              <Row gutter={16}>
-                {/* Dispute Details */}
-                <Col span={12}>
-                  <Card title="Dispute Details" size="small" headStyle={{ background: "#fafafa", fontWeight: 600 }}>
-                    <Row gutter={[0, 8]}>
-                      <Col span={12}>
-                        <Text strong>Department:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.department || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>Payment Type:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.paymentType || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>Reason:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.reason || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>Fine Type:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.fineType || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>Email:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.email || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>Phone Number:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.phone || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>CRM Reference:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.crmReference || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>Address:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.address || "No Data"}</Col>
-                    </Row>
-                  </Card>
-                </Col>
-
-                {/* Vehicle Fine Details */}
-                <Col span={12}>
-                  <Card
-                    title="Vehicle & Fine Details"
-                    size="small"
-                    style={{ borderRadius: 12, marginBottom: 16 }}
-                    headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                  >
-                    <Row gutter={[0, 8]}>
-                      <Col span={12}>
-                        <Text strong>Plate Code:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.plateCode || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>Plate Type:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.plateType || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>Plate Number:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.plateNumber || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>Vehicle Type:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.vehicleType || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>Brand:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.vehicleBrand || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>Color:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.vehicleColor || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>Fine Type:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.fineType || "No Data"}</Col>
-
-                      <Col span={12}>
-                        <Text strong>Fine Amount:</Text>
-                      </Col>
-                      <Col span={12}>
-                        {dispute.fineAmount ? <Text type="danger">{dispute.fineAmount} AED</Text> : "No Data"}
-                      </Col>
-
-                      <Col span={12}>
-                        <Text strong>Owner Name:</Text>
-                      </Col>
-                      <Col span={12}>{dispute.ownerName || "No Data"}</Col>
-                    </Row>
-                  </Card>
-                </Col>
-              </Row>
-
-              {/* More Details */}
-              <Card
-                title="More Details"
-                size="small"
-                style={{ borderRadius: 12, marginBottom: 16 }}
-                headStyle={{ background: "#fafafa", fontWeight: 600 }}
-              >
-                <Row gutter={16}>
-                  <Col span={4}>
-                    <Text strong>Area:</Text> {dispute.area || "No Data"}
-                  </Col>
-                  <Col span={4}>
-                    <Text strong>Zone:</Text> {dispute.zone || "No Data"}
-                  </Col>
-                  <Col span={4}>
-                    <Text strong>Time:</Text> {dispute.time || "No Data"}
-                  </Col>
-                  <Col span={4}>
-                    <Text strong>Date:</Text> {dispute.date || "No Data"}
-                  </Col>
-                  <Col span={4}>
-                    <Text strong>Inspector:</Text> {dispute.inspector || "No Data"}
-                  </Col>
-                  <Col span={4}>
-                    <Text strong>Supervisor:</Text> {dispute.supervisor || "No Data"}
-                  </Col>
-                </Row>
-              </Card>
-
-              {/* Evidence & Location */}
-              <Row gutter={16}>
-                <Col span={12}>
-                  <Card
-                    title="Evidence"
-                    size="small"
-                    style={{ borderRadius: 12, marginBottom: 16 }}
-                    headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                  >
-                    {dispute.documents?.length ? (
-                      <Image.PreviewGroup>
-                        <Row gutter={[8, 8]}>
-                          {dispute.documents.map((doc: string, i: number) => (
-                            <Col span={8} key={i}>
-                              <Image src={getFileUrl(doc)} style={{ borderRadius: 8, objectFit: "cover" }} />
-                            </Col>
-                          ))}
-                        </Row>
-                      </Image.PreviewGroup>
-                    ) : (
-                      <Row gutter={[8, 8]}>
-                        {[
-                          "https://picsum.photos/200/120?random=1",
-                          "https://picsum.photos/200/120?random=2",
-                          "https://picsum.photos/200/120?random=3",
-                        ].map((src, i) => (
-                          <Col span={8} key={i}>
-                            <Image src={src} style={{ borderRadius: 8, objectFit: "cover" }} />
-                          </Col>
-                        ))}
-                      </Row>
-                    )}
-                  </Card>
-                </Col>
-                <Col span={12}>
-                  <Card
-                    title="Location"
-                    size="small"
-                    style={{ borderRadius: 12, marginBottom: 16 }}
-                    headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                  >
-                    {dispute.latitude && dispute.longitude ? (
-                      <iframe
-                        title="map"
-                        width="100%"
-                        height="200"
-                        style={{ border: 0, borderRadius: 8 }}
-                        src={`https://www.google.com/maps?q=${dispute.latitude},${dispute.longitude}&z=15&output=embed`}
-                      />
-                    ) : (
-                      <Empty description="No Location Data" />
-                    )}
-                  </Card>
-                </Col>
-              </Row>
-            </Col>
-
-            {/* RIGHT SIDE TIMELINE */}
-            <Col span={6}>
-              <Card
-                title="Review Timeline"
-                size="small"
-                style={{ borderRadius: 12, background: "#f0f7ff", marginBottom: 16 }}
-                headStyle={{ background: "#e6f2ff", fontWeight: 600 }}
-              >
-                {dispute.activities?.length ? (
-                  <Timeline mode="left">
-                    {dispute.activities.map((act: any, idx: number) => (
-                      <Timeline.Item dot={<ClockCircleOutlined />} color="blue" key={idx}>
-                        <Text strong>{act.title}</Text>
-                        <br />
-                        <Text type="secondary">{act.time}</Text>
-                      </Timeline.Item>
-                    ))}
-                  </Timeline>
-                ) : (
-                  <Empty description="No Activities" />
+      <Spin spinning={isLoading}>
+        <Card bordered={false} style={{ borderRadius: 12 }} bodyStyle={{ padding: 0 }}>
+          {/* Custom Header */}
+          <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+            <Col>
+              <Title level={4} style={{ margin: 0 }}>
+                Dispute Review <Text type="danger">#{dispute?.fine_Number || disputeId}</Text>
+                {dispute?.dispute_Status !== undefined && (
+                  <Tag color={getStatusColor(dispute.dispute_Status)} style={{ marginLeft: 8 }}>
+                    {getStatusText(dispute.dispute_Status)}
+                  </Tag>
                 )}
-              </Card>
+              </Title>
+            </Col>
+            <Col>
+              <Button type="text" icon={<CloseOutlined />} onClick={onClose} style={{ fontSize: 16 }} />
             </Col>
           </Row>
-        )}
 
-        {/* FOOTER */}
-        <Divider />
-        <Row gutter={16} align="middle" justify="space-between">
-          <Col span={8}>
-            <Text strong>Comment *</Text>
-            <TextArea placeholder="Enter your comment" rows={2} />
-          </Col>
-          <Col span={8}>
-            <Text strong>Select Supervisor</Text>
-            <Select style={{ width: "100%" }} placeholder="Select Supervisor">
-              <Select.Option value="1">Supervisor 1</Select.Option>
-              <Select.Option value="2">Supervisor 2</Select.Option>
-            </Select>
-          </Col>
-          <Col span={8} style={{ textAlign: "right" }}>
-            <Button onClick={onClose} style={{ marginRight: 8 }}>
-              Cancel
-            </Button>
-            <Button type="primary" style={{ marginRight: 8 }}>
-              Approve
-            </Button>
-            <Button danger>Reject</Button>
-          </Col>
-        </Row>
-      </Card>
+          {!dispute ? (
+            <Empty description="No Data Available" />
+          ) : (
+            <Row gutter={24}>
+              {/* LEFT SIDE */}
+              <Col span={18}>
+                <Row gutter={16}>
+                  {/* Dispute Details */}
+                  <Col span={12}>
+                    <Card
+                      title="Dispute Details"
+                      size="small"
+                      headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                      style={{ marginBottom: 16 }}
+                    >
+                      <Row gutter={[0, 12]}>
+                        <Col span={10}>
+                          <Text strong>Fine Number:</Text>
+                        </Col>
+                        <Col span={14}>{dispute.fine_Number || "No Data"}</Col>
+
+                        <Col span={10}>
+                          <Text strong>Department:</Text>
+                        </Col>
+                        <Col span={14}>{dispute.department || "No Data"}</Col>
+
+                        <Col span={10}>
+                          <Text strong>Payment Type:</Text>
+                        </Col>
+                        <Col span={14}>{dispute.payment_Type || "No Data"}</Col>
+
+                        <Col span={10}>
+                          <Text strong>Dispute Reason:</Text>
+                        </Col>
+                        <Col span={14}>{dispute.dispute_Reason || "No Data"}</Col>
+
+                        <Col span={10}>
+                          <Text strong>Email:</Text>
+                        </Col>
+                        <Col span={14}>{dispute.email || "No Data"}</Col>
+
+                        <Col span={10}>
+                          <Text strong>Phone Number:</Text>
+                        </Col>
+                        <Col span={14}>{dispute.phone || "No Data"}</Col>
+
+                        <Col span={10}>
+                          <Text strong>CRM Reference:</Text>
+                        </Col>
+                        <Col span={14}>{dispute.crM_Ref || "No Data"}</Col>
+
+                        <Col span={10}>
+                          <Text strong>Address:</Text>
+                        </Col>
+                        <Col span={14}>{dispute.address || "No Data"}</Col>
+                      </Row>
+                    </Card>
+                  </Col>
+
+                  {/* Fine Details */}
+                  <Col span={12}>
+                    <Card
+                      title="Fine Details"
+                      size="small"
+                      style={{ borderRadius: 12, marginBottom: 16 }}
+                      headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                    >
+                      {dispute.fineDetails ? (
+                        <Row gutter={[0, 12]}>
+                          <Col span={10}>
+                            <Text strong>Fine Number:</Text>
+                          </Col>
+                          <Col span={14}>{dispute.fineDetails.fineNo || "No Data"}</Col>
+
+                          <Col span={10}>
+                            <Text strong>Fine Type:</Text>
+                          </Col>
+                          <Col span={14}>{dispute.fineDetails.fineType || "No Data"}</Col>
+
+                          <Col span={10}>
+                            <Text strong>Fine Amount:</Text>
+                          </Col>
+                          <Col span={14}>
+                            {dispute.fineDetails.fineAmount ? (
+                              <Text type="danger" strong>
+                                {dispute.fineDetails.fineAmount} AED
+                              </Text>
+                            ) : (
+                              "No Data"
+                            )}
+                          </Col>
+
+                          <Col span={10}>
+                            <Text strong>Fine Status:</Text>
+                          </Col>
+                          <Col span={14}>
+                            <Tag color={dispute.fineDetails.fineStatus === "Pending" ? "orange" : "green"}>
+                              {dispute.fineDetails.fineStatus || "No Data"}
+                            </Tag>
+                          </Col>
+
+                          <Col span={10}>
+                            <Text strong>Section:</Text>
+                          </Col>
+                          <Col span={14}>{dispute.fineDetails.section || "No Data"}</Col>
+
+                          <Col span={10}>
+                            <Text strong>Supervisor ID:</Text>
+                          </Col>
+                          <Col span={14}>{dispute.fineDetails.supervisorID || "No Data"}</Col>
+
+                          <Col span={10}>
+                            <Text strong>Device Number:</Text>
+                          </Col>
+                          <Col span={14}>{dispute.fineDetails.inspectionDeviceNo || "No Data"}</Col>
+
+                          <Col span={10}>
+                            <Text strong>Comments:</Text>
+                          </Col>
+                          <Col span={14}>{dispute.fineDetails.comments || "No Data"}</Col>
+                        </Row>
+                      ) : (
+                        <Empty description="No Fine Details Available" />
+                      )}
+                    </Card>
+                  </Col>
+                </Row>
+
+                {/* Vehicle Details (if available) */}
+                {dispute.vehicle && (
+                  <Card
+                    title="Vehicle Details"
+                    size="small"
+                    style={{ borderRadius: 12, marginBottom: 16 }}
+                    headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                  >
+                    <Row gutter={16}>
+                      <Col span={4}>
+                        <Text strong>Plate:</Text> {dispute.vehicle.plateNumber || "No Data"}
+                      </Col>
+                      <Col span={4}>
+                        <Text strong>Type:</Text> {dispute.vehicle.vehicleType || "No Data"}
+                      </Col>
+                      <Col span={4}>
+                        <Text strong>Brand:</Text> {dispute.vehicle.brand || "No Data"}
+                      </Col>
+                      <Col span={4}>
+                        <Text strong>Color:</Text> {dispute.vehicle.color || "No Data"}
+                      </Col>
+                      <Col span={4}>
+                        <Text strong>Owner:</Text> {dispute.vehicle.ownerName || "No Data"}
+                      </Col>
+                    </Row>
+                  </Card>
+                )}
+
+                {/* Evidence & Location */}
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Card
+                      title="Evidence"
+                      size="small"
+                      style={{ borderRadius: 12, marginBottom: 16 }}
+                      headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                    >
+                      {dispute.fineDetails?.documents ? (
+                        <Row justify="center">
+                          <Col>
+                            <Text>{dispute.fineDetails.documents}</Text>
+                          </Col>
+                        </Row>
+                      ) : (
+                        <Empty description="No Evidence Available" />
+                      )}
+                    </Card>
+                  </Col>
+
+                  <Col span={12}>
+                    <Card
+                      title="Location"
+                      size="small"
+                      style={{ borderRadius: 12, marginBottom: 16 }}
+                      headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                    >
+                      {dispute.fineDetails?.latitude && dispute.fineDetails?.longitude ? (
+                        <iframe
+                          title="location-map"
+                          width="100%"
+                          height="200"
+                          style={{ border: 0, borderRadius: 8 }}
+                          src={`https://www.google.com/maps?q=${dispute.fineDetails.latitude},${dispute.fineDetails.longitude}&z=15&output=embed`}
+                        />
+                      ) : (
+                        <Empty description="No Location Data Available" />
+                      )}
+                    </Card>
+                  </Col>
+                </Row>
+              </Col>
+
+              {/* RIGHT SIDE - Review Timeline */}
+              <Col span={6}>
+                <Card
+                  title="Review Timeline"
+                  size="small"
+                  style={{ borderRadius: 12, background: "#f0f7ff", marginBottom: 16 }}
+                  headStyle={{ background: "#e6f2ff", fontWeight: 600 }}
+                >
+                  {dispute.reviews && dispute.reviews.length > 0 ? (
+                    <Timeline>
+                      {dispute.reviews.map((review: any, idx: number) => (
+                        <Timeline.Item dot={<ClockCircleOutlined />} color="blue" key={idx}>
+                          <Text strong>
+                            Review{" "}
+                            {review.review_Action === 1
+                              ? "Approved"
+                              : review.review_Action === 2
+                                ? "Rejected"
+                                : review.review_Action === 3
+                                  ? "Escalated"
+                                  : "Unknown"}
+                          </Text>
+                          <br />
+                          <Text type="secondary">{review.review_Comments || "No Comments"}</Text>
+                          {review.assignedTo && (
+                            <>
+                              <br />
+                              <Text type="secondary">Assigned to: {review.assignedTo}</Text>
+                            </>
+                          )}
+                        </Timeline.Item>
+                      ))}
+                    </Timeline>
+                  ) : (
+                    <Empty description="No Review History" />
+                  )}
+                </Card>
+              </Col>
+            </Row>
+          )}
+
+          {/* FOOTER - Action Form */}
+          {dispute && (
+            <>
+              <Divider />
+              <Form form={form} layout="vertical">
+                <Row gutter={16} align="bottom">
+                  <Col span={8}>
+                    <Form.Item
+                      name="review_Comments"
+                      label={<Text strong>Comment *</Text>}
+                      rules={[{ required: true, message: "Please enter your comments" }]}
+                    >
+                      <TextArea placeholder="Enter your review comments" rows={3} />
+                    </Form.Item>
+                  </Col>
+
+                  <Col span={8}>
+                    <Form.Item name="assignedTo" label={<Text strong>Assign To (Optional)</Text>}>
+                      <Input placeholder="Enter supervisor/officer name" />
+                    </Form.Item>
+                  </Col>
+
+                  <Col span={4}>
+                    <Form.Item name="assignedTo" label={<Text strong>Assign To</Text>}>
+                      <Select placeholder="Select Supervisor">
+                        <Select.Option value="supervisor1">Supervisor 1</Select.Option>
+                        <Select.Option value="supervisor2">Supervisor 2</Select.Option>
+                        <Select.Option value="supervisor3">Supervisor 3</Select.Option>
+                      </Select>
+                    </Form.Item>
+                  </Col>
+
+                  <Col span={4} style={{ textAlign: "right", paddingTop: 30 }}>
+                    <Button onClick={onClose} style={{ marginRight: 8 }} disabled={isUpdating}>
+                      Cancel
+                    </Button>
+                    <Button
+                      type="default"
+                      style={{ marginRight: 8 }}
+                      loading={isUpdating && reviewAction === 1}
+                      onClick={() => {
+                        setReviewAction(1);
+                        handleStatusUpdate(1); // Assigned = 1
+                      }}
+                    >
+                      Assign
+                    </Button>
+                    <Button
+                      type="primary"
+                      style={{ marginRight: 8 }}
+                      loading={isUpdating && reviewAction === 2}
+                      onClick={() => {
+                        setReviewAction(2);
+                        handleStatusUpdate(2); // Approved = 2
+                      }}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      danger
+                      loading={isUpdating && reviewAction === 3}
+                      onClick={() => {
+                        setReviewAction(3);
+                        handleStatusUpdate(3); // Rejected = 3
+                      }}
+                    >
+                      Reject
+                    </Button>
+                  </Col>
+                </Row>
+              </Form>
+            </>
+          )}
+        </Card>
+      </Spin>
     </Modal>
   );
 };

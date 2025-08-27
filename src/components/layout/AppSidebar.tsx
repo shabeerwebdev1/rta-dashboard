@@ -13,6 +13,7 @@ import {
   PushpinOutlined,
   DashboardOutlined,
   AuditOutlined,
+  LinkOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -76,14 +77,35 @@ const AppSidebar: React.FC = () => {
       icon: <ExclamationCircleOutlined />,
       label: <Link to={FULL_PATHS.DISPUTE}>{t("sidebar.dispute")}</Link>,
     },
-    { key: FULL_PATHS.HRMS, icon: <TeamOutlined />, label: t("sidebar.hrms") },
-
-    { key: FULL_PATHS.TOWING, icon: <CarOutlined />, label: t("sidebar.towing") },
-    { key: FULL_PATHS.TEAM, icon: <UsergroupAddOutlined />, label: t("sidebar.team") },
+    { 
+      key: FULL_PATHS.HRMS, 
+      icon: <TeamOutlined />, 
+      label: <Link to={FULL_PATHS.HRMS}>{t("sidebar.hrms")}</Link> 
+    },
+    { 
+      key: FULL_PATHS.TOWING, 
+      icon: <CarOutlined />, 
+      label: <Link to={FULL_PATHS.TOWING}>{t("sidebar.towing")}</Link> 
+    },
+    { 
+      key: FULL_PATHS.TEAM, 
+      icon: <UsergroupAddOutlined />, 
+      label: <Link to={FULL_PATHS.TEAM}>{t("sidebar.team")}</Link> 
+    },
     {
       key: FULL_PATHS.ANALYTICS,
       icon: <BarChartOutlined />,
-      label: t("sidebar.analytics"),
+      label: <Link to={FULL_PATHS.ANALYTICS}>{t("sidebar.analytics")}</Link>,
+    },
+    { 
+      key: FULL_PATHS.ZONELINKING, 
+      icon: <LinkOutlined />, 
+      label: <Link to={FULL_PATHS.ZONELINKING}>{t("sidebar.zonelinking")}</Link>,
+    },
+    { 
+      key: FULL_PATHS.SHIFTPLANNING, 
+      icon: <AuditOutlined />,
+      label: <Link to={FULL_PATHS.SHIFTPLANNING}>{t("sidebar.shiftplanning")}</Link>,
     },
   ];
 
