@@ -11,7 +11,7 @@ export default function SplashPage() {
     const timer = setTimeout(() => {
       setIsLoading(false);
       navigate("/dashboard", { replace: true });
-    }, 5000); // 5 seconds, adjust as needed
+    }, 5000); 
 
     return () => clearTimeout(timer);
   }, [navigate]);

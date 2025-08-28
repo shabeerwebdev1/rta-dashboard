@@ -16,15 +16,16 @@ const FinesPage = lazy(() => import("./pages/FinesPage"));
 const ParkonicPage = lazy(() => import("./pages/ParkonicPage"));
 const DisputeManagementPage = lazy(() => import("./pages/DisputeManagementPage"));
 const UserZoneLinking = lazy(() => import("./pages/UserZoneLinking"));
-const LoginPage = lazy(() => import("./pages/LoginPage")); // 👈 added
+const SupervisorManagementpage = lazy(() => import("./pages/SupervisorManagementpage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
 const SplashPage = lazy(() => import("./pages/SplashPage"));
 const ShiftPlanning = lazy(() => import("./pages/ShiftPlanning"));
-
+const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* --- Public Routes (Login) --- */}
+      {/* --- Public Routes --- */}
       <Route path={PATHS.LOGIN} element={<LoginPage />} />
       <Route path={PATHS.SPLASH} element={<SplashPage />} />
 
@@ -47,20 +48,22 @@ const AppRoutes = () => {
           <Route path={PATHS.DISPUTE} element={<DisputeManagementPage />} />
           <Route path={PATHS.GENERAL} element={<GeneralSearchPage />} />
 
+          {/* Whitelist with nested children */}
           <Route path={PATHS.WHITELIST}>
             <Route index element={<Navigate to={PATHS.PLATES} replace />} />
             <Route path={PATHS.PLATES} element={<WhitelistPlatesPage />} />
+            <Route path={PATHS.INSPECTIONS_OBSTACLES} element={<InspectionObstaclesPage />} />
             <Route path={PATHS.TRADELICENSES} element={<WhitelistTradeLicensesPage />} />
           </Route>
 
           <Route path={PATHS.PLEDGES} element={<PledgesPage />} />
-          <Route path={PATHS.INSPECTIONS} element={<InspectionObstaclesPage />} />
           <Route path={PATHS.INSPECTOR_MANAGEMENT} element={<UserZoneLinking />} />
+          <Route path={PATHS.SUPERVISROR_MANGEMENT} element={<SupervisorManagementpage />} />
           <Route path={PATHS.SHIFTPLANNING} element={<ShiftPlanning />} />
 
-
           {/* Fallback */}
-          <Route path="*" element={<Navigate to={FULL_PATHS.LOGIN} replace />} />
+          {/* Fallback */}
+          <Route path="*" element={<ComingSoonPage />} />
         </Route>
       </Route>
     </Routes>

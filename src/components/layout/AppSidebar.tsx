@@ -40,10 +40,10 @@ const AppSidebar: React.FC = () => {
     {
       key: "configuration",
       icon: <SettingOutlined />,
-      label: "Configuration",
+      label: t("sidebar.configuration"),
       children: [
         {
-          key: FULL_PATHS.WHITELIST,
+          key: FULL_PATHS.WHITELIST_PLATES,
           icon: <FileTextOutlined />,
           label: <Link to={FULL_PATHS.WHITELIST_PLATES}>{t("sidebar.whitelist")}</Link>,
         },
@@ -57,18 +57,27 @@ const AppSidebar: React.FC = () => {
           icon: <AuditOutlined />,
           label: <Link to={FULL_PATHS.PLEDGES}>{t("sidebar.pledges")}</Link>,
         },
-        { key: FULL_PATHS.LEAVE_MANGEMENT, icon: <TeamOutlined />, label: t("sidebar.leaveManagement") },
+        {
+          key: FULL_PATHS.LEAVE_MANGEMENT,
+          icon: <TeamOutlined />,
+          label: <Link to={FULL_PATHS.LEAVE_MANGEMENT}>{t("sidebar.leaveManagement")}</Link>,
+        },
         {
           key: FULL_PATHS.SUPERVISROR_MANGEMENT,
           icon: <ExclamationCircleOutlined />,
           label: <Link to={FULL_PATHS.SUPERVISROR_MANGEMENT}>{t("sidebar.supervisorManagement")}</Link>,
         },
+        {
+          key: FULL_PATHS.INSPECTOR_MANAGEMENT,
+          icon: <LinkOutlined />,
+          label: <Link to={FULL_PATHS.INSPECTOR_MANAGEMENT}>{t("sidebar.inspectorManagement")}</Link>,
+        },
       ],
     },
     {
-      key: FULL_PATHS.INSPECTIONS,
+      key: "inspections",
       icon: <SearchOutlined />,
-      label: <Link to={FULL_PATHS.INSPECTIONS}>{t("sidebar.inspections")}</Link>,
+      label: t("sidebar.inspections"),
       children: [
         {
           key: FULL_PATHS.PARKONIC,
@@ -87,26 +96,31 @@ const AppSidebar: React.FC = () => {
       icon: <ExclamationCircleOutlined />,
       label: <Link to={FULL_PATHS.DISPUTE}>{t("sidebar.dispute")}</Link>,
     },
-    { key: FULL_PATHS.TOWING, icon: <CarOutlined />, label: t("sidebar.towing") },
+    { key: FULL_PATHS.TOWING, icon: <CarOutlined />, label: <Link to={FULL_PATHS.TOWING}>{t("sidebar.towing")}</Link> },
     {
-      key: FULL_PATHS.TEAM_ASSESSMENT,
+      key: "team-assessment-group", // group only, not a path
       icon: <UsergroupAddOutlined />,
       label: t("sidebar.traningAndEvaluation"),
       children: [
-        { key: FULL_PATHS.TEAM_ASSESSMENT, icon: <UsergroupAddOutlined />, label: t("sidebar.teamEvaluation") },
-        { key: FULL_PATHS.TEAM_ASSESSMENT, icon: <UsergroupAddOutlined />, label: t("sidebar.training") },
+        {
+          key: FULL_PATHS.TEAM_EVALUATION,
+          icon: <UsergroupAddOutlined />,
+          label: <Link to={FULL_PATHS.TEAM_EVALUATION}>{t("sidebar.teamEvaluation")}</Link>,
+        },
+        {
+          key: FULL_PATHS.TEAM_TRAINING,
+          icon: <UsergroupAddOutlined />,
+          label: <Link to={FULL_PATHS.TEAM_TRAINING}>{t("sidebar.training")}</Link>,
+        },
       ],
     },
+
     {
       key: FULL_PATHS.ANALYTICS,
       icon: <BarChartOutlined />,
       label: <Link to={FULL_PATHS.ANALYTICS}>{t("sidebar.analytics")}</Link>,
     },
-    {
-      key: FULL_PATHS.INSPECTOR_MANAGEMENT,
-      icon: <LinkOutlined />,
-      label: <Link to={FULL_PATHS.INSPECTOR_MANAGEMENT}>{t("sidebar.inspectorManagement")}</Link>,
-    },
+
     {
       key: FULL_PATHS.SHIFTPLANNING,
       icon: <AuditOutlined />,
@@ -163,24 +177,15 @@ const AppSidebar: React.FC = () => {
             src="/images/rta_logo_full.png"
             alt="Full Logo"
             preview={false}
-            style={{
-              height: 58,
-              width: "auto",
-              objectFit: "contain",
-            }}
+            style={{ height: 58, width: "auto", objectFit: "contain" }}
           />
         </div>
-
         <div className={`logo-wrapper ${collapsed ? "visible" : "hidden"}`}>
           <Image
             src="/images/rta_logo_mini.png"
             alt="Mini Logo"
             preview={false}
-            style={{
-              height: 72,
-              width: "auto",
-              objectFit: "contain",
-            }}
+            style={{ height: 72, width: "auto", objectFit: "contain" }}
           />
         </div>
       </div>

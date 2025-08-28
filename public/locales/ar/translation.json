@@ -21,7 +21,8 @@
     "teamAssesment": "تقييم الفريق",
     "traningAndEvaluation": "التدريب والتقييم",
     "teamEvaluation": "تقييم الفريق",
-    "training": "التدريب"
+    "training": "التدريب",
+    "configuration": "الإعدادات"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -37,7 +38,7 @@
       "permits": "بحث التصاريح",
       "fines": "إدارة الغرامات",
       "parkonic": "إدارة باركونيك",
-      "inspectorManagement":"إدارة المشتري",
+      "inspectorManagement": "إدارة المشتري",
       "supervisorManagement": "إدارة المشرفين"
     },
     "addTitle": "إضافة {{entity}} جديد",
@@ -116,8 +117,8 @@
     "reviewStatus": "حالة المراجعة",
     "entryDateTime": "تاريخ ووقت الدخول",
     "isByLaw": "هل هو قانوني؟",
-    "UploadJPG/JPEG": "رفع JPG/JPEG"
-
+    "UploadJPG/JPEG": "رفع JPG/JPEG",
+    "addedOn": "تمت الإضافة في"
   },
   "common": {
     "action": "إجراء",
@@ -143,8 +144,10 @@
     "true": "صحيح",
     "false": "خاطئ",
     "remove obstacle": "إزالة العائق",
-    "remove": "إزالة"
-    },
+    "remove": "إزالة",
+    "compactView": "عرض مضغوط",
+    "standardView": "عرض قياسي"
+  },
   "entity": {
     "plate": "لوحة",
     "tradeLicense": "رخصة تجارية",

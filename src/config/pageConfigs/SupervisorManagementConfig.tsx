@@ -1,8 +1,8 @@
 // userZoneLinkingConfig.ts
 import { PageConfig } from "../../types/config";
 
-export const UserZoneLinkingConfig: PageConfig = {
-  title: "Inspsector Management",
+export const SupervisorManagemnetConfig: PageConfig = {
+  title: "Supervisor Management",
 
   tableConfig: {
     columns: [

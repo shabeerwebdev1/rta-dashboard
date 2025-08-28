@@ -9,7 +9,7 @@ export const inspectionObstacleConfig: PageConfig = {
     get: "/api/InspectionObstacle",
     post: "/api/InspectionObstacle",
     postContentType: "multipart/form-data",
-    put: "/api/InspectionObstacle/markremoved/:id",
+    put: "/api/InspectionObstacle/markremoved/{obstacleCode}",
     delete: "",
   },
   searchConfig: {

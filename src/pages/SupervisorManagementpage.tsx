@@ -4,6 +4,7 @@ import { Space, Table, Select, Checkbox } from "antd";
 import { UserZoneLinkingConfig } from "../config/pageConfigs/userZoneLinkingConfig";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
+import { SupervisorManagemnetConfig } from "../config/pageConfigs/SupervisorManagementConfig";
 
 const { Option } = Select;
 
@@ -20,27 +21,21 @@ function UserZoneLinking() {
   const [data, setData] = useState(sampleData);
 
   useEffect(() => {
-    setPageTitle(t(UserZoneLinkingConfig.title));
+    setPageTitle(t(SupervisorManagemnetConfig.title));
   }, [setPageTitle, t]);
 
   const handleZoneChange = (value: string, record: any) => {
-    const newData = data.map((item) =>
-      item.key === record.key ? { ...item, zone: value } : item
-    );
+    const newData = data.map((item) => (item.key === record.key ? { ...item, zone: value } : item));
     setData(newData);
   };
 
   const handleShiftChange = (value: string, record: any) => {
-    const newData = data.map((item) =>
-      item.key === record.key ? { ...item, shift: value } : item
-    );
+    const newData = data.map((item) => (item.key === record.key ? { ...item, shift: value } : item));
     setData(newData);
   };
 
   const handleWeekOffChange = (checkedValues: string[], record: any) => {
-    const newData = data.map((item) =>
-      item.key === record.key ? { ...item, weekOffs: checkedValues } : item
-    );
+    const newData = data.map((item) => (item.key === record.key ? { ...item, weekOffs: checkedValues } : item));
     setData(newData);
   };
 
@@ -54,7 +49,7 @@ function UserZoneLinking() {
             value={record.zone}
             style={{ width: 120 }}
             onChange={(val) => handleZoneChange(val, record)}
-             placeholder="Select Zone"
+            placeholder="Select Zone"
           >
             <Option value="North">North</Option>
             <Option value="South">South</Option>
@@ -104,12 +99,7 @@ function UserZoneLinking() {
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <Table
-        rowSelection={{ type: "checkbox" }}
-        dataSource={data}
-        columns={columns}
-        pagination={false}
-      />
+      <Table rowSelection={{ type: "checkbox" }} dataSource={data} columns={columns} pagination={false} />
     </Space>
   );
 }

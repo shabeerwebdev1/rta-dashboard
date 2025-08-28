@@ -1,8 +1,14 @@
 import React from "react";
 import { Tag, Space, Typography, Button } from "antd";
-import { CloseOutlined, ArrowUpOutlined, ArrowDownOutlined } from "@ant-design/icons";
+import { ArrowUpOutlined, ArrowDownOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
+
+// Define tagStyle for consistent styling of tags
+const tagStyle: React.CSSProperties = {
+  margin: "0 4px",
+  cursor: "pointer",
+};
 
 const { Text } = Typography;
 
@@ -18,7 +24,6 @@ interface ActiveFiltersDisplayProps {
   onClearFilter: (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => void;
   onClearAll: () => void;
   columnLabels: Record<string, string>;
-  // Add these props for lookup data
   lookupOptions?: any[];
   getLabelFromValue?: (value: number, options: any[], i18n: any) => string;
 }
@@ -42,6 +47,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
       plateColor_Id: 400,
       plateStatus_Id: 500,
       exemptionReason_ID: 100,
+
       sourceOfObstacle: 800,
       pledgeType: 900,
     };
@@ -67,7 +73,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
   if (state.sortBy && state.sortOrder) {
     const sortLabel = columnLabels[state.sortBy] || state.sortBy;
     filterGroups.push(
-      <Space key="sorter_group">
+      <Space key="sorter_group" align="center">
         <Text>{t("common.sortBy")}: </Text>
         <Tag
           color="#ee3a41"
@@ -75,9 +81,9 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
           closable
           onClose={() => onClearFilter("sorter")}
           icon={state.sortOrder === "ascend" ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-          style={{ userSelect: "none" }}
+          style={tagStyle}
         >
-          <>{sortLabel}</>
+          {sortLabel}
         </Tag>
       </Space>,
     );
@@ -87,10 +93,10 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
   if (state.searchKey && state.searchValue) {
     const searchLabel = columnLabels[state.searchKey] || state.searchKey;
     filterGroups.push(
-      <Space key="search_group">
+      <Space key="search_group" align="center">
         <Text>{searchLabel}: </Text>
-        <Tag color="#ee3a41" key="search" closable onClose={() => onClearFilter("search")} style={{ userSelect: "none" }}>
-          <>{state.searchValue}</>
+        <Tag color="#ee3a41" key="search" closable onClose={() => onClearFilter("search")} style={tagStyle}>
+          {state.searchValue}
         </Tag>
       </Space>,
     );
@@ -101,10 +107,10 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     const from = state.dateRange[0].format("YYYY-MM-DD");
     const to = state.dateRange[1].format("YYYY-MM-DD");
     filterGroups.push(
-      <Space key="date_group">
-        <Text> {t("form.dateRange")}: </Text>
-        <Tag color="#ee3a41" key="date" closable onClose={() => onClearFilter("date")} style={{ userSelect: "none" }}>
-          <>{`${from} to ${to}`}</>
+      <Space key="date_group" align="center">
+        <Text>{t("form.dateRange")}: </Text>
+        <Tag color="#ee3a41" key="date" closable onClose={() => onClearFilter("date")} style={tagStyle}>
+          {`${from} to ${to}`}
         </Tag>
       </Space>,
     );
@@ -116,15 +122,15 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     if (values && values.length > 0) {
       const groupLabel = columnLabels[key] || key;
       const groupTags = (
-        <Space key={key} size={[0, 8]} wrap>
+        <Space key={key} size={[0, 8]} wrap align="center">
           <Text style={{ marginRight: 10 }}>{groupLabel}: </Text>
           {values.map((value) => (
-            <Tag 
-              color="#ee3a41" 
-              style={{}} 
-              key={String(value)} 
-              closable 
+            <Tag
+              color="#ee3a41"
+              key={String(value)}
+              closable
               onClose={() => onClearFilter("column", key, value)}
+              style={tagStyle}
             >
               {getFilterLabel(key, value)}
             </Tag>

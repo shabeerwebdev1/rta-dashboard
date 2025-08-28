@@ -29,7 +29,7 @@ export const pledgeConfig: PageConfig = {
       { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "string", sortable: true },
       { key: "businessName", title: "form.businessName", type: "string", sortable: true },
       { key: "pledgeType", title: "form.pledgeType", type: "string", filterable: true },
-      { key: "submittedAt", title: "form.fromDate", type: "date", sortable: true },
+      { key: "addOn", title: "form.fromDate", type: "date", sortable: true },
     ],
     viewRecord: true,
     showEdit: false,

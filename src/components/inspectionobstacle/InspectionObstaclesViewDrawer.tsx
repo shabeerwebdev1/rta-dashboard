@@ -1,8 +1,7 @@
 import React from "react";
-import { Drawer, Descriptions, Tag, Typography, Button, Image, Empty, Space } from "antd";
+import { Drawer, Descriptions, Tag, Typography, Button, Image, Empty, Space, Badge } from "antd";
 import { useTranslation } from "react-i18next";
 import { DeleteOutlined, ShareAltOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
 import type { PageConfig } from "../../types/config";
 import { useAppNotification } from "../../utils/notificationManager";
 import { useUpdateInspectionObstacleMutation } from "../../services/rtkApiFactory";
@@ -45,12 +44,31 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
 
   const handleRemoveObstacle = async () => {
     try {
-      const response = await updateObstacle({ id: record.id as number, status: 1 }).unwrap();
+      // Check if obstacleCode exists and is valid
+      const obstacleCode = record.obstacleCode as string;
+      
+      if (!obstacleCode || typeof obstacleCode !== 'string') {
+        notification.error("Invalid obstacle code", "Please check the obstacle data");
+        return;
+      }
+  
+      console.log("Sending obstacle code:", obstacleCode); // For debugging
+      
+      // Pass obstacle code as parameter to the mutation (not in request body)
+      const response = await updateObstacle(obstacleCode).unwrap();
+      
       notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
       onStatusChange();
       onClose();
-    } catch (err) {
-      notification.error(err as any, "Operation Failed");
+    } catch (err: any) {
+      console.error("Remove obstacle error:", err); // For debugging
+      
+      // Check if it's a validation error
+      if (err?.data?.errors?.obstacleCode) {
+        notification.error("Validation Error", err.data.errors.obstacleCode[0]);
+      } else {
+        notification.error(err as any, "Operation Failed");
+      }
     }
   };
 
@@ -69,6 +87,11 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
         </Button>
       }
     >
+      {/* Add obstacle code to display for debugging */}
+      <Descriptions.Item label="Obstacle Code (Debug)">
+        {record.obstacleCode ? String(record.obstacleCode) : "N/A"}
+      </Descriptions.Item>
+
       <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
         {displayFields.map((field) => {
           if (field.type === "action") {
@@ -93,7 +116,16 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
                   case "status":
                     const statusKey =
                       typeof text === "string" ? text.toLowerCase() : text === 1 ? "removed" : "reported";
-                    return <Tag color={statusKey === "removed" ? "green" : "orange"}>{t(`status.${statusKey}`)}</Tag>;
+                    return (
+                      <Badge 
+                        status={statusKey === "removed" ? "success" : "warning"} 
+                        text={
+                          <Tag color={statusKey === "removed" ? "green" : "orange"}>
+                            {t(`status.${statusKey}`)}
+                          </Tag>
+                        } 
+                      />
+                    );
                   default:
                     return String(text);
                 }

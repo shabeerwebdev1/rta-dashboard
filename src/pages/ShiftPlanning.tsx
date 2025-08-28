@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Tabs, Tooltip, Button, Card, Select, DatePicker, Space } from "antd";
+import { Table, Tabs, Tooltip, Button, Card, Select, DatePicker, Space, Modal, Form } from "antd";
 import { ShiftPlanningConfig } from "../config/pageConfigs/shiftPlanningConfig";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
@@ -49,9 +49,10 @@ const dataSource = [
   {
     key: 1,
     slno: 1,
-    inspector: "Inspector",
+    inspector: "Inspector 1",
     inspectorId: "INS001",
     month: "August",
+    shift: "Morning",
     days: [
       "Z1-A1",
       "Z1-A2",
@@ -89,9 +90,10 @@ const dataSource = [
   {
     key: 2,
     slno: 2,
-    inspector: "Inspector",
+    inspector: "Inspector 2",
     inspectorId: "INS002",
     month: "August",
+    shift: "Morning",
     days: [
       "Z1-A4",
       "Z1-A3",
@@ -129,9 +131,10 @@ const dataSource = [
   {
     key: 3,
     slno: 3,
-    inspector: "Inspector",
+    inspector: "Inspector 3",
     inspectorId: "INS003",
     month: "August",
+    shift: "Morning",
     days: [
       "Z1-A3",
       "Z1-A4",
@@ -169,9 +172,10 @@ const dataSource = [
   {
     key: 4,
     slno: 4,
-    inspector: "Inspector",
+    inspector: "Inspector 4",
     inspectorId: "INS004",
     month: "September",
+    shift: "Morning",
     days: [
       "Z2-A1",
       "Z2-A2",
@@ -209,9 +213,10 @@ const dataSource = [
   {
     key: 5,
     slno: 5,
-    inspector: "Inspector",
+    inspector: "Inspector 5",
     inspectorId: "INS005",
     month: "September",
+    shift: "Morning",
     days: [
       "Z2-A4",
       "Z2-A3",
@@ -249,9 +254,10 @@ const dataSource = [
   {
     key: 6,
     slno: 6,
-    inspector: "Inspector",
+    inspector: "Inspector 6",
     inspectorId: "INS006",
     month: "October",
+    shift: "Morning",
     days: [
       "Z1-A8",
       "Z1-A9",
@@ -289,9 +295,10 @@ const dataSource = [
   {
     key: 7,
     slno: 7,
-    inspector: "Inspector",
+    inspector: "Inspector 7",
     inspectorId: "INS007",
     month: "October",
+    shift: "Morning",
     days: [
       "Z2-A8",
       "Z2-A9",
@@ -329,9 +336,10 @@ const dataSource = [
   {
     key: 8,
     slno: 8,
-    inspector: "Inspector",
+    inspector: "Inspector 8",
     inspectorId: "INS008",
     month: "November",
+    shift: "Morning",
     days: [
       "Z1-A12",
       "Z1-A13",
@@ -369,9 +377,10 @@ const dataSource = [
   {
     key: 9,
     slno: 9,
-    inspector: "Inspector",
+    inspector: "Inspector 9",
     inspectorId: "INS009",
     month: "November",
+    shift: "Morning",
     days: [
       "Z2-A12",
       "Z2-A13",
@@ -409,9 +418,10 @@ const dataSource = [
   {
     key: 10,
     slno: 10,
-    inspector: "Inspector",
+    inspector: "Inspector 10",
     inspectorId: "INS010",
     month: "December",
+    shift: "Morning",
     days: [
       "Z1-A16",
       "Z1-A17",
@@ -449,9 +459,10 @@ const dataSource = [
   {
     key: 11,
     slno: 11,
-    inspector: "Inspector",
+    inspector: "Inspector 11",
     inspectorId: "INS011",
     month: "December",
+    shift: "Morning",
     days: [
       "Z2-A16",
       "Z2-A17",
@@ -472,7 +483,7 @@ const dataSource = [
       "Z2-A28",
       "Z2-A29",
       "Z2-A30",
-      "Z2-A31",
+      "Z极-A31",
       "Z2-A1",
       "Z2-A2",
       "LV",
@@ -489,14 +500,15 @@ const dataSource = [
   {
     key: 12,
     slno: 12,
-    inspector: "Inspector",
+    inspector: "Inspector 12",
     inspectorId: "INS012",
     month: "January",
+    shift: "Morning",
     days: [
       "Z1-A20",
       "Z1-A21",
       "LV",
-      "WO",
+      "极O",
       "Z1-A22",
       "Z1-A23",
       "Z1-A24",
@@ -514,7 +526,7 @@ const dataSource = [
       "Z1-A3",
       "Z1-A4",
       "Z1-A5",
-      "Z1-A6",
+      "Z1-A极",
       "LV",
       "WO",
       "Z1-A7",
@@ -529,9 +541,10 @@ const dataSource = [
   {
     key: 13,
     slno: 13,
-    inspector: "Inspector",
+    inspector: "Inspector 13",
     inspectorId: "INS013",
     month: "January",
+    shift: "Morning",
     days: [
       "Z2-A20",
       "Z2-A21",
@@ -569,9 +582,10 @@ const dataSource = [
   {
     key: 14,
     slno: 14,
-    inspector: "Inspector",
+    inspector: "Inspector 14",
     inspectorId: "INS014",
     month: "February",
+    shift: "Morning",
     days: [
       "Z1-A24",
       "Z1-A25",
@@ -588,7 +602,7 @@ const dataSource = [
       "LV",
       "WO",
       "Z1-A3",
-      "Z1-A4",
+      "Z极-A4",
       "Z1-A5",
       "Z1-A6",
       "Z1-A7",
@@ -609,15 +623,16 @@ const dataSource = [
   {
     key: 15,
     slno: 15,
-    inspector: "Inspector",
+    inspector: "Inspector 15",
     inspectorId: "INS015",
     month: "February",
+    shift: "Morning",
     days: [
       "Z2-A24",
       "Z2-A25",
       "LV",
       "WO",
-      "Z2-A26",
+      "Z2-A极6",
       "Z2-A27",
       "Z2-A28",
       "Z2-A29",
@@ -644,48 +659,9 @@ const dataSource = [
       "Z2-A15",
       "Z2-A16",
     ],
-    status: "Inspector",
+    status: "Published",
   },
 ];
-
-// Cell color styles
-// Cell color styles
-const getCellStyle = (value: string) => {
-  if (value === "LV") return { backgroundColor: "#ffccc7", color: "#a8071a", fontWeight: 600 };
-  if (value === "WO") return { backgroundColor: "#fff7e6", color: "#d46b08", fontWeight: 600 };
-  if (value.startsWith("Z")) return { backgroundColor: "#e6f7ff", color: "#0050b3", fontWeight: 500 };
-  return {};
-};
-
-// Tooltip + styled cell renderer
-const renderDayCell = (value: string, dayIndex: number) => {
-  let tooltipText = "";
-  if (value.includes("-")) {
-    const [zone, area] = value.split("-");
-    tooltipText = `${zoneMapping[zone] || zone}, ${zoneMapping[area] || area}`;
-  } else if (value === "LV") {
-    tooltipText = "Leave";
-  } else if (value === "WO") {
-    tooltipText = "Week Off";
-  } else {
-    tooltipText = "Not Assigned";
-  }
-
-  return (
-    <Tooltip title={tooltipText}>
-      <div
-        style={{
-          padding: "4px 8px",
-          textAlign: "center",
-          borderRadius: 4,
-          ...getCellStyle(value),
-        }}
-      >
-        {value}
-      </div>
-    </Tooltip>
-  );
-};
 
 export default function ShiftPlanning() {
   const [activeTab, setActiveTab] = useState("1");
@@ -694,6 +670,120 @@ export default function ShiftPlanning() {
   const [selectedMonth, setSelectedMonth] = useState("August");
   const { setPageTitle } = usePage();
   const { t } = useTranslation();
+  // modal state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingData, setEditingData] = useState<any>(null);
+  const [form] = Form.useForm();
+
+  // Cell color styles
+  const getCellStyle = (value: string) => {
+    if (value === "LV") return { backgroundColor: "#ffccc7", color: "#a8071a", fontWeight: 600 };
+    if (value === "WO") return { backgroundColor: "#fff7e6", color: "#d46b08", fontWeight: 600 };
+    if (value.startsWith("Z")) return { backgroundColor: "#e6f7ff", color: "#0050b3", fontWeight: 500 };
+    return {};
+  };
+
+  const handleEditClick = (row: any, value: string, dayIndex: number) => {
+    if (!value.includes("-")) return;
+
+    const [zone, area] = value.split("-");
+    setEditingData({
+      ...row,
+      zone,
+      area,
+      day: dayIndex + 1,
+    });
+
+    form.setFieldsValue({
+      inspector: row.inspector,
+      shift: row.shift,
+      zone,
+      area,
+    });
+
+    setIsModalOpen(true);
+  };
+
+  // Tooltip + styled cell renderer
+  const renderDayCell = (value: string, dayIndex: number, row: any) => {
+    let tooltipContent: React.ReactNode;
+
+    if (value.includes("-")) {
+      const [zone, area] = value.split("-");
+      const zoneName = zoneMapping[zone] || zone;
+      const areaName = zoneMapping[area] || area;
+
+      tooltipContent = (
+        <div style={{ maxWidth: 250 }}>
+          <p style={{ marginBottom: 4 }}>
+            <b>Inspector:</b> {row.inspector}
+          </p>
+          <p style={{ marginBottom: 4 }}>
+            <b>Date:</b> Day {dayIndex + 1}
+          </p>
+          <p style={{ marginBottom: 4 }}>
+            <b>Shift:</b> {row.shift}
+          </p>
+          <p style={{ marginBottom: 4 }}>
+            <b>Zone:</b> {zoneName}
+          </p>
+          <p style={{ marginBottom: 8 }}>
+            <b>Area:</b> {areaName}
+          </p>
+          <Button 
+  type="link" 
+  size="small" 
+  style={{ color: "red" }} 
+  onClick={() => handleEditClick(row, value, dayIndex)}
+>
+  Edit
+</Button>
+
+        </div>
+      );
+    } else if (value === "LV") {
+      tooltipContent = "Leave";
+    } else if (value === "WO") {
+      tooltipContent = "Week Off";
+    } else {
+      tooltipContent = "Not Assigned";
+    }
+
+    return (
+      <Tooltip
+        title={tooltipContent}
+        overlayStyle={{
+          maxWidth: 260,
+
+          backgroundColor: "white", // white background
+
+          borderRadius: "6px",
+          padding: "1px 1px", // reduced padding
+          boxShadow: "0 4px 10px rgba(0,0,0,0.12)",
+          fontSize: "13px",
+         
+          lineHeight: 1.4,
+        }}
+        overlayInnerStyle={{
+          borderRadius: "6px",
+          backgroundColor: "black", // inside background
+          color: "white",
+          fontWeight: "400", // 🔹 text color inside tooltip
+        }}
+      >
+        <div
+          style={{
+            padding: "4px 8px",
+            textAlign: "center",
+            borderRadius: 4,
+            ...getCellStyle(value),
+          }}
+        >
+          {value}
+        </div>
+      </Tooltip>
+    );
+  };
 
   useEffect(() => {
     // ✅ bind page title from config + translation
@@ -705,14 +795,20 @@ export default function ShiftPlanning() {
     title: `Day ${i + 1}`,
     dataIndex: ["days", i],
     key: `day${i + 1}`,
-    render: (value: string) => renderDayCell(value || "NA", i),
+    render: (value: string, row: any) => renderDayCell(value || "NA", i, row),
     width: 100,
   }));
 
   const columns = [
-    { title: "Sl No", dataIndex: "slno", key: "slno", fixed: "left", width: 80 },
-    { title: "Inspector", dataIndex: "inspector", key: "inspector", fixed: "left", width: 150 },
+    {
+      title: "Inspector",
+      dataIndex: "inspector",
+      key: "inspector",
+      fixed: "left",
+      width: 150,
+    },
     { title: "Month", dataIndex: "month", key: "month", width: 120 },
+    { title: "Shift", dataIndex: "shift", key: "shift", width: 120 },
     ...dayColumns,
   ];
 
@@ -721,29 +817,41 @@ export default function ShiftPlanning() {
     console.log("Date Range:", dateRange);
   };
 
+  const handleModalOk = () => {
+    form
+      .validateFields()
+      .then((values) => {
+        console.log("Updated values:", values);
+        setIsModalOpen(false);
+      })
+      .catch((info) => {
+        console.log("Validation Failed:", info);
+      });
+  };
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Card style={{ marginBottom: 20 }}>
-        {" "}
         <Space size="large">
-          {" "}
           <Select
             placeholder="Select Inspector"
             style={{ width: 200 }}
             value={inspector}
             onChange={(val) => setInspector(val)}
           >
-            {" "}
-            <Select.Option value="Inspector">Inspector </Select.Option>{" "}
-            <Select.Option value="Inspector">Inspector </Select.Option>{" "}
-          </Select>{" "}
-          <RangePicker onChange={(val) => setDateRange(val)} />{" "}
+            <Select.Option value="Inspector 1">Inspector 1</Select.Option>
+            <Select.Option value="Inspector 2">Inspector 2</Select.Option>
+            <Select.Option value="Inspector 3">Inspector 3</Select.Option>
+            <Select.Option value="Inspector 4">Inspector 4</Select.Option>
+            <Select.Option value="Inspector 5">Inspector 5</Select.Option>
+          </Select>
+          <RangePicker onChange={(val) => setDateRange(val)} />
           <Button type="primary" onClick={handleSubmit}>
-            {" "}
-            Submit{" "}
-          </Button>{" "}
-        </Space>{" "}
+            Submit
+          </Button>
+        </Space>
       </Card>
+
       <Tabs
         type="card"
         activeKey={activeTab}
@@ -804,6 +912,54 @@ export default function ShiftPlanning() {
           />
         </TabPane>
       </Tabs>
+
+      <Modal
+        title="Edit Shift Details"
+        open={isModalOpen}
+        onOk={handleModalOk}
+        onCancel={() => setIsModalOpen(false)}
+        okText="Save Changes"
+        cancelText="Cancel"
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item name="inspector" label="Inspector">
+            <Select disabled>
+              {[...new Set(dataSource.map((d) => d.inspector))].map((insp) => (
+                <Select.Option key={insp} value={insp}>
+                  {insp}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item name="shift" label="Shift" rules={[{ required: true, message: "Please select a shift" }]}>
+            <Select>
+              <Select.Option value="Morning">Morning</Select.Option>
+              <Select.Option value="Afternoon">Afternoon</Select.Option>
+              <Select.Option value="Night">Night</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item name="zone" label="Zone" rules={[{ required: true, message: "Please select a zone" }]}>
+            <Select>
+              <Select.Option value="Z1">Zone 1</Select.Option>
+              <Select.Option value="Z2">Zone 2</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item name="area" label="Area" rules={[{ required: true, message: "Please select an area" }]}>
+            <Select>
+              {Object.entries(zoneMapping)
+                .filter(([key]) => key.startsWith("A"))
+                .map(([key, label]) => (
+                  <Select.Option key={key} value={key}>
+                    {label}
+                  </Select.Option>
+                ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
     </Space>
   );
 }

@@ -138,7 +138,10 @@ export const dynamicApi = createApi({
       invalidatesTags: ["InspectionObstacle"],
     }),
     updateInspectionObstacle: builder.mutation({
-      query: ({ id, ...params }) => ({ url: `/api/InspectionObstacle/markremoved/${id}`, method: "PUT", params }),
+      query: (obstacleCode) => ({ 
+        url: `/api/InspectionObstacle/markremoved/${obstacleCode}`, 
+        method: "PUT" 
+      }),
       invalidatesTags: ["InspectionObstacle"],
     }),
 

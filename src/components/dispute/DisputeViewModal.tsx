@@ -19,7 +19,11 @@ import {
 } from "antd";
 import { ClockCircleOutlined, CloseOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
-import { useLazyGetDisputeByIdQuery, useUpdateDisputeStatusMutation } from "../../services/rtkApiFactory";
+import {
+  useLazyGetDisputeByIdQuery,
+  useUpdateDisputeStatusMutation,
+  useLazyGetLookupsQuery, // Add this import
+} from "../../services/rtkApiFactory";
 import { useAppNotification } from "../../utils/notificationManager";
 
 const { Title, Text } = Typography;
@@ -40,43 +44,98 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
 
   const [triggerGetDisputeById, { data: disputeData, isLoading }] = useLazyGetDisputeByIdQuery();
   const [updateDisputeStatus, { isLoading: isUpdating }] = useUpdateDisputeStatusMutation();
+  const [triggerGetLookups] = useLazyGetLookupsQuery(); // Add this
 
-  const [reviewAction, setReviewAction] = useState<number>(1); // 1=Approve, 2=Reject, 3=Escalate
+  const [reviewAction, setReviewAction] = useState<number>(2); // 2=Approved, 3=Rejected
+  const [storedDisputeId, setStoredDisputeId] = useState<string>("");
+  const [lookupOptions, setLookupOptions] = useState<any[]>([]); // Add this state
+  const [isLoadingLookups, setIsLoadingLookups] = useState(false); // Add this state
+
+  // Store disputeId in localStorage when it changes
+  useEffect(() => {
+    if (disputeId) {
+      localStorage.setItem("currentDisputeId", disputeId);
+      setStoredDisputeId(disputeId);
+    }
+  }, [disputeId]);
+
+  // Get disputeId from localStorage on component mount
+  useEffect(() => {
+    const savedDisputeId = localStorage.getItem("currentDisputeId");
+    if (savedDisputeId) {
+      setStoredDisputeId(savedDisputeId);
+    }
+  }, []);
+
+  // Fetch lookup data when modal opens
+  useEffect(() => {
+    if (open) {
+      fetchLookupData();
+    }
+  }, [open, i18n.language]);
+
+  const fetchLookupData = async () => {
+    setIsLoadingLookups(true);
+    try {
+      // Category IDs for department (1000) and payment type (1100)
+      const categoryIds = [1000, 1100];
+      const result = await triggerGetLookups(categoryIds).unwrap();
+      setLookupOptions(result);
+    } catch (error) {
+      console.error("Failed to fetch lookup data:", error);
+    } finally {
+      setIsLoadingLookups(false);
+    }
+  };
 
   // Fetch dispute data when modal opens
   useEffect(() => {
-    if (open && disputeId) {
-      triggerGetDisputeById(disputeId);
+    if (open && storedDisputeId) {
+      triggerGetDisputeById(storedDisputeId);
     }
-  }, [open, disputeId, triggerGetDisputeById]);
+  }, [open, storedDisputeId, triggerGetDisputeById]);
 
-  // Reset form when modal closes
+  // Reset form and clear storage when modal closes
   useEffect(() => {
     if (!open) {
       form.resetFields();
-      setReviewAction(1);
+      setReviewAction(2);
+      localStorage.removeItem("currentDisputeId");
     }
   }, [open, form]);
 
   const dispute = disputeData?.data;
+
+  // Helper function to get label from value
+  const getLabelFromValue = (value: number, categoryId: number) => {
+    const option = lookupOptions.find((opt) => opt.value === value && opt.categoryId === categoryId);
+    if (!option) return value;
+    return i18n.language === "ar" ? option.labelAr : option.labelEn;
+  };
 
   const handleStatusUpdate = async (action: number) => {
     try {
       const values = await form.validateFields();
 
       const payload = {
-        dispute_Id: disputeId,
+        dispute_Id: storedDisputeId,
         review_Action: action,
         review_Comments: values.review_Comments,
         assignedTo: values.assignedTo || "",
-        action_type: action === 1 ? "Approved" : action === 2 ? "Rejected" : "Escalated",
+        action_type: action === 1 ? "Assigned" : action === 2 ? "Approved" : "Rejected",
       };
 
       const response = await updateDisputeStatus(payload).unwrap();
       notification.success(response, t("messages.updateSuccess", { entity: "Dispute Status" }));
 
+      // Refresh the dispute data to get the updated reviews
+      triggerGetDisputeById(storedDisputeId);
+
+      // Reset the form
+      form.resetFields();
+
+      // Call the callback if provided (but don't close the modal)
       onStatusUpdate?.();
-      onClose();
     } catch (error: any) {
       if (error.errorFields) {
         // Validation errors
@@ -131,13 +190,13 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
       closable={false}
       bodyStyle={{ padding: 24 }}
     >
-      <Spin spinning={isLoading}>
+      <Spin spinning={isLoading || isUpdating || isLoadingLookups}>
         <Card bordered={false} style={{ borderRadius: 12 }} bodyStyle={{ padding: 0 }}>
           {/* Custom Header */}
           <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
             <Col>
               <Title level={4} style={{ margin: 0 }}>
-                Dispute Review <Text type="danger">#{dispute?.fine_Number || disputeId}</Text>
+                Dispute Review <Text type="danger">#{dispute?.fine_Number || storedDisputeId}</Text>
                 {dispute?.dispute_Status !== undefined && (
                   <Tag color={getStatusColor(dispute.dispute_Status)} style={{ marginLeft: 8 }}>
                     {getStatusText(dispute.dispute_Status)}
@@ -174,12 +233,16 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                         <Col span={10}>
                           <Text strong>Department:</Text>
                         </Col>
-                        <Col span={14}>{dispute.department || "No Data"}</Col>
+                        <Col span={14}>
+                          {dispute.department ? getLabelFromValue(dispute.department, 1000) : "No Data"}
+                        </Col>
 
                         <Col span={10}>
                           <Text strong>Payment Type:</Text>
                         </Col>
-                        <Col span={14}>{dispute.payment_Type || "No Data"}</Col>
+                        <Col span={14}>
+                          {dispute.payment_Type ? getLabelFromValue(dispute.payment_Type, 1100) : "No Data"}
+                        </Col>
 
                         <Col span={10}>
                           <Text strong>Dispute Reason:</Text>
@@ -363,14 +426,13 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                       {dispute.reviews.map((review: any, idx: number) => (
                         <Timeline.Item dot={<ClockCircleOutlined />} color="blue" key={idx}>
                           <Text strong>
-                            Review{" "}
                             {review.review_Action === 1
-                              ? "Approved"
+                              ? "Assigned"
                               : review.review_Action === 2
-                                ? "Rejected"
+                                ? "Approved"
                                 : review.review_Action === 3
-                                  ? "Escalated"
-                                  : "Unknown"}
+                                  ? "Rejected"
+                                  : "Review"}
                           </Text>
                           <br />
                           <Text type="secondary">{review.review_Comments || "No Comments"}</Text>
@@ -378,6 +440,14 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                             <>
                               <br />
                               <Text type="secondary">Assigned to: {review.assignedTo}</Text>
+                            </>
+                          )}
+                          {review.createdAt && (
+                            <>
+                              <br />
+                              <Text type="secondary" style={{ fontSize: "10px" }}>
+                                {formatDateTime(review.createdAt)}
+                              </Text>
                             </>
                           )}
                         </Timeline.Item>
@@ -407,12 +477,6 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     </Form.Item>
                   </Col>
 
-                  <Col span={8}>
-                    <Form.Item name="assignedTo" label={<Text strong>Assign To (Optional)</Text>}>
-                      <Input placeholder="Enter supervisor/officer name" />
-                    </Form.Item>
-                  </Col>
-
                   <Col span={4}>
                     <Form.Item name="assignedTo" label={<Text strong>Assign To</Text>}>
                       <Select placeholder="Select Supervisor">
@@ -423,7 +487,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     </Form.Item>
                   </Col>
 
-                  <Col span={4} style={{ textAlign: "right", paddingTop: 30 }}>
+                  <Col span={10} style={{ textAlign: "right", paddingTop: 30 }}>
                     <Button onClick={onClose} style={{ marginRight: 8 }} disabled={isUpdating}>
                       Cancel
                     </Button>
