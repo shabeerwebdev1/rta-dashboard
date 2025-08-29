@@ -9,52 +9,66 @@ const { Option } = Select;
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-const sampleData = [
-  { key: 1, employeeId: "E123", employeeName: "John Doe" },
-  { key: 2, employeeId: "E456", employeeName: "Jane Smith" },
+interface InspectorData {
+  key: number;
+  InspectorName: string;
+  zone?: string;
+  shift?: string;
+  weekOffs?: string[];
+  inspectiontype?: string;
+}
+
+const sampleData: InspectorData[] = [
+  { key: 1, InspectorName: "John Doe" },
+  { key: 2, InspectorName: "Jane Smith" },
 ];
 
 function UserZoneLinking() {
   const { setPageTitle } = usePage();
   const { t } = useTranslation();
-  const [data, setData] = useState(sampleData);
+  const [data, setData] = useState<InspectorData[]>(sampleData);
 
   useEffect(() => {
     setPageTitle(t(UserZoneLinkingConfig.title));
   }, [setPageTitle, t]);
 
-  const handleZoneChange = (value: string, record: any) => {
-    const newData = data.map((item) =>
-      item.key === record.key ? { ...item, zone: value } : item
+  const handleZoneChange = (value: string, record: InspectorData) => {
+    setData((prev) =>
+      prev.map((item) => (item.key === record.key ? { ...item, zone: value } : item))
     );
-    setData(newData);
   };
 
-  const handleShiftChange = (value: string, record: any) => {
-    const newData = data.map((item) =>
-      item.key === record.key ? { ...item, shift: value } : item
+  const handleShiftChange = (value: string, record: InspectorData) => {
+    setData((prev) =>
+      prev.map((item) => (item.key === record.key ? { ...item, shift: value } : item))
     );
-    setData(newData);
   };
 
-  const handleWeekOffChange = (checkedValues: string[], record: any) => {
-    const newData = data.map((item) =>
-      item.key === record.key ? { ...item, weekOffs: checkedValues } : item
+  const handleWeekOffChange = (checkedValues: string[], record: InspectorData) => {
+    setData((prev) =>
+      prev.map((item) => (item.key === record.key ? { ...item, weekOffs: checkedValues } : item))
     );
-    setData(newData);
+  };
+
+  const handleInspectionTypeChange = (value: string, record: InspectorData) => {
+    setData((prev) =>
+      prev.map((item) =>
+        item.key === record.key ? { ...item, inspectiontype: value } : item
+      )
+    );
   };
 
   // Build columns dynamically
-  const columns = UserZoneLinkingConfig.tableConfig.columns.map((col) => {
-    if (col.key === "zone") {
+  const columns = UserZoneLinkingConfig.tableConfig.columns.map((col: any) => {
+    if (col.key === "Zone") {
       return {
         ...col,
-        render: (_: any, record: any) => (
+        render: (_: any, record: InspectorData) => (
           <Select
             value={record.zone}
             style={{ width: 120 }}
             onChange={(val) => handleZoneChange(val, record)}
-             placeholder="Select Zone"
+            placeholder="Select Zone"
           >
             <Option value="North">North</Option>
             <Option value="South">South</Option>
@@ -65,10 +79,10 @@ function UserZoneLinking() {
       };
     }
 
-    if (col.key === "shift") {
+    if (col.key === "Shift") {
       return {
         ...col,
-        render: (_: any, record: any) => (
+        render: (_: any, record: InspectorData) => (
           <Select
             value={record.shift}
             style={{ width: 140 }}
@@ -83,10 +97,27 @@ function UserZoneLinking() {
       };
     }
 
-    if (col.key === "weekOffs") {
+    if (col.key === "InspectionType") {
       return {
         ...col,
-        render: (_: any, record: any) => (
+        render: (_: any, record: InspectorData) => (
+          <Select
+            value={record.inspectiontype}
+            style={{ width: 160 }}
+            onChange={(val) => handleInspectionTypeChange(val, record)}
+            placeholder="Select Type"
+          >
+            <Option value="Plate Type">Car Plate</Option>
+            <Option value="Trade Type">Trade License</Option>
+          </Select>
+        ),
+      };
+    }
+
+    if (col.key === "WeekOffs") {
+      return {
+        ...col,
+        render: (_: any, record: InspectorData) => (
           <Checkbox.Group
             options={days}
             value={record.weekOffs}

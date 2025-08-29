@@ -4,7 +4,6 @@ import {
   Card,
   Input,
   Button,
-  Dropdown,
   Modal,
   Form,
   Row,
@@ -22,6 +21,7 @@ import {
   DownloadOutlined,
   AppstoreOutlined,
   UnorderedListOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
@@ -32,6 +32,7 @@ import { useAppNotification } from "../utils/notificationManager";
 import {
   useGetPledgesQuery,
   useAddPledgeMutation,
+  useUpdatePledgeMutation,
   useDeletePledgeMutation,
   useLazyGetLookupsQuery,
   useLazyGetPledgeByIdQuery,
@@ -40,7 +41,6 @@ import { useUploadFilesMutation } from "../services/fileApi";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
-import DynamicViewDrawer from "../components/drawer";
 import { pageConfigs } from "../config/pageConfigs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import PledgesViewDrawer from "../components/pledge/PledgesViewDrawer";
@@ -86,6 +86,9 @@ const PledgesPage: React.FC = () => {
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
 
+  // Add modal mode and selected record state
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any>(null);
@@ -99,6 +102,7 @@ const PledgesPage: React.FC = () => {
     refetchOnMountOrArgChange: true,
   });
   const [addPledge, { isLoading: isAdding }] = useAddPledgeMutation();
+  const [updatePledge, { isLoading: isUpdating }] = useUpdatePledgeMutation();
   const [deletePledge, { isLoading: isDeleting }] = useDeletePledgeMutation();
   const [uploadFiles, { isLoading: isUploading }] = useUploadFilesMutation();
   const [triggerGetPledge, { data: singleRecordData, isSuccess: isSingleRecordSuccess, isLoading: isPledgeLoading }] =
@@ -180,12 +184,28 @@ const PledgesPage: React.FC = () => {
     clearAll();
   };
 
-  const handleModalOpen = () => {
+  const handleModalOpen = (mode: "add" | "edit" = "add", record?: any) => {
+    setModalMode(mode);
+    setSelectedRecord(record || null);
     setIsModalOpen(true);
+
+    if (mode === "edit" && record) {
+      form.setFieldsValue({
+        pledgeType: record.pledgeType,
+        tradeLicenseNumber: record.tradeLicenseNumber,
+        businessName: record.businessName,
+        remarks: record.remarks,
+        // Handle document pre-fill logic here if needed
+      });
+    } else {
+      form.resetFields();
+    }
   };
 
   const handleModalClose = () => {
     setIsModalOpen(false);
+    setSelectedRecord(null);
+    setModalMode("add");
     form.resetFields();
   };
 
@@ -220,8 +240,17 @@ const PledgesPage: React.FC = () => {
         payload.DocumentUploaded = true;
       }
 
-      const response = await addPledge(payload).unwrap();
-      notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
+      let response;
+      if (modalMode === "add") {
+        response = await addPledge(payload).unwrap();
+        notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
+      } else {
+        response = await updatePledge({
+          id: selectedRecord.id,
+          ...payload,
+        }).unwrap();
+        notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
+      }
       handleModalClose();
     } catch (err) {
       notification.error(err as any, "Operation Failed");
@@ -271,20 +300,19 @@ const PledgesPage: React.FC = () => {
       content: t("messages.csvConfirmContent"),
       onOk: () => {
         const selectedData = data?.data.filter((item: any) => selectedRowKeys.includes(item.id));
-  
+
         // ✅ Map values to labels before exporting
         const formattedData = selectedData.map((item: any) => ({
           ...item,
           pledgeType: getLabelFromValue(item.pledgeType, pledgeTypeOptions, i18n),
         }));
-  
+
         exportToCsv(formattedData, `pledges_export.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
       },
     });
   };
-  
 
   const columnLabels = useMemo(
     () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
@@ -310,6 +338,7 @@ const PledgesPage: React.FC = () => {
 
   const actionMenuItems = (record: any) => [
     { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
+    { key: "edit", label: t("common.edit"), icon: <EditOutlined />, onClick: () => handleModalOpen("edit", record) },
   ];
 
   const searchAddon = (
@@ -364,7 +393,7 @@ const PledgesPage: React.FC = () => {
                   onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
                 />
               </Tooltip>
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleModalOpen}>
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => handleModalOpen("add")}>
                 {t("common.addNew")}
               </Button>
             </Space>
@@ -401,7 +430,7 @@ const PledgesPage: React.FC = () => {
 
       <Modal
         open={isModalOpen}
-        title={t("page.addTitle", { entity: "Pledge" })}
+        title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: "Pledge" })}
         onCancel={handleModalClose}
         width="720px"
         footer={[
@@ -414,10 +443,10 @@ const PledgesPage: React.FC = () => {
           <Button
             key="submit"
             type="primary"
-            loading={isAdding || isUploading || isLoadingLookups}
+            loading={isAdding || isUpdating || isUploading || isLoadingLookups}
             onClick={() => form.submit()}
           >
-            {t("common.submit")}
+            {t(modalMode === "add" ? "common.submit" : "common.update")}
           </Button>,
         ]}
       >
@@ -450,7 +479,7 @@ const PledgesPage: React.FC = () => {
                 <Form.Item
                   name="document"
                   label={t("form.document")}
-                  rules={[{ required: true }]}
+                  rules={[{ required: modalMode === "add" }]} // Only required for add mode
                   valuePropName="fileList"
                   getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
                 >

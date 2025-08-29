@@ -15,14 +15,16 @@
     "analytics": "التحليلات والرؤى",
     "plates": "لوحات",
     "tradelicenses": "رخص تجارية",
-    "generalsearch": "البحث العام",
+    "general": "البحث العام",
     "inspectorManagement": "إدارة المشتري",
     "supervisorManagement": "إدارة المشرفين",
     "teamAssesment": "تقييم الفريق",
     "traningAndEvaluation": "التدريب والتقييم",
     "teamEvaluation": "تقييم الفريق",
     "training": "التدريب",
-    "configuration": "الإعدادات"
+    "configuration": "الإعدادات",
+    "createshiftplan": "إنشاء خطة نوبات",
+    "adhocshiftplan": "خطة نوبات خاصة"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -39,7 +41,9 @@
       "fines": "إدارة الغرامات",
       "parkonic": "إدارة باركونيك",
       "inspectorManagement": "إدارة المشتري",
-      "supervisorManagement": "إدارة المشرفين"
+      "supervisorManagement": "إدارة المشرفين",
+      "createshiftplan": "إنشاء خطة نوبات",
+      "adhocshiftplan": "خطة نوبات خاصة"
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",
@@ -146,7 +150,8 @@
     "remove obstacle": "إزالة العائق",
     "remove": "إزالة",
     "compactView": "عرض مضغوط",
-    "standardView": "عرض قياسي"
+    "standardView": "عرض قياسي",
+    "confirm": "تأكيد"
   },
   "entity": {
     "plate": "لوحة",
@@ -181,7 +186,6 @@
     "sourceOfObstacle": "اختر مصدر العائق",
     "closestPaymentDevice": "أدخل أقرب جهاز دفع",
     "reportedBy": "أدخل اسم المبلغ",
-    "comments": "أضف التعليقات (اختياري)",
     "pledgeNumber": "أدخل رقم التعهد",
     "pledgeType": "اختر نوع التعهد",
     "tradeLicenseNumber": "أدخل رقم رخصة التجارة",
@@ -195,6 +199,7 @@
     "crmReference": "أدخل مرجع CRM",
     "email": "أدخل عنوان بريدك الإلكتروني",
     "phoneNumber": "أدخل رقم هاتفك",
-    "address": "أدخل عنوانك"
+    "address": "أدخل عنوانك",
+    "comments": "أضف تعليقات "
   }
 }

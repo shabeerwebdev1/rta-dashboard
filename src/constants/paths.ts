@@ -20,9 +20,10 @@ export const PATHS = {
   INSPECTOR_MANAGEMENT: "inspector-management",
   SUPERVISROR_MANGEMENT: "supervisor-management",
   LEAVE_MANGEMENT: "leave-management",
-  SHIFTPLANNING: "shiftplanning", // ✅ lowercase
+  CREATESHIFTPLAN:"createshiftplan",
   ANALYTICS: "analytics",
   TOWING: "towing",
+  ADHOCSHIFTPLAN:"adhocshiftplan",
 
   TEAM_EVALUATION: "team-assessment",
   TEAM_TRAINING: "team-assessment",
@@ -58,5 +59,6 @@ export const FULL_PATHS = {
 
   ANALYTICS: "/analytics",
   INSPECTOR_MANAGEMENT: "/inspector-management",
-  SHIFTPLANNING: "/shiftplanning", // ✅ lowercase
+  CREATESHIFTPLAN: "/createshiftplan",
+  ADHOCSHIFTPLAN:"/adhocshiftplan",
 };

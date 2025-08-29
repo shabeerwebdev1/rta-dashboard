@@ -1,18 +1,16 @@
-// UserZoneLinking.tsx
 import React, { useEffect, useState } from "react";
 import { Space, Table, Select, Checkbox } from "antd";
-import { UserZoneLinkingConfig } from "../config/pageConfigs/userZoneLinkingConfig";
+import { SupervisorManagemnetConfig } from "../config/pageConfigs/SupervisorManagementConfig";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
-import { SupervisorManagemnetConfig } from "../config/pageConfigs/SupervisorManagementConfig";
 
 const { Option } = Select;
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const sampleData = [
-  { key: 1, employeeId: "E123", employeeName: "John Doe" },
-  { key: 2, employeeId: "E456", employeeName: "Jane Smith" },
+  { key: 1, SupervisorName: "John Doe" },
+  { key: 2, SupervisorName: "Jane Smith" },
 ];
 
 function UserZoneLinking() {
@@ -25,40 +23,73 @@ function UserZoneLinking() {
   }, [setPageTitle, t]);
 
   const handleZoneChange = (value: string, record: any) => {
-    const newData = data.map((item) => (item.key === record.key ? { ...item, zone: value } : item));
+    const newData = data.map((item) =>
+      item.key === record.key ? { ...item, zone: value } : item
+    );
     setData(newData);
   };
 
   const handleShiftChange = (value: string, record: any) => {
-    const newData = data.map((item) => (item.key === record.key ? { ...item, shift: value } : item));
+    const newData = data.map((item) =>
+      item.key === record.key ? { ...item, shift: value } : item
+    );
     setData(newData);
   };
 
   const handleWeekOffChange = (checkedValues: string[], record: any) => {
-    const newData = data.map((item) => (item.key === record.key ? { ...item, weekOffs: checkedValues } : item));
+    const newData = data.map((item) =>
+      item.key === record.key ? { ...item, weekOffs: checkedValues } : item
+    );
     setData(newData);
   };
 
-  // Build columns dynamically
-  const columns = UserZoneLinkingConfig.tableConfig.columns.map((col) => {
+  const columns = SupervisorManagemnetConfig.tableConfig.columns.map((col) => {
     if (col.key === "zone") {
-      return {
-        ...col,
-        render: (_: any, record: any) => (
-          <Select
-            value={record.zone}
-            style={{ width: 120 }}
-            onChange={(val) => handleZoneChange(val, record)}
-            placeholder="Select Zone"
-          >
-            <Option value="North">North</Option>
-            <Option value="South">South</Option>
-            <Option value="East">East</Option>
-            <Option value="West">West</Option>
-          </Select>
-        ),
-      };
-    }
+  return {
+    ...col,
+    render: (_: any, record: any) => (
+      <Select
+        mode="multiple"
+        value={record.zone || []}
+        style={{ width: 200 }}
+        onChange={(val) => handleZoneChange(val, record)}
+        placeholder="Select Zone(s)"
+        tagRender={(props) => {
+          const { label, closable, onClose } = props;
+          return (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "2px 8px",
+                margin: "2px",
+                backgroundColor: "#e6f7ff",
+                border: "1px solid #91d5ff",
+                borderRadius: "12px",
+                fontSize: "12px",
+              }}
+            >
+              {label}
+              {closable && (
+                <span
+                  style={{ marginLeft: 6, cursor: "pointer", color: "#1890ff" }}
+                  onClick={onClose}
+                >
+                  ✕
+                </span>
+              )}
+            </span>
+          );
+        }}
+      >
+        <Option value="North">North</Option>
+        <Option value="South">South</Option>
+        <Option value="East">East</Option>
+        <Option value="West">West</Option>
+      </Select>
+    ),
+  };
+}
 
     if (col.key === "shift") {
       return {
@@ -91,15 +122,17 @@ function UserZoneLinking() {
       };
     }
 
-    return {
-      ...col,
-      dataIndex: col.key,
-    };
+    return { ...col, dataIndex: col.key };
   });
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <Table rowSelection={{ type: "checkbox" }} dataSource={data} columns={columns} pagination={false} />
+      <Table
+        rowSelection={{ type: "checkbox" }}
+        dataSource={data}
+        columns={columns}
+        pagination={false}
+      />
     </Space>
   );
 }

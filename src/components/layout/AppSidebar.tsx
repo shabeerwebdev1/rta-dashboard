@@ -21,10 +21,32 @@ import { FULL_PATHS } from "../../constants/paths";
 
 const { Sider } = Layout;
 
-const AppSidebar: React.FC = () => {
+interface AppSidebarProps {
+  currentTheme?: string; // Add theme prop
+}
+
+const AppSidebar: React.FC<AppSidebarProps> = ({ currentTheme = "corporateIndigo" }) => {
   const [collapsed, setCollapsed] = useState(false);
   const { t } = useTranslation();
   const location = useLocation();
+
+  // Function to get logo paths based on theme
+  const getLogoPaths = (theme: string) => {
+    switch (theme) {
+      case "corporateRed":
+        return {
+          full: "/images/redlogo.png",
+          mini: "/images/rta_logo_mini.png",
+        };
+      default:
+        return {
+          full: "/images/rta_logo_full.png",
+          mini: "/images/rta_logo_mini.png",
+        };
+    }
+  };
+
+  const logosPaths = getLogoPaths(currentTheme);
 
   const menuItems: MenuProps["items"] = [
     {
@@ -122,9 +144,21 @@ const AppSidebar: React.FC = () => {
     },
 
     {
-      key: FULL_PATHS.SHIFTPLANNING,
+      key: "shiftplanning",
       icon: <AuditOutlined />,
-      label: <Link to={FULL_PATHS.SHIFTPLANNING}>{t("sidebar.shiftplanning")}</Link>,
+      label: t("sidebar.shiftplanning"),
+      children: [
+        {
+          key: FULL_PATHS.CREATESHIFTPLAN,
+          icon: <AuditOutlined />,
+          label: <Link to={FULL_PATHS.CREATESHIFTPLAN}>{t("sidebar.createshiftplan")}</Link>,
+        },
+        {
+          key: FULL_PATHS.ADHOCSHIFTPLAN,
+          icon: <AuditOutlined />,
+          label: <Link to={FULL_PATHS.ADHOCSHIFTPLAN}>{t("sidebar.adhocshiftplan")}</Link>,
+        },
+      ],
     },
   ];
 
@@ -174,7 +208,7 @@ const AppSidebar: React.FC = () => {
       <div className="sidebar-logo-container">
         <div className={`logo-wrapper ${collapsed ? "hidden" : "visible"}`}>
           <Image
-            src="/images/rta_logo_full.png"
+            src={logosPaths.full}
             alt="Full Logo"
             preview={false}
             style={{ height: 58, width: "auto", objectFit: "contain" }}
@@ -182,7 +216,7 @@ const AppSidebar: React.FC = () => {
         </div>
         <div className={`logo-wrapper ${collapsed ? "visible" : "hidden"}`}>
           <Image
-            src="/images/rta_logo_mini.png"
+            src={logosPaths.mini}
             alt="Mini Logo"
             preview={false}
             style={{ height: 72, width: "auto", objectFit: "contain" }}

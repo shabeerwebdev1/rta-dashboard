@@ -6,7 +6,6 @@ import {
   Col,
   Typography,
   Divider,
-  Image,
   Timeline,
   Button,
   Input,
@@ -392,7 +391,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
 
                   <Col span={12}>
                     <Card
-                      title="Location"
+                      title=" Fine Location"
                       size="small"
                       style={{ borderRadius: 12, marginBottom: 16 }}
                       headStyle={{ background: "#fafafa", fontWeight: 600 }}
@@ -466,7 +465,8 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
             <>
               <Divider />
               <Form form={form} layout="vertical">
-                <Row gutter={16} align="bottom">
+                <Row gutter={16} align="middle">
+                  {/* Comment Box */}
                   <Col span={8}>
                     <Form.Item
                       name="review_Comments"
@@ -477,30 +477,38 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     </Form.Item>
                   </Col>
 
-                  <Col span={4}>
-                    <Form.Item name="assignedTo" label={<Text strong>Assign To</Text>}>
-                      <Select placeholder="Select Supervisor">
-                        <Select.Option value="supervisor1">Supervisor 1</Select.Option>
-                        <Select.Option value="supervisor2">Supervisor 2</Select.Option>
-                        <Select.Option value="supervisor3">Supervisor 3</Select.Option>
-                      </Select>
-                    </Form.Item>
+                  {/* Supervisor dropdown + Assign button side by side */}
+                  <Col span={6}>
+                    <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                      <Form.Item
+                        name="assignedTo"
+                        label={<Text strong>Assign To</Text>}
+                        style={{ flex: 1, marginBottom: 0 }}
+                      >
+                        <Select placeholder="Select Supervisor">
+                          <Select.Option value="supervisor1">Supervisor 1</Select.Option>
+                          <Select.Option value="supervisor2">Supervisor 2</Select.Option>
+                          <Select.Option value="supervisor3">Supervisor 3</Select.Option>
+                        </Select>
+                      </Form.Item>
+
+                      <Button
+                        type="default"
+                        loading={isUpdating && reviewAction === 1}
+                        onClick={() => {
+                          setReviewAction(1);
+                          handleStatusUpdate(1); // Assigned = 1
+                        }}
+                      >
+                        Assign
+                      </Button>
+                    </div>
                   </Col>
 
+                  {/* Approve + Reject + Cancel buttons aligned right */}
                   <Col span={10} style={{ textAlign: "right", paddingTop: 30 }}>
                     <Button onClick={onClose} style={{ marginRight: 8 }} disabled={isUpdating}>
                       Cancel
-                    </Button>
-                    <Button
-                      type="default"
-                      style={{ marginRight: 8 }}
-                      loading={isUpdating && reviewAction === 1}
-                      onClick={() => {
-                        setReviewAction(1);
-                        handleStatusUpdate(1); // Assigned = 1
-                      }}
-                    >
-                      Assign
                     </Button>
                     <Button
                       type="primary"

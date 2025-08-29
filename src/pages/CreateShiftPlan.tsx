@@ -663,7 +663,7 @@ const dataSource = [
   },
 ];
 
-export default function ShiftPlanning() {
+export default function CreateShiftPlan() {
   const [activeTab, setActiveTab] = useState("1");
   const [inspector, setInspector] = useState("");
   const [dateRange, setDateRange] = useState([]);
@@ -676,12 +676,25 @@ export default function ShiftPlanning() {
   const [form] = Form.useForm();
 
   // Cell color styles
-  const getCellStyle = (value: string) => {
-    if (value === "LV") return { backgroundColor: "#ffccc7", color: "#a8071a", fontWeight: 600 };
-    if (value === "WO") return { backgroundColor: "#fff7e6", color: "#d46b08", fontWeight: 600 };
-    if (value.startsWith("Z")) return { backgroundColor: "#e6f7ff", color: "#0050b3", fontWeight: 500 };
-    return {};
-  };
+  // ✅ Update getCellStyle to handle Day 29
+  const getCellStyle = (value: string, dayIndex?: number) => {
+  let style: any = {};
+
+  if (value === "LV") style = { backgroundColor: "#ffccc7", color: "#a8071a", fontWeight: 600 };
+  else if (value === "WO") style = { backgroundColor: "#fff7e6", color: "#d46b08", fontWeight: 600 };
+  else if (value?.startsWith("Z")) style = { backgroundColor: "#e6f7ff", color: "#0050b3", fontWeight: 500 };
+
+  // ✅ Special styling for Day 29
+  if (dayIndex === 28) {
+    style = {
+      ...style,
+      border: "2px solid #faad14", // orange border highlight
+      backgroundColor: "#fffbe6",   // light yellow background
+    };
+  }
+
+  return style;
+};
 
   const handleEditClick = (row: any, value: string, dayIndex: number) => {
     if (!value.includes("-")) return;
@@ -730,15 +743,14 @@ export default function ShiftPlanning() {
           <p style={{ marginBottom: 8 }}>
             <b>Area:</b> {areaName}
           </p>
-          <Button 
-  type="link" 
-  size="small" 
-  style={{ color: "red" }} 
-  onClick={() => handleEditClick(row, value, dayIndex)}
->
-  Edit
-</Button>
-
+          <Button
+            type="link"
+            size="small"
+            style={{ color: "red" }}
+            onClick={() => handleEditClick(row, value, dayIndex)}
+          >
+            Edit
+          </Button>
         </div>
       );
     } else if (value === "LV") {
@@ -761,7 +773,7 @@ export default function ShiftPlanning() {
           padding: "1px 1px", // reduced padding
           boxShadow: "0 4px 10px rgba(0,0,0,0.12)",
           fontSize: "13px",
-         
+
           lineHeight: 1.4,
         }}
         overlayInnerStyle={{
@@ -776,7 +788,7 @@ export default function ShiftPlanning() {
             padding: "4px 8px",
             textAlign: "center",
             borderRadius: 4,
-            ...getCellStyle(value),
+            ...getCellStyle(value, dayIndex), // ✅ pass dayIndex
           }}
         >
           {value}
@@ -791,6 +803,7 @@ export default function ShiftPlanning() {
   }, [setPageTitle, t]);
 
   // Dynamic columns (Day 1 - 30)
+  // ✅ Update dayColumns to pass dayIndex into getCellStyle
   const dayColumns = Array.from({ length: 30 }, (_, i) => ({
     title: `Day ${i + 1}`,
     dataIndex: ["days", i],
@@ -800,17 +813,37 @@ export default function ShiftPlanning() {
   }));
 
   const columns = [
-    {
-      title: "Inspector",
-      dataIndex: "inspector",
-      key: "inspector",
-      fixed: "left",
-      width: 150,
-    },
-    { title: "Month", dataIndex: "month", key: "month", width: 120 },
-    { title: "Shift", dataIndex: "shift", key: "shift", width: 120 },
-    ...dayColumns,
-  ];
+  {
+    title: "Inspector",
+    dataIndex: "inspector",
+    key: "inspector",
+    fixed: "left",
+    width: 150,
+    filters: [...new Set(dataSource.map((d) => ({ text: d.inspector, value: d.inspector })))],
+    onFilter: (value: any, record: any) => record.inspector === value,
+    sorter: (a: any, b: any) => a.inspector.localeCompare(b.inspector),
+  },
+  {
+    title: "Month",
+    dataIndex: "month",
+    key: "month",
+    width: 120,
+    filters: [...new Set(dataSource.map((d) => ({ text: d.month, value: d.month })))],
+    onFilter: (value: any, record: any) => record.month === value,
+    sorter: (a: any, b: any) => a.month.localeCompare(b.month),
+  },
+  {
+    title: "Shift",
+    dataIndex: "shift",
+    key: "shift",
+    width: 120,
+    filters: [...new Set(dataSource.map((d) => ({ text: d.shift, value: d.shift })))],
+    onFilter: (value: any, record: any) => record.shift === value,
+    sorter: (a: any, b: any) => a.shift.localeCompare(b.shift),
+  },
+  ...dayColumns,
+];
+
 
   const handleSubmit = () => {
     console.log("Inspector:", inspector);
@@ -832,26 +865,33 @@ export default function ShiftPlanning() {
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Card style={{ marginBottom: 20 }}>
-        <Space size="large">
-          <Select
-            placeholder="Select Inspector"
-            style={{ width: 200 }}
-            value={inspector}
-            onChange={(val) => setInspector(val)}
-          >
-            <Select.Option value="Inspector 1">Inspector 1</Select.Option>
-            <Select.Option value="Inspector 2">Inspector 2</Select.Option>
-            <Select.Option value="Inspector 3">Inspector 3</Select.Option>
-            <Select.Option value="Inspector 4">Inspector 4</Select.Option>
-            <Select.Option value="Inspector 5">Inspector 5</Select.Option>
-          </Select>
-          <RangePicker onChange={(val) => setDateRange(val)} />
-          <Button type="primary" onClick={handleSubmit}>
-            Submit
-          </Button>
-        </Space>
-      </Card>
+        <Form layout="inline">
+          <Form.Item label="Inspector">
+            <Select
+              placeholder="Select Inspector"
+              style={{ width: 200 }}
+              value={inspector}
+              onChange={(val) => setInspector(val)}
+            >
+              <Select.Option value="Inspector 1">Inspector 1</Select.Option>
+              <Select.Option value="Inspector 2">Inspector 2</Select.Option>
+              <Select.Option value="Inspector 3">Inspector 3</Select.Option>
+              <Select.Option value="Inspector 4">Inspector 4</Select.Option>
+              <Select.Option value="Inspector 5">Inspector 5</Select.Option>
+            </Select>
+          </Form.Item>
 
+          <Form.Item label="Plan Date">
+            <RangePicker onChange={(val) => setDateRange(val)} />
+          </Form.Item>
+
+          <Form.Item>
+            <Button type="primary" onClick={handleSubmit}>
+              Submit
+            </Button>
+          </Form.Item>
+        </Form>
+      </Card>
       <Tabs
         type="card"
         activeKey={activeTab}
@@ -867,18 +907,7 @@ export default function ShiftPlanning() {
         </TabPane>
 
         <TabPane tab="Monthly" key="2">
-          <Select
-            placeholder="Select Month"
-            style={{ width: 200, marginBottom: 16 }}
-            value={selectedMonth}
-            onChange={(val) => setSelectedMonth(val)}
-          >
-            {[...new Set(dataSource.map((d) => d.month))].map((month) => (
-              <Select.Option key={month} value={month}>
-                {month}
-              </Select.Option>
-            ))}
-          </Select>
+         
 
           <Table
             dataSource={dataSource.filter((d) => d.month === selectedMonth)}
@@ -890,18 +919,7 @@ export default function ShiftPlanning() {
         </TabPane>
 
         <TabPane tab="Inspector Wise" key="3">
-          <Select
-            placeholder="Select Inspector"
-            style={{ width: 200, marginBottom: 16 }}
-            value={inspector}
-            onChange={(val) => setInspector(val)}
-          >
-            {[...new Set(dataSource.map((d) => d.inspector))].map((insp) => (
-              <Select.Option key={insp} value={insp}>
-                {insp}
-              </Select.Option>
-            ))}
-          </Select>
+         
 
           <Table
             dataSource={inspector ? dataSource.filter((d) => d.inspector === inspector) : []}

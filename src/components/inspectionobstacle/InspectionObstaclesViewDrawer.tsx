@@ -1,5 +1,5 @@
 import React from "react";
-import { Drawer, Descriptions, Tag, Typography, Button, Image, Empty, Space, Badge } from "antd";
+import { Drawer, Descriptions, Tag, Typography, Button, Image, Empty, Space, Badge, Modal } from "antd";
 import { useTranslation } from "react-i18next";
 import { DeleteOutlined, ShareAltOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
@@ -26,7 +26,8 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
 }) => {
   const { t } = useTranslation();
   const notification = useAppNotification();
-  const [updateObstacle, { isLoading: isUpdating }] = useUpdateInspectionObstacleMutation();
+  const [updateObstacle] = useUpdateInspectionObstacleMutation();
+  const [modal, contextHolder] = Modal.useModal(); // ✅ useModal hook
 
   if (!record) return null;
 
@@ -42,115 +43,102 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
     { key: "removeAction", title: "common.remove obstacle", type: "action" },
   ];
 
-  const handleRemoveObstacle = async () => {
-    try {
-      // Check if obstacleCode exists and is valid
-      const obstacleCode = record.obstacleCode as string;
-      
-      if (!obstacleCode || typeof obstacleCode !== 'string') {
-        notification.error("Invalid obstacle code", "Please check the obstacle data");
-        return;
-      }
-  
-      console.log("Sending obstacle code:", obstacleCode); // For debugging
-      
-      // Pass obstacle code as parameter to the mutation (not in request body)
-      const response = await updateObstacle(obstacleCode).unwrap();
-      
-      notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
-      onStatusChange();
-      onClose();
-    } catch (err: any) {
-      console.error("Remove obstacle error:", err); // For debugging
-      
-      // Check if it's a validation error
-      if (err?.data?.errors?.obstacleCode) {
-        notification.error("Validation Error", err.data.errors.obstacleCode[0]);
-      } else {
-        notification.error(err as any, "Operation Failed");
-      }
-    }
+  const handleRemoveObstacle = (obstacleCode: string) => {
+    modal.confirm({
+      title: t("messages.deleteConfirmTitle"),
+      content: t("messages.deleteConfirmContent", { entity: t(config.name.singular) }),
+      okText: t("common.confirm"),
+      cancelText: t("common.cancel"),
+      onOk: async () => {
+        try {
+          const response = await updateObstacle(obstacleCode).unwrap();
+          notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
+          onStatusChange();
+          onClose();
+        } catch (err: any) {
+          if (err?.data?.errors?.obstacleCode) {
+            notification.error({ message: "Validation Error", description: err.data.errors.obstacleCode[0] });
+          } else {
+            notification.error(err as any, "Operation Failed");
+          }
+        }
+      },
+    });
   };
 
   const imageNames = record.photoPath ? String(record.photoPath).split(";").filter(Boolean) : [];
 
   return (
-    <Drawer
-      open={open}
-      onClose={onClose}
-      width={500}
-      title={t("page.viewTitle", { entity: t(config.name.singular) })}
-      className="inspection-obstacles-drawer"
-      extra={
-        <Button icon={<ShareAltOutlined />} onClick={onShare}>
-          {t("common.share")}
-        </Button>
-      }
-    >
-      {/* Add obstacle code to display for debugging */}
-      <Descriptions.Item label="Obstacle Code (Debug)">
-        {record.obstacleCode ? String(record.obstacleCode) : "N/A"}
-      </Descriptions.Item>
+    <>
+      {contextHolder}
+      <Drawer
+        open={open}
+        onClose={onClose}
+        width={500}
+        title={t("page.viewTitle", { entity: t(config.name.singular) })}
+        className="inspection-obstacles-drawer"
+        extra={
+          <Button icon={<ShareAltOutlined />} onClick={onShare}>
+            {t("common.share")}
+          </Button>
+        }
+      >
+        <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
+          {displayFields.map((field) => {
+            if (field.type === "action") {
+              return (
+                <Descriptions.Item label={t(field.title)} key={field.key}>
+                  {!isRemoved && (
+                    <Button
+                      icon={<DeleteOutlined />}
+                      onClick={() => handleRemoveObstacle(record.obstacleCode as string)}
+                      danger
+                    >
+                      {t("common.remove")}
+                    </Button>
+                  )}
+                </Descriptions.Item>
+              );
+            }
 
-      <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
-        {displayFields.map((field) => {
-          if (field.type === "action") {
+            const text = record[field.key];
+
             return (
               <Descriptions.Item label={t(field.title)} key={field.key}>
-                {!isRemoved && (
-                  <Button icon={<DeleteOutlined />} onClick={handleRemoveObstacle} loading={isUpdating} danger>
-                    {t("common.remove")}
-                  </Button>
-                )}
+                {(() => {
+                  if (!text) return t("common.noData");
+                  switch (field.type) {
+                    case "status":
+                      const statusKey =
+                        typeof text === "string" ? text.toLowerCase() : text === 1 ? "removed" : "reported";
+                      return <Tag color={statusKey === "removed" ? "green" : "orange"}>{t(`status.${statusKey}`)}</Tag>;
+
+                    default:
+                      return String(text);
+                  }
+                })()}
               </Descriptions.Item>
             );
-          }
+          })}
+        </Descriptions>
 
-          const text = record[field.key];
+        <Typography.Title level={5} style={{ marginBottom: 16 }}>
+          {t("form.photo")}
+        </Typography.Title>
 
-          return (
-            <Descriptions.Item label={t(field.title)} key={field.key}>
-              {(() => {
-                if (!text) return t("common.noData");
-                switch (field.type) {
-                  case "status":
-                    const statusKey =
-                      typeof text === "string" ? text.toLowerCase() : text === 1 ? "removed" : "reported";
-                    return (
-                      <Badge 
-                        status={statusKey === "removed" ? "success" : "warning"} 
-                        text={
-                          <Tag color={statusKey === "removed" ? "green" : "orange"}>
-                            {t(`status.${statusKey}`)}
-                          </Tag>
-                        } 
-                      />
-                    );
-                  default:
-                    return String(text);
-                }
-              })()}
-            </Descriptions.Item>
-          );
-        })}
-      </Descriptions>
-
-      <Typography.Title level={5} style={{ marginBottom: 16 }}>
-        {t("form.photo")}
-      </Typography.Title>
-
-      {imageNames.length > 0 ? (
-        <Image.PreviewGroup>
-          <Space wrap>
-            {imageNames.map((name, index) => (
-              <Image key={index} width={100} height={100} src={getFileUrl(name)} alt={name} />
-            ))}
-          </Space>
-        </Image.PreviewGroup>
-      ) : (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
-      )}
-    </Drawer>
+        {imageNames.length > 0 ? (
+          <Image.PreviewGroup>
+            <Space wrap>
+              {imageNames.map((name, index) => (
+                <Image key={index} width={100} height={100} src={getFileUrl(name)} alt={name} />
+              ))}
+            </Space>
+          </Image.PreviewGroup>
+        ) : (
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
+        )}
+      </Drawer>
+    </>
   );
 };
 

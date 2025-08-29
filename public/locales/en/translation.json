@@ -23,7 +23,9 @@
     "traningAndEvaluation": "Training & Evaluation",
     "teamEvaluation": "Team Evaluation",
     "training": "Training",
-    "configuration": "Configuration"
+    "configuration": "Configuration",
+    "createshiftplan": "Create Shift Plan",
+    "adhocshiftplan": "Adhoc Shift Plan"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -41,7 +43,8 @@
       "parkonic": "Parkonic Management",
       "inspectorManagement": "Inspector Management",
       "supervisorManagement": "Supervisor Management",
-      "shiftplanning": "Shift Planning"
+      "createshiftplan": "Create Shift Plan",
+      "adhocshiftplan": "Adhoc Shift Plan"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",
@@ -155,7 +158,8 @@
     "true": "True",
     "false": "False",
     "compactView": "Compact View",
-    "standardView": "Standard View"
+    "standardView": "Standard View",
+    "confirm": "Confirm"
   },
   "entity": {
     "plate": "Plate",
@@ -190,7 +194,7 @@
     "sourceOfObstacle": "Select the source of obstacle",
     "closestPaymentDevice": "Enter the closest payment device",
     "reportedBy": "Enter the reporter's name",
-    "comments": "Add comments (optional)",
+    "comments": "Add comments ",
     "pledgeNumber": "Enter the pledge number",
     "pledgeType": "Select the pledge type",
     "tradeLicenseNumber": "Enter the trade license number",

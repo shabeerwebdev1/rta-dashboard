@@ -47,7 +47,6 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
       plateColor_Id: 400,
       plateStatus_Id: 500,
       exemptionReason_ID: 100,
-
       sourceOfObstacle: 800,
       pledgeType: 900,
     };
@@ -76,7 +75,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
       <Space key="sorter_group" align="center">
         <Text>{t("common.sortBy")}: </Text>
         <Tag
-          color="#ee3a41"
+          color="#171B7D"
           key="sorter"
           closable
           onClose={() => onClearFilter("sorter")}
@@ -95,7 +94,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     filterGroups.push(
       <Space key="search_group" align="center">
         <Text>{searchLabel}: </Text>
-        <Tag color="#ee3a41" key="search" closable onClose={() => onClearFilter("search")} style={tagStyle}>
+        <Tag color="#171B7D" key="search" closable onClose={() => onClearFilter("search")} style={tagStyle}>
           {state.searchValue}
         </Tag>
       </Space>,
@@ -109,7 +108,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     filterGroups.push(
       <Space key="date_group" align="center">
         <Text>{t("form.dateRange")}: </Text>
-        <Tag color="#ee3a41" key="date" closable onClose={() => onClearFilter("date")} style={tagStyle}>
+        <Tag color="#171B7D" key="date" closable onClose={() => onClearFilter("date")} style={tagStyle}>
           {`${from} to ${to}`}
         </Tag>
       </Space>,
@@ -126,7 +125,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
           <Text style={{ marginRight: 10 }}>{groupLabel}: </Text>
           {values.map((value) => (
             <Tag
-              color="#ee3a41"
+              color="#171B7D"
               key={String(value)}
               closable
               onClose={() => onClearFilter("column", key, value)}
@@ -158,7 +157,12 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
       }}
     >
       <Space wrap>{filterGroups}</Space>
-      <Button type="link" danger onClick={onClearAll} style={{ whiteSpace: "nowrap", paddingRight: 0 }}>
+      <Button
+        type="link"
+        danger
+        onClick={onClearAll}
+        style={{ whiteSpace: "nowrap", paddingRight: 0, color: "#171B7D" }}
+      >
         {t("common.clearAll")}
       </Button>
     </div>

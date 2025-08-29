@@ -1,4 +1,3 @@
-// userZoneLinkingConfig.ts
 import { PageConfig } from "../../types/config";
 
 export const SupervisorManagemnetConfig: PageConfig = {
@@ -6,12 +5,11 @@ export const SupervisorManagemnetConfig: PageConfig = {
 
   tableConfig: {
     columns: [
-      { key: "employeeId", title: "employeeId", type: "string", sortable: true },
-      { key: "employeeName", title: "employeeName", type: "string", sortable: true },
-      { key: "zone", title: "zone", type: "string", sortable: false },
-      { key: "shift", title: "shift", type: "string", sortable: false }, // ✅ NEW
-
-      { key: "weekOffs", title: "weekOffs", type: "string", sortable: false },
+      { key: "SupervisorName", title: "Supervisor Name", type: "string", sortable: true },
+      { key: "zone", title: "Zone", type: "string", sortable: false },
+      { key: "shift", title: "Shift", type: "string", sortable: false },
+      { key: "weekOffs", title: "Week Offs", type: "string", sortable: false },
     ],
+    viewRecord: false,
   },
 };
