@@ -24,6 +24,7 @@ export const PATHS = {
   ANALYTICS: "analytics",
   TOWING: "towing",
   ADHOCSHIFTPLAN:"adhocshiftplan",
+  SHIFT_MANAGEMENT: "shift-management",
 
   TEAM_EVALUATION: "team-assessment",
   TEAM_TRAINING: "team-assessment",
@@ -49,16 +50,16 @@ export const FULL_PATHS = {
   FINES: "/fines",
   DISPUTE: "/dispute",
 
-  SUPERVISROR_MANGEMENT: "/supervisor-management",
+
   LEAVE_MANGEMENT: "/leave-management",
   TOWING: "/towing",
 
   // --- Team Assessment section (children only, no parent path) ---
   TEAM_EVALUATION: "/team-assessment/evaluation",
   TEAM_TRAINING: "/team-assessment/training",
+  SHIFT_MANAGEMENT: "/shift-management",
 
   ANALYTICS: "/analytics",
-  INSPECTOR_MANAGEMENT: "/inspector-management",
   CREATESHIFTPLAN: "/createshiftplan",
   ADHOCSHIFTPLAN:"/adhocshiftplan",
 };

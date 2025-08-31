@@ -16,8 +16,7 @@
     "plates": "Plates",
     "tradelicenses": "Trade Licenses",
     "general": "General Search",
-    "inspectorManagement": "Inspector Management",
-    "supervisorManagement": "Supervisor Management",
+    "shiftmanagement": "Shift Management",
     "shiftplanning": "Shift Planning",
     "teamAssesment": "Team Assessment",
     "traningAndEvaluation": "Training & Evaluation",
@@ -31,6 +30,10 @@
     "compactMode": "Compact Mode",
     "standardMode": "Standard Mode"
   },
+"tabs": {
+  "inspectors": "Inspectors",
+  "supervisors": "Supervisors"
+},
   "page": {
     "title": {
       "whitelist-plates": "Plate Whitelist",
@@ -41,8 +44,7 @@
       "dispute-management": "Dispute Management",
       "fines": "Fines Management",
       "parkonic": "Parkonic Management",
-      "inspectorManagement": "Inspector Management",
-      "supervisorManagement": "Supervisor Management",
+      "shiftmanagement": "Shift Management",
       "createshiftplan": "Create Shift Plan",
       "adhocshiftplan": "Adhoc Shift Plan"
     },

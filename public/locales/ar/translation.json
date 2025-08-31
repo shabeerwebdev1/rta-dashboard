@@ -24,12 +24,17 @@
     "training": "التدريب",
     "configuration": "الإعدادات",
     "createshiftplan": "إنشاء خطة نوبات",
-    "adhocshiftplan": "خطة نوبات خاصة"
+    "adhocshiftplan": "خطة نوبات خاصة",
+    "shiftmanagement": "إدارة النوبات"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
     "standardMode": "الوضع القياسي"
   },
+  "tabs": {
+  "inspectors": "المفتشون",
+  "supervisors": "المشرفون"
+},
   "page": {
     "title": {
       "whitelist-plates": "القائمة البيضاء للوحات",
@@ -40,8 +45,7 @@
       "permits": "بحث التصاريح",
       "fines": "إدارة الغرامات",
       "parkonic": "إدارة باركونيك",
-      "inspectorManagement": "إدارة المشتري",
-      "supervisorManagement": "إدارة المشرفين",
+      "shiftmanagement": "إدارة النوبات",
       "createshiftplan": "إنشاء خطة نوبات",
       "adhocshiftplan": "خطة نوبات خاصة"
     },

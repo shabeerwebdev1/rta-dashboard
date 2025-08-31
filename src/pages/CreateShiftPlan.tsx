@@ -892,6 +892,7 @@ export default function CreateShiftPlan() {
           </Form.Item>
         </Form>
       </Card>
+       <Card bordered={true}>
       <Tabs
         type="card"
         activeKey={activeTab}
@@ -930,7 +931,7 @@ export default function CreateShiftPlan() {
           />
         </TabPane>
       </Tabs>
-
+</Card>
       <Modal
         title="Edit Shift Details"
         open={isModalOpen}

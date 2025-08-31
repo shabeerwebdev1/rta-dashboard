@@ -84,16 +84,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ currentTheme = "corporateIndigo
           icon: <TeamOutlined />,
           label: <Link to={FULL_PATHS.LEAVE_MANGEMENT}>{t("sidebar.leaveManagement")}</Link>,
         },
-        {
-          key: FULL_PATHS.SUPERVISROR_MANGEMENT,
-          icon: <ExclamationCircleOutlined />,
-          label: <Link to={FULL_PATHS.SUPERVISROR_MANGEMENT}>{t("sidebar.supervisorManagement")}</Link>,
-        },
-        {
-          key: FULL_PATHS.INSPECTOR_MANAGEMENT,
-          icon: <LinkOutlined />,
-          label: <Link to={FULL_PATHS.INSPECTOR_MANAGEMENT}>{t("sidebar.inspectorManagement")}</Link>,
-        },
       ],
     },
     {
@@ -157,6 +147,11 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ currentTheme = "corporateIndigo
           key: FULL_PATHS.ADHOCSHIFTPLAN,
           icon: <AuditOutlined />,
           label: <Link to={FULL_PATHS.ADHOCSHIFTPLAN}>{t("sidebar.adhocshiftplan")}</Link>,
+        },
+        {
+          key: FULL_PATHS.SHIFT_MANAGEMENT,
+          icon: <AuditOutlined />,
+          label: <Link to={FULL_PATHS.SHIFT_MANAGEMENT}>{t("sidebar.shiftmanagement")}</Link>,
         },
       ],
     },

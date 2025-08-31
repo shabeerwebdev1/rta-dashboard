@@ -16,12 +16,11 @@ const InspectionObstaclesPage = lazy(() => import("./pages/InspectionObstaclesPa
 const FinesPage = lazy(() => import("./pages/FinesPage"));
 const ParkonicPage = lazy(() => import("./pages/ParkonicPage"));
 const DisputeManagementPage = lazy(() => import("./pages/DisputeManagementPage"));
-const UserZoneLinking = lazy(() => import("./pages/UserZoneLinking"));
-const SupervisorManagementpage = lazy(() => import("./pages/SupervisorManagementpage"));
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const SplashPage = lazy(() => import("./pages/SplashPage"));
 const CreateShiftPlan = lazy(() => import("./pages/CreateShiftPlan"));
 const AdhocShiftPlan = lazy(() => import("./pages/AdhocShiftPlan"));
+const ShiftManagement = lazy(() => import("./pages/ShiftManagement"));
 
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 
@@ -60,8 +59,7 @@ const AppRoutes = () => {
           </Route>
 
           <Route path={PATHS.PLEDGES} element={<PledgesPage />} />
-          <Route path={PATHS.INSPECTOR_MANAGEMENT} element={<UserZoneLinking />} />
-          <Route path={PATHS.SUPERVISROR_MANGEMENT} element={<SupervisorManagementpage />} />
+          <Route path={PATHS.SHIFT_MANAGEMENT} element={<ShiftManagement />} />
           <Route path={PATHS.CREATESHIFTPLAN} element={<CreateShiftPlan />} />
           <Route path={PATHS.ADHOCSHIFTPLAN} element={<AdhocShiftPlan />} />
 
