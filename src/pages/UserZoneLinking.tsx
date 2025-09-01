@@ -15,7 +15,7 @@ interface InspectorData {
   zone?: string[];
   shift?: string;
   weekOffs?: string[];
-  inspectiontype?: string;
+  inspectiontype?: string[];
 }
 
 const sampleData: InspectorData[] = [
@@ -50,7 +50,7 @@ function UserZoneLinking() {
     );
   };
 
-  const handleInspectionTypeChange = (value: string, record: InspectorData) => {
+  const handleInspectionTypeChange = (value: string[], record: InspectorData) => {
     setData((prev) =>
       prev.map((item) =>
         item.key === record.key ? { ...item, inspectiontype: value } : item
@@ -133,10 +133,38 @@ function UserZoneLinking() {
         ...col,
         render: (_: any, record: InspectorData) => (
           <Select
-            value={record.inspectiontype}
-            style={{ width: 160 }}
+            mode="multiple"
+            value={record.inspectiontype || []}
+            style={{ width: 200 }}
             onChange={(val) => handleInspectionTypeChange(val, record)}
-            placeholder="Select Type"
+            placeholder="Select Type(s)"
+            tagRender={(props) => {
+              const { label, value, closable, onClose } = props;
+              return (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "2px 8px",
+                    margin: "2px",
+                    backgroundColor: "#e6f7ff",
+                    border: "1px solid #91d5ff",
+                    borderRadius: "12px",
+                    fontSize: "12px",
+                  }}
+                >
+                  {label}
+                  {closable && (
+                    <span
+                      style={{ marginLeft: 6, cursor: "pointer", color: "#1890ff" }}
+                      onClick={onClose}
+                    >
+                      ✕
+                    </span>
+                  )}
+                </span>
+              );
+            }}
           >
             <Option value="Plate Type">Car Plate</Option>
             <Option value="Trade Type">Trade License</Option>

@@ -76,3 +76,12 @@ body {
   scrollbar-width: thin;
   scrollbar-color: rgba(0,0,0,0.25) transparent;
 }
+
+.compact-table .ant-table-thead > tr > th {
+  padding: 0px 0px;
+}
+
+.compact-table .ant-table-tbody > tr > td {
+  padding: 0px 0px;
+}
+

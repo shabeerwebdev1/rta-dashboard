@@ -333,7 +333,13 @@ const SupervisorViewPage: React.FC = () => {
           </>
         }
       >
-        <Table columns={checkInColumns} dataSource={checkInData} pagination={false} />
+        <Table 
+  columns={checkInColumns} 
+  dataSource={checkInData} 
+  pagination={false}
+  size="small"
+  className="compact-table"
+/>
       </Card>
 
       {/* ✅ Drawer */}
