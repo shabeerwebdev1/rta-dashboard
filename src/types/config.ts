@@ -1,4 +1,5 @@
 import type { Rule } from "antd/es/form";
+import { ColumnsType } from "antd/es/table";
 import type { ReactNode } from "react";
 
 export type FormFieldType = "text" | "textarea" | "select" | "date" | "dateRange" | "file" | "hidden" | "email";
@@ -34,12 +35,15 @@ export interface TableColumn {
   type: TableColumnType;
   options?: string[] | { label: string; value: unknown }[];
   filterable?: boolean;
+  dataIndex?: string;
+  width?: number | string;
+  align?: string;
   sortable?: boolean;
   render?: (text: any, record: any) => React.ReactNode;
 }
 
 export interface TableConfig {
-  columns: TableColumn[];
+  columns: ColumnsType[];
   viewRecord: boolean;
   rowKey?: string;
   showEdit?: boolean;

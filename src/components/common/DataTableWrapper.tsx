@@ -4,8 +4,9 @@ import type { TableProps } from "antd";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { STATUS_COLORS } from "../../constants/ui";
-import type { PageConfig, TableColumn } from "../../types/config";
+import type { PageConfig } from "../../types/config";
 import { MoreOutlined } from "@ant-design/icons";
+import { ColumnsType } from "antd/es/table";
 
 interface DataTableWrapperProps {
   pageConfig: PageConfig;
@@ -111,12 +112,13 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
   };
 
   const columns = React.useMemo(() => {
-    const generatedColumns = pageConfig.tableConfig.columns.map((col: TableColumn) => {
+    const generatedColumns = pageConfig.tableConfig.columns.map((col: ColumnsType) => {
       const antdCol: any = {
         key: col.key,
         title: t(col.title),
         dataIndex: col.key,
         filteredValue: state.columnFilters[col.key] || null,
+        width: col.key === "plateUI" ? "160px" : undefined,
       };
 
       if (col.sortable) {
