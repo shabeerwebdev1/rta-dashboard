@@ -866,7 +866,7 @@ export default function CreateShiftPlan() {
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Card style={{ marginBottom: 20 }}>
         <Form layout="inline">
-          <Form.Item label="Inspector">
+          {/* <Form.Item label="Inspector">
             <Select
               placeholder="Select Inspector"
               style={{ width: 200 }}
@@ -879,7 +879,7 @@ export default function CreateShiftPlan() {
               <Select.Option value="Inspector 4">Inspector 4</Select.Option>
               <Select.Option value="Inspector 5">Inspector 5</Select.Option>
             </Select>
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item label="Plan Date">
             <RangePicker onChange={(val) => setDateRange(val)} />
@@ -887,8 +887,19 @@ export default function CreateShiftPlan() {
 
           <Form.Item>
             <Button type="primary" onClick={handleSubmit}>
-              Submit
+              plan
             </Button>
+          </Form.Item>
+
+          <Form.Item>
+            <label>
+              previous batch
+            </label>
+          </Form.Item>
+          <Form.Item>
+            <label>
+             Published by: user name
+            </label>
           </Form.Item>
         </Form>
       </Card>
