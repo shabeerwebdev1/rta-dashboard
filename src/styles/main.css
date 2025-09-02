@@ -126,10 +126,12 @@ html[lang="ar"] .ant-pagination-total-text {
 /* Dashboard Stats Cards */
 .dashboard-stat-card .ant-card-body {
   display: flex;
-  flex-direction: column;
+  align-items: center;      /* vertical center */
+  justify-content: space-between;
   padding: 10px !important;
   border-radius: 12px;
   position: relative;
+  height: 110px;
 }
 
 .dashboard-stat-card {
@@ -144,7 +146,7 @@ html[lang="ar"] .ant-pagination-total-text {
 }
 
 /* Avatar in top right */
-.dashboard-stat-card .ant-avatar {
+.dashboard-stat-card.obstacles .ant-avatar {
   position: absolute;
   top: 16px;
   right: 16px;

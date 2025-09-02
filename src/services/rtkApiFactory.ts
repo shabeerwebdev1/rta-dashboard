@@ -33,6 +33,7 @@ export const dynamicApi = createApi({
     "FineSearch",
     "ParkonicSearch",
     "VLookups",
+    "WebDashboard",
   ],
   endpoints: (builder) => ({
     getLookups: builder.query({
@@ -197,6 +198,15 @@ export const dynamicApi = createApi({
       query: (body) => ({ url: "/api/Parkonic/Review", method: "PUT", body }),
       invalidatesTags: ["ParkonicSearch"],
     }),
+
+    // Web Dashboard
+     
+    getSupervisorDashboard: builder.query({
+  query: (supervisorId: string) => `/api/WebDashboard/GetBySupervisor/${supervisorId}`,
+  providesTags: ["WebDashboard"],
+}),
+
+
   }),
 });
 
@@ -230,4 +240,5 @@ export const {
   useAddDisputeMutation,
   useUpdateDisputeMutation,
   useUpdateDisputeStatusMutation,
+  useGetSupervisorDashboardQuery,
 } = dynamicApi;
