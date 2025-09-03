@@ -1,11 +1,9 @@
-// DisputeManagementPage.tsx
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Space,
   Card,
   Input,
   Button,
-  Dropdown,
   Modal,
   Form,
   Row,
@@ -34,7 +32,7 @@ import {
   useAddDisputeMutation,
   useUpdateDisputeMutation,
   useLazyGetLookupsQuery,
-  useLazyGetDisputeByIdQuery, // Add this import
+  useLazyGetDisputeByIdQuery,
 } from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
@@ -102,7 +100,10 @@ const DisputeManagementPage: React.FC = () => {
   const [addDispute, { isLoading: isAdding }] = useAddDisputeMutation();
   const [updateDispute, { isLoading: isUpdating }] = useUpdateDisputeMutation();
   const [triggerGetLookups] = useLazyGetLookupsQuery();
-  const [triggerGetDisputeById] = useLazyGetDisputeByIdQuery(); // Add this
+  const [triggerGetDisputeById] = useLazyGetDisputeByIdQuery();
+  const searchInputRef = useRef<any>(null);
+
+ 
 
   // Fetch lookup data when modal opens or language changes
   useEffect(() => {
@@ -149,6 +150,11 @@ const DisputeManagementPage: React.FC = () => {
   useEffect(() => {
     setGlobalSearch(state.searchKey, debouncedSearchValue);
   }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
+
+  // Sync local search value with state
+  useEffect(() => {
+    setSearchValue(state.searchValue);
+  }, [state.searchValue]);
 
   const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
     if (type === "search") {
@@ -296,8 +302,29 @@ const DisputeManagementPage: React.FC = () => {
     { key: "edit", label: t("common.edit"), icon: <EditOutlined />, onClick: () => handleModalOpen("edit", record) },
   ];
 
+  // Handle search key change - preserve current search as filter and clear input
+
+  const handleSearchKeyChange = (newKey: string) => {
+    const currentValue = searchValue;
+
+    // Clear the input field with a slight delay
+    setTimeout(() => {
+      setSearchValue("");
+    }, 0);
+
+    // If there's a current search value, preserve it as a column filter
+    if (currentValue.trim()) {
+      setGlobalSearch(state.searchKey, currentValue);
+    }
+
+    // Update the search key with empty value
+    setGlobalSearch(newKey, "");
+  };
+
+  // Update the effect
+
   const searchAddon = (
-    <Select value={state.searchKey} onChange={(key) => setGlobalSearch(key, state.searchValue)} style={{ width: 150 }}>
+    <Select value={state.searchKey} onChange={handleSearchKeyChange} style={{ width: 150 }}>
       {config.searchConfig?.globalSearchKeys.map((key) => (
         <Option key={key} value={key}>
           {columnLabels[key]}
@@ -314,6 +341,7 @@ const DisputeManagementPage: React.FC = () => {
           <Col>
             <Space>
               <Input
+                ref={searchInputRef}
                 addonBefore={searchAddon}
                 placeholder={t("common.searchPlaceholder")}
                 value={searchValue}
@@ -321,6 +349,7 @@ const DisputeManagementPage: React.FC = () => {
                 style={{ width: 450 }}
                 allowClear
               />
+
               <DatePicker.RangePicker
                 value={state.dateRange}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
@@ -349,6 +378,8 @@ const DisputeManagementPage: React.FC = () => {
           onClearFilter={handleClearFilter}
           onClearAll={handleClearAll}
           columnLabels={columnLabels}
+          lookupOptions={lookupOptions}
+          getLabelFromValue={getLabelFromValue}
         />
       </Card>
 

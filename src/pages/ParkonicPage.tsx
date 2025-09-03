@@ -1,14 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Table, Card, Space, Tag, Button, Dropdown, Input, DatePicker, Row, Col, Select, Tooltip, App } from "antd";
-import {
-  EyeOutlined,
-  DownloadOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  IdcardOutlined,
-} from "@ant-design/icons";
+import { Card, Space, Button, Input, DatePicker, Row, Col, Select, Tooltip, App } from "antd";
+import { EyeOutlined, DownloadOutlined, AppstoreOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { useSearchParkonicsQuery } from "../services/rtkApiFactory";
@@ -21,62 +13,9 @@ import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
-import type { PageConfig } from "../types/config";
+import { parkonicPageConfig } from "../config/pageConfigs/parkonicConfig";
 
 const { Option } = Select;
-
-const parkonicPageConfig: PageConfig = {
-  key: "parkonic",
-  title: "page.title.parkonic",
-  name: { singular: "Parkonic Record", plural: "Parkonic Records" },
-  api: { get: "/api/Parkonic", post: "", put: "/api/Parkonic/Review", delete: "" },
-  searchConfig: {
-    globalSearchKeys: ["plateNumber"],
-    columnFilterKeys: ["reviewStatus"],
-    dateRangeKey: "entryDateTime",
-  },
-  statsConfig: [
-    { title: "Total Records", icon: <IdcardOutlined />, value: (data) => data.length },
-    {
-      title: "Approved",
-      icon: <CheckCircleOutlined />,
-      value: (data) => data.filter((d) => d.reviewStatus === 1).length,
-      color: "#52c41a",
-    },
-    {
-      title: "Rejected",
-      icon: <CloseCircleOutlined />,
-      value: (data) => data.filter((d) => d.reviewStatus === 0).length,
-      color: "#ff4d4f",
-    },
-  ],
-  tableConfig: {
-    rowKey: "fineId",
-    columns: [
-      { key: "plateNumber", title: "form.vehicleNumber", type: "string", sortable: true },
-      {
-        key: "reviewStatus",
-        title: "form.reviewStatus",
-        type: "custom",
-        sortable: true,
-        filterable: true,
-        render: (status: number) => {
-          const statusMap: Record<number, { text: string; color: string }> = {
-            0: { text: "Rejected", color: "red" },
-            1: { text: "Approved", color: "green" },
-            2: { text: "Pending", color: "blue" },
-          };
-          const { text, color } = statusMap[status] || { text: "Unknown", color: "default" };
-          return <Tag color={color}>{text}</Tag>;
-        },
-      },
-      { key: "entryDateTime", title: "form.entryDateTime", type: "date", sortable: true },
-      { key: "exitDateTime", title: "form.exitDateTime", type: "date", sortable: true },
-    ],
-    viewRecord: true,
-  },
-  formConfig: { modalWidth: "0", fields: [] },
-};
 
 const ParkonicPage: React.FC = () => {
   const { t } = useTranslation();
@@ -84,6 +23,7 @@ const ParkonicPage: React.FC = () => {
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const config = parkonicPageConfig;
+
   const {
     apiParams,
     handleTableChange,
@@ -115,6 +55,11 @@ const ParkonicPage: React.FC = () => {
     setGlobalSearch(state.searchKey, debouncedSearchValue);
   }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
 
+  // Sync local search value with state
+  useEffect(() => {
+    setSearchValue(state.searchValue);
+  }, [state.searchValue]);
+
   const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
     if (type === "search") {
       setSearchValue("");
@@ -141,7 +86,7 @@ const ParkonicPage: React.FC = () => {
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = data.data.filter((item: any) => selectedRowKeys.includes(item.fineId));
+        const selectedData = data?.data?.filter((item: any) => selectedRowKeys.includes(item.fineId)) || [];
         exportToCsv(selectedData, `parkonic_export.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
@@ -158,8 +103,25 @@ const ParkonicPage: React.FC = () => {
     { key: "view", icon: <EyeOutlined />, label: t("common.view"), onClick: () => showDrawer(record) },
   ];
 
+  const handleSearchKeyChange = (newKey: string) => {
+    const currentValue = searchValue;
+
+    // Clear the input field with a slight delay
+    setTimeout(() => {
+      setSearchValue("");
+    }, 0);
+
+    // If there's a current search value, preserve it as a column filter
+    if (currentValue.trim()) {
+      setGlobalSearch(state.searchKey, currentValue);
+    }
+
+    // Update the search key with empty value
+    setGlobalSearch(newKey, "");
+  };
+
   const searchAddon = (
-    <Select value={state.searchKey} onChange={(key) => setGlobalSearch(key, state.searchValue)} style={{ width: 150 }}>
+    <Select value={state.searchKey} onChange={handleSearchKeyChange} style={{ width: 150 }}>
       {config.searchConfig?.globalSearchKeys.map((key) => (
         <Option key={key} value={key}>
           {columnLabels[key]}
@@ -194,7 +156,7 @@ const ParkonicPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
-              <Tooltip title={tableSize === "middle" ? "Compact view" : "Standard view"}>
+              <Tooltip title={tableSize === "middle" ? t("common.compactView") : t("common.standardView")}>
                 <Button
                   icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
                   onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}

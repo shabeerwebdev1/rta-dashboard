@@ -1,225 +1,225 @@
-import React, { useEffect, useState } from "react";
-import {
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Button,
-  Row,
-  Col,
-  Space,
-  Card,
-  Table,
-  Spin,
-  Empty,
-  Dropdown,
-} from "antd";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tooltip } from "antd";
+import { EyeOutlined, DownloadOutlined, AppstoreOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
-import {
-  MoreOutlined,
-  EyeOutlined,
-  EnvironmentOutlined,
-} from "@ant-design/icons";
-import type { MenuProps } from "antd";
+import { useTableParams } from "../hooks/useTableParams";
+import { useDebounce } from "../hooks/useDebounce";
+import { useAppNotification } from "../utils/notificationManager";
+import { useSearchFinesQuery } from "../services/rtkApiFactory";
+import { exportToCsv } from "../utils/csvExporter";
+import StatsDisplay from "../components/common/StatsDisplay";
+import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
+import { finesConfig } from "../config/pageConfigs/finesConfig";
 import dayjs from "dayjs";
-import { useLazySearchFinesQuery } from "../services/rtkApiFactory";
+import DataTableWrapper from "../components/common/DataTableWrapper";
 import FinesViewDrawer from "../components/fines/FinesViewDrawer";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
+const pageKey = "fines";
 
 const FinesPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
-  const [form] = Form.useForm();
+  const { modal } = App.useApp();
+  const notification = useAppNotification();
+  const config = finesConfig;
+
+  const {
+    apiParams,
+    handleTableChange,
+    handlePaginationChange,
+    setGlobalSearch,
+    setDateRange,
+    clearFilter,
+    clearAll,
+    state,
+  } = useTableParams(config.searchConfig!);
 
   const [drawerVisible, setDrawerVisible] = useState(false);
-  const [selectedFine, setSelectedFine] = useState<any>(null);
-  const [focusSection, setFocusSection] = useState<
-    "details" | "photos" | "location" | null
-  >(null);
+  const [selectedFineData, setSelectedFineData] = useState<any>(null);
+  const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
-  // lazy query usage
-  const [searchFines, { data: searchResults = [], isFetching }] =
-    useLazySearchFinesQuery();
+  const [searchValue, setSearchValue] = useState<string>(state.searchValue);
+  const debouncedSearchValue = useDebounce(searchValue, 500);
+
+  const { data, isLoading, isFetching } = useSearchFinesQuery(apiParams, {
+    refetchOnMountOrArgChange: true,
+  });
+
+  const searchInputRef = useRef<any>(null);
 
   useEffect(() => {
-    setPageTitle(t("page.title.fines"));
-  }, [setPageTitle, t]);
+    setPageTitle(t(config.title));
+  }, [setPageTitle, t, config.title, i18n.language]);
 
-  const disablePastDates = (current: dayjs.Dayjs) =>
-    current && current < dayjs().startOf("day");
+  useEffect(() => {
+    setGlobalSearch(state.searchKey, debouncedSearchValue);
+  }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
 
-  const onFinish = (values: Record<string, unknown>) => {
-    const params: Record<string, unknown> = {
-      ...values,
-      dateFrom: values.dateRange
-        ? (values.dateRange as any)[0].toISOString()
-        : undefined,
-      dateTo: values.dateRange
-        ? (values.dateRange as any)[1].toISOString()
-        : undefined,
-    };
-    delete params.dateRange;
+  useEffect(() => {
+    setSearchValue(state.searchValue);
+  }, [state.searchValue]);
 
-    searchFines(params);
+  const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
+    if (type === "search") {
+      setSearchValue("");
+    }
+    clearFilter(type, key, value);
   };
 
-  const handleView = (
-    record: any,
-    section: "details" | "photos" | "location" = "details"
-  ) => {
-    setSelectedFine(record);
-    setFocusSection(section);
+  const handleClearAll = () => {
+    setSearchValue("");
+    clearAll();
+  };
+
+  const handleView = (record: any) => {
+    setSelectedFineData(record);
     setDrawerVisible(true);
   };
 
-  const columns = [
-    { title: t("form.fineNumber"), dataIndex: "fineNo", key: "fineNo" },
-    { title: t("form.supervisorName"), dataIndex: "supervisor", key: "supervisor" },
-    {
-      title: t("form.amount"),
-      dataIndex: "fineAmount",
-      key: "fineAmount",
-      render: (amount: number) =>
-        amount != null ? `${amount} AED` : t("common.noData"),
-    },
-    {
-      title: t("form.date"),
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date: string) =>
-        date ? dayjs(date).format("YYYY-MM-DD ") : t("common.noData"),
-    },
-    {
-      title: "",
-      key: "action",
-      align: "center",
-      width: 100,
-      render: (_: any, record: any) => {
-        if (!record) return null;
-        const menuItems: MenuProps["items"] = [
-          {
-            key: "view",
-            label: t("common.view"),
-            icon: <EyeOutlined />,
-            onClick: () => handleView(record),
-          },
-        ];
-        return (
-          <Space>
-            {record.latitude && record.longitude ? (
-              <Button
-                type="text"
-                icon={<EnvironmentOutlined />}
-                onClick={() => handleView(record, "location")}
-              />
-            ) : null}
-            <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
-              <Button type="text" icon={<MoreOutlined />} />
-            </Dropdown>
-          </Space>
-        );
+  const handleDownloadCsv = () => {
+    if (selectedRowKeys.length === 0) {
+      notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
+      return;
+    }
+    modal.confirm({
+      title: t("messages.csvConfirmTitle"),
+      content: t("messages.csvConfirmContent"),
+      onOk: () => {
+        const selectedData = tableData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID)) || [];
+        exportToCsv(selectedData, `fines_export.csv`);
+        notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
+        setSelectedRowKeys([]);
       },
+    });
+  };
+
+  const columnLabels = useMemo(
+    () => Object.fromEntries(config.tableConfig.columns.map((c: any) => [c.key, t(c.title)])),
+    [t, config],
+  );
+
+  const actionMenuItems = (record: any) => [
+    {
+      key: "view",
+      label: t("common.view"),
+      icon: <EyeOutlined />,
+      onClick: () => handleView(record),
     },
-  ].filter(Boolean); // ✅ remove any undefined column
+  ];
+
+  const handleSearchKeyChange = (newKey: string) => {
+    const currentValue = searchValue;
+
+    setTimeout(() => {
+      setSearchValue("");
+    }, 0);
+
+    if (currentValue.trim()) {
+      setGlobalSearch(state.searchKey, currentValue);
+    }
+
+    setGlobalSearch(newKey, "");
+  };
+
+  const searchAddon = (
+    <Select value={state.searchKey} onChange={handleSearchKeyChange} style={{ width: 150 }}>
+      {config.searchConfig?.globalSearchKeys.map((key) => (
+        <Option key={key} value={key}>
+          {columnLabels[key]}
+        </Option>
+      ))}
+    </Select>
+  );
+
+  const tableData = React.useMemo(() => {
+    if (!data) return [];
+    if (Array.isArray(data)) return data;
+    if (data.data && Array.isArray(data.data)) return data.data;
+    return [];
+  }, [data]);
+
+  const totalCount = React.useMemo(() => {
+    if (!data) return 0;
+    if (Array.isArray(data)) return data.length;
+    if (data.total) return data.total;
+    if (data.data && Array.isArray(data.data)) return data.data.length;
+    return 0;
+  }, [data]);
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      {/* Search Form */}
-      <Card bordered={false}>
-        <Form form={form} layout="vertical" onFinish={onFinish}>
-          <Row gutter={24}>
-            <Col xs={24} sm={12} md={6}>
-              <Form.Item name="fineNo" label={t("form.fineNumber")}>
-                <Input placeholder={t("form.fineNumber")} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Form.Item name="supervisor" label={t("form.supervisorName")}>
-                <Select placeholder={t("form.supervisorName")} allowClear>
-                  <Option value="admin">admin</Option>
-                  <Option value="user">User</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Form.Item name="createdBy" label={t("form.issuer")}>
-                <Select placeholder={t("form.issuer")} allowClear>
-                  <Option value="issuer1">Issuer 1</Option>
-                  <Option value="issuer2">Issuer 2</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Form.Item name="inspectionType" label={t("form.fineType")}>
-                <Input placeholder={t("form.fineType")} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Form.Item name="section" label={t("form.section")}>
-                <Input placeholder={t("form.section")} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12} md={6}>
-              <Form.Item name="dateRange" label={t("form.dateRange")}>
-                <RangePicker
-                  style={{ width: "100%" }}
-                  disabledDate={disablePastDates}
+      <StatsDisplay statsConfig={config.statsConfig} data={tableData} loading={isFetching} />
+
+      <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
+        <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
+          <Col>
+            <Space>
+              <Input
+                ref={searchInputRef}
+                addonBefore={searchAddon}
+                placeholder={t("common.searchPlaceholder")}
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                style={{ width: 450 }}
+                allowClear
+              />
+              <RangePicker
+                value={state.dateRange}
+                onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
+              />
+            </Space>
+          </Col>
+          <Col>
+            <Space>
+              <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
+                {t("common.downloadCsv")}
+              </Button>
+              <Tooltip title={tableSize === "middle" ? t("common.compactView") : t("common.standardView")}>
+                <Button
+                  icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
+                  onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
                 />
-              </Form.Item>
-            </Col>
-            <Col
-              xs={24}
-              sm={12}
-              md={12}
-              style={{ textAlign: "right", marginTop: 30 }}
-            >
-              <Space>
-                <Button onClick={() => form.resetFields()}>
-                  {t("common.reset")}
-                </Button>
-                <Button type="primary" htmlType="submit" loading={isFetching}>
-                  {t("common.search")}
-                </Button>
-              </Space>
-            </Col>
-          </Row>
-        </Form>
+              </Tooltip>
+            </Space>
+          </Col>
+        </Row>
+        <ActiveFiltersDisplay
+          state={state}
+          onClearFilter={handleClearFilter}
+          onClearAll={handleClearAll}
+          columnLabels={columnLabels}
+        />
       </Card>
 
-      {/* Results Table */}
       <Card bordered={false} bodyStyle={{ padding: "5px 5px 0 5px" }}>
-        <Spin spinning={isFetching}>
-          <Table
-            rowSelection={{
-              type: "checkbox",
-              onChange: (selectedRowKeys, selectedRows) => {
-                console.log("Selected rows:", selectedRowKeys, selectedRows);
-              },
-            }}
-            columns={columns}
-            dataSource={Array.isArray(searchResults) ? searchResults.filter(Boolean) : []}
-            // ✅ Ensure unique key (fallback to fineNo if id missing)
-            rowKey={(record) => record?.id || record?.fineNo || Math.random()}
-            locale={{
-              emptyText: <Empty description={t("common.noData")} />,
-            }}
-            pagination={{
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} ${t("common.items")}`,
-            }}
-          />
-        </Spin>
+        <DataTableWrapper
+          pageConfig={config}
+          data={tableData}
+          total={totalCount}
+          isLoading={isFetching}
+          apiParams={apiParams}
+          handleTableChange={handleTableChange}
+          handlePaginationChange={handlePaginationChange}
+          rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
+          tableSize={tableSize}
+          rowKey={config.tableConfig.rowKey}
+          actionMenuItems={actionMenuItems}
+          state={state}
+        />
       </Card>
 
-      {/* View Drawer */}
       <FinesViewDrawer
         open={drawerVisible}
-        onClose={() => setDrawerVisible(false)}
-        fine={selectedFine}
-        focusSection={focusSection}
+        onClose={() => {
+          setDrawerVisible(false);
+          setSelectedFineData(null);
+        }}
+        fine={selectedFineData}
+        isLoading={isFetching}
       />
     </Space>
   );

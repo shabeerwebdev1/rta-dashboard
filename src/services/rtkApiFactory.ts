@@ -139,9 +139,9 @@ export const dynamicApi = createApi({
       invalidatesTags: ["InspectionObstacle"],
     }),
     updateInspectionObstacle: builder.mutation({
-      query: (obstacleCode) => ({ 
-        url: `/api/InspectionObstacle/markremoved/${obstacleCode}`, 
-        method: "PUT" 
+      query: (obstacleCode) => ({
+        url: `/api/InspectionObstacle/markremoved/${obstacleCode}`,
+        method: "PUT",
       }),
       invalidatesTags: ["InspectionObstacle"],
     }),
@@ -178,12 +178,19 @@ export const dynamicApi = createApi({
       providesTags: ["PermitSearch"],
       transformResponse: (response: any) => ({ data: response.data || [], total: response.data?.length || 0 }),
     }),
+
+    // FIXED: searchFines query to handle the correct response structure
     searchFines: builder.query({
-      query: (params) => ({ url: "/api/FineManagement/search", params }),
+      query: (params) => ({ url: "/api/Inspection", params }),
       providesTags: ["FineSearch"],
       transformResponse: (response: any) => {
-        const data = response?.data;
-        return Array.isArray(data) ? data : [data];
+        //  API response structure: { totalCount, pageNumber, pageSize, statusCode, successful, en_Msg, ar_Msg, data: [...] }
+        if (!response) return { data: [], total: 0 };
+        // Return both data and total for proper pagination
+        return {
+          data: response.data || [],
+          total: response.totalCount || 0,
+        };
       },
     }),
 
@@ -200,13 +207,11 @@ export const dynamicApi = createApi({
     }),
 
     // Web Dashboard
-     
+
     getSupervisorDashboard: builder.query({
-  query: (supervisorId: string) => `/api/WebDashboard/GetBySupervisor/${supervisorId}`,
-  providesTags: ["WebDashboard"],
-}),
-
-
+      query: (supervisorId: string) => `/api/WebDashboard/GetBySupervisor/${supervisorId}`,
+      providesTags: ["WebDashboard"],
+    }),
   }),
 });
 
@@ -231,7 +236,7 @@ export const {
   useAddInspectionObstacleMutation,
   useUpdateInspectionObstacleMutation,
   useSearchPermitsQuery,
-  useLazySearchFinesQuery,
+  useSearchFinesQuery,
   useSearchParkonicsQuery,
   useReviewParkonicMutation,
   useLazyGetLookupsQuery,

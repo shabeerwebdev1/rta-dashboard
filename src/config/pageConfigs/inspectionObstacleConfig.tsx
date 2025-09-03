@@ -18,11 +18,20 @@ export const inspectionObstacleConfig: PageConfig = {
     dateRangeKey: "reportedAt",
   },
   statsConfig: [
-    { title: "Reported Obstacles", icon: <SearchOutlined />, value: (data) => data.length },
+    {
+      title: "Total Obstacles",
+      icon: <SearchOutlined />,
+      value: (data) => data.length,
+    },
+    {
+      title: "Reported Obstacles",
+      icon: <SearchOutlined />,
+      value: (data) => data.filter((d) => d.status === 0).length,
+    },
     {
       title: "Removed Obstacles",
       icon: <CheckSquareOutlined />,
-      value: (data) => data.filter((d) => String(d.status ?? "").toLowerCase() === "removed").length,
+      value: (data) => data.filter((d) => d.status === 1).length,
       color: "#52c41a",
     },
   ],

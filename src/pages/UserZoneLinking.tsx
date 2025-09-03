@@ -33,29 +33,19 @@ function UserZoneLinking() {
   }, [setPageTitle, t]);
 
   const handleZoneChange = (value: string[], record: InspectorData) => {
-    setData((prev) =>
-      prev.map((item) => (item.key === record.key ? { ...item, zone: value } : item))
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, zone: value } : item)));
   };
 
   const handleShiftChange = (value: string, record: InspectorData) => {
-    setData((prev) =>
-      prev.map((item) => (item.key === record.key ? { ...item, shift: value } : item))
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, shift: value } : item)));
   };
 
   const handleWeekOffChange = (checkedValues: string[], record: InspectorData) => {
-    setData((prev) =>
-      prev.map((item) => (item.key === record.key ? { ...item, weekOffs: checkedValues } : item))
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, weekOffs: checkedValues } : item)));
   };
 
   const handleInspectionTypeChange = (value: string[], record: InspectorData) => {
-    setData((prev) =>
-      prev.map((item) =>
-        item.key === record.key ? { ...item, inspectiontype: value } : item
-      )
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, inspectiontype: value } : item)));
   };
 
   // Build columns dynamically
@@ -87,10 +77,7 @@ function UserZoneLinking() {
                 >
                   {label}
                   {closable && (
-                    <span
-                      style={{ marginLeft: 6, cursor: "pointer", color: "#1890ff" }}
-                      onClick={onClose}
-                    >
+                    <span style={{ marginLeft: 6, cursor: "pointer", color: "#1890ff" }} onClick={onClose}>
                       ✕
                     </span>
                   )}
@@ -155,10 +142,7 @@ function UserZoneLinking() {
                 >
                   {label}
                   {closable && (
-                    <span
-                      style={{ marginLeft: 6, cursor: "pointer", color: "#1890ff" }}
-                      onClick={onClose}
-                    >
+                    <span style={{ marginLeft: 6, cursor: "pointer", color: "#1890ff" }} onClick={onClose}>
                       ✕
                     </span>
                   )}
@@ -180,7 +164,7 @@ function UserZoneLinking() {
         ...col,
         render: (_: any, record: InspectorData) => (
           <Checkbox.Group
-            options={days.map(day => ({ label: day, value: day }))}
+            options={days.map((day) => ({ label: day, value: day }))}
             value={record.weekOffs}
             onChange={(vals) => handleWeekOffChange(vals as string[], record)}
           />

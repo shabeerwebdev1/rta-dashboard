@@ -99,7 +99,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ currentTheme = "corporateIndigo
         {
           key: FULL_PATHS.FINES,
           icon: <DollarOutlined />,
-          label: <Link to={FULL_PATHS.FINES}>{t("sidebar.fines")}</Link>,
+          label: <Link to={FULL_PATHS.FINES}>{t("sidebar.inspectionmanagement")}</Link>,
         },
       ],
     },

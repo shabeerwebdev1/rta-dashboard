@@ -26,6 +26,7 @@ interface ActiveFiltersDisplayProps {
   columnLabels: Record<string, string>;
   lookupOptions?: any[];
   getLabelFromValue?: (value: number, options: any[], i18n: any) => string;
+  statusLabels?: Record<number, string>;
 }
 
 const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
@@ -35,6 +36,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
   columnLabels,
   lookupOptions = [],
   getLabelFromValue,
+  statusLabels,
 }) => {
   const { t, i18n } = useTranslation();
   const filterGroups: React.ReactNode[] = [];
@@ -59,6 +61,11 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
 
   // Helper to get label for a filter value
   const getFilterLabel = (columnKey: string, value: string | number) => {
+    // Special handling for status column
+    if (columnKey === "status" && statusLabels) {
+      return statusLabels[Number(value)] || String(value);
+    }
+    
     if (getLabelFromValue && lookupOptions.length > 0) {
       const lookupOptionsForColumn = getLookupOptionsForColumn(columnKey);
       if (lookupOptionsForColumn.length > 0) {

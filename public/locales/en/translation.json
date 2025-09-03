@@ -24,16 +24,17 @@
     "training": "Training",
     "configuration": "Configuration",
     "createshiftplan": "Create Shift Plan",
-    "adhocshiftplan": "Adhoc Shift Plan"
+    "adhocshiftplan": "Adhoc Shift Plan",
+    "inspectionmanagement": "Inspections Management"
   },
   "header": {
     "compactMode": "Compact Mode",
     "standardMode": "Standard Mode"
   },
-"tabs": {
-  "inspectors": "Inspectors",
-  "supervisors": "Supervisors"
-},
+  "tabs": {
+    "inspectors": "Inspectors",
+    "supervisors": "Supervisors"
+  },
   "page": {
     "title": {
       "whitelist-plates": "Plate Whitelist",
@@ -46,7 +47,8 @@
       "parkonic": "Parkonic Management",
       "shiftmanagement": "Shift Management",
       "createshiftplan": "Create Shift Plan",
-      "adhocshiftplan": "Adhoc Shift Plan"
+      "adhocshiftplan": "Adhoc Shift Plan",
+      "inspectionmanagement": "Inspections Management"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",
@@ -128,7 +130,14 @@
     "entryDateTime": "Entry Date & Time",
     "isByLaw": "Is By-Law",
     "UploadJPG/JPEG": "Upload JPG/JPEG",
-    "addedOn": "Added On"
+    "addedOn": "Added On",
+    "fineAmount": "Fine Amount",
+    "isPaid": "Is Paid",
+    "carPlate": "Car Plate",
+    "tradeLicense": "Trade License",
+    "inspectionType": "Inspection Type",
+    "inspectionStatus": "Inspection Status",
+    "finedDate": "Fined Date"
   },
   "common": {
     "action": "Action",

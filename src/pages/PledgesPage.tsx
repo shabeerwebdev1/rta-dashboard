@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Space,
   Card,
@@ -97,6 +97,7 @@ const PledgesPage: React.FC = () => {
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
+  const searchInputRef = useRef<any>(null);
 
   const { data, isLoading, isFetching } = useGetPledgesQuery(apiParams, {
     refetchOnMountOrArgChange: true,
@@ -122,6 +123,11 @@ const PledgesPage: React.FC = () => {
   useEffect(() => {
     fetchLookupData();
   }, [i18n.language]);
+
+  // Sync local search value with state
+  useEffect(() => {
+    setSearchValue(state.searchValue);
+  }, [state.searchValue]);
 
   const fetchLookupData = async () => {
     setIsLoadingLookups(true);
@@ -182,6 +188,23 @@ const PledgesPage: React.FC = () => {
   const handleClearAll = () => {
     setSearchValue("");
     clearAll();
+  };
+
+  const handleSearchKeyChange = (newKey: string) => {
+    const currentValue = searchValue;
+
+    // Clear the input field with a slight delay
+    setTimeout(() => {
+      setSearchValue("");
+    }, 0);
+
+    // If there's a current search value, preserve it as a column filter
+    if (currentValue.trim()) {
+      setGlobalSearch(state.searchKey, currentValue);
+    }
+
+    // Update the search key with empty value
+    setGlobalSearch(newKey, "");
   };
 
   const handleModalOpen = (mode: "add" | "edit" = "add", record?: any) => {
@@ -342,7 +365,7 @@ const PledgesPage: React.FC = () => {
   ];
 
   const searchAddon = (
-    <Select value={state.searchKey} onChange={(key) => setGlobalSearch(key, state.searchValue)} style={{ width: 150 }}>
+    <Select value={state.searchKey} onChange={handleSearchKeyChange} style={{ width: 150 }}>
       {config.searchConfig?.globalSearchKeys.map((key) => (
         <Option key={key} value={key}>
           {columnLabels[key] || key}
@@ -369,6 +392,7 @@ const PledgesPage: React.FC = () => {
           <Col>
             <Space>
               <Input
+                ref={searchInputRef}
                 addonBefore={searchAddon}
                 placeholder={t("common.searchPlaceholder")}
                 value={searchValue}

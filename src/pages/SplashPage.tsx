@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Image, Spin, Row, Col, Typography } from "antd";
+import { Image, Spin, Row, Col } from "antd";
 import { useNavigate } from "react-router-dom";
 
 export default function SplashPage() {

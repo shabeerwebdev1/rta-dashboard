@@ -154,15 +154,43 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
     }));
   }, []);
 
+  // Updated setGlobalSearch to handle search key changes properly
   const setGlobalSearch = useCallback((key: string, value: string) => {
-    setState((prev) => ({ ...prev, page: 1, searchKey: key, searchValue: value }));
+    setState((prev) => {
+      // If the search key is changing and there's a current search value, 
+      // preserve it as a column filter
+      if (key !== prev.searchKey && prev.searchValue.trim()) {
+        const newColumnFilters = { ...prev.columnFilters };
+        const currentFilter = newColumnFilters[prev.searchKey];
+        
+        if (currentFilter) {
+          // If there's already a filter for this key, add to it
+          if (!currentFilter.includes(prev.searchValue)) {
+            newColumnFilters[prev.searchKey] = [...currentFilter, prev.searchValue];
+          }
+        } else {
+          // Create new filter for the previous search
+          newColumnFilters[prev.searchKey] = [prev.searchValue];
+        }
+        
+        return {
+          ...prev,
+          page: 1,
+          searchKey: key,
+          searchValue: "", // Clear the search value when changing key
+          columnFilters: newColumnFilters,
+        };
+      }
+      
+      // Normal search value update for the same key
+      return { ...prev, page: 1, searchKey: key, searchValue: value };
+    });
   }, []);
 
   const setDateRange = useCallback((dates: [Dayjs, Dayjs] | null) => {
     setState((prev) => ({ ...prev, page: 1, dateRange: dates }));
   }, []);
 
-  // In your useTableParams hook, update the clearFilter function:
   const clearFilter = useCallback(
     (type: "search" | "date" | "column" | "sorter", key?: string, valueToRemove?: string | number) => {
       setState((prev) => {

@@ -25,16 +25,18 @@
     "configuration": "الإعدادات",
     "createshiftplan": "إنشاء خطة نوبات",
     "adhocshiftplan": "خطة نوبات خاصة",
-    "shiftmanagement": "إدارة النوبات"
+    "shiftmanagement": "إدارة النوبات",
+    "inspectionmanagement": "إدارة التفتيش"
+
   },
   "header": {
     "compactMode": "الوضع المضغوط",
     "standardMode": "الوضع القياسي"
   },
   "tabs": {
-  "inspectors": "المفتشون",
-  "supervisors": "المشرفون"
-},
+    "inspectors": "المفتشون",
+    "supervisors": "المشرفون"
+  },
   "page": {
     "title": {
       "whitelist-plates": "القائمة البيضاء للوحات",
@@ -47,7 +49,9 @@
       "parkonic": "إدارة باركونيك",
       "shiftmanagement": "إدارة النوبات",
       "createshiftplan": "إنشاء خطة نوبات",
-      "adhocshiftplan": "خطة نوبات خاصة"
+      "adhocshiftplan": "خطة نوبات خاصة",
+      "inspectionmanagement": "إدارة التفتيش"
+
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",
@@ -126,7 +130,15 @@
     "entryDateTime": "تاريخ ووقت الدخول",
     "isByLaw": "هل هو قانوني؟",
     "UploadJPG/JPEG": "رفع JPG/JPEG",
-    "addedOn": "تمت الإضافة في"
+    "addedOn": "تمت الإضافة في",
+    "fineAmount": "مبلغ الغرامة",
+    "isPaid": "هل تم الدفع؟",
+    "carPlate": "لوحة السيارة",
+    "tradeLicense": "الرخصة التجارية",
+    "inspectionType": "نوع التفتيش",
+    "inspectionStatus": "حالة التفتيش",
+    "finedDate": "تاريخ الغرامة"
+
   },
   "common": {
     "action": "إجراء",

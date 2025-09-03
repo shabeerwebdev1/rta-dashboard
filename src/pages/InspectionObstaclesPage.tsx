@@ -14,6 +14,7 @@ import {
   DatePicker,
   Tooltip,
   Spin,
+  Tag,
 } from "antd";
 import {
   PlusOutlined,
@@ -37,7 +38,6 @@ import { useUploadFilesMutation } from "../services/fileApi";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
-import DynamicViewDrawer from "../components/drawer";
 import { pageConfigs } from "../config/pageConfigs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import InspectionObstaclesViewDrawer from "../components/inspectionobstacle/InspectionObstaclesViewDrawer";
@@ -205,10 +205,13 @@ const InspectionObstaclesPage: React.FC = () => {
     }
   };
 
-  const statusLabels: Record<number, string> = {
-    0: t("status.reported"),
-    1: t("status.removed"),
-  };
+  const statusLabels = useMemo(
+    () => ({
+      0: t("status.reported"),
+      1: t("status.removed"),
+    }),
+    [t],
+  );
 
   // Map IDs to labels before showing in drawer
   const handleView = (record: any) => {
@@ -217,7 +220,7 @@ const InspectionObstaclesPage: React.FC = () => {
       zone: getLabelFromValue(record.zone, zoneOptions, i18n),
       area: getLabelFromValue(record.area, areaOptions, i18n),
       sourceOfObstacle: getLabelFromValue(record.sourceOfObstacle, sourceOptions, i18n),
-      status: statusLabels[record.status] || record.status,
+      status: statusLabels[record.status as keyof typeof statusLabels] || record.status,
     };
     setViewRecord(mappedRecord);
     setIsDrawerOpen(true);
@@ -271,7 +274,23 @@ const InspectionObstaclesPage: React.FC = () => {
         if (column.key === "area") return { ...column, render: (v: any) => getLabelFromValue(v, areaOptions, i18n) };
         if (column.key === "sourceOfObstacle")
           return { ...column, render: (v: any) => getLabelFromValue(v, sourceOptions, i18n) };
-        if (column.key === "status") return { ...column, render: (v: number) => statusLabels[v] || v };
+
+        // ✅ Status column with badges
+        if (column.key === "status") {
+          return {
+            ...column,
+            render: (v: number) => {
+              const statusKey = v === 1 ? "removed" : "reported";
+              const color = v === 1 ? "green" : "orange";
+              return <Tag color={color}>{t(`status.${statusKey}`)}</Tag>;
+            },
+            filters: [
+              { text: t("status.reported"), value: 0 },
+              { text: t("status.removed"), value: 1 },
+            ],
+            onFilter: (value: any, record: any) => record.status === value,
+          };
+        }
         return column;
       }),
     }),
@@ -337,6 +356,7 @@ const InspectionObstaclesPage: React.FC = () => {
           columnLabels={columnLabels}
           lookupOptions={lookupOptions}
           getLabelFromValue={getLabelFromValue}
+          statusLabels={statusLabels}
         />
       </Card>
 
@@ -354,6 +374,12 @@ const InspectionObstaclesPage: React.FC = () => {
         state={state}
         lookupOptions={lookupOptions}
         getLabelFromValue={getLabelFromValue}
+        filterOptions={{
+          status: [
+            { text: t("status.reported"), value: 0 },
+            { text: t("status.removed"), value: 1 },
+          ],
+        }}
       />
 
       <Modal

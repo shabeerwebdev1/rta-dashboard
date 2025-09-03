@@ -92,7 +92,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
 
   const getFilterOptionsWithLabels = (columnKey: string) => {
     // First, check if filterOptions are provided for this column
-    if (filterOptions[columnKey] && filterOptions[columnKey].length > 0) {
+    if (filterOptions && filterOptions[columnKey] && filterOptions[columnKey].length > 0) {
       return filterOptions[columnKey];
     }
 
@@ -112,7 +112,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
   };
 
   const columns = React.useMemo(() => {
-    const generatedColumns = pageConfig.tableConfig.columns.map((col: ColumnsType) => {
+    const generatedColumns = pageConfig.tableConfig.columns.map((col: any) => {
       const antdCol: any = {
         key: col.key,
         title: t(col.title),
@@ -129,17 +129,24 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
       }
 
       if (col.filterable) {
-        if (col.type === "select" && col.options) {
-          antdCol.filters = (col.options as { label: string; value: unknown }[]).map((opt) => ({
-            text: opt.label,
-            value: opt.value,
-          }));
-        } else {
-          // Use the enhanced filter function
-          antdCol.filters = getFilterOptionsWithLabels(col.key);
-        }
+        // Use the enhanced filter function
+        antdCol.filters = getFilterOptionsWithLabels(col.key);
         antdCol.filterMode = "tree";
         antdCol.filterSearch = true;
+        
+        // Add onFilter function for custom filtering
+        if (!col.onFilter) {
+          antdCol.onFilter = (value: any, record: any) => {
+            // Handle numeric values (like status)
+            if (typeof record[col.key] === 'number' || typeof value === 'number') {
+              return record[col.key] === Number(value);
+            }
+            // Handle string values
+            return String(record[col.key]) === String(value);
+          };
+        } else {
+          antdCol.onFilter = col.onFilter;
+        }
       }
 
       if (col.render) {
@@ -213,7 +220,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
     lookupOptions,
     getLabelFromValue,
     i18n,
-    filterOptions, // Add filterOptions to dependencies
+    filterOptions,
   ]);
 
   return (
@@ -251,9 +258,10 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
           pageSize={apiParams.PageSize}
           total={total}
           showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`}
-          showSizeChanger={true}
+          showSizeChanger={{ showSearch: false }}
           pageSizeOptions={["10", "20", "50"]}
           onChange={handlePaginationChange}
+          
         />
       </div>
     </Card>
