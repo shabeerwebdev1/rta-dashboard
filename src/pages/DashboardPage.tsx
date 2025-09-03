@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Row, Select, Table, Tag, Typography, Button, Avatar, Statistic, Spin } from "antd";
+import { Card, Col, Row, Select, Table, Tag, Typography, Button, Avatar, Statistic, Spin, message } from "antd";
 import {
   UserOutlined,
   CheckCircleOutlined,
@@ -54,19 +54,11 @@ const SupervisorViewPage: React.FC = () => {
   const [selectedSupervisor, setSelectedSupervisor] = useState<string | null>(null);
   const [supervisorInfo, setSupervisorInfo] = useState<any>(null);
 
-  // Use the RTK Query hook
+  // Use the RTK Query hook - skip if no supervisor is selected
   const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery(
-    selectedSupervisor || SUPERVISOR_IDS[0].id,
-    { skip: !selectedSupervisor && SUPERVISOR_IDS.length > 0 }
+    selectedSupervisor as string,
+    { skip: !selectedSupervisor }
   );
-
-  // Set default supervisor on initial load
-  useEffect(() => {
-    if (SUPERVISOR_IDS.length > 0 && !selectedSupervisor) {
-      setSelectedSupervisor(SUPERVISOR_IDS[0].id);
-      setSupervisorInfo(SUPERVISOR_IDS[0]);
-    }
-  }, []);
 
   // Update supervisor info when selection changes
   const handleSupervisorChange = (value: string) => {
@@ -183,12 +175,8 @@ const SupervisorViewPage: React.FC = () => {
     setPageTitle("Dashboard");
   }, [setPageTitle]);
 
-  if (isLoading) {
-    return <Spin size="large" style={{ display: 'block', margin: '50px auto' }} />;
-  }
-
   if (error) {
-    return <div>Error loading dashboard data</div>;
+    message.error("Error loading dashboard data");
   }
 
   return (
@@ -201,6 +189,7 @@ const SupervisorViewPage: React.FC = () => {
               style={{ width: "100%" }}
               value={selectedSupervisor}
               onChange={handleSupervisorChange}
+              allowClear
             >
               {SUPERVISOR_IDS.map(supervisor => (
                 <Select.Option key={supervisor.id} value={supervisor.id}>
@@ -229,6 +218,9 @@ const SupervisorViewPage: React.FC = () => {
           </Col>
         </Row>
       </Card>
+      
+      {isLoading && <Spin size="large" style={{ display: 'block', margin: '50px auto' }} />}
+      
       <Row gutter={16} style={{ marginBottom: 20 }}>
         {/* ✅ Google Map */}
         <Col span={16}>
@@ -288,7 +280,7 @@ const SupervisorViewPage: React.FC = () => {
                   <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
                       <Statistic title="Checked In" value={dashboardData?.data?.checkedIn || 0} />
-                      <Statistic title="Pending" value={dashboardData?.data?.missing || 0} />
+                      <Statistic title="Missing" value={dashboardData?.data?.missing || 0} />
                       <Statistic title="On Leave" value={dashboardData?.data?.onLeave || 0} />
                     </div>
                   </Col>
