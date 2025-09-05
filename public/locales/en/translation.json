@@ -25,7 +25,8 @@
     "configuration": "Configuration",
     "createshiftplan": "Create Shift Plan",
     "adhocshiftplan": "Adhoc Shift Plan",
-    "inspectionmanagement": "Inspections Management"
+    "inspectionmanagement": "Inspections Management",
+    "roleManagement": "Role Management"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -48,7 +49,8 @@
       "shiftmanagement": "Shift Management",
       "createshiftplan": "Create Shift Plan",
       "adhocshiftplan": "Adhoc Shift Plan",
-      "inspectionmanagement": "Inspections Management"
+      "inspectionmanagement": "Inspections Management",
+      "roleManagement": "Role Management"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",
@@ -65,7 +67,8 @@
     "csvConfirmContent": "You are about to download the selected data.",
     "selectRows": "Please select at least one row to download.",
     "fileUploadSuccess": "File uploaded successfully: {fileName}",
-    "fileUploadError": "File upload failed for: {fileName}"
+    "fileUploadError": "File upload failed for: {fileName}",
+    "errorLoading": "Error loading dashboard data"
   },
   "form": {
     "plateNumber": "Plate Number",
@@ -170,7 +173,8 @@
     "false": "False",
     "compactView": "Compact View",
     "standardView": "Standard View",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "selectSupervisor": "Select Supervisor"
   },
   "entity": {
     "plate": "Plate",
@@ -220,5 +224,24 @@
     "email": "Enter your email address",
     "phoneNumber": "Enter your phone number",
     "address": "Enter your address"
+  },
+
+  "dashboard": {
+    "totalInspectors": "Total Inspectors",
+    "checkedIn": "Checked In",
+    "missing": "Missing",
+    "onLeave": "On Leave",
+    "totalApprovals": "Total Approvals",
+    "leave": "Leave",
+    "towing": "Towing",
+    "totalInspections": "Total Inspections",
+    "fines": "Fines",
+    "amount": "Amount",
+    "totalObstacles": "Total Obstacles",
+    "overviewData": "Overview Data",
+    "inspectorsStatus": "Inspectors Status",
+    "towingRequests": "Towing Requests",
+    "leaveRequests": "Leave Requests",
+    "obstacle": "Obstacle"
   }
 }

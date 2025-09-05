@@ -34,6 +34,8 @@ export const dynamicApi = createApi({
     "ParkonicSearch",
     "VLookups",
     "WebDashboard",
+    "Zones",
+    "Shifts",
   ],
   endpoints: (builder) => ({
     getLookups: builder.query({
@@ -209,10 +211,34 @@ export const dynamicApi = createApi({
     // Web Dashboard
 
     getSupervisorDashboard: builder.query({
-      query: (supervisorId: string) => `/api/WebDashboard/GetBySupervisor/${supervisorId}`,
+      query: (supervisorId: string) => `/api/WebDashboard/dashboard?supervisorId=${supervisorId}`,
       providesTags: ["WebDashboard"],
     }),
+      // Zones
+     getZones: builder.query({
+      query: () => "/api/Inspection/Zones",
+      providesTags: ["Zones"],
+      transformResponse: (response: any) => {
+        return response?.data || response || [];
+      },
+    }),
+
+    // Shift
+
+  // In dynamicApi endpoints
+getShifts: builder.query({
+  query: () => "/api/Inspection/Shifts",
+  providesTags: ["Shifts"],
+  transformResponse: (response: any) => {
+    return response?.data || response || [];
+  },
+}),
+
+    
   }),
+
+   
+
 });
 
 export const {
@@ -246,4 +272,6 @@ export const {
   useUpdateDisputeMutation,
   useUpdateDisputeStatusMutation,
   useGetSupervisorDashboardQuery,
+  useLazyGetZonesQuery,
+  useLazyGetShiftsQuery,
 } = dynamicApi;

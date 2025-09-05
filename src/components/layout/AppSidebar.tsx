@@ -84,6 +84,10 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ currentTheme = "corporateIndigo
           icon: <TeamOutlined />,
           label: <Link to={FULL_PATHS.LEAVE_MANGEMENT}>{t("sidebar.leaveManagement")}</Link>,
         },
+        { key: FULL_PATHS.ROLE_MANAGEMENT,
+          icon: <LinkOutlined />,
+          label: <Link to={FULL_PATHS.ROLE_MANAGEMENT}>{t("sidebar.roleManagement")}</Link>,
+        },
       ],
     },
     {

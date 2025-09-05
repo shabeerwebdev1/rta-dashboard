@@ -9,6 +9,7 @@ export const SupervisorManagemnetConfig: PageConfig = {
       { key: "zone", title: "Zone", type: "string", sortable: false },
       { key: "shift", title: "Shift", type: "string", sortable: false },
       { key: "weekOffs", title: "Week Offs", type: "string", sortable: false },
+      { key: "Actions", title: "", type: "string", sortable: false },
     ],
     viewRecord: false,
   },

@@ -26,8 +26,9 @@
     "createshiftplan": "إنشاء خطة نوبات",
     "adhocshiftplan": "خطة نوبات خاصة",
     "shiftmanagement": "إدارة النوبات",
-    "inspectionmanagement": "إدارة التفتيش"
-
+    "inspectionmanagement": "إدارة التفتيش",
+    "shiftplanning": "تخطيط النوبات",
+    "roleManagement": "إدارة الأدوار"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -50,7 +51,8 @@
       "shiftmanagement": "إدارة النوبات",
       "createshiftplan": "إنشاء خطة نوبات",
       "adhocshiftplan": "خطة نوبات خاصة",
-      "inspectionmanagement": "إدارة التفتيش"
+      "inspectionmanagement": "إدارة التفتيش",
+      "roleManagement": "إدارة الأدوار"
 
     },
     "addTitle": "إضافة {{entity}} جديد",
@@ -68,7 +70,8 @@
     "csvConfirmContent": "أنت على وشك تنزيل البيانات المحددة.",
     "selectRows": "يرجى تحديد صف واحد على الأقل للتنزيل.",
     "fileUploadSuccess": "تم رفع الملف بنجاح: {fileName}",
-    "fileUploadError": "فشل رفع الملف: {fileName}"
+    "fileUploadError": "فشل رفع الملف: {fileName}",
+     "errorLoading": "خطأ في تحميل بيانات لوحة التحكم"
   },
   "form": {
     "plateNumber": "رقم اللوحة",
@@ -167,7 +170,8 @@
     "remove": "إزالة",
     "compactView": "عرض مضغوط",
     "standardView": "عرض قياسي",
-    "confirm": "تأكيد"
+    "confirm": "تأكيد",
+    "selectSupervisor": "اختر المشرف"
   },
   "entity": {
     "plate": "لوحة",
@@ -217,5 +221,23 @@
     "phoneNumber": "أدخل رقم هاتفك",
     "address": "أدخل عنوانك",
     "comments": "أضف تعليقات "
+  },
+  "dashboard": {
+    "totalInspectors": "إجمالي المفتشين",
+    "checkedIn": "تم التسجيل",
+    "missing": "مفقود",
+    "onLeave": "في إجازة",
+    "totalApprovals": "إجمالي الموافقات",
+    "leave": "إجازة",
+    "towing": "سحب",
+    "totalInspections": "إجمالي التفتيش",
+    "fines": "غرامات",
+    "amount": "المبلغ",
+    "totalObstacles": "إجمالي المعوقات",
+    "overviewData": "بيانات نظرة عامة",
+    "inspectorsStatus": "حالة المفتشين",
+    "towingRequests": "طلبات السحب",
+    "leaveRequests": "طلبات الإجازة",
+    "obstacle": "عائق"
   }
 }

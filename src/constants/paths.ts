@@ -28,6 +28,7 @@ export const PATHS = {
 
   TEAM_EVALUATION: "team-assessment",
   TEAM_TRAINING: "team-assessment",
+  ROLE_MANAGEMENT: "role-management",
 };
 
 export const FULL_PATHS = {
@@ -62,4 +63,5 @@ export const FULL_PATHS = {
   ANALYTICS: "/analytics",
   CREATESHIFTPLAN: "/createshiftplan",
   ADHOCSHIFTPLAN:"/adhocshiftplan",
+  ROLE_MANAGEMENT: "/role-management",
 };

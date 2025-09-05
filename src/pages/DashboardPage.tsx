@@ -12,7 +12,8 @@ import {
 } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import DashboardViewDrawer from "../components/dashboard/DashboardViewDrawer";
-import { useGetSupervisorDashboardQuery } from "../services/rtkApiFactory"
+import { useGetSupervisorDashboardQuery } from "../services/rtkApiFactory";
+import { useTranslation } from "react-i18next"; // Add this import
 
 // ✅ Google Maps
 import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
@@ -29,24 +30,31 @@ const dubaiCenter = {
   lng: 55.2743,
 };
 
-// Hardcoded supervisor IDs
+// Hardcoded supervisor IDs with Arabic names
 const SUPERVISOR_IDS = [
   {
     id: "457CEE92-D09B-4481-88B8-1676667713AD",
     name: "Supervisor 1",
+    nameAr: "المشرف ١",
     zone: "Zone A",
-    shift: "Morning Shift"
+    zoneAr: "المنطقة أ",
+    shift: "Morning Shift",
+    shiftAr: "نوبة الصباح"
   },
   {
     id: "824E667B-9CF9-4CD0-BA21-65538444509A",
     name: "Supervisor 2",
+    nameAr: "المشرف ٢",
     zone: "Zone B",
-    shift: "Evening Shift"
+    zoneAr: "المنطقة ب",
+    shift: "Evening Shift",
+    shiftAr: "نوبة المساء"
   }
 ];
 
 const SupervisorViewPage: React.FC = () => {
   const { setPageTitle } = usePage();
+  const { t, i18n } = useTranslation(); // Get translation function and language
   const [activeTable, setActiveTable] = useState("checkInStatus");
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedInspector, setSelectedInspector] = useState<any>(null);
@@ -60,6 +68,11 @@ const SupervisorViewPage: React.FC = () => {
     { skip: !selectedSupervisor }
   );
 
+  // Helper function to get text based on current language
+  const getLocalizedText = (englishText: string, arabicText: string) => {
+    return i18n.language === "ar" ? arabicText : englishText;
+  };
+
   // Update supervisor info when selection changes
   const handleSupervisorChange = (value: string) => {
     setSelectedSupervisor(value);
@@ -67,43 +80,63 @@ const SupervisorViewPage: React.FC = () => {
     setSupervisorInfo(info);
   };
 
-  // ✅ Inspectors data (you might want to replace this with actual data from the API)
+  // ✅ Inspectors data with Arabic support
   const inspectorAvatars = [
     {
       id: 1,
       name: "Inspector 1",
+      nameAr: "المفتش ١",
       lat: 25.1972,
       lng: 55.2743,
       status: "Checked-in",
+      statusAr: "تم التسجيل",
       color: "#52c41a",
-      details: { email: "inspector1@example.com" },
+      details: { 
+        email: "inspector1@example.com",
+        emailAr: "المفتش١@example.com"
+      },
     },
     {
       id: 2,
       name: "Inspector 2",
+      nameAr: "المفتش ٢",
       lat: 25.1965,
       lng: 55.2728,
       status: "Pending",
+      statusAr: "قيد الانتظار",
       color: "#faad14",
-      details: { email: "inspector2@example.com" },
+      details: { 
+        email: "inspector2@example.com",
+        emailAr: "المفتش٢@example.com"
+      },
     },
     {
       id: 3,
       name: "Inspector 3",
+      nameAr: "المفتش ٣",
       lat: 25.198,
       lng: 55.2735,
       status: "Checked-in",
+      statusAr: "تم التسجيل",
       color: "#1890ff",
-      details: { email: "inspector3@example.com" },
+      details: { 
+        email: "inspector3@example.com",
+        emailAr: "المفتش٣@example.com"
+      },
     },
     {
       id: 4,
       name: "Inspector 4",
+      nameAr: "المفتش ٤",
       lat: 25.1975,
       lng: 55.275,
       status: "On Leave",
+      statusAr: "في إجازة",
       color: "#ff4d4f",
-      details: { email: "inspector4@example.com" },
+      details: { 
+        email: "inspector4@example.com",
+        emailAr: "المفتش٤@example.com"
+      },
     },
   ];
 
@@ -127,34 +160,52 @@ const SupervisorViewPage: React.FC = () => {
     setSelectedInspector(null);
   };
 
-  // ✅ Dummy Table data
+  // ✅ Dummy Table data with Arabic support
   const checkInData = inspectorAvatars.map((insp, idx) => ({
     key: idx,
     checkInId: `C000${idx + 1}`,
-    inspectorName: insp.name,
-    time: "08:30 AM",
-    assignment: "Zone A",
-    status: insp.status,
+    inspectorName: getLocalizedText(insp.name, insp.nameAr),
+    time: getLocalizedText("08:30 AM", "٠٨:٣٠ ص"),
+    assignment: getLocalizedText("Zone A", "المنطقة أ"),
+    status: getLocalizedText(insp.status, insp.statusAr),
+    originalStatus: insp.status, // Keep original for filtering/sorting
   }));
 
   const checkInColumns = [
-    { title: "Check-in Id", dataIndex: "checkInId", key: "checkInId" },
-    { title: "Inspector Name", dataIndex: "inspectorName", key: "inspectorName" },
-    { title: "Time", dataIndex: "time", key: "time" },
-    { title: "Assignment", dataIndex: "assignment", key: "assignment" },
+    { 
+      title: t("form.checkInId", "Check-in Id"), 
+      dataIndex: "checkInId", 
+      key: "checkInId" 
+    },
+    { 
+      title: t("form.inspectorName", "Inspector Name"), 
+      dataIndex: "inspectorName", 
+      key: "inspectorName" 
+    },
+    { 
+      title: t("form.time", "Time"), 
+      dataIndex: "time", 
+      key: "time" 
+    },
+    { 
+      title: t("form.assignment", "Assignment"), 
+      dataIndex: "assignment", 
+      key: "assignment" 
+    },
     {
-      title: "Status",
+      title: t("form.status", "Status"),
       dataIndex: "status",
       key: "status",
-      render: (status: string) => {
-        if (status === "Checked-in") return <Tag color="green">Checked-in</Tag>;
-        if (status === "Pending") return <Tag color="orange">Pending</Tag>;
-        if (status === "On Leave") return <Tag color="red">On Leave</Tag>;
+      render: (status: string, record: any) => {
+        const originalStatus = record.originalStatus;
+        if (originalStatus === "Checked-in") return <Tag color="green">{status}</Tag>;
+        if (originalStatus === "Pending") return <Tag color="orange">{status}</Tag>;
+        if (originalStatus === "On Leave") return <Tag color="red">{status}</Tag>;
         return <Tag>{status}</Tag>;
       },
     },
     {
-      title: "Actions",
+      title: t("common.action", "Actions"),
       key: "actions",
       align: "center" as const,
       render: (_: any, record: any) => {
@@ -164,7 +215,7 @@ const SupervisorViewPage: React.FC = () => {
             icon={<EyeOutlined />}
             onClick={() => handleViewClick(record)}
           >
-            View
+            {t("common.view", "View")}
           </Button>
         );
       },
@@ -172,11 +223,11 @@ const SupervisorViewPage: React.FC = () => {
   ];
 
   useEffect(() => {
-    setPageTitle("Dashboard");
-  }, [setPageTitle]);
+    setPageTitle(t("sidebar.dashboard", "Dashboard"));
+  }, [setPageTitle, t, i18n.language]);
 
   if (error) {
-    message.error("Error loading dashboard data");
+    message.error(t("messages.errorLoading", "Error loading dashboard data"));
   }
 
   return (
@@ -185,7 +236,7 @@ const SupervisorViewPage: React.FC = () => {
         <Row gutter={16}>
           <Col span={6}>
             <Select 
-              placeholder="Select Supervisor" 
+              placeholder={t("common.selectSupervisor", "Select Supervisor")} 
               style={{ width: "100%" }}
               value={selectedSupervisor}
               onChange={handleSupervisorChange}
@@ -193,27 +244,27 @@ const SupervisorViewPage: React.FC = () => {
             >
               {SUPERVISOR_IDS.map(supervisor => (
                 <Select.Option key={supervisor.id} value={supervisor.id}>
-                  {supervisor.name}
+                  {getLocalizedText(supervisor.name, supervisor.nameAr)}
                 </Select.Option>
               ))}
             </Select>
           </Col>
           <Col span={6}>
             <div>
-              <Text strong>Name</Text> <br /> 
-              {supervisorInfo?.name || "N/A"}
+              <Text strong>{t("form.supervisorName", "Name")}</Text> <br /> 
+              {supervisorInfo ? getLocalizedText(supervisorInfo.name, supervisorInfo.nameAr) : "N/A"}
             </div>
           </Col>
           <Col span={6}>
             <div>
-              <Text strong>Zone</Text> <br /> 
-              {supervisorInfo?.zone || "N/A"}
+              <Text strong>{t("form.zone", "Zone")}</Text> <br /> 
+              {supervisorInfo ? getLocalizedText(supervisorInfo.zone, supervisorInfo.zoneAr) : "N/A"}
             </div>
           </Col>
           <Col span={6}>
             <div>
-              <Text strong>Shift</Text> <br /> 
-              {supervisorInfo?.shift || "N/A"}
+              <Text strong>{t("form.shift", "Shift")}</Text> <br /> 
+              {supervisorInfo ? getLocalizedText(supervisorInfo.shift, supervisorInfo.shiftAr) : "N/A"}
             </div>
           </Col>
         </Row>
@@ -249,8 +300,8 @@ const SupervisorViewPage: React.FC = () => {
                     onCloseClick={() => setSelectedMarker(null)}
                   >
                     <div>
-                      <h4>{selectedMarker.name}</h4>
-                      <p>{selectedMarker.details.email}</p>
+                      <h4>{getLocalizedText(selectedMarker.name, selectedMarker.nameAr)}</h4>
+                      <p>{getLocalizedText(selectedMarker.details.email, selectedMarker.details.emailAr)}</p>
                     </div>
                   </InfoWindow>
                 )}
@@ -266,26 +317,21 @@ const SupervisorViewPage: React.FC = () => {
             <Col span={24}>
               <Card className="dashboard-stat-card" style={{ borderColor: "#1890ff" }}>
                 <Row
-                  wrap={false} // ✅ prevent wrapping
-                  align="middle" // ✅ vertical center
+                  wrap={false}
+                  align="middle"
                   justify="space-between"
                   style={{ width: "100%" }}
                 >
-                  {/* Left: Total */}
                   <Col flex="none">
-                    <Statistic title="Total Inspectors" value={dashboardData?.data?.totalInspectors || 0} />
+                    <Statistic title={t("dashboard.totalInspectors", "Total Inspectors")} value={dashboardData?.data?.totalInspectors || 0} />
                   </Col>
-
-                  {/* Center: 3 stats */}
                   <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-                      <Statistic title="Checked In" value={dashboardData?.data?.checkedIn || 0} />
-                      <Statistic title="Missing" value={dashboardData?.data?.missing || 0} />
-                      <Statistic title="On Leave" value={dashboardData?.data?.onLeave || 0} />
+                      <Statistic title={t("dashboard.checkedIn", "Checked In")} value={dashboardData?.data?.checkedIn || 0} />
+                      <Statistic title={t("dashboard.missing", "Missing")} value={dashboardData?.data?.missing || 0} />
+                      <Statistic title={t("dashboard.onLeave", "On Leave")} value={dashboardData?.data?.onLeave || 0} />
                     </div>
                   </Col>
-
-                  {/* Right: Icon */}
                   <Col flex="none" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
                     <Avatar
                       size={56}
@@ -301,25 +347,20 @@ const SupervisorViewPage: React.FC = () => {
             <Col span={24}>
               <Card className="dashboard-stat-card" style={{ borderColor: "#52c41a" }}>
                 <Row
-                  wrap={false} // prevent wrapping
-                  align="middle" // vertical center
+                  wrap={false}
+                  align="middle"
                   justify="space-between"
                   style={{ width: "100%" }}
                 >
-                  {/* Left: Total Approvals */}
                   <Col flex="none">
-                    <Statistic title="Total Approvals" value={dashboardData?.data?.totalApprovals || 0} />
+                    <Statistic title={t("dashboard.totalApprovals", "Total Approvals")} value={dashboardData?.data?.totalApprovals || 0} />
                   </Col>
-
-                  {/* Center: Sub Stats */}
                   <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-                      <Statistic title="Leave" value={dashboardData?.data?.leaveRequests || 0} />
-                      <Statistic title="Towing" value={dashboardData?.data?.towingRequests || 0} />
+                      <Statistic title={t("dashboard.leave", "Leave")} value={dashboardData?.data?.leaveRequests || 0} />
+                      <Statistic title={t("dashboard.towing", "Towing")} value={dashboardData?.data?.towingRequests || 0} />
                     </div>
                   </Col>
-
-                  {/* Right: Icon */}
                   <Col flex="none" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
                     <Avatar
                       size={56}
@@ -335,25 +376,20 @@ const SupervisorViewPage: React.FC = () => {
             <Col span={24}>
               <Card className="dashboard-stat-card" style={{ borderColor: "#faad14" }}>
                 <Row
-                  wrap={false} // prevent wrapping
-                  align="middle" // vertical center
+                  wrap={false}
+                  align="middle"
                   justify="space-between"
                   style={{ width: "100%" }}
                 >
-                  {/* Left: Total Inspections */}
                   <Col flex="none">
-                    <Statistic title="Total Inspections" value={dashboardData?.data?.totalInspections || 0} />
+                    <Statistic title={t("dashboard.totalInspections", "Total Inspections")} value={dashboardData?.data?.totalInspections || 0} />
                   </Col>
-
-                  {/* Center: Sub Stats */}
                   <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-                      <Statistic title="Fines" value={dashboardData?.data?.totalFines || 0} />
-                      <Statistic title="Amount" value={dashboardData?.data?.fineAmount || 0} suffix="AED" />
+                      <Statistic title={t("dashboard.fines", "Fines")} value={dashboardData?.data?.totalFines || 0} />
+                      <Statistic title={t("dashboard.amount", "Amount")} value={dashboardData?.data?.fineAmount || 0} suffix="AED" />
                     </div>
                   </Col>
-
-                  {/* Right: Icon */}
                   <Col flex="none" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
                     <Avatar
                       size={56}
@@ -370,27 +406,22 @@ const SupervisorViewPage: React.FC = () => {
               <Card
                 className="dashboard-stat-card"
                 style={{
-                  borderColor: " #ff4d4f", // ✅ consistent border
+                  borderColor: "#ff4d4f",
                   cursor: "pointer",
                 }}
               >
                 <Row
-                  wrap={false} // ✅ prevent wrapping
+                  wrap={false}
                   align="middle"
                   justify="space-between"
                   style={{ width: "100%" }}
                 >
-                  {/* Left: Total Obstacles */}
                   <Col flex="none">
-                    <Statistic title="Total Obstacles" value={dashboardData?.data?.totalObstacles || 0} />
+                    <Statistic title={t("dashboard.totalObstacles", "Total Obstacles")} value={dashboardData?.data?.totalObstacles || 0} />
                   </Col>
-
-                  {/* Center: (optional stats if needed) */}
                   <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
-                    {/* If later you want sub-stats, place them here */}
+                    {/* Optional sub-stats can go here */}
                   </Col>
-
-                  {/* Right: Icon */}
                   <Col flex="none" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
                     <Avatar
                       size={56}
@@ -407,7 +438,7 @@ const SupervisorViewPage: React.FC = () => {
 
       {/* ✅ Table Section */}
       <Card
-        title="Overview Data"
+        title={t("dashboard.overviewData", "Overview Data")}
         extra={
           <>
             <Button
@@ -416,7 +447,7 @@ const SupervisorViewPage: React.FC = () => {
               icon={<UserOutlined />}
               style={{ marginRight: 8 }}
             >
-              Inspectors Status
+              {t("dashboard.inspectorsStatus", "Inspectors Status")}
             </Button>
             <Button
               type={activeTable === "towingRequests" ? "primary" : "default"}
@@ -424,7 +455,7 @@ const SupervisorViewPage: React.FC = () => {
               icon={<CarOutlined />}
               style={{ marginRight: 8 }}
             >
-              Towing Requests
+              {t("dashboard.towingRequests", "Towing Requests")}
             </Button>
             <Button
               type={activeTable === "leaveRequests" ? "primary" : "default"}
@@ -432,14 +463,14 @@ const SupervisorViewPage: React.FC = () => {
               icon={<AppstoreAddOutlined />}
               style={{ marginRight: 8 }}
             >
-              Leave Requests
+              {t("dashboard.leaveRequests", "Leave Requests")}
             </Button>
             <Button
               type={activeTable === "obstacle" ? "primary" : "default"}
               onClick={() => setActiveTable("obstacle")}
               icon={<ExclamationCircleOutlined />}
             >
-              Obstacle
+              {t("dashboard.obstacle", "Obstacle")}
             </Button>
           </>
         }
@@ -454,7 +485,11 @@ const SupervisorViewPage: React.FC = () => {
       </Card>
 
       {/* ✅ Drawer */}
-      <DashboardViewDrawer open={drawerVisible} onClose={handleDrawerClose} inspector={selectedInspector} />
+      <DashboardViewDrawer 
+        open={drawerVisible} 
+        onClose={handleDrawerClose} 
+        inspector={selectedInspector} 
+      />
     </div>
   );
 };
