@@ -140,7 +140,18 @@
     "tradeLicense": "Trade License",
     "inspectionType": "Inspection Type",
     "inspectionStatus": "Inspection Status",
-    "finedDate": "Fined Date"
+    "finedDate": "Fined Date",
+    "tradeLicenseOrPlate": "Trade License / Plate",
+    "inspectionDate": "Inspection Date",
+    "blackPoints": "Black Points",
+    "tradeLicenseDetails": "Trade License Details",
+    "plateDetails": "Plate Details",
+    "manufacturerYear": "Manufacturer Year",
+    "vehicleOwnerEmail": "Vehicle Owner Email",
+    "vehicleOwnerMobile": "Vehicle Owner Mobile",
+    "notPaid": "Not Paid",
+    "pledgeDate": "Pledge Date",
+    "pledgeEndDate": "Pledge End Date"
   },
   "common": {
     "action": "Action",

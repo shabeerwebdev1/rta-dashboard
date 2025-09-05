@@ -5,7 +5,6 @@ import PageLoader from "./components/common/PageLoader";
 import { PATHS, FULL_PATHS } from "./constants/paths";
 import GeneralSearchPage from "./pages/GeneralSearchPage";
 
-
 // --- Lazy-loaded Page Components ---
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const PermitsPage = lazy(() => import("./pages/PermitsPage"));
@@ -16,7 +15,6 @@ const InspectionObstaclesPage = lazy(() => import("./pages/InspectionObstaclesPa
 const FinesPage = lazy(() => import("./pages/FinesPage"));
 const ParkonicPage = lazy(() => import("./pages/ParkonicPage"));
 const DisputeManagementPage = lazy(() => import("./pages/DisputeManagementPage"));
-const LoginPage = lazy(() => import("./pages/LoginPage"));
 const SplashPage = lazy(() => import("./pages/SplashPage"));
 const CreateShiftPlan = lazy(() => import("./pages/CreateShiftPlan"));
 const AdhocShiftPlan = lazy(() => import("./pages/AdhocShiftPlan"));
@@ -29,7 +27,6 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* --- Public Routes --- */}
-      <Route path={PATHS.LOGIN} element={<LoginPage />} />
       <Route path={PATHS.SPLASH} element={<SplashPage />} />
 
       {/* --- Protected Routes (Main Layout) --- */}
@@ -41,8 +38,8 @@ const AppRoutes = () => {
             </Suspense>
           }
         >
-          {/* At root, redirect to login */}
-          <Route index element={<Navigate to={FULL_PATHS.LOGIN} replace />} />
+          {/* At root, redirect to Splash */}
+          <Route index element={<Navigate to={FULL_PATHS.SPLASH} replace />} />
 
           <Route path={PATHS.DASHBOARD} element={<DashboardPage />} />
           <Route path={PATHS.PERMITS} element={<PermitsPage />} />
@@ -65,8 +62,6 @@ const AppRoutes = () => {
           <Route path={PATHS.ADHOCSHIFTPLAN} element={<AdhocShiftPlan />} />
           <Route path={PATHS.ROLE_MANAGEMENT} element={<RoleManagementPage />} />
 
-
-          {/* Fallback */}
           {/* Fallback */}
           <Route path="*" element={<ComingSoonPage />} />
         </Route>

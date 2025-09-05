@@ -51,6 +51,9 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
       exemptionReason_ID: 100,
       sourceOfObstacle: 800,
       pledgeType: 900,
+      inspectionType: 1400,
+      inspectionCategory: 1300,
+      inspectionStatus: 1500,
     };
 
     const categoryId = columnToCategoryMap[columnKey];
@@ -65,7 +68,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     if (columnKey === "status" && statusLabels) {
       return statusLabels[Number(value)] || String(value);
     }
-    
+
     if (getLabelFromValue && lookupOptions.length > 0) {
       const lookupOptionsForColumn = getLookupOptionsForColumn(columnKey);
       if (lookupOptionsForColumn.length > 0) {

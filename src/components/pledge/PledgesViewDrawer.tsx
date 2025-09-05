@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, Descriptions, Tag, Typography, Button, Space, Image, Empty, Spin } from "antd";
+import { Drawer, Descriptions, Typography, Button, Space, Image, Empty, Spin } from "antd";
 import { useTranslation } from "react-i18next";
 import { ShareAltOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
@@ -8,6 +8,18 @@ import type { PageConfig } from "../../types/config";
 import { getFileUrl } from "../../services/fileApi";
 import { useLazyGetLookupsQuery, useLazyGetPledgeByIdQuery } from "../../services/rtkApiFactory";
 
+// ---------- Helper Functions ----------
+const getLabelFromValue = (value: number, options: any[], language: string): string => {
+  const option = options.find((opt) => opt.value === value);
+  if (!option) return String(value);
+  return language === "ar" ? option.labelAr : option.labelEn;
+};
+
+const filterOptionsByCategory = (options: any[], categoryId: number): any[] => {
+  return options.filter((option) => option.categoryId === categoryId);
+};
+
+// ---------- Component ----------
 interface PledgesViewDrawerProps {
   open: boolean;
   onClose: () => void;
@@ -17,53 +29,38 @@ interface PledgesViewDrawerProps {
   isLoading?: boolean;
 }
 
-// Helper function to get label from value based on current language
-const getLabelFromValue = (value: number, options: any[], language: string): string => {
-  const option = options.find((opt) => opt.value === value);
-  if (!option) return String(value);
-  return language === "ar" ? option.labelAr : option.labelEn;
-};
-
-// Helper function to filter options by category
-const filterOptionsByCategory = (options: any[], categoryId: number): any[] => {
-  return options.filter((option) => option.categoryId === categoryId);
-};
-
-const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({ 
-  open, 
-  onClose, 
-  record, 
-  config, 
-  onShare, 
-  isLoading = false 
+const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({
+  open,
+  onClose,
+  record,
+  config,
+  onShare,
+  isLoading = false,
 }) => {
   const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
   const [mappedRecord, setMappedRecord] = useState<any>(null);
+
   const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [triggerGetPledge, { data: singleRecordData, isSuccess: isSingleRecordSuccess, isLoading: isPledgeLoading }] =
     useLazyGetPledgeByIdQuery();
 
-  // Get record ID from URL
   const recordId = searchParams.get("viewRecord");
 
-  // Fetch record data when drawer opens
+  // Fetch record when drawer opens
   useEffect(() => {
     if (open) {
-      // If we have a record object with data, use it directly
       if (record && record.id) {
         fetchLookupData();
-      }
-      // If we have a record ID from URL but no record data, fetch the record
-      else if (recordId) {
+      } else if (recordId) {
         triggerGetPledge(recordId);
       }
     }
   }, [open, record, recordId]);
 
-  // Handle the fetched record data
+  // Handle fetched record
   useEffect(() => {
     if (isSingleRecordSuccess && singleRecordData) {
       fetchLookupData();
@@ -73,11 +70,9 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({
   const fetchLookupData = async () => {
     setIsLoadingLookups(true);
     try {
-      // Use category ID 900 for pledge types
       const result = await triggerGetLookups([900]).unwrap();
       setLookupOptions(result);
 
-      // Determine which record to use for mapping
       const recordToMap = singleRecordData?.data || record;
       if (recordToMap) {
         mapRecordToLabels(result, recordToMap);
@@ -90,25 +85,30 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({
   };
 
   const mapRecordToLabels = (lookups: any[], recordData: any) => {
-    if (!recordData) return;
-
     const pledgeTypeOptions = filterOptionsByCategory(lookups, 900);
 
     const mapped = {
       ...recordData,
       pledgeTypeLabel: getLabelFromValue(recordData.pledgeType as number, pledgeTypeOptions, i18n.language),
-      addOnFormatted: recordData.addOn ? dayjs(recordData.addOn as string).format("DD MMM YYYY, h:mm A") : "",
+      pledgeDateFormatted: recordData.pledgeDate
+        ? dayjs(recordData.pledgeDate as string).format("YYYY-MM-DD")
+        : "",
+      pledgeEndDateFormatted: recordData.pledgeEndDate
+        ? dayjs(recordData.pledgeEndDate as string).format("YYYY-MM-DD")
+        : "",
     };
 
     setMappedRecord(mapped);
   };
 
+  // Fields to show in Drawer
   const displayFields = [
     { key: "pledgeTypeLabel", title: "form.pledgeType", type: "text" },
     { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "text" },
     { key: "businessName", title: "form.businessName", type: "text" },
     { key: "remarks", title: "form.remarks", type: "text" },
-    { key: "addOnFormatted", title: "form.addedOn", type: "text" },
+    { key: "pledgeDateFormatted", title: "form.pledgeDate", type: "date" },
+    { key: "pledgeEndDateFormatted", title: "form.pledgeEndDate", type: "date" },
   ];
 
   const imageNames = mappedRecord?.documentPath ? String(mappedRecord.documentPath).split(";").filter(Boolean) : [];
@@ -136,7 +136,15 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({
                 const text = mappedRecord[field.key];
                 return (
                   <Descriptions.Item label={t(field.title)} key={field.key}>
-                    {text || t("common.noData")}
+                    {(() => {
+                      if (!text) return t("common.noData");
+
+                      if (field.type === "date" && dayjs(text as string).isValid()) {
+                        return dayjs(text as string).format("DD MMM YYYY");
+                      }
+
+                      return String(text);
+                    })()}
                   </Descriptions.Item>
                 );
               })}

@@ -119,7 +119,7 @@ export const dynamicApi = createApi({
       invalidatesTags: ["Pledge"],
     }),
     updatePledge: builder.mutation({
-      query: ({ id, ...body }) => ({ url: `/api/Pledge/${id}`, method: "PUT", body }),
+      query: (body) => ({ url: `/api/Pledge`, method: "PUT", body }),
       invalidatesTags: ["Pledge"],
     }),
     deletePledge: builder.mutation({
@@ -186,11 +186,15 @@ export const dynamicApi = createApi({
       query: (params) => ({ url: "/api/Inspection", params }),
       providesTags: ["FineSearch"],
       transformResponse: (response: any) => {
-        //  API response structure: { totalCount, pageNumber, pageSize, statusCode, successful, en_Msg, ar_Msg, data: [...] }
         if (!response) return { data: [], total: 0 };
-        // Return both data and total for proper pagination
+
+        const normalizedData = (response.data || []).map((item: any) => ({
+          ...item,
+          inspectionCategory: item.inspectionCategory ? parseInt(item.inspectionCategory, 10) : null,
+        }));
+
         return {
-          data: response.data || [],
+          data: normalizedData,
           total: response.totalCount || 0,
         };
       },
@@ -213,6 +217,14 @@ export const dynamicApi = createApi({
     getSupervisorDashboard: builder.query({
       query: (supervisorId: string) => `/api/WebDashboard/dashboard?supervisorId=${supervisorId}`,
       providesTags: ["WebDashboard"],
+    }),
+    // User code validation
+    validatecode: builder.query({
+      query: (code: string) => ({
+        url: "/api/User/ValidateCode",
+        method: "GET",
+        params: { code },
+      }),
     }),
       // Zones
      getZones: builder.query({
@@ -274,4 +286,5 @@ export const {
   useGetSupervisorDashboardQuery,
   useLazyGetZonesQuery,
   useLazyGetShiftsQuery,
+  useValidatecodeQuery,
 } = dynamicApi;

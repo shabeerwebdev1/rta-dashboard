@@ -1,5 +1,7 @@
 import { CheckCircleOutlined, CloseCircleOutlined, DollarCircleOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
+import UAEPlate from "../../components/UAEPlate";
+import TradeLicenseCard from "../../components/TradeLicenseCard";
 
 export const finesConfig: PageConfig = {
   key: "fines",
@@ -12,7 +14,7 @@ export const finesConfig: PageConfig = {
     delete: "",
   },
   searchConfig: {
-    globalSearchKeys: ["plateNumber", "vehicleBrand", "tradeLicense"],
+    globalSearchKeys: ["plateNumber", "vehicleBrand", "tradeLicenseNumber"],
     columnFilterKeys: ["inspectionStatus", "vehicleColor", "fineType", "inspectionType"],
     dateRangeKey: "entityDateTime",
   },
@@ -27,28 +29,57 @@ export const finesConfig: PageConfig = {
       title: "Paid Fines",
       icon: <CheckCircleOutlined />,
       value: (data) => data.filter((d) => d.isPaid).length,
-      color: "#52c41a", // green
+      color: "#52c41a",
     },
     {
       title: "Unpaid Fines",
       icon: <CloseCircleOutlined />,
       value: (data) => data.filter((d) => !d.isPaid).length,
-      color: "#ff4d4f", // red
+      color: "#ff4d4f",
     },
   ],
+
   tableConfig: {
     rowKey: "inspectionGUID",
     columns: [
+      {
+        key: "identification",
+        title: "form.tradeLicenseOrPlate",
+        type: "custom",
+        render: (_, record) => {
+          if (record?.tradeLicenseNumber) {
+            return (
+              <TradeLicenseCard
+                code={record?.tradeLicenseNumber}
+                number={record?.tradeLicenseNameEn}
+                emirateAr={record?.tradeLicenseNameAr}
+              />
+            );
+          }
+          if (record?.plateNumber) {
+            return (
+              <UAEPlate
+                code={record?.plateCategoryValue}
+                number={record?.plateNumber}
+                emirateEn={record?.plateSourceValue}
+                emirateAr={record?.plateCodeValue}
+              />
+            );
+          }
+          return null;
+        },
+      },
+
+      { key: "inspectionType", title: "form.inspectionType", type: "number", filterable: true },
+      { key: "inspectionCategory", title: "form.fineType", type: "string", filterable: true },
       { key: "fineAmount", title: "form.fineAmount", type: "number" },
-      { key: "plateNumber", title: "form.carPlate", type: "string" },
-      { key: "tradeLicense", title: "form.tradeLicense", type: "string" },
-      { key: "inspectionType", title: "form.inspectionType", type: "string", filterable: true },
-      { key: "fineType", title: "form.fineType", type: "string", filterable: true },
+
       { key: "entityDateTime", title: "form.finedDate", type: "date" },
       { key: "inspectionStatus", title: "form.inspectionStatus", type: "string", filterable: true },
     ],
     viewRecord: true,
   },
+
   formConfig: {
     modalWidth: "720px",
     fields: [],

@@ -140,7 +140,18 @@
     "tradeLicense": "الرخصة التجارية",
     "inspectionType": "نوع التفتيش",
     "inspectionStatus": "حالة التفتيش",
-    "finedDate": "تاريخ الغرامة"
+    "finedDate": "تاريخ الغرامة",
+    "tradeLicenseOrPlate": "الرخصة التجارية / اللوحة",
+    "inspectionDate": "تاريخ التفتيش",
+    "blackPoints": "النقاط السوداء",
+    "tradeLicenseDetails": "تفاصيل الرخصة التجارية",
+    "plateDetails": "تفاصيل اللوحة",
+    "manufacturerYear": "سنة الصنع",
+    "vehicleOwnerEmail": "البريد الإلكتروني لمالك المركبة",
+    "vehicleOwnerMobile": "جوال مالك المركبة",
+    "notPaid": "لم يتم الدفع",
+    "pledgeDate":  "تاريخ التعهد",
+    "pledgeEndDate":  "تاريخ انتهاء التعهد"
 
   },
   "common": {

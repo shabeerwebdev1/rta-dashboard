@@ -37,7 +37,7 @@ import {
   useLazyGetLookupsQuery,
   useLazyGetPledgeByIdQuery,
 } from "../services/rtkApiFactory";
-import { useUploadFilesMutation } from "../services/fileApi";
+import { getFileUrl, useUploadFilesMutation } from "../services/fileApi";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
@@ -213,15 +213,30 @@ const PledgesPage: React.FC = () => {
     setIsModalOpen(true);
 
     if (mode === "edit" && record) {
+      let fileList: any[] = [];
+
+      if (record.documentPath) {
+        const files = record.documentPath.split(";");
+        fileList = files.map((file: string, index: number) => ({
+          uid: String(index),
+          name: file.split("/").pop() || `file-${index}`,
+          status: "done",
+          url: getFileUrl(file),
+        }));
+      }
+
+      // Set date range from individual date fields
+      const dateRange =
+        record.pledgeDate && record.pledgeEndDate ? [dayjs(record.pledgeDate), dayjs(record.pledgeEndDate)] : null;
+
       form.setFieldsValue({
         pledgeType: record.pledgeType,
         tradeLicenseNumber: record.tradeLicenseNumber,
         businessName: record.businessName,
         remarks: record.remarks,
-        // Handle document pre-fill logic here if needed
+        document: fileList,
+        dateRange: dateRange,
       });
-    } else {
-      form.resetFields();
     }
   };
 
@@ -233,21 +248,27 @@ const PledgesPage: React.FC = () => {
   };
 
   const handleFormSubmit = async (values: any) => {
+    // Extract dates from the range picker
+    const startDate = values.dateRange?.[0];
+    const endDate = values.dateRange?.[1];
+
     let payload: Record<string, any> = {
-      PledgeNumber: values.pledgeNumber,
       PledgeType: values.pledgeType,
       TradeLicenseNumber: values.tradeLicenseNumber,
       BusinessName: values.businessName,
       Remarks: values.remarks,
       DocumentUploaded: false,
+      // Add date fields with proper formatting
+      PledgeDate: startDate ? startDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]") : null,
+      PledgeEndDate: endDate ? endDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]") : null,
     };
 
     try {
-      if (values.document && values.document.length > 0) {
+      // handle file upload only if new files were added
+      if (values.document && values.document.some((f: any) => f.originFileObj)) {
         const formData = new FormData();
         formData.append("Category", "PledgeDocuments");
 
-        // Append all selected files
         values.document.forEach((file: any) => {
           if (file.originFileObj) {
             formData.append("Files", file.originFileObj);
@@ -255,11 +276,13 @@ const PledgesPage: React.FC = () => {
         });
 
         const uploadResult = await uploadFiles(formData).unwrap();
-
-        // Collect all uploaded file names
         const savedFileNames = (uploadResult as any[]).map((f) => f.savedAs);
 
-        payload.DocumentPath = savedFileNames.join(";"); // matches drawer parsing
+        payload.DocumentPath = savedFileNames.join(";");
+        payload.DocumentUploaded = true;
+      } else if (modalMode === "edit" && selectedRecord?.documentPath) {
+        // keep old document if not uploading new
+        payload.DocumentPath = selectedRecord.documentPath;
         payload.DocumentUploaded = true;
       }
 
@@ -268,12 +291,10 @@ const PledgesPage: React.FC = () => {
         response = await addPledge(payload).unwrap();
         notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
       } else {
-        response = await updatePledge({
-          id: selectedRecord.id,
-          ...payload,
-        }).unwrap();
+        response = await updatePledge({ id: selectedRecord.id, ...payload }).unwrap();
         notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
       }
+
       handleModalClose();
     } catch (err) {
       notification.error(err as any, "Operation Failed");
@@ -499,6 +520,31 @@ const PledgesPage: React.FC = () => {
                   <Input placeholder={t("placeholders.businessName")} />
                 </Form.Item>
               </Col>
+
+              <Col span={12}>
+                <Form.Item
+                  name="dateRange"
+                  label={t("form.dateRange")}
+                  rules={[
+                    {
+                      required: true,
+                      validator: (_, value) => {
+                        if (!value || value.length !== 2) {
+                          return Promise.reject(new Error(t("messages.dateRangeRequired")));
+                        }
+                        return Promise.resolve();
+                      },
+                    },
+                  ]}
+                >
+                  <DatePicker.RangePicker
+                    style={{ width: "100%" }}
+                    disabledDate={(d) => d && d < dayjs().startOf("day")}
+                    placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
+                  />
+                </Form.Item>
+              </Col>
+
               <Col span={24}>
                 <Form.Item
                   name="document"

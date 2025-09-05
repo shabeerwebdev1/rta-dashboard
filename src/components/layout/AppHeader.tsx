@@ -12,20 +12,28 @@ const { Title } = Typography;
 
 const AppHeader = () => {
   const { pageTitle } = usePage();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+
+  // 🔹 Get user info from localStorage
+  const userName =
+    i18n.language === "ar"
+      ? localStorage.getItem("displayNameAr")
+      : localStorage.getItem("displayNameEn") || "Guest";
+
+  const userImage = localStorage.getItem("userImage");
 
   const handleMenuClick: MenuProps["onClick"] = (e) => {
     if (e.key === "2") {
-      // 👈 Logout option
-      // Here you could also clear auth tokens/localStorage if needed
-      navigate(FULL_PATHS.LOGIN, { replace: true });
+      // Logout option
+      localStorage.clear(); // 🔹 Clear tokens + user data
+      navigate(FULL_PATHS.SPLASH, { replace: true });
     }
   };
 
   const userMenuItems: MenuProps["items"] = [
-    { key: "1", icon: <UserOutlined />, label: "Profile" },
-    { key: "2", icon: <LogoutOutlined />, label: "Logout", danger: true },
+    { key: "1", icon: <UserOutlined />, label: t("Profile") },
+    { key: "2", icon: <LogoutOutlined />, label: t("Logout"), danger: true },
   ];
 
   return (
@@ -57,8 +65,8 @@ const AppHeader = () => {
           placement="bottomRight"
         >
           <Space style={{ cursor: "pointer" }}>
-            <Avatar icon={<UserOutlined />} />
-            <span>administrator</span>
+            <Avatar src={userImage} icon={<UserOutlined />} />
+            <span>{userName}</span>
           </Space>
         </Dropdown>
       </Space>

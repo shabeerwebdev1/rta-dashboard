@@ -212,6 +212,7 @@ const WhitelistPlatesPage: React.FC = () => {
       ...rest,
       fromDate: dateRange[0].toISOString(),
       toDate: dateRange[1].toISOString(),
+      plateStatus_Id: modalMode === "add" ? 5001 : rest.plateStatus_Id,
     };
 
     try {
@@ -492,19 +493,22 @@ const WhitelistPlatesPage: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
+              {modalMode === "edit" && (
+                <Col span={12}>
+                  <Form.Item name="plateStatus_Id" label={t("form.status")} rules={[{ required: true }]}>
+                    <Select
+                      placeholder={t("placeholders.status")}
+                      options={plateStatusOptions.map((option) => ({
+                        label: option.label,
+                        value: option.value,
+                      }))}
+                    />
+                  </Form.Item>
+                </Col>
+              )}
+
               <Col span={12}>
-                <Form.Item name="plateStatus_Id" label={t("form.status")} rules={[{ required: true }]}>
-                  <Select
-                    placeholder={t("placeholders.status")}
-                    options={plateStatusOptions.map((option) => ({
-                      label: option.label,
-                      value: option.value,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item name="isByLaw" label={t("form.isByLaw")}>
+                <Form.Item name="isByLaw" label={t("form.isByLaw")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.isByLaw")}
                     options={[

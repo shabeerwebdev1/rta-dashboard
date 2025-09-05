@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tooltip } from "antd";
+import React, { useState, useEffect, useMemo } from "react";
+import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tooltip, Spin } from "antd";
 import { EyeOutlined, DownloadOutlined, AppstoreOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
-import { useSearchFinesQuery } from "../services/rtkApiFactory";
+import { useSearchFinesQuery, useLazyGetLookupsQuery } from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
@@ -18,6 +18,22 @@ import FinesViewDrawer from "../components/fines/FinesViewDrawer";
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 const pageKey = "fines";
+
+// Fixed helper function to get label from value based on current language
+const getLabelFromValue = (value: number, options: any[], i18n: any) => {
+  if (!options || !Array.isArray(options)) return String(value);
+
+  const option = options.find((opt) => opt.value === value || opt.id === value);
+  if (!option) return String(value);
+
+  return i18n.language === "ar" ? option.labelAr || option.label : option.labelEn || option.label;
+};
+
+// Helper function to filter options by category
+const filterOptionsByCategory = (options: any[], categoryId: number) => {
+  if (!options || !Array.isArray(options)) return [];
+  return options.filter((option) => option.categoryId === categoryId);
+};
 
 const FinesPage: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -41,6 +57,9 @@ const FinesPage: React.FC = () => {
   const [selectedFineData, setSelectedFineData] = useState<any>(null);
   const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [lookupOptions, setLookupOptions] = useState<any[]>([]);
+  const [isLoadingLookups, setIsLoadingLookups] = useState(false);
+  const [languageChanged, setLanguageChanged] = useState(false);
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
@@ -49,7 +68,50 @@ const FinesPage: React.FC = () => {
     refetchOnMountOrArgChange: true,
   });
 
-  const searchInputRef = useRef<any>(null);
+  const [triggerGetLookups] = useLazyGetLookupsQuery();
+
+  // Track language changes
+  useEffect(() => {
+    setLanguageChanged((prev) => !prev);
+  }, [i18n.language]);
+
+  // Fetch lookup data when component mounts or language changes
+  useEffect(() => {
+    fetchLookupData();
+  }, [languageChanged]);
+
+  const fetchLookupData = async () => {
+    setIsLoadingLookups(true);
+    try {
+      // Fetch inspection types (category 1400) and inspection categories (1300)
+      const result = await triggerGetLookups([1300, 1400, 1500]).unwrap();
+      setLookupOptions(result);
+    } catch (error) {
+      console.error("Failed to fetch lookup data:", error);
+      notification.error({ data: { en_Msg: "Failed to load dropdown options" } }, "Load Failed");
+    } finally {
+      setIsLoadingLookups(false);
+    }
+  };
+
+  // Get inspection type options with proper labels based on current language
+  const inspectionTypeOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 1400).map((option) => ({
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr || option.label : option.labelEn || option.label,
+      })),
+    [lookupOptions, i18n.language],
+  );
+
+  const inspectionCategoryOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 1300).map((option) => ({
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr || option.label : option.labelEn || option.label,
+      })),
+    [lookupOptions, i18n.language],
+  );
 
   useEffect(() => {
     setPageTitle(t(config.title));
@@ -90,7 +152,16 @@ const FinesPage: React.FC = () => {
       content: t("messages.csvConfirmContent"),
       onOk: () => {
         const selectedData = tableData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID)) || [];
-        exportToCsv(selectedData, `fines_export.csv`);
+
+        // Map numeric values to labels for CSV export
+        const mappedData = selectedData.map((item: any) => ({
+          ...item,
+          inspectionType: getLabelFromValue(item.inspectionType, inspectionTypeOptions, i18n),
+          inspectionCategory: getLabelFromValue(item.inspectionCategory, inspectionCategoryOptions, i18n),
+          // Add other mapped fields if needed
+        }));
+
+        exportToCsv(mappedData, `fines_export_${i18n.language}.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
       },
@@ -99,7 +170,7 @@ const FinesPage: React.FC = () => {
 
   const columnLabels = useMemo(
     () => Object.fromEntries(config.tableConfig.columns.map((c: any) => [c.key, t(c.title)])),
-    [t, config],
+    [t, config, i18n.language],
   );
 
   const actionMenuItems = (record: any) => [
@@ -150,6 +221,46 @@ const FinesPage: React.FC = () => {
     return 0;
   }, [data]);
 
+  // Enhanced table config with render functions for numeric values
+  const enhancedTableConfig = useMemo(
+    () => ({
+      ...config.tableConfig,
+      columns: config.tableConfig.columns.map((column) => {
+        // Add render functions for different column types
+        if (column.key === "inspectionType") {
+          return {
+            ...column,
+            render: (value: any) => {
+              if (value === null || value === undefined || value === "") return t("common.noData");
+              return getLabelFromValue(value, inspectionTypeOptions, i18n);
+            },
+          };
+        }
+        if (column.key === "inspectionCategory") {
+          return {
+            ...column,
+            render: (value: any) => {
+              if (value === null || value === undefined || value === "") return t("common.noData");
+              return getLabelFromValue(value, inspectionCategoryOptions, i18n);
+            },
+          };
+        }
+        // Add more column renderers as needed
+        if (column.key === "fineAmount") {
+          return {
+            ...column,
+            render: (value: any) => {
+              if (value === null || value === undefined || value === "") return t("common.noData");
+              return `${value} AED`;
+            },
+          };
+        }
+        return column;
+      }),
+    }),
+    [config.tableConfig, inspectionTypeOptions, inspectionCategoryOptions, i18n, t],
+  );
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <StatsDisplay statsConfig={config.statsConfig} data={tableData} loading={isFetching} />
@@ -159,7 +270,6 @@ const FinesPage: React.FC = () => {
           <Col>
             <Space>
               <Input
-                ref={searchInputRef}
                 addonBefore={searchAddon}
                 placeholder={t("common.searchPlaceholder")}
                 value={searchValue}
@@ -192,25 +302,31 @@ const FinesPage: React.FC = () => {
           onClearFilter={handleClearFilter}
           onClearAll={handleClearAll}
           columnLabels={columnLabels}
+          lookupOptions={lookupOptions}
+          getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
         />
       </Card>
 
-      <Card bordered={false} bodyStyle={{ padding: "5px 5px 0 5px" }}>
-        <DataTableWrapper
-          pageConfig={config}
-          data={tableData}
-          total={totalCount}
-          isLoading={isFetching}
-          apiParams={apiParams}
-          handleTableChange={handleTableChange}
-          handlePaginationChange={handlePaginationChange}
-          rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
-          tableSize={tableSize}
-          rowKey={config.tableConfig.rowKey}
-          actionMenuItems={actionMenuItems}
-          state={state}
-        />
-      </Card>
+      <Spin spinning={isLoadingLookups}>
+        <Card bordered={false} bodyStyle={{ padding: "5px 5px 0 5px" }}>
+          <DataTableWrapper
+            pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
+            data={tableData}
+            total={totalCount}
+            isLoading={isLoading || isFetching}
+            apiParams={apiParams}
+            handleTableChange={handleTableChange}
+            handlePaginationChange={handlePaginationChange}
+            rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
+            tableSize={tableSize}
+            rowKey={config.tableConfig.rowKey}
+            actionMenuItems={actionMenuItems}
+            state={state}
+            lookupOptions={lookupOptions}
+            getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
+          />
+        </Card>
+      </Spin>
 
       <FinesViewDrawer
         open={drawerVisible}
@@ -220,6 +336,8 @@ const FinesPage: React.FC = () => {
         }}
         fine={selectedFineData}
         isLoading={isFetching}
+        lookupOptions={lookupOptions}
+        getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
       />
     </Space>
   );

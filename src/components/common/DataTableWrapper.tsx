@@ -82,6 +82,9 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
       exemptionReason_ID: 100,
       sourceOfObstacle: 800,
       pledgeType: 900,
+      inspectionType:1400,
+      inspectionCategory:1300,
+      inspectionStatus:1500
     };
 
     const categoryId = columnToCategoryMap[columnKey];
