@@ -36,7 +36,10 @@ export const dynamicApi = createApi({
     "WebDashboard",
     "Zones",
     "Shifts",
+    "Roles",
+    "ShiftManagement",
   ],
+
   endpoints: (builder) => ({
     getLookups: builder.query({
       query: (ids: number[]) => ({
@@ -226,8 +229,11 @@ export const dynamicApi = createApi({
         params: { code },
       }),
     }),
-      // Zones
-     getZones: builder.query({
+
+    //Shift Management
+
+    // Zones
+    getZones: builder.query({
       query: () => "/api/Inspection/Zones",
       providesTags: ["Zones"],
       transformResponse: (response: any) => {
@@ -237,20 +243,62 @@ export const dynamicApi = createApi({
 
     // Shift
 
-  // In dynamicApi endpoints
-getShifts: builder.query({
-  query: () => "/api/Inspection/Shifts",
-  providesTags: ["Shifts"],
-  transformResponse: (response: any) => {
-    return response?.data || response || [];
-  },
-}),
+    // In dynamicApi endpoints
+    getShifts: builder.query({
+      query: () => "/api/Inspection/Shifts",
+      providesTags: ["Shifts"],
+      transformResponse: (response: any) => {
+        return response?.data || response || [];
+      },
+    }),
 
-    
+    //ShiftData
+    getActiveShifts: builder.query({
+      query: () => "/api/ShiftManagement/active",
+      providesTags: ["ShiftManagement"],
+      transformResponse: (response: any) => {
+        return response?.data || response || [];
+      },
+    }),
+
+    //update Shift
+    updateShiftManagement: builder.mutation({
+      query: (body) => ({
+        url: "/api/ShiftManagement",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["ShiftManagement"],
+    }),
+
+    //Role Management
+
+    //Role Dropdown
+    getRoles: builder.query({
+      query: () => "/api/RolePermission/allrole",
+      providesTags: ["Roles"],
+      transformResponse: (response: any) => {
+        return response?.data || response || [];
+      },
+    }),
+
+    //Rolebased menu table
+    getRoleById: builder.query({
+      query: (roleId) => `/api/RolePermission/role/${roleId}`,
+      providesTags: ["Roles"],
+    }),
+
+    //Update Roles
+
+    updateRolePermissions: builder.mutation({
+      query: (body) => ({
+        url: "/api/RolePermission",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Roles"],
+    }),
   }),
-
-   
-
 });
 
 export const {
@@ -287,4 +335,9 @@ export const {
   useLazyGetZonesQuery,
   useLazyGetShiftsQuery,
   useValidatecodeQuery,
+  useGetRolesQuery,
+  useLazyGetRoleByIdQuery,
+  useUpdateRolePermissionsMutation,
+  useGetActiveShiftsQuery,
+  useUpdateShiftManagementMutation,
 } = dynamicApi;

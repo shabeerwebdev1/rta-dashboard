@@ -1,77 +1,238 @@
-import React, { useEffect, useState } from "react";
-import { Card, Select, Button, Checkbox, Space } from "antd";
+import React, { useEffect, useState, useMemo } from "react";
+import { Card, Select, Checkbox, Space, Spin, Alert, Table, Button, notification } from "antd";
 import { roleManagementConfig } from "../config/pageConfigs/roleManagementConfig";
-import DataTableWrapper from "../components/common/DataTableWrapper";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
+import { useGetRolesQuery, useLazyGetRoleByIdQuery, useUpdateRolePermissionsMutation } from "../services/rtkApiFactory";
+import DataTableWrapper from "../components/common/DataTableWrapper";
 
 const { Option } = Select;
 
-const initialData = [
-  { key: 1, menuItem: "Dashboard", create: -1, read: 1, update: 0, delete: 0 },
-  { key: 2, menuItem: "Whitelist", create: 1, read: 1, update: 1, delete: 0 },
-  { key: 3, menuItem: "Pledge", create: 0, read: 1, update: -1, delete: 0 },
-  { key: 4, menuItem: "Observable", create: 1, read: 1, update: 0, delete: 1 },
-];
+interface RolePermission {
+  id: number;
+  roleManagementCode: string;
+  menuName: string;
+  roleGUID: string;
+  roleName: string | null;
+  canCreate: number;
+  canRead: number;
+  canUpdate: number;
+  canDelete: number;
+  isActive: boolean;
+}
+
+interface TableRow {
+  key: number;
+  menuItem: string;
+  create: number;
+  read: number;
+  update: number;
+  delete: number;
+  roleManagementCode: string;
+  roleGUID: string;
+}
 
 const RoleManagementPage: React.FC = () => {
-  const [role, setRole] = useState<string>("admin");
-  const [tableData, setTableData] = useState(initialData);
-    const { setPageTitle } = usePage();
-    const { t } = useTranslation();
+  const [selectedRoleId, setSelectedRoleId] = useState<string>("");
+  const [selectedRoleName, setSelectedRoleName] = useState<string>("");
+  const [tableData, setTableData] = useState<TableRow[]>([]);
+  const [originalData, setOriginalData] = useState<TableRow[]>([]);
+  const { setPageTitle } = usePage();
+  const { t } = useTranslation();
 
-  const handleCheckboxChange = (recordKey: number, field: string, checked: boolean) => {
-    const newData = tableData.map((row) =>
-      row.key === recordKey ? { ...row, [field]: checked ? 1 : 0 } : row
-    );
-    setTableData(newData);
+  // API hooks
+  const { data: rolesData, error: rolesError, isLoading: isLoadingRoles } = useGetRolesQuery();
+  const [getRoleById, { data: rolePermissions, error: permissionsError, isLoading: isLoadingPermissions }] =
+    useLazyGetRoleByIdQuery();
+  const [updateRolePermissions, { isLoading: isUpdating }] = useUpdateRolePermissionsMutation();
+
+  // Fetch permissions when role is selected
+  useEffect(() => {
+    if (selectedRoleId) {
+      getRoleById(selectedRoleId);
+    }
+  }, [selectedRoleId, getRoleById]);
+
+  // Transform API data → table rows
+  useEffect(() => {
+    if (rolePermissions?.data) {
+      const transformedData: TableRow[] = rolePermissions.data.map((item: RolePermission) => ({
+        key: item.id,
+        menuItem: item.menuName,
+        create: item.canCreate,
+        read: item.canRead,
+        update: item.canUpdate,
+        delete: item.canDelete,
+        roleManagementCode: item.roleManagementCode,
+        roleGUID: item.roleGUID,
+      }));
+      setTableData(transformedData);
+      setOriginalData(transformedData);
+    }
+  }, [rolePermissions]);
+
+  // Handle checkbox toggle
+  const handleCheckboxChange = (recordKey: number, field: keyof TableRow, checked: boolean) => {
+    setTableData((prev) => prev.map((row) => (row.key === recordKey ? { ...row, [field]: checked ? 1 : 0 } : row)));
   };
 
-  useEffect(() => {
-      setPageTitle(t(roleManagementConfig.title));
-    }, [setPageTitle, t]);
+  // Handle role selection
+  const handleRoleChange = (value: string, option: any) => {
+    setSelectedRoleId(value);
+    setSelectedRoleName(option.children || "");
+  };
 
-  // Custom columns with checkboxes
-  roleManagementConfig.tableConfig.columns = [
-    { key: "menuItem", title: "Menu Item", dataIndex: "menuItem" },
-    ...["create", "read", "update", "delete"].map((field) => ({
-      key: field,
-      title: field.charAt(0).toUpperCase() + field.slice(1),
-      dataIndex: field,
-      render: (_: any, record: any) => (
-        <Checkbox
-          checked={record[field] === 1}
-          disabled={record[field] === -1}
-          onChange={(e) => handleCheckboxChange(record.key, field, e.target.checked)}
-        />
-      ),
-    })),
-  ];
+  // Prepare data for submission - only include modified permissions
+  const prepareSubmissionData = () => {
+    const modifiedData = tableData.filter((row, index) => {
+      const originalRow = originalData[index];
+      return (
+        row.create !== originalRow.create ||
+        row.read !== originalRow.read ||
+        row.update !== originalRow.update ||
+        row.delete !== originalRow.delete
+      );
+    });
+
+    return modifiedData.map((row) => ({
+      id: row.key,
+      roleManagementCode: row.roleManagementCode,
+      menuName: row.menuItem,
+      roleGUID: row.roleGUID,
+      roleName: selectedRoleName,
+      canCreate: row.create,
+      canRead: row.read,
+      canUpdate: row.update,
+      canDelete: row.delete,
+    }));
+  };
+
+  // Handle update submission
+  const handleUpdate = async () => {
+    try {
+      const submissionData = prepareSubmissionData();
+
+      console.log("🔍 Submitting data:", submissionData); // add this
+
+      if (submissionData.length === 0) {
+        notification.info({
+          message: t("No changes detected"),
+          description: t("Please modify at least one permission before updating."),
+        });
+        return;
+      }
+
+      const result = await updateRolePermissions(submissionData).unwrap();
+
+      notification.success({
+        message: t("Permissions updated successfully"),
+        description: t("Role permissions have been updated."),
+      });
+
+      // Refresh the data to get the latest state
+      if (selectedRoleId) {
+        getRoleById(selectedRoleId);
+      }
+      setTimeout(() => {
+          setSelectedRoleId("");
+          setSelectedRoleName("");
+          setTableData([]);
+          setOriginalData([]);
+        }, 300);
+      
+    } catch (error) {
+      notification.error({
+        message: t("Update failed"),
+        description: t("Failed to update permissions. Please try again."),
+      });
+      console.error("Update error:", error);
+    }
+  };
+
+  // Build columns directly from config
+  const tableColumns = useMemo(() => {
+    return roleManagementConfig.tableConfig.columns.map((col) => {
+      if (col.type === "boolean") {
+        return {
+          ...col,
+          render: (_: any, record: TableRow) => (
+            <Checkbox
+              checked={record[col.key as keyof TableRow] === 1}
+              disabled={record[col.key as keyof TableRow] === -1}
+              onChange={(e) => handleCheckboxChange(record.key, col.key as keyof TableRow, e.target.checked)}
+            />
+          ),
+        };
+      }
+      return col;
+    });
+  }, [tableData]);
+
+  useEffect(() => {
+    setPageTitle(t(roleManagementConfig.title));
+  }, [setPageTitle, t]);
+
+  if (isLoadingRoles) {
+    return <Spin size="large" style={{ display: "block", margin: "50px auto" }} />;
+  }
+
+  if (rolesError) {
+    return <Alert message="Error" description="Failed to load roles. Please try again later." type="error" showIcon />;
+  }
 
   return (
-    <Card  bordered={false}>
-      <Space style={{ marginBottom: 16 }}>
-        <span>Select Role:</span>
-        <Select value={role} style={{ width: 200 }} onChange={(val) => setRole(val)}>
-          <Option value="admin">Admin</Option>
-          <Option value="manager">Manager</Option>
-          <Option value="user">User</Option>
+    <Card bordered={false}>
+      <Space direction="vertical" style={{ width: "100%" }} size="large">
+        <Select
+          value={selectedRoleId}
+          style={{ width: 200 }}
+          onChange={handleRoleChange}
+          placeholder={t("Select a role")}
+          loading={isLoadingRoles}
+        >
+          {rolesData?.map((role: any, index: number) => {
+            const keyValue = role.roleId ?? role.roleGUID ?? `role-${index}`;
+            return (
+              <Option key={keyValue} value={keyValue}>
+                {role.roleName ?? "Unnamed Role"}
+              </Option>
+            );
+          })}
         </Select>
-        <Button type="primary">Update</Button>
-      </Space>
 
-      <DataTableWrapper
-        pageConfig={roleManagementConfig}   
-        data={tableData}
-        total={tableData.length}
-        isLoading={false}
-        apiParams={{ PageNumber: 1, PageSize: 10 }}
-        handleTableChange={() => {}}
-        handlePaginationChange={() => {}}
-        tableSize="middle"
-        state={{ columnFilters: {} }}
-        pagination={false}
-      />
+        {selectedRoleId && (
+          <Button type="primary" onClick={handleUpdate} loading={isUpdating} disabled={isLoadingPermissions}>
+            {t("Update Permissions")}
+          </Button>
+        )}
+
+        {permissionsError && (
+          <Alert message="Error" description="Failed to load permissions for this role." type="error" showIcon />
+        )}
+
+        {isLoadingPermissions ? (
+          <Spin size="large" style={{ display: "block", margin: "50px auto" }} />
+        ) : (
+          <DataTableWrapper
+            pageConfig={{
+              ...roleManagementConfig,
+              tableConfig: {
+                ...roleManagementConfig.tableConfig,
+                columns: tableColumns,
+              },
+            }}
+            data={tableData}
+            total={tableData.length}
+            isLoading={isLoadingPermissions}
+            handleTableChange={() => {}}
+            handlePaginationChange={() => {}}
+            tableSize="middle"
+            state={{ columnFilters: {} }}
+            showPagination={false}
+            rowKey={(record: TableRow) => record.key ?? record.roleGUID ?? Math.random()}
+          />
+        )}
+      </Space>
     </Card>
   );
 };

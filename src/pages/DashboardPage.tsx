@@ -33,7 +33,7 @@ const dubaiCenter = {
 // Hardcoded supervisor IDs with Arabic names
 const SUPERVISOR_IDS = [
   {
-    id: "457CEE92-D09B-4481-88B8-1676667713AD",
+    id: "9C09B416-3AE4-406A-8627-71A23532A809",
     name: "Supervisor 1",
     nameAr: "المشرف ١",
     zone: "Zone A",
@@ -42,7 +42,7 @@ const SUPERVISOR_IDS = [
     shiftAr: "نوبة الصباح"
   },
   {
-    id: "824E667B-9CF9-4CD0-BA21-65538444509A",
+    id: "FCDF7BEC-9FC3-44F1-9AE2-B8D6223B9CE1",
     name: "Supervisor 2",
     nameAr: "المشرف ٢",
     zone: "Zone B",

@@ -28,6 +28,7 @@ interface DataTableWrapperProps {
   lookupOptions?: any[];
   getLabelFromValue?: (value: number, options: any[], i18n: any) => string;
   filterOptions?: Record<string, Array<{ text: string; value: string | number }>>;
+  showPagination?: boolean; 
 }
 
 const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
@@ -46,6 +47,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
   lookupOptions = [],
   getLabelFromValue,
   filterOptions = {},
+  showPagination = true, // New prop to control pagination visibility
 }) => {
   const { t, i18n } = useTranslation();
   const { token } = theme.useToken();
@@ -245,28 +247,31 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
           sortColumn: state.sortBy,
         })}
       />
-      <div
-        style={{
-          position: "sticky",
-          bottom: 0,
-          background: token.colorBgContainer,
-          padding: "12px 16px",
-          textAlign: "right",
-          borderTop: `1px solid ${token.colorBorderSecondary}`,
-          zIndex: 10,
-        }}
-      >
-        <Pagination
-          current={apiParams.PageNumber}
-          pageSize={apiParams.PageSize}
-          total={total}
-          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`}
-          showSizeChanger={{ showSearch: false }}
-          pageSizeOptions={["10", "20", "50"]}
-          onChange={handlePaginationChange}
-          
-        />
-      </div>
+     {showPagination && (
+        <div
+          style={{
+            position: "sticky",
+            bottom: 0,
+            background: token.colorBgContainer,
+            padding: "12px 16px",
+            textAlign: "right",
+            borderTop: `1px solid ${token.colorBorderSecondary}`,
+            zIndex: 10,
+          }}
+        >
+          <Pagination
+            current={apiParams.PageNumber}
+            pageSize={apiParams.PageSize}
+            total={total}
+            showTotal={(total, range) =>
+              `${range[0]}-${range[1]} of ${total} ${t("common.items")}`
+            }
+            showSizeChanger={{ showSearch: false }}
+            pageSizeOptions={["10", "20", "50"]}
+            onChange={handlePaginationChange}
+          />
+        </div>
+      )}
     </Card>
   );
 };
