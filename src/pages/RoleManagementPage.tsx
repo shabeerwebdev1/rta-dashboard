@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState, useMemo } from "react";
 import { Card, Select, Checkbox, Space, Spin, Alert, Table, Button, notification } from "antd";
 import { roleManagementConfig } from "../config/pageConfigs/roleManagementConfig";
@@ -33,7 +34,7 @@ interface TableRow {
 }
 
 const RoleManagementPage: React.FC = () => {
-  const [selectedRoleId, setSelectedRoleId] = useState<string>("");
+  const [selectedRoleId, setSelectedRoleId] = useState<string>("default");
   const [selectedRoleName, setSelectedRoleName] = useState<string>("");
   const [tableData, setTableData] = useState<TableRow[]>([]);
   const [originalData, setOriginalData] = useState<TableRow[]>([]);
@@ -41,14 +42,14 @@ const RoleManagementPage: React.FC = () => {
   const { t } = useTranslation();
 
   // API hooks
-  const { data: rolesData, error: rolesError, isLoading: isLoadingRoles } = useGetRolesQuery();
+  const { data: rolesData, error: rolesError, isLoading: isLoadingRoles } = useGetRolesQuery(undefined);
   const [getRoleById, { data: rolePermissions, error: permissionsError, isLoading: isLoadingPermissions }] =
     useLazyGetRoleByIdQuery();
   const [updateRolePermissions, { isLoading: isUpdating }] = useUpdateRolePermissionsMutation();
 
   // Fetch permissions when role is selected
   useEffect(() => {
-    if (selectedRoleId) {
+    if (selectedRoleId && selectedRoleId !== "default") {
       getRoleById(selectedRoleId);
     }
   }, [selectedRoleId, getRoleById]);
@@ -78,6 +79,14 @@ const RoleManagementPage: React.FC = () => {
 
   // Handle role selection
   const handleRoleChange = (value: string, option: any) => {
+    if (value === "default") {
+      setSelectedRoleId("default");
+      setSelectedRoleName("");
+      setTableData([]);
+      setOriginalData([]);
+      return;
+    }
+
     setSelectedRoleId(value);
     setSelectedRoleName(option.children || "");
   };
@@ -112,8 +121,6 @@ const RoleManagementPage: React.FC = () => {
     try {
       const submissionData = prepareSubmissionData();
 
-      console.log("🔍 Submitting data:", submissionData); // add this
-
       if (submissionData.length === 0) {
         notification.info({
           message: t("No changes detected"),
@@ -122,24 +129,18 @@ const RoleManagementPage: React.FC = () => {
         return;
       }
 
-      const result = await updateRolePermissions(submissionData).unwrap();
+      await updateRolePermissions(submissionData).unwrap();
 
       notification.success({
         message: t("Permissions updated successfully"),
         description: t("Role permissions have been updated."),
       });
 
-      // Refresh the data to get the latest state
-      if (selectedRoleId) {
-        getRoleById(selectedRoleId);
-      }
-      setTimeout(() => {
-          setSelectedRoleId("");
-          setSelectedRoleName("");
-          setTableData([]);
-          setOriginalData([]);
-        }, 300);
-      
+      // ✅ Reset to default state after update
+      setSelectedRoleId("default");
+      setSelectedRoleName("");
+      setTableData([]);
+      setOriginalData([]);
     } catch (error) {
       notification.error({
         message: t("Update failed"),
@@ -184,12 +185,15 @@ const RoleManagementPage: React.FC = () => {
     <Card bordered={false}>
       <Space direction="vertical" style={{ width: "100%" }} size="large">
         <Select
-          value={selectedRoleId}
+          value={selectedRoleId || "default"}
           style={{ width: 200 }}
           onChange={handleRoleChange}
-          placeholder={t("Select a role")}
           loading={isLoadingRoles}
         >
+          <Option value="default" disabled>
+            {t("Select Role")}
+          </Option>
+
           {rolesData?.map((role: any, index: number) => {
             const keyValue = role.roleId ?? role.roleGUID ?? `role-${index}`;
             return (
@@ -200,7 +204,8 @@ const RoleManagementPage: React.FC = () => {
           })}
         </Select>
 
-        {selectedRoleId && (
+        {/* Show Update button only when a valid role is selected */}
+        {selectedRoleId !== "default" && (
           <Button type="primary" onClick={handleUpdate} loading={isUpdating} disabled={isLoadingPermissions}>
             {t("Update Permissions")}
           </Button>
@@ -213,24 +218,27 @@ const RoleManagementPage: React.FC = () => {
         {isLoadingPermissions ? (
           <Spin size="large" style={{ display: "block", margin: "50px auto" }} />
         ) : (
-          <DataTableWrapper
-            pageConfig={{
-              ...roleManagementConfig,
-              tableConfig: {
-                ...roleManagementConfig.tableConfig,
-                columns: tableColumns,
-              },
-            }}
-            data={tableData}
-            total={tableData.length}
-            isLoading={isLoadingPermissions}
-            handleTableChange={() => {}}
-            handlePaginationChange={() => {}}
-            tableSize="middle"
-            state={{ columnFilters: {} }}
-            showPagination={false}
-            rowKey={(record: TableRow) => record.key ?? record.roleGUID ?? Math.random()}
-          />
+          // ✅ Show table only when role is selected
+          selectedRoleId !== "default" && (
+            <DataTableWrapper
+              pageConfig={{
+                ...roleManagementConfig,
+                tableConfig: {
+                  ...roleManagementConfig.tableConfig,
+                  columns: tableColumns,
+                },
+              }}
+              data={tableData}
+              total={tableData.length}
+              isLoading={isLoadingPermissions}
+              handleTableChange={() => {}}
+              handlePaginationChange={() => {}}
+              tableSize="middle"
+              state={{ columnFilters: {} }}
+              showPagination={false}
+              rowKey={(record: TableRow) => record.key ?? record.roleGUID ?? Math.random()}
+            />
+          )
         )}
       </Space>
     </Card>
