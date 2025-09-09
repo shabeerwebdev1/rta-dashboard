@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 import {
   useLazyGetDisputeByIdQuery,
   useUpdateDisputeStatusMutation,
-  useLazyGetLookupsQuery, // Add this import
+  useLazyGetLookupsQuery,
 } from "../../services/rtkApiFactory";
 import { useAppNotification } from "../../utils/notificationManager";
 
@@ -43,12 +43,12 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
 
   const [triggerGetDisputeById, { data: disputeData, isLoading }] = useLazyGetDisputeByIdQuery();
   const [updateDisputeStatus, { isLoading: isUpdating }] = useUpdateDisputeStatusMutation();
-  const [triggerGetLookups] = useLazyGetLookupsQuery(); // Add this
+  const [triggerGetLookups] = useLazyGetLookupsQuery();
 
   const [reviewAction, setReviewAction] = useState<number>(2); // 2=Approved, 3=Rejected
   const [storedDisputeId, setStoredDisputeId] = useState<string>("");
-  const [lookupOptions, setLookupOptions] = useState<any[]>([]); // Add this state
-  const [isLoadingLookups, setIsLoadingLookups] = useState(false); // Add this state
+  const [lookupOptions, setLookupOptions] = useState<any[]>([]);
+  const [isLoadingLookups, setIsLoadingLookups] = useState(false);
 
   // Store disputeId in localStorage when it changes
   useEffect(() => {
@@ -77,7 +77,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
     setIsLoadingLookups(true);
     try {
       // Category IDs for department (1000) and payment type (1100)
-      const categoryIds = [1000, 1100];
+      const categoryIds = [1000, 1100, 1002]; // Added dispute status category
       const result = await triggerGetLookups(categoryIds).unwrap();
       setLookupOptions(result);
     } catch (error) {
@@ -287,15 +287,10 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                           <Col span={14}>{dispute.fineDetails.fineNo || "No Data"}</Col>
 
                           <Col span={10}>
-                            <Text strong>Fine Type:</Text>
-                          </Col>
-                          <Col span={14}>{dispute.fineDetails.fineType || "No Data"}</Col>
-
-                          <Col span={10}>
                             <Text strong>Fine Amount:</Text>
                           </Col>
                           <Col span={14}>
-                            {dispute.fineDetails.fineAmount ? (
+                            {dispute.fineDetails.fineAmount !== null && dispute.fineDetails.fineAmount !== undefined ? (
                               <Text type="danger" strong>
                                 {dispute.fineDetails.fineAmount} AED
                               </Text>
@@ -308,30 +303,19 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                             <Text strong>Fine Status:</Text>
                           </Col>
                           <Col span={14}>
-                            <Tag color={dispute.fineDetails.fineStatus === "Pending" ? "orange" : "green"}>
-                              {dispute.fineDetails.fineStatus || "No Data"}
-                            </Tag>
+                            {dispute.fineDetails.fineStatus ? (
+                              <Tag color={getStatusColor(dispute.fineDetails.fineStatus)}>
+                                {getLabelFromValue(dispute.fineDetails.fineStatus, 1002)}
+                              </Tag>
+                            ) : (
+                              "No Data"
+                            )}
                           </Col>
 
                           <Col span={10}>
-                            <Text strong>Section:</Text>
+                            <Text strong>Inspection ID:</Text>
                           </Col>
-                          <Col span={14}>{dispute.fineDetails.section || "No Data"}</Col>
-
-                          <Col span={10}>
-                            <Text strong>Supervisor ID:</Text>
-                          </Col>
-                          <Col span={14}>{dispute.fineDetails.supervisorID || "No Data"}</Col>
-
-                          <Col span={10}>
-                            <Text strong>Device Number:</Text>
-                          </Col>
-                          <Col span={14}>{dispute.fineDetails.inspectionDeviceNo || "No Data"}</Col>
-
-                          <Col span={10}>
-                            <Text strong>Comments:</Text>
-                          </Col>
-                          <Col span={14}>{dispute.fineDetails.comments || "No Data"}</Col>
+                          <Col span={14}>{dispute.fineDetails.inspectionId || "No Data"}</Col>
                         </Row>
                       ) : (
                         <Empty description="No Fine Details Available" />
@@ -349,27 +333,39 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     headStyle={{ background: "#fafafa", fontWeight: 600 }}
                   >
                     <Row gutter={16}>
-                      <Col span={4}>
-                        <Text strong>Plate:</Text> {dispute.vehicle.plateNumber || "No Data"}
+                      <Col span={6}>
+                        <Text strong>Plate Number:</Text> {dispute.vehicle.plateNumber || "No Data"}
                       </Col>
-                      <Col span={4}>
-                        <Text strong>Type:</Text> {dispute.vehicle.vehicleType || "No Data"}
+                      <Col span={6}>
+                        <Text strong>Plate Color:</Text> {dispute.vehicle.plateColor || "No Data"}
                       </Col>
-                      <Col span={4}>
-                        <Text strong>Brand:</Text> {dispute.vehicle.brand || "No Data"}
+                      <Col span={6}>
+                        <Text strong>Plate Type:</Text> {dispute.vehicle.plateType || "No Data"}
                       </Col>
-                      <Col span={4}>
-                        <Text strong>Color:</Text> {dispute.vehicle.color || "No Data"}
+                      <Col span={6}>
+                        <Text strong>Plate Source:</Text> {dispute.vehicle.plateSource || "No Data"}
                       </Col>
-                      <Col span={4}>
-                        <Text strong>Owner:</Text> {dispute.vehicle.ownerName || "No Data"}
+                      <Col span={6}>
+                        <Text strong>Vehicle Brand:</Text> {dispute.vehicle.vehicleBrand || "No Data"}
+                      </Col>
+                      <Col span={6}>
+                        <Text strong>Vehicle Type:</Text> {dispute.vehicle.vehicleType || "No Data"}
+                      </Col>
+                      <Col span={6}>
+                        <Text strong>Vehicle Color:</Text> {dispute.vehicle.vehicleColor || "No Data"}
+                      </Col>
+                      <Col span={6}>
+                        <Text strong>Manufacturer Year:</Text> {dispute.vehicle.manufacturerYear || "No Data"}
+                      </Col>
+                      <Col span={6}>
+                        <Text strong>Owner Name:</Text> {dispute.vehicle.ownerName || "No Data"}
                       </Col>
                     </Row>
                   </Card>
                 )}
 
                 {/* Evidence & Location */}
-                <Row gutter={16}>
+                {/* <Row gutter={16}>
                   <Col span={12}>
                     <Card
                       title="Evidence"
@@ -377,39 +373,21 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                       style={{ borderRadius: 12, marginBottom: 16 }}
                       headStyle={{ background: "#fafafa", fontWeight: 600 }}
                     >
-                      {dispute.fineDetails?.documents ? (
-                        <Row justify="center">
-                          <Col>
-                            <Text>{dispute.fineDetails.documents}</Text>
-                          </Col>
-                        </Row>
-                      ) : (
-                        <Empty description="No Evidence Available" />
-                      )}
+                      <Empty description="No Evidence Available" />
                     </Card>
                   </Col>
 
                   <Col span={12}>
                     <Card
-                      title=" Fine Location"
+                      title="Fine Location"
                       size="small"
                       style={{ borderRadius: 12, marginBottom: 16 }}
                       headStyle={{ background: "#fafafa", fontWeight: 600 }}
                     >
-                      {dispute.fineDetails?.latitude && dispute.fineDetails?.longitude ? (
-                        <iframe
-                          title="location-map"
-                          width="100%"
-                          height="200"
-                          style={{ border: 0, borderRadius: 8 }}
-                          src={`https://www.google.com/maps?q=${dispute.fineDetails.latitude},${dispute.fineDetails.longitude}&z=15&output=embed`}
-                        />
-                      ) : (
-                        <Empty description="No Location Data Available" />
-                      )}
+                      <Empty description="No Location Data Available" />
                     </Card>
                   </Col>
-                </Row>
+                </Row> */}
               </Col>
 
               {/* RIGHT SIDE - Review Timeline */}

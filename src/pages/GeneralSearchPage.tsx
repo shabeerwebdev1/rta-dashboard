@@ -22,11 +22,7 @@ const GeneralSearchPage: React.FC = () => {
   );
 
   useEffect(() => {
-    if (activeTab === "permits") {
-      setPageTitle("Permit Search");
-    } else if (activeTab === "inspection-obstacles") {
-      setPageTitle("Inspection Obstacles Search");
-    }
+    setPageTitle("General Search");
   }, [activeTab, setPageTitle]);
 
   const onFinish = (values: Record<string, any>) => {
@@ -108,7 +104,8 @@ const GeneralSearchPage: React.FC = () => {
           type="card"
         >
           <TabPane tab="Permits" key="permits" />
-          <TabPane tab="Inspection Obstacles" key="inspection-obstacles" />
+          <TabPane tab="Car Plate" key="car-Plate" />
+          <TabPane tab="Tarde Lincense" key="trade-license" />
         </Tabs>
 
         <Form form={form} layout="vertical" onFinish={onFinish}>
@@ -147,7 +144,26 @@ const GeneralSearchPage: React.FC = () => {
               </>
             )}
 
-            {activeTab === "inspection-obstacles" && (
+            {activeTab === "car-Plate" && (
+              <>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="zone" label="Zone">
+                    <Input placeholder="Enter Zone" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="area" label="Area">
+                    <Input placeholder="Enter Area" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="area" label="Area">
+                    <Input placeholder="Enter Area" />
+                  </Form.Item>
+                </Col>
+              </>
+            )}
+            {activeTab === "trade-license" && (
               <>
                 <Col xs={24} sm={12} md={8}>
                   <Form.Item name="zone" label="Zone">

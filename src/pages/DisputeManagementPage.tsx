@@ -1,19 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import {
-  Space,
-  Card,
-  Input,
-  Button,
-  Modal,
-  Form,
-  Row,
-  Col,
-  Select,
-  App,
-  DatePicker,
-  Tooltip,
-  Spin,
-} from "antd";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, DatePicker, Tooltip, Spin } from "antd";
 import {
   PlusOutlined,
   EyeOutlined,
@@ -103,7 +89,13 @@ const DisputeManagementPage: React.FC = () => {
   const [triggerGetDisputeById] = useLazyGetDisputeByIdQuery();
   const searchInputRef = useRef<any>(null);
 
- 
+  const getLabelFromValue = (value: number, options: any[], i18n: any) => {
+    const option = options.find((opt) => opt.value === value);
+    if (!option) return value;
+
+    // Use Arabic label if language is Arabic, otherwise English
+    return i18n.language === "ar" ? option.labelAr : option.labelEn;
+  };
 
   // Fetch lookup data when modal opens or language changes
   useEffect(() => {
@@ -143,6 +135,14 @@ const DisputeManagementPage: React.FC = () => {
     [lookupOptions, i18n.language],
   );
 
+
+  const disputeStatusEnum = [
+    { value: 1, labelEn: "Pending", labelAr: "قيد الانتظار" },
+    { value: 2, labelEn: "Approved", labelAr: "موافقة" },
+    { value: 3, labelEn: "Rejected", labelAr: "مرفوض" },
+    { value: 4, labelEn: "Recalled", labelAr: "تم الاسترجاع" },
+  ];
+  
   useEffect(() => {
     setPageTitle(t(config.title));
   }, [setPageTitle, t, config.title, i18n.language]);
@@ -179,7 +179,7 @@ const DisputeManagementPage: React.FC = () => {
         const result = await triggerGetDisputeById(record.dispute_Id).unwrap();
         if (result.data) {
           form.setFieldsValue({
-            fineId: result.data.fine_Number, // Map fine_Number to fineId
+            fineId: result.data.fine_Number,
             department: result.data.department,
             payment_Type: result.data.payment_Type,
             dispute_Reason: result.data.dispute_Reason,
@@ -187,6 +187,8 @@ const DisputeManagementPage: React.FC = () => {
             email: result.data.email,
             phone: result.data.phone,
             address: result.data.address,
+            sourceUser: result.data.sourceUser,
+            actualDisputeDate: result.data.actualDisputeDate ? dayjs(result.data.actualDisputeDate) : null,
           });
         }
       } catch (error) {
@@ -210,7 +212,7 @@ const DisputeManagementPage: React.FC = () => {
 
       // Prepare the payload according to API structure
       const payload = {
-        fineId: Number(values.fineId), // Changed from fine_Number to fineId
+        fineId: String(values.fineId),
         department: values.department,
         payment_Type: values.payment_Type,
         dispute_Reason: values.dispute_Reason,
@@ -218,6 +220,8 @@ const DisputeManagementPage: React.FC = () => {
         email: values.email,
         phone: values.phone,
         address: values.address,
+        sourceUser: values.sourceUser,
+        actualDisputeDate: values.actualDisputeDate ? values.actualDisputeDate.toISOString() : null,
       };
 
       if (modalMode === "add") {
@@ -283,6 +287,14 @@ const DisputeManagementPage: React.FC = () => {
     () => ({
       ...config.tableConfig,
       columns: config.tableConfig.columns.map((column) => {
+        if (column.key === "dispute_Status") {
+          return {
+            ...column,
+            filterable: true, // ✅ ensure filterable
+            render: (value: number) => getLabelFromValue(value, disputeStatusEnum, i18n),
+          };
+        }
+  
         const categoryId = columnToCategoryMap[column.key];
         if (categoryId) {
           const options = filterOptionsByCategory(lookupOptions, categoryId);
@@ -296,6 +308,8 @@ const DisputeManagementPage: React.FC = () => {
     }),
     [config.tableConfig, lookupOptions, i18n],
   );
+  
+  
 
   const actionMenuItems = (record: any) => [
     { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
@@ -396,6 +410,8 @@ const DisputeManagementPage: React.FC = () => {
         tableSize={tableSize}
         rowKey={config.tableConfig.rowKey}
         state={state}
+        lookupOptions={lookupOptions}
+        getLabelFromValue={getLabelFromValue}
       />
 
       <Modal
@@ -507,6 +523,27 @@ const DisputeManagementPage: React.FC = () => {
                   <Input placeholder={t("placeholders.phoneNumber")} maxLength={10} />
                 </Form.Item>
               </Col>
+
+              <Col span={12}>
+                <Form.Item
+                  name="sourceUser"
+                  label={t("form.sourceUser")}
+                  rules={[{ required: true, message: t("messages.requiredField") }]}
+                >
+                  <Input placeholder={t("placeholders.sourceUser")} />
+                </Form.Item>
+              </Col>
+
+              <Col span={12}>
+                <Form.Item
+                  name="actualDisputeDate"
+                  label={t("form.actualDisputeDate")}
+                  rules={[{ required: true, message: t("messages.requiredField") }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
+                </Form.Item>
+              </Col>
+
               <Col span={24}>
                 <Form.Item
                   name="address"

@@ -153,20 +153,12 @@ const PledgesPage: React.FC = () => {
     [lookupOptions, i18n.language],
   );
 
-  // Handle record view from table
-  const handleViewFromTable = (recordId: string) => {
-    triggerGetPledge(recordId);
-  };
+  
 
   useEffect(() => {
     if (isSingleRecordSuccess && singleRecordData) {
       setViewRecord(singleRecordData.data);
       setIsDrawerOpen(true);
-
-      // Update URL with viewRecord parameter
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.set("viewRecord", singleRecordData.data.id);
-      setSearchParams(newSearchParams);
     }
   }, [isSingleRecordSuccess, singleRecordData]);
 
@@ -252,7 +244,7 @@ const PledgesPage: React.FC = () => {
     const startDate = values.dateRange?.[0];
     const endDate = values.dateRange?.[1];
 
-    let payload: Record<string, any> = {
+    const payload: Record<string, string | number | boolean | null> = {
       PledgeType: values.pledgeType,
       TradeLicenseNumber: values.tradeLicenseNumber,
       BusinessName: values.businessName,
@@ -319,8 +311,10 @@ const PledgesPage: React.FC = () => {
   };
 
   const handleView = (record: any) => {
-    handleViewFromTable(record.id);
+    setViewRecord(record); // ✅ use row data directly
+    setIsDrawerOpen(true);
   };
+  
 
   const handleShare = (record: any) => {
     // Create URL with record ID parameter
@@ -398,11 +392,6 @@ const PledgesPage: React.FC = () => {
   const handleDrawerClose = () => {
     setIsDrawerOpen(false);
     setViewRecord(null);
-
-    // Remove viewRecord parameter from URL
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.delete("viewRecord");
-    setSearchParams(newSearchParams);
   };
 
   return (

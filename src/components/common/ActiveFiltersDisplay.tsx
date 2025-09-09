@@ -54,6 +54,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
       inspectionType: 1400,
       inspectionCategory: 1300,
       inspectionStatus: 1500,
+      payment_Type:1100,
     };
 
     const categoryId = columnToCategoryMap[columnKey];

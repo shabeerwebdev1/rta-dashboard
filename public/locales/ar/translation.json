@@ -151,7 +151,11 @@
     "vehicleOwnerMobile": "جوال مالك المركبة",
     "notPaid": "لم يتم الدفع",
     "pledgeDate":  "تاريخ التعهد",
-    "pledgeEndDate":  "تاريخ انتهاء التعهد"
+    "pledgeEndDate":  "تاريخ انتهاء التعهد",
+    "disputestatus": "حالة النزاع",
+    "assinedto": "مُعين إلى",
+    "sourceUser": "المستخدم المصدر",
+    "actualDisputeDate": "تاريخ النزاع الفعلي"
 
   },
   "common": {

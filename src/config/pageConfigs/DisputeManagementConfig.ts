@@ -28,16 +28,9 @@ export const disputeManagementConfig: PageConfig = {
     rowKey: "dispute_Id",
     columns: [
       {
-        key: "department",
-        title: "form.department",
+        key: "fineId",
+        title: "form.fineNumber",
         type: "select",
-        filterable: true,
-        options: [
-          { label: "Parking", value: 1 },
-          { label: "Traffic", value: 2 },
-          { label: "Finance", value: 3 },
-          { label: "Enforcement", value: 4 },
-        ],
       },
       {
         key: "payment_Type",
@@ -52,6 +45,9 @@ export const disputeManagementConfig: PageConfig = {
       },
       { key: "phone", title: "form.phoneNumber", type: "string" },
       { key: "crM_Ref", title: "form.crmReference", type: "string", sortable: true },
+      { key: "email", title: "form.email", type: "string" },
+      { key: "dispute_Status", title: "form.disputestatus", type: "string" },
+      { key: "assignedTo", title: "form.assinedto", type: "string" },
     ],
     viewRecord: true,
     showEdit: true,

@@ -151,7 +151,11 @@
     "vehicleOwnerMobile": "Vehicle Owner Mobile",
     "notPaid": "Not Paid",
     "pledgeDate": "Pledge Date",
-    "pledgeEndDate": "Pledge End Date"
+    "pledgeEndDate": "Pledge End Date",
+    "disputestatus": "Dispute Status",
+    "assinedto": "Assigned To",
+    "sourceUser": "Source User",
+    "actualDisputeDate": "Actual Dispute Date"
   },
   "common": {
     "action": "Action",
