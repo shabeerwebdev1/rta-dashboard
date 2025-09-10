@@ -29,6 +29,7 @@ export const PATHS = {
   TEAM_EVALUATION: "team-assessment",
   TEAM_TRAINING: "team-assessment",
   ROLE_MANAGEMENT: "role-management",
+  LEAVE_MANAGEMENT: "leave-management",
 };
 
 export const FULL_PATHS = {

@@ -14,8 +14,8 @@ interface SupervisorData {
   key: string;
   SupervisorName: string;
   zone?: string[];
-  shift?: string; // shiftGUID
-  weekOffs?: number[]; // store numbers (3 = Wednesday, etc.)
+  shift?: string;
+  weekOffs?: number[];
   role: string;
   employeeId: string;
   uswMcode: string;
@@ -44,7 +44,7 @@ interface ActiveShiftData {
   shiftId: string;
   roleGUID: string;
   role: string;
-  wO_Days: string; // "3,4,5"
+  wO_Days: string;
   isActive: boolean;
   assignmentTypes: number[];
   zoneIds: number[];
@@ -52,8 +52,6 @@ interface ActiveShiftData {
 }
 
 const { Option } = Select;
-
-const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 function SupervisorManagement() {
   const [data, setData] = useState<SupervisorData[]>([]);
@@ -64,11 +62,12 @@ function SupervisorManagement() {
   const { t, i18n } = useTranslation();
   const [isLoadingShifts, setIsLoadingShifts] = useState(false);
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [updatingRowKey, setUpdatingRowKey] = useState<string | null>(null);
 
-  const { 
-    data: activeShiftsResponse, 
-    isLoading: isLoadingActiveShifts, 
-    refetch: refetchActiveShifts 
+  const {
+    data: activeShiftsResponse,
+    isLoading: isLoadingActiveShifts,
+    refetch: refetchActiveShifts,
   } = useGetActiveShiftsQuery();
 
   const [updateShiftManagement, { isLoading: isUpdating }] = useUpdateShiftManagementMutation();
@@ -78,22 +77,22 @@ function SupervisorManagement() {
     fetchShiftsData();
   }, [i18n.language]);
 
-  const availableShiftIds = useMemo(() => shifts.map(shift => shift.shiftTypeGUID), [shifts]);
+  const availableShiftIds = useMemo(() => shifts.map((shift) => shift.shiftTypeGUID), [shifts]);
 
   useEffect(() => {
     if (activeShiftsResponse) {
-      const activeShiftsData = Array.isArray(activeShiftsResponse) 
-        ? activeShiftsResponse 
+      const activeShiftsData = Array.isArray(activeShiftsResponse)
+        ? activeShiftsResponse
         : activeShiftsResponse.data || [];
 
       const transformedData: SupervisorData[] = activeShiftsData
         .filter((item: ActiveShiftData) => item.roleGUID === "9C09B416-3AE4-406A-8627-71A23532A809")
         .map((item: ActiveShiftData, index: number) => {
           const isValidShift = item.shiftId && availableShiftIds.includes(item.shiftId);
-          const zoneIds = item.zoneIds?.map(id => id.toString()) || [];
+          const zoneIds = item.zoneIds?.map((id) => id.toString()) || [];
 
           return {
-            key: item.uswMcode || `supervisor-${index}`,
+            key: item.employeeId || item.uswMcode || `supervisor-${index}`,
             SupervisorName: item.employeeName,
             zone: zoneIds,
             shift: isValidShift ? item.shiftId : undefined,
@@ -133,17 +132,37 @@ function SupervisorManagement() {
     }
   };
 
-  const zoneOptions = useMemo(() => zones.map((zone) => ({
-    value: zone.zoneId.toString(),
-    label: `${zone.zoneCode}-${zone.zone}`,
-    original: zone,
-  })), [zones, i18n.language]);
+  const zoneOptions = useMemo(
+    () =>
+      zones.map((zone) => ({
+        value: zone.zoneId.toString(),
+        label: `${zone.zoneCode}-${zone.zone}`,
+        original: zone,
+      })),
+    [zones, i18n.language]
+  );
 
-  const shiftOptions = useMemo(() => shifts.map((shift) => ({
-    value: shift.shiftTypeGUID,
-    label: `${shift.shiftTypeCode} - ${i18n.language === "ar" ? shift.shiftTypeNameAr : shift.shiftTypeNameEn}`,
-    original: shift,
-  })), [shifts, i18n.language]);
+  const shiftOptions = useMemo(
+    () =>
+      shifts.map((shift) => ({
+        value: shift.shiftTypeGUID,
+        label: `${shift.shiftTypeCode} - ${
+          i18n.language === "ar" ? shift.shiftTypeNameAr : shift.shiftTypeNameEn
+        }`,
+        original: shift,
+      })),
+    [shifts, i18n.language]
+  );
+
+  // ✅ Properly translated weekdays
+  const weekDayOptions = useMemo(
+    () =>
+      SupervisorManagemnetConfig.tableConfig.weekDays.map((d) => ({
+        label: t(d.label),
+        value: parseInt(d.value),
+      })),
+    [i18n.language, t]
+  );
 
   const handleZoneChange = (value: string[], record: SupervisorData) => {
     setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, zone: value } : item)));
@@ -154,35 +173,42 @@ function SupervisorManagement() {
   };
 
   const handleWeekOffChange = (checkedValues: number[], record: SupervisorData) => {
-    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, weekOffs: checkedValues } : item)));
+    setData((prev) =>
+      prev.map((item) => (item.key === record.key ? { ...item, weekOffs: checkedValues } : item))
+    );
   };
 
   const handleUpdate = async (record: SupervisorData) => {
     try {
+      setUpdatingRowKey(record.key);
+
       const zoneIds = record.zone?.map((zoneId) => zoneId) || [];
       const assignmentTypes = [0];
 
       const updateData = {
         employeeId: record.employeeId,
-        shiftId: record.shift || "", // ✅ send shiftGUID
-        wO_Days: record.weekOffs?.join(",") || "", // ✅ send numbers like "3,4,5"
+        shiftId: record.shift || "",
+        wO_Days: record.weekOffs?.join(",") || "",
         role: "Supervisor",
         assignmentTypes,
         zoneIds,
       };
-      
 
       await updateShiftManagement(updateData).unwrap();
+
       notification.success({
         message: t("Update successful"),
         description: t("Supervisor data has been updated successfully."),
       });
+
       refetchActiveShifts();
     } catch (error) {
       notification.error({
         message: t("Update failed"),
         description: t("Failed to update supervisor data. Please try again."),
       });
+    } finally {
+      setUpdatingRowKey(null);
     }
   };
 
@@ -237,9 +263,10 @@ function SupervisorManagement() {
           ...col,
           render: (_: any, record: SupervisorData) => (
             <Checkbox.Group
-              options={days.map((day, idx) => ({ label: day, value: idx + 1 }))}
+              options={weekDayOptions}
               value={record.weekOffs}
               onChange={(vals) => handleWeekOffChange(vals as number[], record)}
+              style={{ display: "flex", flexDirection: "column", gap: 4 }}
             />
           ),
         };
@@ -250,9 +277,13 @@ function SupervisorManagement() {
           ...col,
           render: (_: any, record: SupervisorData) => (
             <Space>
-              <Button type="primary" onClick={() => handleUpdate(record)} loading={isUpdating}>
-                Update
-              </Button>
+              <Button
+          type="primary"
+          onClick={() => handleUpdate(record)}
+          loading={updatingRowKey === record.key} // ✅ only this row shows loading
+        >
+          {t("common.update")}
+        </Button>
             </Space>
           ),
         };
@@ -260,7 +291,7 @@ function SupervisorManagement() {
 
       return { ...col, dataIndex: col.key };
     });
-  }, [zones, shifts, data, isLoadingZones, isLoadingShifts, isUpdating]);
+  }, [zones, shifts, data, isLoadingZones, isLoadingShifts, isUpdating, weekDayOptions]);
 
   return (
     <Spin spinning={isLoadingActiveShifts || isLoadingZones || isLoadingShifts || isUpdating}>

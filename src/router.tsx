@@ -20,7 +20,7 @@ const CreateShiftPlan = lazy(() => import("./pages/CreateShiftPlan"));
 const AdhocShiftPlan = lazy(() => import("./pages/AdhocShiftPlan"));
 const ShiftManagement = lazy(() => import("./pages/ShiftManagement"));
 const RoleManagementPage = lazy(() => import("./pages/RoleManagementPage"));
-
+const LeaveManagementPage = lazy(() => import("./pages/LeaveManagementPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 
 const AppRoutes = () => {
@@ -61,6 +61,7 @@ const AppRoutes = () => {
           <Route path={PATHS.CREATESHIFTPLAN} element={<CreateShiftPlan />} />
           <Route path={PATHS.ADHOCSHIFTPLAN} element={<AdhocShiftPlan />} />
           <Route path={PATHS.ROLE_MANAGEMENT} element={<RoleManagementPage />} />
+          <Route path={PATHS.LEAVE_MANAGEMENT} element={<LeaveManagementPage />} />
 
           {/* Fallback */}
           <Route path="*" element={<ComingSoonPage />} />

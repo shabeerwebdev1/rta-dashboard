@@ -29,14 +29,16 @@
     "inspectionmanagement": "إدارة التفتيش",
     "shiftplanning": "تخطيط النوبات",
     "roleManagement": "إدارة الأدوار"
-  },
+    },
   "header": {
     "compactMode": "الوضع المضغوط",
     "standardMode": "الوضع القياسي"
   },
   "tabs": {
     "inspectors": "المفتشون",
-    "supervisors": "المشرفون"
+    "supervisors": "المشرفون",
+    "carPlate": "لوحة السيارة",
+    "tradeLicense": "الرخصة التجارية"
   },
   "page": {
     "title": {
@@ -52,7 +54,8 @@
       "createshiftplan": "إنشاء خطة نوبات",
       "adhocshiftplan": "خطة نوبات خاصة",
       "inspectionmanagement": "إدارة التفتيش",
-      "roleManagement": "إدارة الأدوار"
+      "roleManagement": "إدارة الأدوار",
+      "leaveManagement": "إدارة الإجازات"
 
     },
     "addTitle": "إضافة {{entity}} جديد",
@@ -158,9 +161,20 @@
     "actualDisputeDate": "تاريخ النزاع الفعلي",
     "approvalActions": "إجراءات الموافقة",
     "approve": "الموافقة",
-    "reject": "الرفض"
-    
-
+    "reject": "الرفض",
+   
+    "InspectorName": "اسم المفتش",
+    "Zone": "المنطقة",
+    "Shift": "الوردية",
+    "AssignmentType": "نوع التكليف",
+    "WeekOffs": "أيام العطلة",
+    "Actions": "الإجراءات",
+      "employeeId": "معرف الموظف",
+     "leaveType": "نوع الإجازة",
+      "leaveReason": "سبب الإجازة",
+      "totalLeaveDays": "إجمالي أيام الإجازة",
+      "plateCategory": "فئة اللوحة",
+      "plateCode": "رمز اللوحة"
   },
   "common": {
     "action": "إجراء",
@@ -206,7 +220,11 @@
     "removed": "تمت الإزالة",
     "reported": "Reported",
     "submitting": "جارٍ الإرسال",
-    "updating": "جارٍ التحديث"
+    "updating": "جارٍ التحديث",
+    "approved": "موافق",
+    "rejected": "مرفوض",
+    "cancelled": "ملغى",
+    "recalled": "تم الاسترجاع"
   },
 
   "placeholders": {
@@ -240,7 +258,9 @@
     "phoneNumber": "أدخل رقم هاتفك",
     "address": "أدخل عنوانك",
     "comments": "أضف تعليقات ",
-    "SourceUser": "أدخل المستخدم المصدر"
+    "SourceUser": "أدخل المستخدم المصدر",
+    "plateCategory": "اختر فئة اللوحة",
+    "plateCode": "اختر رمز اللوحة"
 
   },
   "dashboard": {
@@ -260,5 +280,14 @@
     "towingRequests": "طلبات السحب",
     "leaveRequests": "طلبات الإجازة",
     "obstacle": "عائق"
+  },
+    "weekdays": {
+    "Monday": "الإثنين",
+    "Tuesday": "الثلاثاء",
+    "Wednesday": "الأربعاء",
+    "Thursday": "الخميس",
+    "Friday": "الجمعة",
+    "Saturday": "السبت",
+    "Sunday": "الأحد"
   }
 }

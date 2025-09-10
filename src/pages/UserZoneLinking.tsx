@@ -1,6 +1,6 @@
 // UserZoneLinking.tsx
 import React, { useEffect, useState, useMemo } from "react";
-import { Space, Select, Checkbox, notification, Spin, Alert, Button } from "antd";
+import { Space, Select, Checkbox, notification, Spin, Button } from "antd";
 import { UserZoneLinkingConfig } from "../config/pageConfigs/userZoneLinkingConfig";
 import { useTranslation } from "react-i18next";
 import {
@@ -22,7 +22,7 @@ interface InspectorData {
   weekOffs?: string[];
   assignmentType?: number[];
   role: string;
-  roleGUID: string; // ✅ Added roleGUID
+  roleGUID: string;
   employeeId: string;
   uswMcode: string;
   isActive: boolean;
@@ -74,7 +74,6 @@ function UserZoneLinking() {
   const {
     data: activeShiftsResponse,
     isLoading: isLoadingActiveShifts,
-    error: activeShiftsError,
     refetch: refetchActiveShifts,
   } = useGetActiveShiftsQuery();
 
@@ -217,13 +216,14 @@ function UserZoneLinking() {
     [shifts, i18n.language]
   );
 
+  // ✅ FIX: translate week days here
   const weekDayOptions = useMemo(
     () =>
       UserZoneLinkingConfig.tableConfig.weekDays.map((day) => ({
-        label: day.label,
+        label: t(day.label),
         value: day.value,
       })),
-    [i18n.language]
+    [i18n.language, t]
   );
 
   // === Handlers ===
@@ -242,54 +242,42 @@ function UserZoneLinking() {
   };
 
   const handleAssignmentTypeChange = (value: number[], record: InspectorData) => {
-    setData((prev) =>
-      prev.map((item) => (item.key === record.key ? { ...item, assignmentType: value } : item))
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, assignmentType: value } : item)));
   };
 
   // === Update Handler ===
-// === Update Handler ===
-// === Update Handler ===
-const handleUpdate = async (record: InspectorData) => {
-  try {
-    const zoneIds = record.zone || [];
-    const assignmentTypes = record.assignmentType || [];
+  const handleUpdate = async (record: InspectorData) => {
+    try {
+      const zoneIds = record.zone || [];
+      const assignmentTypes = record.assignmentType || [];
+      const weekOffsString = (record.weekOffs || []).join(",");
 
-    // ✅ Convert weekOffs array (["6","7"]) → "6,7"
-    const weekOffsString = (record.weekOffs || []).join(",");
+      const updateData = {
+        employeeId: record.employeeId,
+        shiftId: record.shift || "",
+        wO_Days: weekOffsString,
+        role: "Inspector",
+        assignmentTypes,
+        zoneIds,
+      };
 
-    const updateData = {
-      employeeId: record.employeeId,
-      shiftId: record.shift || "",  
-      wO_Days: weekOffsString,      
-      role: "Inspector",
+      console.log("Update data:", updateData);
 
-      // ✅ Force roleGUID to Inspector role
-      roleGUID: "FCDF7BEC-9FC3-44F1-9AE2-B8D6223B9CE1",
+      await updateShiftManagement(updateData).unwrap();
 
-      assignmentTypes,
-      zoneIds,
-    };
+      notification.success({
+        message: t("Update successful"),
+        description: t("Inspector data has been updated successfully."),
+      });
 
-    console.log("Update data (forced Inspector roleGUID):", updateData);
-
-    await updateShiftManagement(updateData).unwrap();
-
-    notification.success({
-      message: t("Update successful"),
-      description: t("Inspector data has been updated successfully."),
-    });
-
-    refetchActiveShifts();
-  } catch (error) {
-    notification.error({
-      message: t("Update failed"),
-      description: t("Failed to update inspector data. Please try again."),
-    });
-  }
-};
-
-
+      refetchActiveShifts();
+    } catch {
+      notification.error({
+        message: t("Update failed"),
+        description: t("Failed to update inspector data. Please try again."),
+      });
+    }
+  };
 
   // === Columns with custom render ===
   const tableColumns = useMemo(() => {
@@ -303,7 +291,7 @@ const handleUpdate = async (record: InspectorData) => {
               value={record.zone || []}
               style={{ width: 210 }}
               onChange={(val) => handleZoneChange(val, record)}
-              placeholder="Select Zone(s)"
+              placeholder={t("Select Zone(s)")}
               loading={isLoadingZones}
             >
               {zoneOptions.map((option) => (
@@ -324,7 +312,7 @@ const handleUpdate = async (record: InspectorData) => {
               value={record.shift}
               style={{ width: 200 }}
               onChange={(val) => handleShiftChange(val, record)}
-              placeholder="Select Shift"
+              placeholder={t("Select Shift")}
               loading={isLoadingShifts}
               allowClear
             >
@@ -347,7 +335,7 @@ const handleUpdate = async (record: InspectorData) => {
               value={record.assignmentType || []}
               style={{ width: 200 }}
               onChange={(val) => handleAssignmentTypeChange(val, record)}
-              placeholder="Select Assignment Type(s)"
+              placeholder={t("Select Assignment Type(s)")}
               loading={isLoadingLookups}
             >
               {assignmentTypeOptions.map((option) => (
@@ -382,7 +370,7 @@ const handleUpdate = async (record: InspectorData) => {
           render: (_: any, record: InspectorData) => (
             <Space>
               <Button type="primary" onClick={() => handleUpdate(record)} loading={isUpdating}>
-                Update
+                {t("Update")}
               </Button>
             </Space>
           ),
@@ -391,25 +379,26 @@ const handleUpdate = async (record: InspectorData) => {
 
       return { ...col, dataIndex: col.key };
     });
-  }, [zones, shifts, lookupOptions, data, isLoadingZones, isLoadingShifts, isLoadingLookups, isUpdating, i18n.language]);
-
-  if (activeShiftsError) {
-    return (
-      <div style={{ padding: 20 }}>
-        <Alert
-          message="Failed to load inspector data"
-          description="Please check your API endpoint and try again."
-          type="error"
-        />
-        <Button onClick={refetchActiveShifts} style={{ marginTop: 10 }}>
-          Retry
-        </Button>
-      </div>
-    );
-  }
+  }, [
+    zones,
+    shifts,
+    lookupOptions,
+    data,
+    isLoadingZones,
+    isLoadingShifts,
+    isLoadingLookups,
+    isUpdating,
+    i18n.language,
+    weekDayOptions,
+    t,
+  ]);
 
   return (
-    <Spin spinning={isLoadingActiveShifts || isLoadingLookups || isLoadingZones || isLoadingShifts || isUpdating}>
+    <Spin
+      spinning={
+        isLoadingActiveShifts || isLoadingLookups || isLoadingZones || isLoadingShifts || isUpdating
+      }
+    >
       <DataTableWrapper
         pageConfig={{
           ...UserZoneLinkingConfig,

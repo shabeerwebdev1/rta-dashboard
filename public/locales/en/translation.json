@@ -9,7 +9,6 @@
     "fines": "Fines",
     "parkonic": "Parkonic",
     "hrms": "HRMS",
-    "leaveManagement": "Leave",
     "dispute": "Disputes",
     "towing": "Towing",
     "analytics": "Analytics & Insights",
@@ -26,7 +25,8 @@
     "createshiftplan": "Create Shift Plan",
     "adhocshiftplan": "Adhoc Shift Plan",
     "inspectionmanagement": "Inspections Management",
-    "roleManagement": "Role Management"
+    "roleManagement": "Role Management",
+    "leaveManagement": "Leave Management"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -34,7 +34,9 @@
   },
   "tabs": {
     "inspectors": "Inspectors",
-    "supervisors": "Supervisors"
+    "supervisors": "Supervisors",
+    "carPlate": "Car Plate",
+    "tradeLicense": "Trade License"
   },
   "page": {
     "title": {
@@ -50,7 +52,8 @@
       "createshiftplan": "Create Shift Plan",
       "adhocshiftplan": "Adhoc Shift Plan",
       "inspectionmanagement": "Inspections Management",
-      "roleManagement": "Role Management"
+      "roleManagement": "Role Management",
+      "leaveManagement": "Leave Management"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",
@@ -158,7 +161,21 @@
     "actualDisputeDate": "Actual Dispute Date",
     "approvalActions": "Approval Actions",
     "approve": "Approve",
-    "reject": "Reject"
+    "reject": "Reject",
+    "InspectorName": "Inspector Name",
+    "Zone": "Zone",
+    "Shift": "Shift",
+    "AssignmentType": "Assignment Type",
+    "WeekOffs": "Week Offs",
+     "Actions": "Actions",
+     "employeeId": "Employee ID",
+     "leaveType": "Leave Type",
+      "leaveReason": "Leave Reason",
+      "totalLeaveDays": "Total Leave Days",
+      "plateCategory": "Plate Category",
+      "plateCode": "Plate Code"
+      
+
   },
   "common": {
     "action": "Action",
@@ -208,7 +225,11 @@
     "removed": "Removed",
     "reported": "Reported",
     "submitting": "Submitting",
-    "updating": "Updating"
+    "updating": "Updating",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled",
+    "recalled": "Recalled"
   },
 
   "placeholders": {
@@ -242,7 +263,11 @@
     "email": "Enter your email address",
     "phoneNumber": "Enter your phone number",
     "address": "Enter your address",
-    "SourceUser": "Enter source user"
+    "SourceUser": "Enter source user",
+   
+    "plateCategory": "Select plate category",
+    "plateCode": "Select plate code"
+    
   },
 
   "dashboard": {
@@ -262,5 +287,15 @@
     "towingRequests": "Towing Requests",
     "leaveRequests": "Leave Requests",
     "obstacle": "Obstacle"
+  },
+
+  "weekdays": {
+    "Monday": "Monday",
+    "Tuesday": "Tuesday",
+    "Wednesday": "Wednesday",
+    "Thursday": "Thursday",
+    "Friday": "Friday",
+    "Saturday": "Saturday",
+    "Sunday": "Sunday"
   }
 }

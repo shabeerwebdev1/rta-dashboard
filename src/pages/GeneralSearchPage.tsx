@@ -12,6 +12,7 @@ import {
   Descriptions,
 } from "antd";
 import { usePage } from "../contexts/PageContext";
+import { useTranslation } from "react-i18next";
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -21,6 +22,7 @@ const GeneralSearchPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("car-Plate");
   const [form] = Form.useForm();
   const [searchResult, setSearchResult] = useState<any | null>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     setPageTitle("General Search");
@@ -52,8 +54,8 @@ const GeneralSearchPage: React.FC = () => {
           }}
           type="card"
         >
-          <TabPane tab="Car Plate" key="car-Plate" />
-          <TabPane tab="Trade License" key="trade-license" />
+          <TabPane tab={t("tabs.carPlate")} key="car-Plate" />
+          <TabPane tab={t("tabs.tradeLicense")} key="trade-license" />
         </Tabs>
 
         <Form form={form} layout="vertical" onFinish={onFinish}>
@@ -62,32 +64,32 @@ const GeneralSearchPage: React.FC = () => {
               <Col xs={24}>
                 <Row gutter={16}>
                   <Col xs={24} sm={6}>
-                    <Form.Item name="plateSource" label="Plate Source">
-                      <Select placeholder="Select Plate Source">
-                        <Option value="source1">Source 1</Option>
-                        <Option value="source2">Source 2</Option>
+                    <Form.Item name="plateSource" label={t("form.plateSource")}>
+                      <Select placeholder={t("placeholders.plateSource")}>
+                        <Option value="source1">source1</Option>
+                        <Option value="source2">source2</Option>
                       </Select>
                     </Form.Item>
                   </Col>
                   <Col xs={24} sm={6}>
-                    <Form.Item name="plateCategory" label="Plate Category">
-                      <Select placeholder="Select Plate Category">
+                    <Form.Item name="plateCategory" label={t("form.plateCategory")}>
+                      <Select placeholder={t("placeholders.plateCategory")}>
                         <Option value="cat1">Category 1</Option>
                         <Option value="cat2">Category 2</Option>
                       </Select>
                     </Form.Item>
                   </Col>
                   <Col xs={24} sm={6}>
-                    <Form.Item name="plateCode" label="Plate Code">
-                      <Select placeholder="Select Plate Code">
+                    <Form.Item name="plateCode" label={t("form.plateCode")}>
+                      <Select placeholder={t("placeholders.plateCode")}>
                         <Option value="code1">Code 1</Option>
                         <Option value="code2">Code 2</Option>
                       </Select>
                     </Form.Item>
                   </Col>
                   <Col xs={24} sm={6}>
-                    <Form.Item name="plateNumber" label="Plate Number">
-                      <Input placeholder="Enter Plate Number" />
+                    <Form.Item name="plateNumber" label={t("form.plateNumber")}>
+                      <Input placeholder={t("placeholders.plateNumber")} />
                     </Form.Item>
                   </Col>
                 </Row>

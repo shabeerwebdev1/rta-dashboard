@@ -21,9 +21,6 @@ function ComingSoonPage() {
       [FULL_PATHS.TEAM_TRAINING]: t("sidebar.training"),
 
       [FULL_PATHS.ANALYTICS]: t("sidebar.analytics"),
-      [FULL_PATHS.INSPECTOR_MANAGEMENT]: t("sidebar.inspectorManagement"),
-      [FULL_PATHS.SUPERVISROR_MANGEMENT]: t("sidebar.supervisorManagement"),
-      [FULL_PATHS.LEAVE_MANGEMENT]: t("sidebar.leaveManagement"),
     };
 
     const currentTitle = pathToTitle[location.pathname] || "Coming Soon";

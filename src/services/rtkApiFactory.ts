@@ -38,6 +38,7 @@ export const dynamicApi = createApi({
     "Shifts",
     "Roles",
     "ShiftManagement",
+    "LeaveDetails",
   ],
 
   endpoints: (builder) => ({
@@ -307,6 +308,23 @@ export const dynamicApi = createApi({
       }),
       invalidatesTags: ["Roles"],
     }),
+
+    //leave get details
+    // Leave Management
+    getLeaveDetails: builder.query({
+      query: (params) => ({ url: "/api/Leave", params }),
+      transformResponse: transformListResponse,
+      providesTags: ["LeaveDetails"], // <-- changed from invalidatesTags
+    }),
+
+    updateLeaveStatus: builder.mutation({
+      query: (body) => ({
+        url: "/api/Leave",
+        method: "PUT",
+        body, // expects { id, status }
+      }),
+      invalidatesTags: ["LeaveDetails"], // refreshes leave list after update
+    }),
   }),
 });
 
@@ -361,4 +379,7 @@ export const {
   useUpdateRolePermissionsMutation,
   useGetActiveShiftsQuery,
   useUpdateShiftManagementMutation,
+  // Leave Management
+  useGetLeaveDetailsQuery,
+  useUpdateLeaveStatusMutation,
 } = dynamicApi;
