@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Space, Select, Checkbox, notification, Button, Spin, Alert } from "antd";
+import { Space, Select, Checkbox, notification, Button, Spin } from "antd";
 import { SupervisorManagemnetConfig } from "../config/pageConfigs/SupervisorManagementConfig";
 import { useTranslation } from "react-i18next";
 import {
@@ -14,8 +14,8 @@ interface SupervisorData {
   key: string;
   SupervisorName: string;
   zone?: string[];
-  shift?: string;
-  weekOffs?: string[];
+  shift?: string; // shiftGUID
+  weekOffs?: number[]; // store numbers (3 = Wednesday, etc.)
   role: string;
   employeeId: string;
   uswMcode: string;
@@ -42,8 +42,9 @@ interface ActiveShiftData {
   employeeId: string;
   employeeName: string;
   shiftId: string;
+  roleGUID: string;
   role: string;
-  wO_Days: string;
+  wO_Days: string; // "3,4,5"
   isActive: boolean;
   assignmentTypes: number[];
   zoneIds: number[];
@@ -64,15 +65,12 @@ function SupervisorManagement() {
   const [isLoadingShifts, setIsLoadingShifts] = useState(false);
   const [shifts, setShifts] = useState<Shift[]>([]);
 
-  // Use the getActiveShifts query
   const { 
     data: activeShiftsResponse, 
     isLoading: isLoadingActiveShifts, 
-    error: activeShiftsError,
     refetch: refetchActiveShifts 
   } = useGetActiveShiftsQuery();
-  
-  // Add the update mutation
+
   const [updateShiftManagement, { isLoading: isUpdating }] = useUpdateShiftManagementMutation();
 
   useEffect(() => {
@@ -80,47 +78,33 @@ function SupervisorManagement() {
     fetchShiftsData();
   }, [i18n.language]);
 
-  // Get all available shift IDs from the shifts dropdown
-  const availableShiftIds = useMemo(() => {
-    return shifts.map(shift => shift.shiftTypeGUID);
-  }, [shifts]);
+  const availableShiftIds = useMemo(() => shifts.map(shift => shift.shiftTypeGUID), [shifts]);
 
-  // Transform API data to table data when activeShiftsResponse changes
   useEffect(() => {
-    console.log("Active shifts response:", activeShiftsResponse);
-    console.log("Available shift IDs:", availableShiftIds);
-    
     if (activeShiftsResponse) {
-      // Handle both array response and object response with data property
       const activeShiftsData = Array.isArray(activeShiftsResponse) 
         ? activeShiftsResponse 
         : activeShiftsResponse.data || [];
-      
+
       const transformedData: SupervisorData[] = activeShiftsData
-        .filter((item: ActiveShiftData) => item.role === "Manager") // Only show Supervisors
+        .filter((item: ActiveShiftData) => item.roleGUID === "9C09B416-3AE4-406A-8627-71A23532A809")
         .map((item: ActiveShiftData, index: number) => {
-          // Check if the shiftId exists in available shifts
           const isValidShift = item.shiftId && availableShiftIds.includes(item.shiftId);
-          
-          // Convert zoneIds from number[] to string[]
           const zoneIds = item.zoneIds?.map(id => id.toString()) || [];
-          
-          console.log("Supervisor:", item.employeeName, "zoneIds:", item.zoneIds, "converted:", zoneIds);
-          
+
           return {
             key: item.uswMcode || `supervisor-${index}`,
             SupervisorName: item.employeeName,
             zone: zoneIds,
-            shift: isValidShift ? item.shiftId : undefined, // Only set shift if it exists in dropdown
-            weekOffs: item.wO_Days ? item.wO_Days.split(',') : [],
+            shift: isValidShift ? item.shiftId : undefined,
+            weekOffs: item.wO_Days ? item.wO_Days.split(",").map((d) => parseInt(d)) : [],
             role: item.role,
             employeeId: item.employeeId,
             uswMcode: item.uswMcode,
-            isActive: item.isActive
+            isActive: item.isActive,
           };
         });
-      
-      console.log("Transformed supervisor data:", transformedData);
+
       setData(transformedData);
     }
   }, [activeShiftsResponse, availableShiftIds]);
@@ -129,10 +113,8 @@ function SupervisorManagement() {
     setIsLoadingZones(true);
     try {
       const result = await triggerGetZones().unwrap();
-      console.log("Fetched zones data:", result);
       setZones(result);
     } catch (error) {
-      console.log("Error fetching zones:", error);
       notification.error({ message: "Failed to fetch zones data." });
     } finally {
       setIsLoadingZones(false);
@@ -145,85 +127,58 @@ function SupervisorManagement() {
       const result = await triggerGetShifts().unwrap();
       setShifts(result);
     } catch (error) {
-      console.log("Error fetching shifts:", error);
       notification.error({ message: "Failed to fetch shifts data." });
     } finally {
       setIsLoadingShifts(false);
     }
   };
 
-  const zoneOptions = useMemo(() => {
-    return zones.map((zone) => ({
-      value: zone.zoneId.toString(),
-      label: `${zone.zoneCode}-${zone.zone}`,
-      original: zone
-    }));
-  }, [zones, i18n.language]);
+  const zoneOptions = useMemo(() => zones.map((zone) => ({
+    value: zone.zoneId.toString(),
+    label: `${zone.zoneCode}-${zone.zone}`,
+    original: zone,
+  })), [zones, i18n.language]);
 
-  const shiftOptions = useMemo(() => {
-    return shifts.map((shift) => ({
-      value: shift.shiftTypeGUID,
-      label: `${shift.shiftTypeCode} - ${
-        i18n.language === "ar" ? shift.shiftTypeNameAr : shift.shiftTypeNameEn
-      }`,
-      original: shift,
-    }));
-  }, [shifts, i18n.language]);
+  const shiftOptions = useMemo(() => shifts.map((shift) => ({
+    value: shift.shiftTypeGUID,
+    label: `${shift.shiftTypeCode} - ${i18n.language === "ar" ? shift.shiftTypeNameAr : shift.shiftTypeNameEn}`,
+    original: shift,
+  })), [shifts, i18n.language]);
 
   const handleZoneChange = (value: string[], record: SupervisorData) => {
-    console.log("Selected zoneIds:", value);
-    setData((prev) =>
-      prev.map((item) =>
-        item.key === record.key ? { ...item, zone: value } : item
-      )
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, zone: value } : item)));
   };
 
   const handleShiftChange = (value: string, record: SupervisorData) => {
-    setData((prev) =>
-      prev.map((item) =>
-        item.key === record.key ? { ...item, shift: value } : item
-      )
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, shift: value } : item)));
   };
 
-  const handleWeekOffChange = (checkedValues: string[], record: SupervisorData) => {
+  const handleWeekOffChange = (checkedValues: number[], record: SupervisorData) => {
     setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, weekOffs: checkedValues } : item)));
   };
 
-  // === Update Handler ===
   const handleUpdate = async (record: SupervisorData) => {
     try {
-      // Convert zoneIds from string[] to the required format
-      const zoneIds = record.zone?.map(zoneId => zoneId) || [];
-      
-      // For supervisors, assignmentTypes should always be [0]
+      const zoneIds = record.zone?.map((zoneId) => zoneId) || [];
       const assignmentTypes = [0];
 
-      // Prepare the data in the required format
       const updateData = {
         employeeId: record.employeeId,
-        wO_Days: record.weekOffs?.join(',') || "", // Join with commas: "Monday,Tuesday,Wednesday"
-        role: "Supervisor", // Always Supervisor
-        assignmentTypes: assignmentTypes, // Always [0] for supervisors
-        zoneIds: zoneIds // Array of strings
+        shiftId: record.shift || "", // ✅ send shiftGUID
+        wO_Days: record.weekOffs?.join(",") || "", // ✅ send numbers like "3,4,5"
+        role: "Supervisor",
+        assignmentTypes,
+        zoneIds,
       };
-
-      console.log("Sending update data for supervisor:", updateData);
-      console.log("Zone IDs:", zoneIds);
-
-      const result = await updateShiftManagement(updateData).unwrap();
       
+
+      await updateShiftManagement(updateData).unwrap();
       notification.success({
         message: t("Update successful"),
         description: t("Supervisor data has been updated successfully."),
       });
-
-      // Refresh the data
       refetchActiveShifts();
-
     } catch (error) {
-      console.error("Update error:", error);
       notification.error({
         message: t("Update failed"),
         description: t("Failed to update supervisor data. Please try again."),
@@ -231,16 +186,6 @@ function SupervisorManagement() {
     }
   };
 
-  // Add this useEffect to debug the data state
-  useEffect(() => {
-    console.log("Current supervisor data state:", data);
-    if (data.length > 0) {
-      console.log("First supervisor data:", data[0]);
-      console.log("First supervisor zones:", data[0].zone);
-    }
-  }, [data]);
-
-  // === Columns with custom render ===
   const tableColumns = useMemo(() => {
     return SupervisorManagemnetConfig.tableConfig.columns.map((col: any) => {
       if (col.key === "zone") {
@@ -254,33 +199,6 @@ function SupervisorManagement() {
               onChange={(val) => handleZoneChange(val, record)}
               placeholder="Select Zone(s)"
               loading={isLoadingZones}
-              tagRender={(props) => {
-                const { label, value, closable, onClose } = props;
-                return (
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      padding: "2px 8px",
-                      margin: "2px",
-                      backgroundColor: "#e6f7ff",
-                      border: "1px solid #91d5ff",
-                      borderRadius: "12px",
-                      fontSize: "12px",
-                    }}
-                  >
-                    {label}
-                    {closable && (
-                      <span
-                        style={{ marginLeft: 6, cursor: "pointer", color: "#1890ff" }}
-                        onClick={onClose}
-                      >
-                        ✕
-                      </span>
-                    )}
-                  </span>
-                );
-              }}
             >
               {zoneOptions.map((option) => (
                 <Option key={option.value} value={option.value}>
@@ -319,12 +237,9 @@ function SupervisorManagement() {
           ...col,
           render: (_: any, record: SupervisorData) => (
             <Checkbox.Group
-              options={days.map((day) => ({
-                label: day,
-                value: day,
-              }))}
+              options={days.map((day, idx) => ({ label: day, value: idx + 1 }))}
               value={record.weekOffs}
-              onChange={(vals) => handleWeekOffChange(vals as string[], record)}
+              onChange={(vals) => handleWeekOffChange(vals as number[], record)}
             />
           ),
         };
@@ -335,11 +250,7 @@ function SupervisorManagement() {
           ...col,
           render: (_: any, record: SupervisorData) => (
             <Space>
-              <Button
-                type="primary"
-                onClick={() => handleUpdate(record)}
-                loading={isUpdating}
-              >
+              <Button type="primary" onClick={() => handleUpdate(record)} loading={isUpdating}>
                 Update
               </Button>
             </Space>
@@ -347,28 +258,9 @@ function SupervisorManagement() {
         };
       }
 
-      return {    
-        ...col,
-        dataIndex: col.key,
-      };
+      return { ...col, dataIndex: col.key };
     });
   }, [zones, shifts, data, isLoadingZones, isLoadingShifts, isUpdating]);
-
-  // Show error if active shifts API fails
-  // if (activeShiftsError) {
-  //   return (
-  //     <div style={{ padding: 20 }}>
-  //       <Alert 
-  //         message="Failed to load supervisor data" 
-  //         description="Please check your API endpoint and try again." 
-  //         type="error" 
-  //       />
-  //       <Button onClick={refetchActiveShifts} style={{ marginTop: 10 }}>
-  //         Retry
-  //       </Button>
-  //     </div>
-  //   );
-  // }
 
   return (
     <Spin spinning={isLoadingActiveShifts || isLoadingZones || isLoadingShifts || isUpdating}>

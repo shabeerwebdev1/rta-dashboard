@@ -1,95 +1,43 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, Select, DatePicker, Button, Row, Col, Space, Card, Table, Spin, Empty, Tabs } from "antd";
-import { useSearchPermitsQuery } from "../services/rtkApiFactory";
+import {
+  Form,
+  Input,
+  Select,
+  Button,
+  Row,
+  Col,
+  Space,
+  Card,
+  Tabs,
+  Descriptions,
+} from "antd";
 import { usePage } from "../contexts/PageContext";
-import dayjs from "dayjs";
 
 const { Option } = Select;
-const { RangePicker } = DatePicker;
 const { TabPane } = Tabs;
 
 const GeneralSearchPage: React.FC = () => {
   const { setPageTitle } = usePage();
-  const [activeTab, setActiveTab] = useState("permits");
+  const [activeTab, setActiveTab] = useState("car-Plate");
   const [form] = Form.useForm();
-
-  const { data, isLoading, isFetching } = useSearchPermitsQuery(
-    {},
-    {
-      refetchOnMountOrArgChange: true,
-      skip: activeTab !== "permits",
-    },
-  );
+  const [searchResult, setSearchResult] = useState<any | null>(null);
 
   useEffect(() => {
     setPageTitle("General Search");
   }, [activeTab, setPageTitle]);
 
   const onFinish = (values: Record<string, any>) => {
-    if (activeTab === "permits") {
-      const params: Record<string, any> = {
-        ...values,
-        dateFrom: values.dateRange ? values.dateRange[0].toISOString() : undefined,
-        dateTo: values.dateRange ? values.dateRange[1].toISOString() : undefined,
-      };
-      delete params.dateRange;
+    console.log("Form values:", values);
 
-      // remove null/undefined values
-      Object.keys(params).forEach((key) => params[key] == null && delete params[key]);
-    }
-  };
-
-  const permitColumns = [
-    { title: "Permit Number", dataIndex: "permitNumber", key: "permitNumber" },
-    { title: "Permit Type", dataIndex: "permitType", key: "permitType" },
-    { title: "Plate Number", dataIndex: "plateNumber", key: "plateNumber" },
-    { title: "Phone Number", dataIndex: "phoneNumber", key: "phoneNumber" },
-    {
-      title: "From Date",
-      dataIndex: "validFrom",
-      key: "validFrom",
-      render: (text: string) => (text ? dayjs(text).format("YYYY-MM-DD") : "-"),
-    },
-    {
-      title: "To Date",
-      dataIndex: "validTo",
-      key: "validTo",
-      render: (text: string) => (text ? dayjs(text).format("YYYY-MM-DD") : "-"),
-    },
-    {
-      title: "Authorized Areas",
-      dataIndex: "authorizedAreas",
-      key: "authorizedAreas",
-    },
-  ];
-
-  const obstacleColumns = [
-    { title: "Zone", dataIndex: "zone", key: "zone" },
-    { title: "Area", dataIndex: "area", key: "area" },
-    { title: "Source", dataIndex: "sourceOfObstacle", key: "sourceOfObstacle" },
-    { title: "Status", dataIndex: "status", key: "status" },
-  ];
-
-  const getActiveColumns = () => {
-    switch (activeTab) {
-      case "permits":
-        return permitColumns;
-      case "inspection-obstacles":
-        return obstacleColumns;
-      default:
-        return [];
-    }
-  };
-
-  const getActiveDataSource = () => {
-    switch (activeTab) {
-      case "permits":
-        return data?.data || [];
-      case "inspection-obstacles":
-        return [];
-      default:
-        return [];
-    }
+    // Hardcoded result (mock data)
+    setSearchResult({
+      vehicleBrand: "Toyota",
+      vehicleType: "SUV",
+      vehicleColor: "White",
+      manufacturerYear: "2020",
+      ownerName: "John Doe",
+      ownerContact: "+971 55 123 4567",
+    });
   };
 
   return (
@@ -100,69 +48,52 @@ const GeneralSearchPage: React.FC = () => {
           onChange={(key) => {
             setActiveTab(key);
             form.resetFields();
+            setSearchResult(null); // Clear results when switching tabs
           }}
           type="card"
         >
-          <TabPane tab="Permits" key="permits" />
           <TabPane tab="Car Plate" key="car-Plate" />
-          <TabPane tab="Tarde Lincense" key="trade-license" />
+          <TabPane tab="Trade License" key="trade-license" />
         </Tabs>
 
         <Form form={form} layout="vertical" onFinish={onFinish}>
-          <Row gutter={24}>
-            {activeTab === "permits" && (
-              <>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="permitType" label="Permit Type">
-                    <Select placeholder="Select Permit Type" allowClear>
-                      <Option value="VIP">VIP</Option>
-                      <Option value="Residential">Residential</Option>
-                      <Option value="People of Determination">People of Determination</Option>
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="permitNumber" label="Permit Number">
-                    <Input placeholder="Permit Number" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="plateNumber" label="Plate Number">
-                    <Input placeholder="Plate Number" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="phoneNumber" label="Phone Number">
-                    <Input placeholder="Phone Number" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="dateRange" label="Date Range">
-                    <RangePicker style={{ width: "100%" }} />
-                  </Form.Item>
-                </Col>
-              </>
+          <Row gutter={16}>
+            {activeTab === "car-Plate" && (
+              <Col xs={24}>
+                <Row gutter={16}>
+                  <Col xs={24} sm={6}>
+                    <Form.Item name="plateSource" label="Plate Source">
+                      <Select placeholder="Select Plate Source">
+                        <Option value="source1">Source 1</Option>
+                        <Option value="source2">Source 2</Option>
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={6}>
+                    <Form.Item name="plateCategory" label="Plate Category">
+                      <Select placeholder="Select Plate Category">
+                        <Option value="cat1">Category 1</Option>
+                        <Option value="cat2">Category 2</Option>
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={6}>
+                    <Form.Item name="plateCode" label="Plate Code">
+                      <Select placeholder="Select Plate Code">
+                        <Option value="code1">Code 1</Option>
+                        <Option value="code2">Code 2</Option>
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col xs={24} sm={6}>
+                    <Form.Item name="plateNumber" label="Plate Number">
+                      <Input placeholder="Enter Plate Number" />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Col>
             )}
 
-            {activeTab === "car-Plate" && (
-              <>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="zone" label="Zone">
-                    <Input placeholder="Enter Zone" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="area" label="Area">
-                    <Input placeholder="Enter Area" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="area" label="Area">
-                    <Input placeholder="Enter Area" />
-                  </Form.Item>
-                </Col>
-              </>
-            )}
             {activeTab === "trade-license" && (
               <>
                 <Col xs={24} sm={12} md={8}>
@@ -175,13 +106,18 @@ const GeneralSearchPage: React.FC = () => {
                     <Input placeholder="Enter Area" />
                   </Form.Item>
                 </Col>
+                <Col xs={24} sm={12} md={8}>
+                  <Form.Item name="licenseNumber" label="License Number">
+                    <Input placeholder="Enter License Number" />
+                  </Form.Item>
+                </Col>
               </>
             )}
 
             <Col xs={24} style={{ textAlign: "right", marginTop: 30 }}>
               <Space>
                 <Button onClick={() => form.resetFields()}>Reset</Button>
-                <Button type="primary" htmlType="submit" loading={activeTab === "permits" && isFetching}>
+                <Button type="primary" htmlType="submit">
                   Search
                 </Button>
               </Space>
@@ -190,20 +126,31 @@ const GeneralSearchPage: React.FC = () => {
         </Form>
       </Card>
 
-      <Card bordered={false} bodyStyle={{ padding: "5px 5px 0 5px" }}>
-        <Spin spinning={activeTab === "permits" && (isLoading || isFetching)}>
-          <Table
-            rowSelection={{ type: "checkbox" }}
-            columns={getActiveColumns()}
-            dataSource={getActiveDataSource()}
-            rowKey="key"
-            locale={{ emptyText: <Empty description="No Data" /> }}
-            pagination={{
-              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-            }}
-          />
-        </Spin>
-      </Card>
+      {/* Search Result Section */}
+      {searchResult && (
+        <Card title="Search Result" bordered>
+          <Descriptions bordered column={1} size="middle">
+            <Descriptions.Item label="Vehicle Brand">
+              {searchResult.vehicleBrand}
+            </Descriptions.Item>
+            <Descriptions.Item label="Vehicle Type">
+              {searchResult.vehicleType}
+            </Descriptions.Item>
+            <Descriptions.Item label="Vehicle Color">
+              {searchResult.vehicleColor}
+            </Descriptions.Item>
+            <Descriptions.Item label="Manufacturer Year">
+              {searchResult.manufacturerYear}
+            </Descriptions.Item>
+            <Descriptions.Item label="Owner Name">
+              {searchResult.ownerName}
+            </Descriptions.Item>
+            <Descriptions.Item label="Owner Contact">
+              {searchResult.ownerContact}
+            </Descriptions.Item>
+          </Descriptions>
+        </Card>
+      )}
     </Space>
   );
 };

@@ -12,8 +12,8 @@ import {
 } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import DashboardViewDrawer from "../components/dashboard/DashboardViewDrawer";
-import { useGetSupervisorDashboardQuery } from "../services/rtkApiFactory";
-import { useTranslation } from "react-i18next"; // Add this import
+import { useGetSupervisorDashboardQuery, useGetActiveShiftsQuery } from "../services/rtkApiFactory"; // Add useGetActiveShiftsQuery
+import { useTranslation } from "react-i18next";
 
 // ✅ Google Maps
 import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
@@ -30,31 +30,9 @@ const dubaiCenter = {
   lng: 55.2743,
 };
 
-// Hardcoded supervisor IDs with Arabic names
-const SUPERVISOR_IDS = [
-  {
-    id: "9C09B416-3AE4-406A-8627-71A23532A809",
-    name: "Supervisor 1",
-    nameAr: "المشرف ١",
-    zone: "Zone A",
-    zoneAr: "المنطقة أ",
-    shift: "Morning Shift",
-    shiftAr: "نوبة الصباح"
-  },
-  {
-    id: "FCDF7BEC-9FC3-44F1-9AE2-B8D6223B9CE1",
-    name: "Supervisor 2",
-    nameAr: "المشرف ٢",
-    zone: "Zone B",
-    zoneAr: "المنطقة ب",
-    shift: "Evening Shift",
-    shiftAr: "نوبة المساء"
-  }
-];
-
 const SupervisorViewPage: React.FC = () => {
   const { setPageTitle } = usePage();
-  const { t, i18n } = useTranslation(); // Get translation function and language
+  const { t, i18n } = useTranslation();
   const [activeTable, setActiveTable] = useState("checkInStatus");
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedInspector, setSelectedInspector] = useState<any>(null);
@@ -62,11 +40,20 @@ const SupervisorViewPage: React.FC = () => {
   const [selectedSupervisor, setSelectedSupervisor] = useState<string | null>(null);
   const [supervisorInfo, setSupervisorInfo] = useState<any>(null);
 
+  // Get active shifts data
+  const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery();
+
   // Use the RTK Query hook - skip if no supervisor is selected
-  const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery(
-    selectedSupervisor as string,
-    { skip: !selectedSupervisor }
-  );
+const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery(
+  selectedSupervisor as string, // selectedSupervisor will now hold employeeId
+  { skip: !selectedSupervisor }
+);
+
+   const supervisors =
+  activeShiftsData?.filter(
+    (shift: any) => shift.roleGUID === "9C09B416-3AE4-406A-8627-71A23532A809"
+  ) || [];
+
 
   // Helper function to get text based on current language
   const getLocalizedText = (englishText: string, arabicText: string) => {
@@ -75,10 +62,8 @@ const SupervisorViewPage: React.FC = () => {
 
   // Update supervisor info when selection changes
   const handleSupervisorChange = (value: string) => {
-    setSelectedSupervisor(value);
-    const info = SUPERVISOR_IDS.find(s => s.id === value);
-    setSupervisorInfo(info);
-  };
+  setSelectedSupervisor(value);
+};
 
   // ✅ Inspectors data with Arabic support
   const inspectorAvatars = [
@@ -230,47 +215,52 @@ const SupervisorViewPage: React.FC = () => {
     message.error(t("messages.errorLoading", "Error loading dashboard data"));
   }
 
+  // Filter supervisors from active shifts data
+
+
   return (
     <div>
       <Card style={{ marginBottom: 20 }}>
         <Row gutter={16}>
           <Col span={6}>
             <Select 
-              placeholder={t("common.selectSupervisor", "Select Supervisor")} 
-              style={{ width: "100%" }}
-              value={selectedSupervisor}
-              onChange={handleSupervisorChange}
-              allowClear
-            >
-              {SUPERVISOR_IDS.map(supervisor => (
-                <Select.Option key={supervisor.id} value={supervisor.id}>
-                  {getLocalizedText(supervisor.name, supervisor.nameAr)}
-                </Select.Option>
-              ))}
-            </Select>
+  placeholder={t("common.selectSupervisor", "Select Supervisor")} 
+  style={{ width: "100%" }}
+  value={selectedSupervisor}
+  onChange={handleSupervisorChange}
+  allowClear
+  loading={isLoadingShifts}
+>
+  {supervisors.map((supervisor: any) => (
+    <Select.Option key={supervisor.employeeId} value={supervisor.employeeId}>
+      {supervisor.employeeName}
+    </Select.Option>
+  ))}
+</Select>
+
           </Col>
           <Col span={6}>
-            <div>
-              <Text strong>{t("form.supervisorName", "Name")}</Text> <br /> 
-              {supervisorInfo ? getLocalizedText(supervisorInfo.name, supervisorInfo.nameAr) : "N/A"}
-            </div>
-          </Col>
-          <Col span={6}>
-            <div>
-              <Text strong>{t("form.zone", "Zone")}</Text> <br /> 
-              {supervisorInfo ? getLocalizedText(supervisorInfo.zone, supervisorInfo.zoneAr) : "N/A"}
-            </div>
-          </Col>
+  <div>
+    <Text strong>{t("form.supervisorName", "Name")}</Text> <br /> 
+    {dashboardData?.data?.users?.[0]?.employeeName || "N/A"}
+  </div>
+</Col>
+         <Col span={6}>
+  <div>
+    <Text strong>{t("form.zone", "Zone")}</Text> <br /> 
+    {dashboardData?.data?.users?.[0]?.zones?.join(", ") || "N/A"}
+  </div>
+</Col>
           <Col span={6}>
             <div>
               <Text strong>{t("form.shift", "Shift")}</Text> <br /> 
-              {supervisorInfo ? getLocalizedText(supervisorInfo.shift, supervisorInfo.shiftAr) : "N/A"}
+              {supervisorInfo ? supervisorInfo.role : "N/A"}
             </div>
           </Col>
         </Row>
       </Card>
       
-      {isLoading && <Spin size="large" style={{ display: 'block', margin: '50px auto' }} />}
+      {(isLoading || isLoadingShifts) && <Spin size="large" style={{ display: 'block', margin: '50px auto' }} />}
       
       <Row gutter={16} style={{ marginBottom: 20 }}>
         {/* ✅ Google Map */}
@@ -323,13 +313,13 @@ const SupervisorViewPage: React.FC = () => {
                   style={{ width: "100%" }}
                 >
                   <Col flex="none">
-                    <Statistic title={t("dashboard.totalInspectors", "Total Inspectors")} value={dashboardData?.data?.totalInspectors || 0} />
+                   <Statistic title={t("dashboard.totalInspectors", "Total Inspectors")} value={dashboardData?.data?.totalInspectors || 0} />
                   </Col>
                   <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
                       <Statistic title={t("dashboard.checkedIn", "Checked In")} value={dashboardData?.data?.checkedIn || 0} />
                       <Statistic title={t("dashboard.missing", "Missing")} value={dashboardData?.data?.missing || 0} />
-                      <Statistic title={t("dashboard.onLeave", "On Leave")} value={dashboardData?.data?.onLeave || 0} />
+                     <Statistic title={t("dashboard.onLeave", "On Leave")} value={dashboardData?.data?.onLeave || 0} />
                     </div>
                   </Col>
                   <Col flex="none" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
@@ -353,12 +343,13 @@ const SupervisorViewPage: React.FC = () => {
                   style={{ width: "100%" }}
                 >
                   <Col flex="none">
-                    <Statistic title={t("dashboard.totalApprovals", "Total Approvals")} value={dashboardData?.data?.totalApprovals || 0} />
+                   <Statistic title={t("dashboard.totalApprovals", "Total Approvals")} value={dashboardData?.data?.totalApprovals || 0} />
                   </Col>
                   <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-                      <Statistic title={t("dashboard.leave", "Leave")} value={dashboardData?.data?.leaveRequests || 0} />
-                      <Statistic title={t("dashboard.towing", "Towing")} value={dashboardData?.data?.towingRequests || 0} />
+                     <Statistic title={t("dashboard.leave", "Leave")} value={dashboardData?.data?.leaveRequests || 0} />
+                     <Statistic title={t("dashboard.towing", "Towing")} value={dashboardData?.data?.towingRequests || 0} />
+
                     </div>
                   </Col>
                   <Col flex="none" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
@@ -386,7 +377,8 @@ const SupervisorViewPage: React.FC = () => {
                   </Col>
                   <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-                      <Statistic title={t("dashboard.fines", "Fines")} value={dashboardData?.data?.totalFines || 0} />
+                    <Statistic title={t("dashboard.fines", "Fines")} value={dashboardData?.data?.totalFines || 0} />
+
                       <Statistic title={t("dashboard.amount", "Amount")} value={dashboardData?.data?.fineAmount || 0} suffix="AED" />
                     </div>
                   </Col>
@@ -417,7 +409,7 @@ const SupervisorViewPage: React.FC = () => {
                   style={{ width: "100%" }}
                 >
                   <Col flex="none">
-                    <Statistic title={t("dashboard.totalObstacles", "Total Obstacles")} value={dashboardData?.data?.totalObstacles || 0} />
+                   <Statistic title={t("dashboard.totalObstacles", "Total Obstacles")} value={dashboardData?.data?.totalObstacles || 0} />
                   </Col>
                   <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     {/* Optional sub-stats can go here */}

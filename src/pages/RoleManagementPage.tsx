@@ -1,10 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState, useMemo } from "react";
-import { Card, Select, Checkbox, Space, Spin, Alert, Table, Button, notification } from "antd";
+import { Card, Select, Checkbox, Space, Spin, Alert, Table, Button } from "antd";
 import { roleManagementConfig } from "../config/pageConfigs/roleManagementConfig";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
-import { useGetRolesQuery, useLazyGetRoleByIdQuery, useUpdateRolePermissionsMutation } from "../services/rtkApiFactory";
+import { useAppNotification } from "../utils/notificationManager";
+import {
+  useGetRolesQuery,
+  useLazyGetRoleByIdQuery,
+  useUpdateRolePermissionsMutation,
+} from "../services/rtkApiFactory";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 
 const { Option } = Select;
@@ -38,8 +43,10 @@ const RoleManagementPage: React.FC = () => {
   const [selectedRoleName, setSelectedRoleName] = useState<string>("");
   const [tableData, setTableData] = useState<TableRow[]>([]);
   const [originalData, setOriginalData] = useState<TableRow[]>([]);
+
   const { setPageTitle } = usePage();
   const { t } = useTranslation();
+  const notification = useAppNotification();
 
   // API hooks
   const { data: rolesData, error: rolesError, isLoading: isLoadingRoles } = useGetRolesQuery(undefined);
@@ -74,7 +81,9 @@ const RoleManagementPage: React.FC = () => {
 
   // Handle checkbox toggle
   const handleCheckboxChange = (recordKey: number, field: keyof TableRow, checked: boolean) => {
-    setTableData((prev) => prev.map((row) => (row.key === recordKey ? { ...row, [field]: checked ? 1 : 0 } : row)));
+    setTableData((prev) =>
+      prev.map((row) => (row.key === recordKey ? { ...row, [field]: checked ? 1 : 0 } : row))
+    );
   };
 
   // Handle role selection
@@ -122,19 +131,19 @@ const RoleManagementPage: React.FC = () => {
       const submissionData = prepareSubmissionData();
 
       if (submissionData.length === 0) {
-        notification.info({
-          message: t("No changes detected"),
-          description: t("Please modify at least one permission before updating."),
-        });
+        notification.info(
+          t("No changes detected"),
+          t("Please modify at least one permission before updating.")
+        );
         return;
       }
 
       await updateRolePermissions(submissionData).unwrap();
 
-      notification.success({
-        message: t("Permissions updated successfully"),
-        description: t("Role permissions have been updated."),
-      });
+      notification.success(
+        t("Permissions updated successfully"),
+        t("Role permissions have been updated.")
+      );
 
       // ✅ Reset to default state after update
       setSelectedRoleId("default");
@@ -142,10 +151,10 @@ const RoleManagementPage: React.FC = () => {
       setTableData([]);
       setOriginalData([]);
     } catch (error) {
-      notification.error({
-        message: t("Update failed"),
-        description: t("Failed to update permissions. Please try again."),
-      });
+      notification.error(
+        t("Update failed"),
+        t("Failed to update permissions. Please try again.")
+      );
       console.error("Update error:", error);
     }
   };
