@@ -155,7 +155,11 @@
     "disputestatus": "حالة النزاع",
     "assinedto": "مُعين إلى",
     "sourceUser": "المستخدم المصدر",
-    "actualDisputeDate": "تاريخ النزاع الفعلي"
+    "actualDisputeDate": "تاريخ النزاع الفعلي",
+    "approvalActions": "إجراءات الموافقة",
+    "approve": "الموافقة",
+    "reject": "الرفض"
+    
 
   },
   "common": {
@@ -235,7 +239,9 @@
     "email": "أدخل عنوان بريدك الإلكتروني",
     "phoneNumber": "أدخل رقم هاتفك",
     "address": "أدخل عنوانك",
-    "comments": "أضف تعليقات "
+    "comments": "أضف تعليقات ",
+    "SourceUser": "أدخل المستخدم المصدر"
+
   },
   "dashboard": {
     "totalInspectors": "إجمالي المفتشين",

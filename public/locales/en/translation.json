@@ -155,7 +155,10 @@
     "disputestatus": "Dispute Status",
     "assinedto": "Assigned To",
     "sourceUser": "Source User",
-    "actualDisputeDate": "Actual Dispute Date"
+    "actualDisputeDate": "Actual Dispute Date",
+    "approvalActions": "Approval Actions",
+    "approve": "Approve",
+    "reject": "Reject"
   },
   "common": {
     "action": "Action",
@@ -238,7 +241,8 @@
     "crmReference": "Enter the CRM reference",
     "email": "Enter your email address",
     "phoneNumber": "Enter your phone number",
-    "address": "Enter your address"
+    "address": "Enter your address",
+    "SourceUser": "Enter source user"
   },
 
   "dashboard": {

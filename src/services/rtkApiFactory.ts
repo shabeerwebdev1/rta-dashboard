@@ -203,6 +203,16 @@ export const dynamicApi = createApi({
       },
     }),
 
+    // Update Fine Cancel Status
+    updateFineCancelStatus: builder.mutation({
+      query: (body) => ({
+        url: "/api/InspectionCancelFine/updatestatus",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["FineSearch"], // refresh fines listing
+    }),
+
     searchParkonics: builder.query({
       query: (params) => ({ url: "/api/Parkonic", params }),
       providesTags: ["ParkonicSearch"],
@@ -289,7 +299,6 @@ export const dynamicApi = createApi({
     }),
 
     //Update Roles
-
     updateRolePermissions: builder.mutation({
       query: (body) => ({
         url: "/api/RolePermission",
@@ -302,39 +311,51 @@ export const dynamicApi = createApi({
 });
 
 export const {
+  // Whitelist Plates
   useGetPlatesQuery,
   useLazyGetPlateByIdQuery,
   useAddPlateMutation,
   useUpdatePlateMutation,
   useDeletePlateMutation,
+  // Whitelist Trade Licenses
   useGetTradeLicensesQuery,
   useLazyGetTradeLicenseByIdQuery,
   useAddTradeLicenseMutation,
   useUpdateTradeLicenseMutation,
   useDeleteTradeLicenseMutation,
+  // Pledges
   useGetPledgesQuery,
   useLazyGetPledgeByIdQuery,
   useAddPledgeMutation,
   useUpdatePledgeMutation,
   useDeletePledgeMutation,
+  // Inspection Obstacles
   useGetInspectionObstaclesQuery,
   useLazyGetInspectionObstacleByIdQuery,
   useAddInspectionObstacleMutation,
   useUpdateInspectionObstacleMutation,
+  // permit
   useSearchPermitsQuery,
+  //Fines (inspections Management)
   useSearchFinesQuery,
+  useUpdateFineCancelStatusMutation,
   useSearchParkonicsQuery,
   useReviewParkonicMutation,
   useLazyGetLookupsQuery,
+  // Disputes
   useGetDisputesQuery,
   useLazyGetDisputeByIdQuery,
   useAddDisputeMutation,
   useUpdateDisputeMutation,
   useUpdateDisputeStatusMutation,
+  // Web Dashboard
   useGetSupervisorDashboardQuery,
+  // Shift Management
   useLazyGetZonesQuery,
   useLazyGetShiftsQuery,
+  // User code validation
   useValidatecodeQuery,
+  // Role Management
   useGetRolesQuery,
   useLazyGetRoleByIdQuery,
   useUpdateRolePermissionsMutation,

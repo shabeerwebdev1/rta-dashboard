@@ -77,7 +77,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
     setIsLoadingLookups(true);
     try {
       // Category IDs for department (1000) and payment type (1100)
-      const categoryIds = [1000, 1100, 1002]; // Added dispute status category
+      const categoryIds = [1000, 1100, 1002, 1500]; // Added dispute status category
       const result = await triggerGetLookups(categoryIds).unwrap();
       setLookupOptions(result);
     } catch (error) {
@@ -271,123 +271,110 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     </Card>
                   </Col>
 
-                  {/* Fine Details */}
-                  <Col span={12}>
-                    <Card
-                      title="Fine Details"
-                      size="small"
-                      style={{ borderRadius: 12, marginBottom: 16 }}
-                      headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                    >
-                      {dispute.fineDetails ? (
+                  {/* Vehicle Details (changed to column layout like Dispute Details) */}
+                  {dispute.vehicle && (
+                    <Col span={12}>
+                      <Card
+                        title="Vehicle Details"
+                        size="small"
+                        headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                        style={{ marginBottom: 16 }}
+                      >
                         <Row gutter={[0, 12]}>
                           <Col span={10}>
-                            <Text strong>Fine Number:</Text>
+                            <Text strong>Plate Number:</Text>
                           </Col>
-                          <Col span={14}>{dispute.fineDetails.fineNo || "No Data"}</Col>
+                          <Col span={14}>{dispute.vehicle.plateNumber || "No Data"}</Col>
 
                           <Col span={10}>
-                            <Text strong>Fine Amount:</Text>
+                            <Text strong>Plate Color:</Text>
                           </Col>
-                          <Col span={14}>
-                            {dispute.fineDetails.fineAmount !== null && dispute.fineDetails.fineAmount !== undefined ? (
-                              <Text type="danger" strong>
-                                {dispute.fineDetails.fineAmount} AED
-                              </Text>
-                            ) : (
-                              "No Data"
-                            )}
-                          </Col>
+                          <Col span={14}>{dispute.vehicle.plateColor || "No Data"}</Col>
 
                           <Col span={10}>
-                            <Text strong>Fine Status:</Text>
+                            <Text strong>Plate Type:</Text>
                           </Col>
-                          <Col span={14}>
-                            {dispute.fineDetails.fineStatus ? (
-                              <Tag color={getStatusColor(dispute.fineDetails.fineStatus)}>
-                                {getLabelFromValue(dispute.fineDetails.fineStatus, 1002)}
-                              </Tag>
-                            ) : (
-                              "No Data"
-                            )}
-                          </Col>
+                          <Col span={14}>{dispute.vehicle.plateType || "No Data"}</Col>
 
                           <Col span={10}>
-                            <Text strong>Inspection ID:</Text>
+                            <Text strong>Plate Source:</Text>
                           </Col>
-                          <Col span={14}>{dispute.fineDetails.inspectionId || "No Data"}</Col>
+                          <Col span={14}>{dispute.vehicle.plateSource || "No Data"}</Col>
+
+                          <Col span={10}>
+                            <Text strong>Vehicle Brand:</Text>
+                          </Col>
+                          <Col span={14}>{dispute.vehicle.vehicleBrand || "No Data"}</Col>
+
+                          <Col span={10}>
+                            <Text strong>Vehicle Type:</Text>
+                          </Col>
+                          <Col span={14}>{dispute.vehicle.vehicleType || "No Data"}</Col>
+
+                          <Col span={10}>
+                            <Text strong>Vehicle Color:</Text>
+                          </Col>
+                          <Col span={14}>{dispute.vehicle.vehicleColor || "No Data"}</Col>
+
+                          <Col span={10}>
+                            <Text strong>Manufacturer Year:</Text>
+                          </Col>
+                          <Col span={14}>{dispute.vehicle.manufacturerYear || "No Data"}</Col>
+
+                          <Col span={10}>
+                            <Text strong>Owner Name:</Text>
+                          </Col>
+                          <Col span={14}>{dispute.vehicle.ownerName || "No Data"}</Col>
                         </Row>
-                      ) : (
-                        <Empty description="No Fine Details Available" />
-                      )}
-                    </Card>
-                  </Col>
+                      </Card>
+                    </Col>
+                  )}
                 </Row>
 
-                {/* Vehicle Details (if available) */}
-                {dispute.vehicle && (
-                  <Card
-                    title="Vehicle Details"
-                    size="small"
-                    style={{ borderRadius: 12, marginBottom: 16 }}
-                    headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                  >
+                {/* Fine Details (changed to row layout like Vehicle Details) */}
+                <Card
+                  title="Fine Details"
+                  size="small"
+                  style={{ borderRadius: 12, marginBottom: 16 }}
+                  headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                >
+                  {dispute.fineDetails ? (
                     <Row gutter={16}>
-                      <Col span={6}>
-                        <Text strong>Plate Number:</Text> {dispute.vehicle.plateNumber || "No Data"}
+                      <Col span={8}>
+                        <Text strong>Fine Amount:</Text>
+                        {dispute.fineDetails.fineAmount !== null && dispute.fineDetails.fineAmount !== undefined ? (
+                          <Text type="danger" strong style={{ display: "block", marginTop: 4 }}>
+                            {dispute.fineDetails.fineAmount} AED
+                          </Text>
+                        ) : (
+                          <Text style={{ display: "block", marginTop: 4 }}>No Data</Text>
+                        )}
                       </Col>
-                      <Col span={6}>
-                        <Text strong>Plate Color:</Text> {dispute.vehicle.plateColor || "No Data"}
+
+                      <Col span={8}>
+                        <Text strong>Fine Status:</Text>
+                        {dispute.fineDetails.fineStatus ? (
+                          <div style={{ marginTop: 4 }}>
+                            <Tag color={getStatusColor(dispute.fineDetails.fineStatus)}>
+                              {getLabelFromValue(dispute.fineDetails.fineStatus, 1500)}
+                            </Tag>
+                          </div>
+                        ) : (
+                          <Text style={{ display: "block", marginTop: 4 }}>No Data</Text>
+                        )}
                       </Col>
-                      <Col span={6}>
-                        <Text strong>Plate Type:</Text> {dispute.vehicle.plateType || "No Data"}
-                      </Col>
-                      <Col span={6}>
-                        <Text strong>Plate Source:</Text> {dispute.vehicle.plateSource || "No Data"}
-                      </Col>
-                      <Col span={6}>
-                        <Text strong>Vehicle Brand:</Text> {dispute.vehicle.vehicleBrand || "No Data"}
-                      </Col>
-                      <Col span={6}>
-                        <Text strong>Vehicle Type:</Text> {dispute.vehicle.vehicleType || "No Data"}
-                      </Col>
-                      <Col span={6}>
-                        <Text strong>Vehicle Color:</Text> {dispute.vehicle.vehicleColor || "No Data"}
-                      </Col>
-                      <Col span={6}>
-                        <Text strong>Manufacturer Year:</Text> {dispute.vehicle.manufacturerYear || "No Data"}
-                      </Col>
-                      <Col span={6}>
-                        <Text strong>Owner Name:</Text> {dispute.vehicle.ownerName || "No Data"}
+
+                      <Col span={8}>
+                        <Text strong>Fine Number:</Text>
+                        <Text style={{ display: "block", marginTop: 4 }}>
+                          {dispute.fineDetails.fineNo || "No Data"}
+                        </Text>
                       </Col>
                     </Row>
-                  </Card>
-                )}
-
-                {/* Evidence & Location */}
-                {/* <Row gutter={16}>
-                  <Col span={12}>
-                    <Card
-                      title="Evidence"
-                      size="small"
-                      style={{ borderRadius: 12, marginBottom: 16 }}
-                      headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                    >
-                      <Empty description="No Evidence Available" />
-                    </Card>
-                  </Col>
-
-                  <Col span={12}>
-                    <Card
-                      title="Fine Location"
-                      size="small"
-                      style={{ borderRadius: 12, marginBottom: 16 }}
-                      headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                    >
-                      <Empty description="No Location Data Available" />
-                    </Card>
-                  </Col>
-                </Row> */}
+                  ) : (
+                    <Empty description="No Fine Details Available" />
+                  )}
+                </Card>
               </Col>
 
               {/* RIGHT SIDE - Review Timeline */}
@@ -448,7 +435,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                   <Col span={8}>
                     <Form.Item
                       name="review_Comments"
-                      label={<Text strong>Comment *</Text>}
+                      label={<Text strong>Comment</Text>}
                       rules={[{ required: true, message: "Please enter your comments" }]}
                     >
                       <TextArea placeholder="Enter your review comments" rows={3} />

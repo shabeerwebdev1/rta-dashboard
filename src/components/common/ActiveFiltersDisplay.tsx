@@ -1,10 +1,9 @@
 import React from "react";
-import { Tag, Space, Typography, Button } from "antd";
+import { Tag, Space, Typography, Button, theme } from "antd";
 import { ArrowUpOutlined, ArrowDownOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 
-// Define tagStyle for consistent styling of tags
 const tagStyle: React.CSSProperties = {
   margin: "0 4px",
   cursor: "pointer",
@@ -39,9 +38,13 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
   statusLabels,
 }) => {
   const { t, i18n } = useTranslation();
+  const { token } = theme.useToken(); // 🎨 Grab theme colors
   const filterGroups: React.ReactNode[] = [];
 
-  // Helper to get lookup options for a specific column
+  // Use the theme's primary color for tags
+  const tagColor = token.colorPrimary;
+
+  // Helper: get lookup options for a specific column
   const getLookupOptionsForColumn = (columnKey: string) => {
     const columnToCategoryMap: Record<string, number> = {
       plateSource_Id: 200,
@@ -54,18 +57,16 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
       inspectionType: 1400,
       inspectionCategory: 1300,
       inspectionStatus: 1500,
-      payment_Type:1100,
+      payment_Type: 1100,
     };
 
     const categoryId = columnToCategoryMap[columnKey];
     if (!categoryId) return [];
-
     return lookupOptions.filter((option) => option.categoryId === categoryId);
   };
 
-  // Helper to get label for a filter value
+  // Helper: get label for a filter value
   const getFilterLabel = (columnKey: string, value: string | number) => {
-    // Special handling for status column
     if (columnKey === "status" && statusLabels) {
       return statusLabels[Number(value)] || String(value);
     }
@@ -86,7 +87,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
       <Space key="sorter_group" align="center">
         <Text>{t("common.sortBy")}: </Text>
         <Tag
-          color="#171B7D"
+          color={tagColor}
           key="sorter"
           closable
           onClose={() => onClearFilter("sorter")}
@@ -105,7 +106,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     filterGroups.push(
       <Space key="search_group" align="center">
         <Text>{searchLabel}: </Text>
-        <Tag color="#171B7D" key="search" closable onClose={() => onClearFilter("search")} style={tagStyle}>
+        <Tag color={tagColor} key="search" closable onClose={() => onClearFilter("search")} style={tagStyle}>
           {state.searchValue}
         </Tag>
       </Space>,
@@ -119,7 +120,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     filterGroups.push(
       <Space key="date_group" align="center">
         <Text>{t("form.dateRange")}: </Text>
-        <Tag color="#171B7D" key="date" closable onClose={() => onClearFilter("date")} style={tagStyle}>
+        <Tag color={tagColor} key="date" closable onClose={() => onClearFilter("date")} style={tagStyle}>
           {`${from} to ${to}`}
         </Tag>
       </Space>,
@@ -136,7 +137,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
           <Text style={{ marginRight: 10 }}>{groupLabel}: </Text>
           {values.map((value) => (
             <Tag
-              color="#171B7D"
+              color={tagColor}
               key={String(value)}
               closable
               onClose={() => onClearFilter("column", key, value)}
@@ -164,7 +165,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
         flexWrap: "wrap",
         rowGap: 8,
         padding: "8px 4px",
-        borderTop: "1px solid var(--ant-color-border-secondary)",
+        borderTop: `1px solid ${token.colorBorderSecondary}`,
       }}
     >
       <Space wrap>{filterGroups}</Space>
@@ -172,7 +173,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
         type="link"
         danger
         onClick={onClearAll}
-        style={{ whiteSpace: "nowrap", paddingRight: 0, color: "#171B7D" }}
+        style={{ whiteSpace: "nowrap", paddingRight: 0, color: tagColor }}
       >
         {t("common.clearAll")}
       </Button>
