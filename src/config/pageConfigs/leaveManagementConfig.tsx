@@ -60,7 +60,17 @@ export const leaveManagementPageConfig: PageConfig = {
       { key: "leaveType", title: "form.leaveType", type: "string", sortable: false, filterable: false },
       { key: "fromDate", title: "form.fromDate", type: "date", sortable: false },
       { key: "toDate", title: "form.toDate", type: "date", sortable: false },
-      { key: "totalLeaveDays", title: "form.totalLeaveDays", type: "number", sortable: false },
+      {
+        key: "totalLeaveDays",
+        title: "form.totalLeaveDays",
+        type: "custom",
+        sortable: false,
+        render: (value: number) => (
+          <Tag color="default" style={{ borderRadius: "10px", padding: "4px 8px" }}>
+            {value} {value === 1 ? "Day" : "Days"}
+          </Tag>
+        ),
+      },
       {
         key: "status",
         title: "form.status",

@@ -173,10 +173,19 @@
       "leaveReason": "Leave Reason",
       "totalLeaveDays": "Total Leave Days",
       "plateCategory": "Plate Category",
-      "plateCode": "Plate Code"
-      
+      "plateCode": "Plate Code",
+      "actions": "Actions",
+      "totalLeaves": "Total Leaves",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "pending": "Pending",
+      "menuItem": "Menu Item",
+      "create": "Create",
+      "read": "Read",
+      "update": "Update",
+      "delete": "Delete"
 
-  },
+  }, 
   "common": {
     "action": "Action",
     "items": "items",
@@ -266,8 +275,12 @@
     "SourceUser": "Enter source user",
    
     "plateCategory": "Select plate category",
-    "plateCode": "Select plate code"
-    
+    "plateCode": "Select plate code",
+    "selectShift": "Select Shift",
+    "selectZones": "Select Zone(s)",
+    "selectAssignmentTypes": "Select Assignment Type(s)",
+    "selectRole": "Select Role"
+
   },
 
   "dashboard": {

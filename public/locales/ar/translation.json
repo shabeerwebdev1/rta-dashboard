@@ -162,6 +162,7 @@
     "approvalActions": "إجراءات الموافقة",
     "approve": "الموافقة",
     "reject": "الرفض",
+    
    
     "InspectorName": "اسم المفتش",
     "Zone": "المنطقة",
@@ -174,7 +175,17 @@
       "leaveReason": "سبب الإجازة",
       "totalLeaveDays": "إجمالي أيام الإجازة",
       "plateCategory": "فئة اللوحة",
-      "plateCode": "رمز اللوحة"
+      "plateCode": "رمز اللوحة",
+      "actions": "الإجراءات",
+      "totalLeaves": "إجمالي الإجازات",
+      "approved": "موافق",
+      "rejected": "مرفوض",
+      "pending": "قيد الانتظار",
+      "menuItem": "عنصر القائمة",
+      "create": "إنشاء",
+      "read": "قراءة",
+      "update": "تحديث",
+      "delete": "حذف"
   },
   "common": {
     "action": "إجراء",
@@ -260,7 +271,11 @@
     "comments": "أضف تعليقات ",
     "SourceUser": "أدخل المستخدم المصدر",
     "plateCategory": "اختر فئة اللوحة",
-    "plateCode": "اختر رمز اللوحة"
+    "plateCode": "اختر رمز اللوحة",
+     "selectShift": "اختر الوردية",
+    "selectZones": "اختر المنطقة (المناطق)",
+    "selectAssignmentTypes": "اختر نوع التكليف (التكليفات)",
+    "selectRole": "اختر الدور"
 
   },
   "dashboard": {

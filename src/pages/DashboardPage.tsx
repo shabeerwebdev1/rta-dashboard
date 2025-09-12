@@ -51,7 +51,7 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
 
    const supervisors =
   activeShiftsData?.filter(
-    (shift: any) => shift.roleGUID === "9C09B416-3AE4-406A-8627-71A23532A809"
+    (shift: any) => shift.roleCode === "PARSUP"
   ) || [];
 
 

@@ -1,5 +1,6 @@
+// SupervisorManagement.tsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Space, Select, Checkbox, notification, Button, Spin } from "antd";
+import { Space, Select, Checkbox, Button, Spin, Pagination } from "antd";
 import { SupervisorManagemnetConfig } from "../config/pageConfigs/SupervisorManagementConfig";
 import { useTranslation } from "react-i18next";
 import {
@@ -9,6 +10,7 @@ import {
   useUpdateShiftManagementMutation,
 } from "../services/rtkApiFactory";
 import DataTableWrapper from "../components/common/DataTableWrapper";
+import { useAppNotification } from "../utils/notificationManager";
 
 interface SupervisorData {
   key: string;
@@ -43,6 +45,7 @@ interface ActiveShiftData {
   employeeName: string;
   shiftId: string;
   roleGUID: string;
+  roleCode: string;
   role: string;
   wO_Days: string;
   isActive: boolean;
@@ -64,20 +67,30 @@ function SupervisorManagement() {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [updatingRowKey, setUpdatingRowKey] = useState<string | null>(null);
 
+  const notification = useAppNotification();
+
+  //  pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
   const {
     data: activeShiftsResponse,
     isLoading: isLoadingActiveShifts,
     refetch: refetchActiveShifts,
   } = useGetActiveShiftsQuery();
 
-  const [updateShiftManagement, { isLoading: isUpdating }] = useUpdateShiftManagementMutation();
+  const [updateShiftManagement, { isLoading: isUpdating }] =
+    useUpdateShiftManagementMutation();
 
   useEffect(() => {
     fetchZonesData();
     fetchShiftsData();
   }, [i18n.language]);
 
-  const availableShiftIds = useMemo(() => shifts.map((shift) => shift.shiftTypeGUID), [shifts]);
+  const availableShiftIds = useMemo(
+    () => shifts.map((shift) => shift.shiftTypeGUID),
+    [shifts]
+  );
 
   useEffect(() => {
     if (activeShiftsResponse) {
@@ -86,9 +99,10 @@ function SupervisorManagement() {
         : activeShiftsResponse.data || [];
 
       const transformedData: SupervisorData[] = activeShiftsData
-        .filter((item: ActiveShiftData) => item.roleGUID === "9C09B416-3AE4-406A-8627-71A23532A809")
+        .filter((item: ActiveShiftData) => item.roleCode === "PARSUP")
         .map((item: ActiveShiftData, index: number) => {
-          const isValidShift = item.shiftId && availableShiftIds.includes(item.shiftId);
+          const isValidShift =
+            item.shiftId && availableShiftIds.includes(item.shiftId);
           const zoneIds = item.zoneIds?.map((id) => id.toString()) || [];
 
           return {
@@ -96,7 +110,9 @@ function SupervisorManagement() {
             SupervisorName: item.employeeName,
             zone: zoneIds,
             shift: isValidShift ? item.shiftId : undefined,
-            weekOffs: item.wO_Days ? item.wO_Days.split(",").map((d) => parseInt(d)) : [],
+            weekOffs: item.wO_Days
+              ? item.wO_Days.split(",").map((d) => parseInt(d))
+              : [],
             role: item.role,
             employeeId: item.employeeId,
             uswMcode: item.uswMcode,
@@ -113,8 +129,8 @@ function SupervisorManagement() {
     try {
       const result = await triggerGetZones().unwrap();
       setZones(result);
-    } catch (error) {
-      notification.error({ message: "Failed to fetch zones data." });
+    } catch {
+      notification.error(t("Fetch failed"), t("Failed to fetch zones data."));
     } finally {
       setIsLoadingZones(false);
     }
@@ -125,8 +141,8 @@ function SupervisorManagement() {
     try {
       const result = await triggerGetShifts().unwrap();
       setShifts(result);
-    } catch (error) {
-      notification.error({ message: "Failed to fetch shifts data." });
+    } catch {
+      notification.error(t("Fetch failed"), t("Failed to fetch shifts data."));
     } finally {
       setIsLoadingShifts(false);
     }
@@ -147,14 +163,15 @@ function SupervisorManagement() {
       shifts.map((shift) => ({
         value: shift.shiftTypeGUID,
         label: `${shift.shiftTypeCode} - ${
-          i18n.language === "ar" ? shift.shiftTypeNameAr : shift.shiftTypeNameEn
+          i18n.language === "ar"
+            ? shift.shiftTypeNameAr
+            : shift.shiftTypeNameEn
         }`,
         original: shift,
       })),
     [shifts, i18n.language]
   );
 
-  // ✅ Properly translated weekdays
   const weekDayOptions = useMemo(
     () =>
       SupervisorManagemnetConfig.tableConfig.weekDays.map((d) => ({
@@ -165,16 +182,26 @@ function SupervisorManagement() {
   );
 
   const handleZoneChange = (value: string[], record: SupervisorData) => {
-    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, zone: value } : item)));
+    setData((prev) =>
+      prev.map((item) =>
+        item.key === record.key ? { ...item, zone: value } : item
+      )
+    );
   };
 
   const handleShiftChange = (value: string, record: SupervisorData) => {
-    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, shift: value } : item)));
+    setData((prev) =>
+      prev.map((item) =>
+        item.key === record.key ? { ...item, shift: value } : item
+      )
+    );
   };
 
   const handleWeekOffChange = (checkedValues: number[], record: SupervisorData) => {
     setData((prev) =>
-      prev.map((item) => (item.key === record.key ? { ...item, weekOffs: checkedValues } : item))
+      prev.map((item) =>
+        item.key === record.key ? { ...item, weekOffs: checkedValues } : item
+      )
     );
   };
 
@@ -196,17 +223,17 @@ function SupervisorManagement() {
 
       await updateShiftManagement(updateData).unwrap();
 
-      notification.success({
-        message: t("Update successful"),
-        description: t("Supervisor data has been updated successfully."),
-      });
+      notification.success(
+        t("Update successful"),
+        t("Supervisor data has been updated successfully.")
+      );
 
       refetchActiveShifts();
-    } catch (error) {
-      notification.error({
-        message: t("Update failed"),
-        description: t("Failed to update supervisor data. Please try again."),
-      });
+    } catch {
+      notification.error(
+        t("Update failed"),
+        t("Failed to update supervisor data. Please try again.")
+      );
     } finally {
       setUpdatingRowKey(null);
     }
@@ -223,7 +250,7 @@ function SupervisorManagement() {
               value={record.zone || []}
               style={{ width: 250 }}
               onChange={(val) => handleZoneChange(val, record)}
-              placeholder="Select Zone(s)"
+              placeholder={t("placeholders.selectZones")}
               loading={isLoadingZones}
             >
               {zoneOptions.map((option) => (
@@ -244,7 +271,7 @@ function SupervisorManagement() {
               value={record.shift}
               style={{ width: 200 }}
               onChange={(val) => handleShiftChange(val, record)}
-              placeholder="Select Shift"
+              placeholder={t("placeholders.selectShift")}
               loading={isLoadingShifts}
               allowClear
             >
@@ -265,7 +292,9 @@ function SupervisorManagement() {
             <Checkbox.Group
               options={weekDayOptions}
               value={record.weekOffs}
-              onChange={(vals) => handleWeekOffChange(vals as number[], record)}
+              onChange={(vals) =>
+                handleWeekOffChange(vals as number[], record)
+              }
               style={{ display: "flex", flexDirection: "column", gap: 4 }}
             />
           ),
@@ -278,12 +307,12 @@ function SupervisorManagement() {
           render: (_: any, record: SupervisorData) => (
             <Space>
               <Button
-          type="primary"
-          onClick={() => handleUpdate(record)}
-          loading={updatingRowKey === record.key} // ✅ only this row shows loading
-        >
-          {t("common.update")}
-        </Button>
+                type="primary"
+                onClick={() => handleUpdate(record)}
+                loading={updatingRowKey === record.key}
+              >
+                {t("common.update")}
+              </Button>
             </Space>
           ),
         };
@@ -291,10 +320,30 @@ function SupervisorManagement() {
 
       return { ...col, dataIndex: col.key };
     });
-  }, [zones, shifts, data, isLoadingZones, isLoadingShifts, isUpdating, weekDayOptions]);
+  }, [
+    zones,
+    shifts,
+    data,
+    isLoadingZones,
+    isLoadingShifts,
+    isUpdating,
+    weekDayOptions,
+    t,
+  ]);
+
+  // ✅ slice data for pagination
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    return data.slice(start, end);
+  }, [data, currentPage, pageSize]);
 
   return (
-    <Spin spinning={isLoadingActiveShifts || isLoadingZones || isLoadingShifts || isUpdating}>
+    <Spin
+      spinning={
+        isLoadingActiveShifts || isLoadingZones || isLoadingShifts || isUpdating
+      }
+    >
       <DataTableWrapper
         pageConfig={{
           ...SupervisorManagemnetConfig,
@@ -303,16 +352,30 @@ function SupervisorManagement() {
             columns: tableColumns,
           },
         }}
-        data={data}
+        data={paginatedData} //  use sliced data
         total={data.length}
         isLoading={isLoadingActiveShifts}
         handleTableChange={() => {}}
         handlePaginationChange={() => {}}
         tableSize="middle"
         state={{ columnFilters: {} }}
-        showPagination={false}
+        showPagination={false} //  keep false
         rowKey={(record: SupervisorData) => record.key}
       />
+
+      {/*  Fresh Pagination */}
+      <div style={{ marginTop: 16, textAlign: "right" }}>
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={data.length}
+          onChange={(page, size) => {
+            setCurrentPage(page);
+            setPageSize(size);
+          }}
+          showSizeChanger
+        />
+      </div>
     </Spin>
   );
 }

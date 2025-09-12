@@ -200,7 +200,7 @@ const RoleManagementPage: React.FC = () => {
           loading={isLoadingRoles}
         >
           <Option value="default" disabled>
-            {t("Select Role")}
+            {t("placeholders.selectRole")}
           </Option>
 
           {rolesData?.map((role: any, index: number) => {
@@ -216,7 +216,7 @@ const RoleManagementPage: React.FC = () => {
         {/* Show Update button only when a valid role is selected */}
         {selectedRoleId !== "default" && (
           <Button type="primary" onClick={handleUpdate} loading={isUpdating} disabled={isLoadingPermissions}>
-            {t("Update Permissions")}
+            {t("common.update")}
           </Button>
         )}
 
@@ -227,7 +227,7 @@ const RoleManagementPage: React.FC = () => {
         {isLoadingPermissions ? (
           <Spin size="large" style={{ display: "block", margin: "50px auto" }} />
         ) : (
-          // ✅ Show table only when role is selected
+          //  Show table only when role is selected
           selectedRoleId !== "default" && (
             <DataTableWrapper
               pageConfig={{

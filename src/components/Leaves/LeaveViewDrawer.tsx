@@ -3,6 +3,7 @@ import { Drawer, Descriptions, Tag, Button, Space, App } from "antd";
 import { LeaveStatus } from "../../config/pageConfigs/leaveManagementConfig";
 import { useUpdateLeaveStatusMutation } from "../../services/rtkApiFactory";
 import dayjs from "dayjs";
+import { t } from "i18next";
 
 interface LeaveViewDrawerProps {
   open: boolean;
@@ -61,17 +62,17 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
       {record ? (
         <>
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Employee Id">{record.employeeId}</Descriptions.Item>
-            <Descriptions.Item label="From Date">
+            <Descriptions.Item label={t("form.employeeId")}>{record.employeeId}</Descriptions.Item>
+            <Descriptions.Item label={t("form.fromDate")}>
               {dayjs(record.fromDate).format("DD MMM YYYY, hh:mm A")}
             </Descriptions.Item>
-            <Descriptions.Item label="To Date">
+            <Descriptions.Item label={t("form.toDate")}>
               {dayjs(record.toDate).format("DD MMM YYYY, hh:mm A")}
             </Descriptions.Item>
-            <Descriptions.Item label="Total Leave Days">{record.totalLeaveDays}</Descriptions.Item>
-            <Descriptions.Item label="Leave Type">{record.leaveType}</Descriptions.Item>
-            <Descriptions.Item label="Leave Reason">{record.leaveReason}</Descriptions.Item>
-            <Descriptions.Item label="Status">
+            <Descriptions.Item label={t("form.totalLeaveDays")}>{record.totalLeaveDays}</Descriptions.Item>
+            <Descriptions.Item label={t("form.leaveType")}>{record.leaveType}</Descriptions.Item>
+            <Descriptions.Item label={t("form.leaveReason")}>{record.leaveReason}</Descriptions.Item>
+            <Descriptions.Item label={t("form.status")}>
               <Tag
                 color={
                   status === LeaveStatus.Approved
@@ -89,21 +90,21 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
 
             {/* ✅ Show actions only if NOT approved */}
             {status !== LeaveStatus.Approved && (
-              <Descriptions.Item label="Actions">
+              <Descriptions.Item label={t("form.actions")}>
                 <Space>
                   <Button
                     type="primary"
                     loading={isLoading}
                     onClick={() => handleUpdateStatus(LeaveStatus.Approved)}
                   >
-                    Approve
+                    {t("form.approve")}
                   </Button>
                   <Button
                     danger
                     loading={isLoading}
                     onClick={() => handleUpdateStatus(LeaveStatus.Rejected)}
                   >
-                    Reject
+                    {t("form.reject")}
                   </Button>
                 </Space>
               </Descriptions.Item>
