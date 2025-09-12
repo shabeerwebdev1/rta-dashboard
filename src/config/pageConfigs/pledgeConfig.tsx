@@ -21,7 +21,12 @@ export const pledgeConfig: PageConfig = {
     {
       title: "Corporate Pledges",
       icon: <SnippetsOutlined />,
-      value: (data) => data.filter((d) => d.pledgeType === "Corporate").length,
+      value: (data) => data.filter((item) => item.pledgeType === 9001).length,
+    },
+    {
+      title: "Individual Pledges",
+      icon: <SnippetsOutlined />,
+      value: (data) => data.filter((item) => item.pledgeType === 9002).length,
     },
   ],
   tableConfig: {

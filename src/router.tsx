@@ -2,10 +2,11 @@ import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import MainLayout from "./components/layout/MainLayout";
 import PageLoader from "./components/common/PageLoader";
+import ProtectedRoute from "./components/layout/ProtectedRoute";
 import { PATHS, FULL_PATHS } from "./constants/paths";
 import GeneralSearchPage from "./pages/GeneralSearchPage";
 
-// --- Lazy-loaded Page Components ---
+// Lazy-loaded Pages
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const PermitsPage = lazy(() => import("./pages/PermitsPage"));
 const WhitelistPlatesPage = lazy(() => import("./pages/WhitelistPlatesPage"));
@@ -23,52 +24,40 @@ const RoleManagementPage = lazy(() => import("./pages/RoleManagementPage"));
 const LeaveManagementPage = lazy(() => import("./pages/LeaveManagementPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 
-const AppRoutes = () => {
-  return (
-    <Routes>
-      {/* --- Public Routes --- */}
-      <Route path={PATHS.SPLASH} element={<SplashPage />} />
+const AppRoutes = () => (
+  <Routes>
+    <Route path={PATHS.SPLASH} element={<SplashPage />} />
 
-      {/* --- Protected Routes (Main Layout) --- */}
-      <Route path="/" element={<MainLayout />}>
-        <Route
-          element={
-            <Suspense fallback={<PageLoader />}>
-              <Outlet />
-            </Suspense>
-          }
-        >
-          {/* At root, redirect to Splash */}
-          <Route index element={<Navigate to={FULL_PATHS.SPLASH} replace />} />
+    <Route path="/" element={<MainLayout />}>
+      <Route element={<Suspense fallback={<PageLoader />}><Outlet /></Suspense>}>
 
-          <Route path={PATHS.DASHBOARD} element={<DashboardPage />} />
-          <Route path={PATHS.PERMITS} element={<PermitsPage />} />
-          <Route path={PATHS.FINES} element={<FinesPage />} />
-          <Route path={PATHS.PARKONIC} element={<ParkonicPage />} />
-          <Route path={PATHS.DISPUTE} element={<DisputeManagementPage />} />
-          <Route path={PATHS.GENERAL} element={<GeneralSearchPage />} />
+        <Route index element={<Navigate to={FULL_PATHS.SPLASH} replace />} />
 
-          {/* Whitelist with nested children */}
-          <Route path={PATHS.WHITELIST}>
-            <Route index element={<Navigate to={PATHS.PLATES} replace />} />
-            <Route path={PATHS.PLATES} element={<WhitelistPlatesPage />} />
-            <Route path={PATHS.INSPECTIONS_OBSTACLES} element={<InspectionObstaclesPage />} />
-            <Route path={PATHS.TRADELICENSES} element={<WhitelistTradeLicensesPage />} />
-          </Route>
+        <Route path={PATHS.DASHBOARD} element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path={PATHS.PERMITS} element={<ProtectedRoute><PermitsPage /></ProtectedRoute>} />
+        <Route path={PATHS.FINES} element={<ProtectedRoute><FinesPage /></ProtectedRoute>} />
+        <Route path={PATHS.PARKONIC} element={<ProtectedRoute><ParkonicPage /></ProtectedRoute>} />
+        <Route path={PATHS.DISPUTE} element={<ProtectedRoute><DisputeManagementPage /></ProtectedRoute>} />
+        <Route path={PATHS.GENERAL} element={<ProtectedRoute><GeneralSearchPage /></ProtectedRoute>} />
 
-          <Route path={PATHS.PLEDGES} element={<PledgesPage />} />
-          <Route path={PATHS.SHIFT_MANAGEMENT} element={<ShiftManagement />} />
-          <Route path={PATHS.CREATESHIFTPLAN} element={<CreateShiftPlan />} />
-          <Route path={PATHS.ADHOCSHIFTPLAN} element={<AdhocShiftPlan />} />
-          <Route path={PATHS.ROLE_MANAGEMENT} element={<RoleManagementPage />} />
-          <Route path={PATHS.LEAVE_MANAGEMENT} element={<LeaveManagementPage />} />
-
-          {/* Fallback */}
-          <Route path="*" element={<ComingSoonPage />} />
+        <Route path={PATHS.WHITELIST}>
+          <Route index element={<Navigate to={PATHS.PLATES} replace />} />
+          <Route path={PATHS.PLATES} element={<ProtectedRoute><WhitelistPlatesPage /></ProtectedRoute>} />
+          <Route path={PATHS.INSPECTIONS_OBSTACLES} element={<ProtectedRoute><InspectionObstaclesPage /></ProtectedRoute>} />
+          <Route path={PATHS.TRADELICENSES} element={<ProtectedRoute><WhitelistTradeLicensesPage /></ProtectedRoute>} />
         </Route>
+
+        <Route path={PATHS.PLEDGES} element={<ProtectedRoute><PledgesPage /></ProtectedRoute>} />
+        <Route path={PATHS.SHIFT_MANAGEMENT} element={<ProtectedRoute><ShiftManagement /></ProtectedRoute>} />
+        <Route path={PATHS.CREATESHIFTPLAN} element={<ProtectedRoute><CreateShiftPlan /></ProtectedRoute>} />
+        <Route path={PATHS.ADHOCSHIFTPLAN} element={<ProtectedRoute><AdhocShiftPlan /></ProtectedRoute>} />
+        <Route path={PATHS.ROLE_MANAGEMENT} element={<ProtectedRoute><RoleManagementPage /></ProtectedRoute>} />
+        <Route path={PATHS.LEAVE_MANAGEMENT} element={<ProtectedRoute><LeaveManagementPage /></ProtectedRoute>} />
+
+        <Route path="*" element={<ComingSoonPage />} />
       </Route>
-    </Routes>
-  );
-};
+    </Route>
+  </Routes>
+);
 
 export default AppRoutes;

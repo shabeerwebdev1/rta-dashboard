@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Image, Spin, Row, Col } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useValidatecodeQuery } from "../services/rtkApiFactory";
+import { useAuth } from "../contexts/AuthContext";
 
-const FALLBACK_CODE = "20250903DA9252B5C9EF497592CC480C";
+const FALLBACK_CODE = "20250912C044F1F1A4F64D338C2EC17A";
 const SPLASH_DELAY = 1300;
 
 export default function SplashPage() {
@@ -18,6 +19,13 @@ export default function SplashPage() {
   // call RTK Query
   const { data, isLoading, isError } = useValidatecodeQuery(code);
 
+  const { login } = useAuth();
+
+  if (data?.data?.sTafteeshToken) {
+    login(data.data);
+    navigate("/dashboard", { replace: true });
+  }
+
   useEffect(() => {
     if (isLoading) return;
 
@@ -28,13 +36,19 @@ export default function SplashPage() {
       } else {
         const u = data.data;
 
-        // store token + expiry + user profile
+        // store token + expiry
         localStorage.setItem("sTafteeshToken", u.sTafteeshToken);
         if (u.tokenExpiry) localStorage.setItem("tokenExpiry", u.tokenExpiry);
 
+        // store user profile
         localStorage.setItem("displayNameEn", u.displayNameEn ?? "");
         localStorage.setItem("displayNameAr", u.displayNameAr ?? "");
         localStorage.setItem("userImage", u.userImage ?? "");
+        localStorage.setItem("userGUID", u.userGUID ?? "");
+
+        // store role info
+        localStorage.setItem("roleGUID", u.roleGUID ?? "");
+        localStorage.setItem("rolePermissions", JSON.stringify(u.rolePermissions ?? []));
 
         navigate("/dashboard", { replace: true });
       }

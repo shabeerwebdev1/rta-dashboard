@@ -1,5 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Row, Select, Table, Tag, Typography, Button, Avatar, Statistic, Spin, message } from "antd";
+import {
+  Card,
+  Col,
+  Row,
+  Select,
+  Table,
+  Tag,
+  Typography,
+  Button,
+  Avatar,
+  Statistic,
+  Spin,
+  message,
+} from "antd";
 import {
   UserOutlined,
   CheckCircleOutlined,
@@ -12,10 +25,11 @@ import {
 } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import DashboardViewDrawer from "../components/dashboard/DashboardViewDrawer";
-import { useGetSupervisorDashboardQuery, useGetActiveShiftsQuery } from "../services/rtkApiFactory"; // Add useGetActiveShiftsQuery
+import {
+  useGetSupervisorDashboardQuery,
+  useGetActiveShiftsQuery,
+} from "../services/rtkApiFactory";
 import { useTranslation } from "react-i18next";
-
-// ✅ Google Maps
 import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
 
 const { Text } = Typography;
@@ -40,32 +54,27 @@ const SupervisorViewPage: React.FC = () => {
   const [selectedSupervisor, setSelectedSupervisor] = useState<string | null>(null);
   const [supervisorInfo, setSupervisorInfo] = useState<any>(null);
 
-  // Get active shifts data
-  const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery();
+  const { data: activeShiftsData, isLoading: isLoadingShifts } =
+    useGetActiveShiftsQuery();
 
-  // Use the RTK Query hook - skip if no supervisor is selected
-const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery(
-  selectedSupervisor as string, // selectedSupervisor will now hold employeeId
-  { skip: !selectedSupervisor }
-);
+  const { data: dashboardData, isLoading, error } =
+    useGetSupervisorDashboardQuery(selectedSupervisor as string, {
+      skip: !selectedSupervisor,
+    });
 
    const supervisors =
   activeShiftsData?.filter(
     (shift: any) => shift.roleCode === "PARSUP"
   ) || [];
 
-
-  // Helper function to get text based on current language
   const getLocalizedText = (englishText: string, arabicText: string) => {
     return i18n.language === "ar" ? arabicText : englishText;
   };
 
-  // Update supervisor info when selection changes
   const handleSupervisorChange = (value: string) => {
-  setSelectedSupervisor(value);
-};
+    setSelectedSupervisor(value);
+  };
 
-  // ✅ Inspectors data with Arabic support
   const inspectorAvatars = [
     {
       id: 1,
@@ -76,9 +85,9 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
       status: "Checked-in",
       statusAr: "تم التسجيل",
       color: "#52c41a",
-      details: { 
+      details: {
         email: "inspector1@example.com",
-        emailAr: "المفتش١@example.com"
+        emailAr: "المفتش١@example.com",
       },
     },
     {
@@ -90,9 +99,9 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
       status: "Pending",
       statusAr: "قيد الانتظار",
       color: "#faad14",
-      details: { 
+      details: {
         email: "inspector2@example.com",
-        emailAr: "المفتش٢@example.com"
+        emailAr: "المفتش٢@example.com",
       },
     },
     {
@@ -104,9 +113,9 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
       status: "Checked-in",
       statusAr: "تم التسجيل",
       color: "#1890ff",
-      details: { 
+      details: {
         email: "inspector3@example.com",
-        emailAr: "المفتش٣@example.com"
+        emailAr: "المفتش٣@example.com",
       },
     },
     {
@@ -118,22 +127,22 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
       status: "On Leave",
       statusAr: "في إجازة",
       color: "#ff4d4f",
-      details: { 
+      details: {
         email: "inspector4@example.com",
-        emailAr: "المفتش٤@example.com"
+        emailAr: "المفتش٤@example.com",
       },
     },
   ];
 
-  // ✅ Drawer when clicking a marker
   const handleMarkerClick = (inspector: any) => {
     setSelectedInspector(inspector);
     setDrawerVisible(true);
   };
 
-  // ✅ Tooltip on map when row clicked
   const handleViewClick = (record: any) => {
-    const inspector = inspectorAvatars.find((insp) => insp.name === record.inspectorName);
+    const inspector = inspectorAvatars.find(
+      (insp) => insp.name === record.inspectorName
+    );
     if (inspector) {
       setSelectedInspector(inspector);
       setDrawerVisible(true);
@@ -145,7 +154,6 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
     setSelectedInspector(null);
   };
 
-  // ✅ Dummy Table data with Arabic support
   const checkInData = inspectorAvatars.map((insp, idx) => ({
     key: idx,
     checkInId: `C000${idx + 1}`,
@@ -153,39 +161,24 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
     time: getLocalizedText("08:30 AM", "٠٨:٣٠ ص"),
     assignment: getLocalizedText("Zone A", "المنطقة أ"),
     status: getLocalizedText(insp.status, insp.statusAr),
-    originalStatus: insp.status, // Keep original for filtering/sorting
+    originalStatus: insp.status,
   }));
 
   const checkInColumns = [
-    { 
-      title: t("form.checkInId", "Check-in Id"), 
-      dataIndex: "checkInId", 
-      key: "checkInId" 
-    },
-    { 
-      title: t("form.inspectorName", "Inspector Name"), 
-      dataIndex: "inspectorName", 
-      key: "inspectorName" 
-    },
-    { 
-      title: t("form.time", "Time"), 
-      dataIndex: "time", 
-      key: "time" 
-    },
-    { 
-      title: t("form.assignment", "Assignment"), 
-      dataIndex: "assignment", 
-      key: "assignment" 
-    },
+    { title: t("form.checkInId", "Check-in Id"), dataIndex: "checkInId" },
+    { title: t("form.inspectorName", "Inspector Name"), dataIndex: "inspectorName" },
+    { title: t("form.time", "Time"), dataIndex: "time" },
+    { title: t("form.assignment", "Assignment"), dataIndex: "assignment" },
     {
       title: t("form.status", "Status"),
       dataIndex: "status",
-      key: "status",
       render: (status: string, record: any) => {
-        const originalStatus = record.originalStatus;
-        if (originalStatus === "Checked-in") return <Tag color="green">{status}</Tag>;
-        if (originalStatus === "Pending") return <Tag color="orange">{status}</Tag>;
-        if (originalStatus === "On Leave") return <Tag color="red">{status}</Tag>;
+        if (record.originalStatus === "Checked-in")
+          return <Tag color="green">{status}</Tag>;
+        if (record.originalStatus === "Pending")
+          return <Tag color="orange">{status}</Tag>;
+        if (record.originalStatus === "On Leave")
+          return <Tag color="red">{status}</Tag>;
         return <Tag>{status}</Tag>;
       },
     },
@@ -193,17 +186,11 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
       title: t("common.action", "Actions"),
       key: "actions",
       align: "center" as const,
-      render: (_: any, record: any) => {
-        return (
-          <Button
-            type="link"
-            icon={<EyeOutlined />}
-            onClick={() => handleViewClick(record)}
-          >
-            {t("common.view", "View")}
-          </Button>
-        );
-      },
+      render: (_: any, record: any) => (
+        <Button type="link" icon={<EyeOutlined />} onClick={() => handleViewClick(record)}>
+          {t("common.view", "View")}
+        </Button>
+      ),
     },
   ];
 
@@ -215,71 +202,71 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
     message.error(t("messages.errorLoading", "Error loading dashboard data"));
   }
 
-  // Filter supervisors from active shifts data
-
-
   return (
     <div>
+      {/* Supervisor Info */}
       <Card style={{ marginBottom: 20 }}>
         <Row gutter={16}>
           <Col span={6}>
-            <Select 
-  placeholder={t("common.selectSupervisor", "Select Supervisor")} 
-  style={{ width: "100%" }}
-  value={selectedSupervisor}
-  onChange={handleSupervisorChange}
-  allowClear
-  loading={isLoadingShifts}
->
-  {supervisors.map((supervisor: any) => (
-    <Select.Option key={supervisor.employeeId} value={supervisor.employeeId}>
-      {supervisor.employeeName}
-    </Select.Option>
-  ))}
-</Select>
-
+            <Select
+              placeholder={t("common.selectSupervisor", "Select Supervisor")}
+              style={{ width: "100%" }}
+              value={selectedSupervisor}
+              onChange={handleSupervisorChange}
+              allowClear
+              loading={isLoadingShifts}
+            >
+              {supervisors.map((supervisor: any) => (
+                <Select.Option key={supervisor.employeeId} value={supervisor.employeeId}>
+                  {supervisor.employeeName}
+                </Select.Option>
+              ))}
+            </Select>
           </Col>
           <Col span={6}>
-  <div>
-    <Text strong>{t("form.supervisorName", "Name")}</Text> <br /> 
-    {dashboardData?.data?.users?.[0]?.employeeName || "N/A"}
-  </div>
-</Col>
-         <Col span={6}>
-  <div>
-    <Text strong>{t("form.zone", "Zone")}</Text> <br /> 
-    {dashboardData?.data?.users?.[0]?.zones?.join(", ") || "N/A"}
-  </div>
-</Col>
+            <div>
+              <Text strong>{t("form.supervisorName", "Name")}</Text> <br />
+              {dashboardData?.data?.users?.[0]?.employeeName || "N/A"}
+            </div>
+          </Col>
           <Col span={6}>
             <div>
-              <Text strong>{t("form.shift", "Shift")}</Text> <br /> 
+              <Text strong>{t("form.zone", "Zone")}</Text> <br />
+              {dashboardData?.data?.users?.[0]?.zones?.join(", ") || "N/A"}
+            </div>
+          </Col>
+          <Col span={6}>
+            <div>
+              <Text strong>{t("form.shift", "Shift")}</Text> <br />
               {supervisorInfo ? supervisorInfo.role : "N/A"}
             </div>
           </Col>
         </Row>
       </Card>
-      
-      {(isLoading || isLoadingShifts) && <Spin size="large" style={{ display: 'block', margin: '50px auto' }} />}
-      
+
+      {(isLoading || isLoadingShifts) && (
+        <Spin size="large" style={{ display: "block", margin: "50px auto" }} />
+      )}
+
       <Row gutter={16} style={{ marginBottom: 20 }}>
-        {/* ✅ Google Map */}
+        {/* Google Map */}
         <Col span={16}>
           <Card bodyStyle={{ padding: 0, height: "100%" }}>
             <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY!}>
               <GoogleMap mapContainerStyle={mapContainerStyle} center={dubaiCenter} zoom={15}>
-                {window.google &&
-                  inspectorAvatars.map((inspector) => (
-                    <Marker
-                      key={inspector.id}
-                      position={{ lat: inspector.lat, lng: inspector.lng }}
-                      onClick={() => handleMarkerClick(inspector)}
-                      icon={{
+                {inspectorAvatars.map((inspector) => (
+                  <Marker
+                    key={inspector.id}
+                    position={{ lat: inspector.lat, lng: inspector.lng }}
+                    onClick={() => handleMarkerClick(inspector)}
+                    onLoad={(marker) => {
+                      marker.setIcon({
                         url: "/images/Inspector.png",
                         scaledSize: new window.google.maps.Size(70, 80),
-                      }}
-                    />
-                  ))}
+                      });
+                    }}
+                  />
+                ))}
 
                 {selectedMarker && (
                   <InfoWindow
@@ -291,7 +278,12 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
                   >
                     <div>
                       <h4>{getLocalizedText(selectedMarker.name, selectedMarker.nameAr)}</h4>
-                      <p>{getLocalizedText(selectedMarker.details.email, selectedMarker.details.emailAr)}</p>
+                      <p>
+                        {getLocalizedText(
+                          selectedMarker.details.email,
+                          selectedMarker.details.emailAr
+                        )}
+                      </p>
                     </div>
                   </InfoWindow>
                 )}
@@ -300,29 +292,36 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
           </Card>
         </Col>
 
-        {/* ✅ Stats Cards */}
-        <Col span={8} style={{ height: "100%" }}>
-          <Row gutter={[16, 16]} style={{ height: "100%" }}>
+        {/* Stats Section */}
+        <Col span={8}>
+          <Row gutter={[16, 16]}>
             {/* Inspectors */}
             <Col span={24}>
-              <Card className="dashboard-stat-card" style={{ borderColor: "#1890ff" }}>
-                <Row
-                  wrap={false}
-                  align="middle"
-                  justify="space-between"
-                  style={{ width: "100%" }}
-                >
+              <Card style={{ borderColor: "#1890ff" }}>
+                <Row wrap={false} align="middle" justify="space-between">
                   <Col flex="none">
-                   <Statistic title={t("dashboard.totalInspectors", "Total Inspectors")} value={dashboardData?.data?.totalInspectors || 0} />
+                    <Statistic
+                      title={t("dashboard.totalInspectors", "Total Inspectors")}
+                      value={dashboardData?.data?.totalInspectors || 0}
+                    />
                   </Col>
                   <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-                      <Statistic title={t("dashboard.checkedIn", "Checked In")} value={dashboardData?.data?.checkedIn || 0} />
-                      <Statistic title={t("dashboard.missing", "Missing")} value={dashboardData?.data?.missing || 0} />
-                     <Statistic title={t("dashboard.onLeave", "On Leave")} value={dashboardData?.data?.onLeave || 0} />
+                      <Statistic
+                        title={t("dashboard.checkedIn", "Checked In")}
+                        value={dashboardData?.data?.checkedIn || 0}
+                      />
+                      <Statistic
+                        title={t("dashboard.missing", "Missing")}
+                        value={dashboardData?.data?.missing || 0}
+                      />
+                      <Statistic
+                        title={t("dashboard.onLeave", "On Leave")}
+                        value={dashboardData?.data?.onLeave || 0}
+                      />
                     </div>
                   </Col>
-                  <Col flex="none" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                  <Col flex="none">
                     <Avatar
                       size={56}
                       icon={<UserOutlined />}
@@ -335,24 +334,27 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
 
             {/* Approvals */}
             <Col span={24}>
-              <Card className="dashboard-stat-card" style={{ borderColor: "#52c41a" }}>
-                <Row
-                  wrap={false}
-                  align="middle"
-                  justify="space-between"
-                  style={{ width: "100%" }}
-                >
+              <Card style={{ borderColor: "#52c41a" }}>
+                <Row wrap={false} align="middle" justify="space-between">
                   <Col flex="none">
-                   <Statistic title={t("dashboard.totalApprovals", "Total Approvals")} value={dashboardData?.data?.totalApprovals || 0} />
+                    <Statistic
+                      title={t("dashboard.totalApprovals", "Total Approvals")}
+                      value={dashboardData?.data?.totalApprovals || 0}
+                    />
                   </Col>
                   <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-                     <Statistic title={t("dashboard.leave", "Leave")} value={dashboardData?.data?.leaveRequests || 0} />
-                     <Statistic title={t("dashboard.towing", "Towing")} value={dashboardData?.data?.towingRequests || 0} />
-
+                      <Statistic
+                        title={t("dashboard.leave", "Leave")}
+                        value={dashboardData?.data?.leaveRequests || 0}
+                      />
+                      <Statistic
+                        title={t("dashboard.towing", "Towing")}
+                        value={dashboardData?.data?.towingRequests || 0}
+                      />
                     </div>
                   </Col>
-                  <Col flex="none" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                  <Col flex="none">
                     <Avatar
                       size={56}
                       icon={<CheckCircleOutlined />}
@@ -365,24 +367,28 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
 
             {/* Inspections */}
             <Col span={24}>
-              <Card className="dashboard-stat-card" style={{ borderColor: "#faad14" }}>
-                <Row
-                  wrap={false}
-                  align="middle"
-                  justify="space-between"
-                  style={{ width: "100%" }}
-                >
+              <Card style={{ borderColor: "#faad14" }}>
+                <Row wrap={false} align="middle" justify="space-between">
                   <Col flex="none">
-                    <Statistic title={t("dashboard.totalInspections", "Total Inspections")} value={dashboardData?.data?.totalInspections || 0} />
+                    <Statistic
+                      title={t("dashboard.totalInspections", "Total Inspections")}
+                      value={dashboardData?.data?.totalInspections || 0}
+                    />
                   </Col>
                   <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-                    <Statistic title={t("dashboard.fines", "Fines")} value={dashboardData?.data?.totalFines || 0} />
-
-                      <Statistic title={t("dashboard.amount", "Amount")} value={dashboardData?.data?.fineAmount || 0} suffix="AED" />
+                      <Statistic
+                        title={t("dashboard.fines", "Fines")}
+                        value={dashboardData?.data?.totalFines || 0}
+                      />
+                      <Statistic
+                        title={t("dashboard.amount", "Amount")}
+                        value={dashboardData?.data?.fineAmount || 0}
+                        suffix="AED"
+                      />
                     </div>
                   </Col>
-                  <Col flex="none" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                  <Col flex="none">
                     <Avatar
                       size={56}
                       icon={<SafetyCertificateOutlined />}
@@ -395,26 +401,15 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
 
             {/* Obstacles */}
             <Col span={24}>
-              <Card
-                className="dashboard-stat-card"
-                style={{
-                  borderColor: "#ff4d4f",
-                  cursor: "pointer",
-                }}
-              >
-                <Row
-                  wrap={false}
-                  align="middle"
-                  justify="space-between"
-                  style={{ width: "100%" }}
-                >
+              <Card style={{ borderColor: "#ff4d4f", cursor: "pointer" }}>
+                <Row wrap={false} align="middle" justify="space-between">
                   <Col flex="none">
-                   <Statistic title={t("dashboard.totalObstacles", "Total Obstacles")} value={dashboardData?.data?.totalObstacles || 0} />
+                    <Statistic
+                      title={t("dashboard.totalObstacles", "Total Obstacles")}
+                      value={dashboardData?.data?.totalObstacles || 0}
+                    />
                   </Col>
-                  <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
-                    {/* Optional sub-stats can go here */}
-                  </Col>
-                  <Col flex="none" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                  <Col flex="none">
                     <Avatar
                       size={56}
                       icon={<WarningOutlined />}
@@ -428,7 +423,7 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
         </Col>
       </Row>
 
-      {/* ✅ Table Section */}
+      {/* Table Section */}
       <Card
         title={t("dashboard.overviewData", "Overview Data")}
         extra={
@@ -472,15 +467,14 @@ const { data: dashboardData, isLoading, error } = useGetSupervisorDashboardQuery
           dataSource={checkInData}
           pagination={false}
           size="small"
-          className="compact-table"
         />
       </Card>
 
-      {/* ✅ Drawer */}
-      <DashboardViewDrawer 
-        open={drawerVisible} 
-        onClose={handleDrawerClose} 
-        inspector={selectedInspector} 
+      {/* Drawer */}
+      <DashboardViewDrawer
+        open={drawerVisible}
+        onClose={handleDrawerClose}
+        inspector={selectedInspector}
       />
     </div>
   );

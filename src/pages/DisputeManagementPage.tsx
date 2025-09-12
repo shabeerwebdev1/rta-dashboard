@@ -31,13 +31,6 @@ import DisputeViewModal from "../components/dispute/DisputeViewModal";
 const { Option } = Select;
 const pageKey = "dispute-management";
 
-// Helper functions remain the same
-const getLabelFromValue = (value: number, options: any[], i18n: any) => {
-  const option = options.find((opt) => opt.value === value);
-  if (!option) return value;
-  return i18n.language === "ar" ? option.labelAr : option.labelEn;
-};
-
 const filterOptionsByCategory = (options: any[], categoryId: number) => {
   return options.filter((option) => option.categoryId === categoryId);
 };
@@ -92,8 +85,6 @@ const DisputeManagementPage: React.FC = () => {
   const getLabelFromValue = (value: number, options: any[], i18n: any) => {
     const option = options.find((opt) => opt.value === value);
     if (!option) return value;
-
-    // Use Arabic label if language is Arabic, otherwise English
     return i18n.language === "ar" ? option.labelAr : option.labelEn;
   };
 
@@ -135,14 +126,16 @@ const DisputeManagementPage: React.FC = () => {
     [lookupOptions, i18n.language],
   );
 
+  const disputeStatusEnum = useMemo(
+    () => [
+      { value: 1, labelEn: "Pending", labelAr: "قيد الانتظار" },
+      { value: 2, labelEn: "Approved", labelAr: "موافقة" },
+      { value: 3, labelEn: "Rejected", labelAr: "مرفوض" },
+      { value: 4, labelEn: "Recalled", labelAr: "تم الاسترجاع" },
+    ],
+    [],
+  );
 
-  const disputeStatusEnum = [
-    { value: 1, labelEn: "Pending", labelAr: "قيد الانتظار" },
-    { value: 2, labelEn: "Approved", labelAr: "موافقة" },
-    { value: 3, labelEn: "Rejected", labelAr: "مرفوض" },
-    { value: 4, labelEn: "Recalled", labelAr: "تم الاسترجاع" },
-  ];
-  
   useEffect(() => {
     setPageTitle(t(config.title));
   }, [setPageTitle, t, config.title, i18n.language]);
@@ -283,6 +276,7 @@ const DisputeManagementPage: React.FC = () => {
   );
 
   // Enhanced table config with render functions for dropdown values
+  // Enhanced table config with render functions for dropdown values
   const enhancedTableConfig = useMemo(
     () => ({
       ...config.tableConfig,
@@ -290,11 +284,17 @@ const DisputeManagementPage: React.FC = () => {
         if (column.key === "dispute_Status") {
           return {
             ...column,
-            filterable: true, // ✅ ensure filterable
+            filterable: true,
             render: (value: number) => getLabelFromValue(value, disputeStatusEnum, i18n),
+            // Add these filter properties:
+            filters: disputeStatusEnum.map((status) => ({
+              text: i18n.language === "ar" ? status.labelAr : status.labelEn,
+              value: status.value,
+            })),
+            onFilter: (value: any, record: any) => record.dispute_Status === value,
           };
         }
-  
+
         const categoryId = columnToCategoryMap[column.key];
         if (categoryId) {
           const options = filterOptionsByCategory(lookupOptions, categoryId);
@@ -306,10 +306,8 @@ const DisputeManagementPage: React.FC = () => {
         return column;
       }),
     }),
-    [config.tableConfig, lookupOptions, i18n],
+    [config.tableConfig, lookupOptions, i18n, disputeStatusEnum],
   );
-  
-  
 
   const actionMenuItems = (record: any) => [
     { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
@@ -346,6 +344,10 @@ const DisputeManagementPage: React.FC = () => {
       ))}
     </Select>
   );
+
+  const statusLabels: Record<number, string> = Object.fromEntries(
+    disputeStatusEnum.map((status) => [status.value, i18n.language === "ar" ? status.labelAr : status.labelEn]),
+    );
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -394,6 +396,7 @@ const DisputeManagementPage: React.FC = () => {
           columnLabels={columnLabels}
           lookupOptions={lookupOptions}
           getLabelFromValue={getLabelFromValue}
+          statusLabels={statusLabels}
         />
       </Card>
 
@@ -412,6 +415,12 @@ const DisputeManagementPage: React.FC = () => {
         state={state}
         lookupOptions={lookupOptions}
         getLabelFromValue={getLabelFromValue}
+        filterOptions={{
+          dispute_Status: disputeStatusEnum.map((status) => ({
+            text: i18n.language === "ar" ? status.labelAr : status.labelEn,
+            value: status.value,
+          })),
+        }}
       />
 
       <Modal
@@ -530,7 +539,7 @@ const DisputeManagementPage: React.FC = () => {
                   label={t("form.sourceUser")}
                   rules={[{ required: true, message: t("messages.requiredField") }]}
                 >
-                  <Input placeholder={t("placeholders.sourceUser")} />
+                  <Input placeholder={t("placeholders.SourceUser")} />
                 </Form.Item>
               </Col>
 

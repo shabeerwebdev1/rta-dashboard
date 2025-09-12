@@ -6,7 +6,7 @@ const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
 const baseQuery = fetchBaseQuery({
   baseUrl: RTA_API_TARGET,
   prepareHeaders: (headers) => {
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("sTafteeshToken");
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
     }
