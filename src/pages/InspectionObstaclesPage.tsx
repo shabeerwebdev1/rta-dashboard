@@ -33,6 +33,7 @@ import {
   useGetInspectionObstaclesQuery,
   useAddInspectionObstacleMutation,
   useLazyGetLookupsQuery,
+  useLazyGetZonesQuery
 } from "../services/rtkApiFactory";
 import { useUploadFilesMutation } from "../services/fileApi";
 import StatsDisplay from "../components/common/StatsDisplay";
@@ -46,8 +47,8 @@ const { Option } = Select;
 const pageKey = "inspection-obstacles";
 
 // Helper function to get label from value based on current language
-const getLabelFromValue = (value: number, options: any[], i18n: any) => {
-  const option = options.find((opt) => opt.value === value);
+const getLabelFromValue = (value: number | string, options: any[], i18n: any) => {
+  const option = options.find((opt) => opt.value.toString() === value.toString());
   if (!option) return value;
   return i18n.language === "ar" ? option.labelAr : option.labelEn;
 };
@@ -92,10 +93,12 @@ const InspectionObstaclesPage: React.FC = () => {
   const [addObstacle, { isLoading: isAdding }] = useAddInspectionObstacleMutation();
   const [uploadFiles, { isLoading: isUploading }] = useUploadFilesMutation();
   const [triggerGetLookups] = useLazyGetLookupsQuery();
+  const [triggerGetZones, { data: zonesData, isLoading: isLoadingZones }] = useLazyGetZonesQuery();
 
-  // Fetch lookup data when language changes
+  // Fetch lookup data and zones when language changes
   useEffect(() => {
     fetchLookupData();
+    triggerGetZones();
   }, [i18n.language]);
 
   const fetchLookupData = async () => {
@@ -111,29 +114,34 @@ const InspectionObstaclesPage: React.FC = () => {
     }
   };
 
-  // Options with labels
-  const zoneOptions = useMemo(
-    () =>
-      filterOptionsByCategory(lookupOptions, 600).map((option) => ({
-        ...option,
-        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
-      })),
-    [lookupOptions, i18n.language],
-  );
+  // Zone options from zones API
+  const zoneOptions = useMemo(() => {
+    if (!zonesData) return [];
+    
+    return zonesData.map((zone: any) => ({
+      value: zone.zoneId, // Keep as number to match API response
+      label: `${zone.zoneCode}-${zone.zone}`,
+      original: zone,
+    }));
+  }, [zonesData, i18n.language]);
 
+  // Area options from lookups
   const areaOptions = useMemo(
     () =>
       filterOptionsByCategory(lookupOptions, 700).map((option) => ({
         ...option,
+        value: option.value,
         label: i18n.language === "ar" ? option.labelAr : option.labelEn,
       })),
     [lookupOptions, i18n.language],
   );
 
+  // Source options from lookups
   const sourceOptions = useMemo(
     () =>
       filterOptionsByCategory(lookupOptions, 800).map((option) => ({
         ...option,
+        value: option.value,
         label: i18n.language === "ar" ? option.labelAr : option.labelEn,
       })),
     [lookupOptions, i18n.language],
@@ -265,15 +273,38 @@ const InspectionObstaclesPage: React.FC = () => {
     [t, config.tableConfig.columns, i18n.language],
   );
 
-  // Enhanced table config with proper renderers
+  // Enhanced table config with proper renderers for labels
   const enhancedTableConfig = useMemo(
     () => ({
       ...config.tableConfig,
       columns: config.tableConfig.columns.map((column) => {
-        if (column.key === "zone") return { ...column, render: (v: any) => getLabelFromValue(v, zoneOptions, i18n) };
-        if (column.key === "area") return { ...column, render: (v: any) => getLabelFromValue(v, areaOptions, i18n) };
-        if (column.key === "sourceOfObstacle")
-          return { ...column, render: (v: any) => getLabelFromValue(v, sourceOptions, i18n) };
+        if (column.key === "zone") {
+          return {
+            ...column,
+            render: (value: any) => {
+              const zoneOption = zoneOptions.find(opt => opt.value.toString() === value.toString());
+              return zoneOption ? zoneOption.label : value;
+            }
+          };
+        }
+        if (column.key === "area") {
+          return {
+            ...column,
+            render: (value: any) => {
+              const areaOption = areaOptions.find(opt => opt.value.toString() === value.toString());
+              return areaOption ? areaOption.label : value;
+            }
+          };
+        }
+        if (column.key === "sourceOfObstacle") {
+          return {
+            ...column,
+            render: (value: any) => {
+              const sourceOption = sourceOptions.find(opt => opt.value.toString() === value.toString());
+              return sourceOption ? sourceOption.label : value;
+            }
+          };
+        }
 
         // ✅ Status column with badges
         if (column.key === "status") {
@@ -397,21 +428,29 @@ const InspectionObstaclesPage: React.FC = () => {
           <Button
             key="submit"
             type="primary"
-            loading={isAdding || isUploading || isLoadingLookups}
+            loading={isAdding || isUploading || isLoadingLookups || isLoadingZones}
             onClick={() => form.submit()}
           >
             {t("common.submit")}
           </Button>,
         ]}
       >
-        <Spin spinning={isLoadingLookups}>
+        <Spin spinning={isLoadingLookups || isLoadingZones}>
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
             <Row gutter={24}>
               <Col span={12}>
                 <Form.Item name="Zone" label={t("form.zone")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.zone")}
-                    options={zoneOptions.map((option) => ({ label: option.label, value: option.value }))}
+                    loading={isLoadingZones}
+                    options={zoneOptions.map(opt => ({ 
+                      label: opt.label, 
+                      value: opt.value
+                    }))}
+                    showSearch
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
                   />
                 </Form.Item>
               </Col>

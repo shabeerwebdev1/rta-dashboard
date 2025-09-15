@@ -28,7 +28,7 @@ export const leaveManagementPageConfig: PageConfig = {
   name: { singular: "Leave Management", plural: "Leave Managements" },
   api: { get: "/api/LeaveManagement", post: "", put: "", delete: "" },
   searchConfig: {
-    globalSearchKeys: ["employeeName", "employeeId"],
+    globalSearchKeys: [ "employeeId"],
     columnFilterKeys: ["leaveType", "status"],
     dateRangeKey: "leaveDate",
   },
@@ -56,7 +56,7 @@ export const leaveManagementPageConfig: PageConfig = {
   tableConfig: {
     rowKey: "leaveId",
     columns: [
-      { key: "employeeId", title: "form.employeeId", type: "string", sortable: false },
+      { key: "userId", title: "form.employeeId", type: "string", sortable: false },
       { key: "leaveType", title: "form.leaveType", type: "string", sortable: false, filterable: false },
       { key: "fromDate", title: "form.fromDate", type: "date", sortable: false },
       { key: "toDate", title: "form.toDate", type: "date", sortable: false },

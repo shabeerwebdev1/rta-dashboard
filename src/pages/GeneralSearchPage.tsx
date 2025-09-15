@@ -8,30 +8,27 @@ import {
   Col,
   Space,
   Card,
-  Tabs,
   Descriptions,
 } from "antd";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 
 const { Option } = Select;
-const { TabPane } = Tabs;
 
 const GeneralSearchPage: React.FC = () => {
   const { setPageTitle } = usePage();
-  const [activeTab, setActiveTab] = useState("car-Plate");
   const [form] = Form.useForm();
   const [searchResult, setSearchResult] = useState<any | null>(null);
   const { t } = useTranslation();
 
   useEffect(() => {
     setPageTitle("General Search");
-  }, [activeTab, setPageTitle]);
+  }, [setPageTitle]);
 
   const onFinish = (values: Record<string, any>) => {
     console.log("Form values:", values);
 
-    // Hardcoded result (mock data)
+    // Example mock data
     setSearchResult({
       vehicleBrand: "Toyota",
       vehicleType: "SUV",
@@ -45,80 +42,64 @@ const GeneralSearchPage: React.FC = () => {
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Card bordered={false}>
-        <Tabs
-          activeKey={activeTab}
-          onChange={(key) => {
-            setActiveTab(key);
-            form.resetFields();
-            setSearchResult(null); // Clear results when switching tabs
-          }}
-          type="card"
-        >
-          <TabPane tab={t("tabs.carPlate")} key="car-Plate" />
-          <TabPane tab={t("tabs.tradeLicense")} key="trade-license" />
-        </Tabs>
-
         <Form form={form} layout="vertical" onFinish={onFinish}>
           <Row gutter={16}>
-            {activeTab === "car-Plate" && (
-              <Col xs={24}>
-                <Row gutter={16}>
-                  <Col xs={24} sm={6}>
-                    <Form.Item name="plateSource" label={t("form.plateSource")}>
-                      <Select placeholder={t("placeholders.plateSource")}>
-                        <Option value="source1">source1</Option>
-                        <Option value="source2">source2</Option>
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={6}>
-                    <Form.Item name="plateCategory" label={t("form.plateCategory")}>
-                      <Select placeholder={t("placeholders.plateCategory")}>
-                        <Option value="cat1">Category 1</Option>
-                        <Option value="cat2">Category 2</Option>
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={6}>
-                    <Form.Item name="plateCode" label={t("form.plateCode")}>
-                      <Select placeholder={t("placeholders.plateCode")}>
-                        <Option value="code1">Code 1</Option>
-                        <Option value="code2">Code 2</Option>
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} sm={6}>
-                    <Form.Item name="plateNumber" label={t("form.plateNumber")}>
-                      <Input placeholder={t("placeholders.plateNumber")} />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Col>
-            )}
+            <Col xs={24} sm={6}>
+              <Form.Item
+                name="plateSource"
+                label={t("form.plateSource")}
+                rules={[{ required: true, message: "Please select a plate source" }]}
+              >
+                <Select placeholder={t("placeholders.plateSource")}>
+                  <Option value="dubai">Dubai</Option>
+                  <Option value="sharjah">Sharjah</Option>
+                </Select>
+              </Form.Item>
+            </Col>
 
-            {activeTab === "trade-license" && (
-              <>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="zone" label="Zone">
-                    <Input placeholder="Enter Zone" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="area" label="Area">
-                    <Input placeholder="Enter Area" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12} md={8}>
-                  <Form.Item name="licenseNumber" label="License Number">
-                    <Input placeholder="Enter License Number" />
-                  </Form.Item>
-                </Col>
-              </>
-            )}
+            <Col xs={24} sm={6}>
+              <Form.Item
+                name="plateCategory"
+                label={t("form.plateCategory")}
+                rules={[{ required: true, message: "Please select a category" }]}
+              >
+                <Select placeholder={t("placeholders.plateCategory")}>
+                  <Option value="private">Private</Option>
+                  <Option value="commercial">Commercial</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={6}>
+              <Form.Item
+                name="plateCode"
+                label={t("form.plateCode")}
+                rules={[{ required: true, message: "Please select a code" }]}
+              >
+                <Select placeholder={t("placeholders.plateCode")}>
+                 
+                  <Option value="a">A</Option>
+                  <Option value="b">B</Option>
+                  <Option value="c">C</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} sm={6}>
+              <Form.Item
+                name="plateNumber"
+                label={t("form.plateNumber")}
+                rules={[{ required: true, message: "Please enter plate number" }]}
+              >
+                <Input placeholder={t("placeholders.plateNumber")} />
+              </Form.Item>
+            </Col>
 
             <Col xs={24} style={{ textAlign: "right", marginTop: 30 }}>
               <Space>
-                <Button onClick={() => form.resetFields()}>Reset</Button>
+                <Button onClick={() => { form.resetFields(); setSearchResult(null); }}>
+                  Reset
+                </Button>
                 <Button type="primary" htmlType="submit">
                   Search
                 </Button>
