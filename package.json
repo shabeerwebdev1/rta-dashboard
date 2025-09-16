@@ -19,6 +19,8 @@
   "dependencies": {
     "@ant-design/icons": "^6.0.0",
     "@ant-design/plots": "^2.6.3",
+    "@arcgis/core": "^4.33.13",
+    "@arcgis/map-components": "^4.33.20",
     "@react-google-maps/api": "^2.20.7",
     "@reduxjs/toolkit": "^2.8.2",
     "antd": "^5.26.7",

@@ -55,7 +55,8 @@
       "adhocshiftplan": "خطة نوبات خاصة",
       "inspectionmanagement": "إدارة التفتيش",
       "roleManagement": "إدارة الأدوار",
-      "leaveManagement": "إدارة الإجازات"
+      "leaveManagement": "إدارة الإجازات",
+      "towing": "إدارة سحب المركبات"
 
     },
     "addTitle": "إضافة {{entity}} جديد",

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-namespace */
 import React, { useEffect, useState } from "react";
 import {
   Card,
@@ -30,19 +31,9 @@ import {
   useGetActiveShiftsQuery,
 } from "../services/rtkApiFactory";
 import { useTranslation } from "react-i18next";
-import { GoogleMap, LoadScript, Marker, InfoWindow } from "@react-google-maps/api";
+import ArcGISMap from "../components/common/ArcGISMap"; // ✅ our new reusable map
 
 const { Text } = Typography;
-
-const mapContainerStyle = {
-  width: "100%",
-  height: "495px",
-};
-
-const dubaiCenter = {
-  lat: 25.1972,
-  lng: 55.2743,
-};
 
 const SupervisorViewPage: React.FC = () => {
   const { setPageTitle } = usePage();
@@ -50,22 +41,22 @@ const SupervisorViewPage: React.FC = () => {
   const [activeTable, setActiveTable] = useState("checkInStatus");
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedInspector, setSelectedInspector] = useState<any>(null);
-  const [selectedMarker, setSelectedMarker] = useState<any>(null);
   const [selectedSupervisor, setSelectedSupervisor] = useState<string | null>(null);
   const [supervisorInfo, setSupervisorInfo] = useState<any>(null);
 
   const { data: activeShiftsData, isLoading: isLoadingShifts } =
     useGetActiveShiftsQuery();
 
-  const { data: dashboardData, isLoading, error } =
-    useGetSupervisorDashboardQuery(selectedSupervisor as string, {
-      skip: !selectedSupervisor,
-    });
+  const {
+    data: dashboardData,
+    isLoading,
+    error,
+  } = useGetSupervisorDashboardQuery(selectedSupervisor as string, {
+    skip: !selectedSupervisor,
+  });
 
-   const supervisors =
-  activeShiftsData?.filter(
-    (shift: any) => shift.roleCode === "PARSUP"
-  ) || [];
+  const supervisors =
+    activeShiftsData?.filter((shift: any) => shift.roleCode === "PARSUP") || [];
 
   const getLocalizedText = (englishText: string, arabicText: string) => {
     return i18n.language === "ar" ? arabicText : englishText;
@@ -75,6 +66,7 @@ const SupervisorViewPage: React.FC = () => {
     setSelectedSupervisor(value);
   };
 
+  // Mock Inspectors (replace with API data if needed)
   const inspectorAvatars = [
     {
       id: 1,
@@ -84,11 +76,7 @@ const SupervisorViewPage: React.FC = () => {
       lng: 55.2743,
       status: "Checked-in",
       statusAr: "تم التسجيل",
-      color: "#52c41a",
-      details: {
-        email: "inspector1@example.com",
-        emailAr: "المفتش١@example.com",
-      },
+      details: { zone: "Zone A", lastCheckIn: "08:30 AM" },
     },
     {
       id: 2,
@@ -98,46 +86,9 @@ const SupervisorViewPage: React.FC = () => {
       lng: 55.2728,
       status: "Pending",
       statusAr: "قيد الانتظار",
-      color: "#faad14",
-      details: {
-        email: "inspector2@example.com",
-        emailAr: "المفتش٢@example.com",
-      },
-    },
-    {
-      id: 3,
-      name: "Inspector 3",
-      nameAr: "المفتش ٣",
-      lat: 25.198,
-      lng: 55.2735,
-      status: "Checked-in",
-      statusAr: "تم التسجيل",
-      color: "#1890ff",
-      details: {
-        email: "inspector3@example.com",
-        emailAr: "المفتش٣@example.com",
-      },
-    },
-    {
-      id: 4,
-      name: "Inspector 4",
-      nameAr: "المفتش ٤",
-      lat: 25.1975,
-      lng: 55.275,
-      status: "On Leave",
-      statusAr: "في إجازة",
-      color: "#ff4d4f",
-      details: {
-        email: "inspector4@example.com",
-        emailAr: "المفتش٤@example.com",
-      },
+      details: { zone: "Zone B", lastCheckIn: "09:15 AM" },
     },
   ];
-
-  const handleMarkerClick = (inspector: any) => {
-    setSelectedInspector(inspector);
-    setDrawerVisible(true);
-  };
 
   const handleViewClick = (record: any) => {
     const inspector = inspectorAvatars.find(
@@ -154,12 +105,13 @@ const SupervisorViewPage: React.FC = () => {
     setSelectedInspector(null);
   };
 
+  // Table Config
   const checkInData = inspectorAvatars.map((insp, idx) => ({
     key: idx,
     checkInId: `C000${idx + 1}`,
     inspectorName: getLocalizedText(insp.name, insp.nameAr),
-    time: getLocalizedText("08:30 AM", "٠٨:٣٠ ص"),
-    assignment: getLocalizedText("Zone A", "المنطقة أ"),
+    time: insp.details?.lastCheckIn || "-",
+    assignment: insp.details?.zone || "-",
     status: getLocalizedText(insp.status, insp.statusAr),
     originalStatus: insp.status,
   }));
@@ -187,7 +139,11 @@ const SupervisorViewPage: React.FC = () => {
       key: "actions",
       align: "center" as const,
       render: (_: any, record: any) => (
-        <Button type="link" icon={<EyeOutlined />} onClick={() => handleViewClick(record)}>
+        <Button
+          type="link"
+          icon={<EyeOutlined />}
+          onClick={() => handleViewClick(record)}
+        >
           {t("common.view", "View")}
         </Button>
       ),
@@ -216,9 +172,9 @@ const SupervisorViewPage: React.FC = () => {
               allowClear
               loading={isLoadingShifts}
             >
-              {supervisors.map((supervisor: any) => (
-                <Select.Option key={supervisor.employeeId} value={supervisor.employeeId}>
-                  {supervisor.employeeName}
+              {supervisors.map((sup: any) => (
+                <Select.Option key={sup.employeeId} value={sup.employeeId}>
+                  {sup.employeeName}
                 </Select.Option>
               ))}
             </Select>
@@ -249,53 +205,25 @@ const SupervisorViewPage: React.FC = () => {
       )}
 
       <Row gutter={16} style={{ marginBottom: 20 }}>
-        {/* Google Map */}
+        {/* ✅ ArcGIS Map (Reusable Component) */}
         <Col span={16}>
-          <Card bodyStyle={{ padding: 0, height: "100%" }}>
-            <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY!}>
-              <GoogleMap mapContainerStyle={mapContainerStyle} center={dubaiCenter} zoom={15}>
-                {inspectorAvatars.map((inspector) => (
-                  <Marker
-                    key={inspector.id}
-                    position={{ lat: inspector.lat, lng: inspector.lng }}
-                    onClick={() => handleMarkerClick(inspector)}
-                    onLoad={(marker) => {
-                      marker.setIcon({
-                        url: "/images/Inspector.png",
-                        scaledSize: new window.google.maps.Size(70, 80),
-                      });
-                    }}
-                  />
-                ))}
-
-                {selectedMarker && (
-                  <InfoWindow
-                    position={{
-                      lat: selectedMarker.lat,
-                      lng: selectedMarker.lng,
-                    }}
-                    onCloseClick={() => setSelectedMarker(null)}
-                  >
-                    <div>
-                      <h4>{getLocalizedText(selectedMarker.name, selectedMarker.nameAr)}</h4>
-                      <p>
-                        {getLocalizedText(
-                          selectedMarker.details.email,
-                          selectedMarker.details.emailAr
-                        )}
-                      </p>
-                    </div>
-                  </InfoWindow>
-                )}
-              </GoogleMap>
-            </LoadScript>
+          <Card bodyStyle={{ padding: 0, height: "100%", position: "relative" }}>
+            <ArcGISMap
+              inspectors={inspectorAvatars}
+              center={[55.2743, 25.1972]}
+              zoom={12}
+              height="495px"
+              onInspectorClick={(inspector) => {
+                setSelectedInspector(inspector);
+                setDrawerVisible(true);
+              }}
+            />
           </Card>
         </Col>
 
         {/* Stats Section */}
         <Col span={8}>
           <Row gutter={[16, 16]}>
-            {/* Inspectors */}
             <Col span={24}>
               <Card style={{ borderColor: "#1890ff" }}>
                 <Row wrap={false} align="middle" justify="space-between">
@@ -305,7 +233,10 @@ const SupervisorViewPage: React.FC = () => {
                       value={dashboardData?.data?.totalInspectors || 0}
                     />
                   </Col>
-                  <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
+                  <Col
+                    flex="auto"
+                    style={{ display: "flex", justifyContent: "center" }}
+                  >
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
                       <Statistic
                         title={t("dashboard.checkedIn", "Checked In")}
@@ -331,8 +262,6 @@ const SupervisorViewPage: React.FC = () => {
                 </Row>
               </Card>
             </Col>
-
-            {/* Approvals */}
             <Col span={24}>
               <Card style={{ borderColor: "#52c41a" }}>
                 <Row wrap={false} align="middle" justify="space-between">
@@ -342,7 +271,10 @@ const SupervisorViewPage: React.FC = () => {
                       value={dashboardData?.data?.totalApprovals || 0}
                     />
                   </Col>
-                  <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
+                  <Col
+                    flex="auto"
+                    style={{ display: "flex", justifyContent: "center" }}
+                  >
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
                       <Statistic
                         title={t("dashboard.leave", "Leave")}
@@ -364,8 +296,6 @@ const SupervisorViewPage: React.FC = () => {
                 </Row>
               </Card>
             </Col>
-
-            {/* Inspections */}
             <Col span={24}>
               <Card style={{ borderColor: "#faad14" }}>
                 <Row wrap={false} align="middle" justify="space-between">
@@ -375,7 +305,10 @@ const SupervisorViewPage: React.FC = () => {
                       value={dashboardData?.data?.totalInspections || 0}
                     />
                   </Col>
-                  <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
+                  <Col
+                    flex="auto"
+                    style={{ display: "flex", justifyContent: "center" }}
+                  >
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
                       <Statistic
                         title={t("dashboard.fines", "Fines")}
@@ -398,8 +331,6 @@ const SupervisorViewPage: React.FC = () => {
                 </Row>
               </Card>
             </Col>
-
-            {/* Obstacles */}
             <Col span={24}>
               <Card style={{ borderColor: "#ff4d4f", cursor: "pointer" }}>
                 <Row wrap={false} align="middle" justify="space-between">

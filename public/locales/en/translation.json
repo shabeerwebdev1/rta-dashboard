@@ -53,7 +53,8 @@
       "adhocshiftplan": "Adhoc Shift Plan",
       "inspectionmanagement": "Inspections Management",
       "roleManagement": "Role Management",
-      "leaveManagement": "Leave Management"
+      "leaveManagement": "Leave Management",
+      "towing": "Towing Management"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",

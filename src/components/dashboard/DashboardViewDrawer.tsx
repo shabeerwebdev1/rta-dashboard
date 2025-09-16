@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Drawer, Descriptions, Card, Row, Col, Statistic, Divider, Badge } from "antd";
 import { CheckCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
+
+import ArcGISMap from "../common/ArcGISMap";
 
 interface DashboardViewDrawerProps {
   open: boolean;
@@ -32,8 +34,6 @@ const DashboardViewDrawer: React.FC<DashboardViewDrawerProps> = ({ open, onClose
   };
 
   // Dummy coords for Expo City Dubai
-  const lat = 25.1522;
-  const lng = 55.3529;
 
   // Upcoming shift data
   const upcomingShifts = [
@@ -176,25 +176,23 @@ const DashboardViewDrawer: React.FC<DashboardViewDrawerProps> = ({ open, onClose
             </div>
           )}
 
-          {/* Static Map */}
-          <div
-            style={{
-              height: 200,
-              borderRadius: 8,
-              overflow: "hidden",
-              marginTop: 8,
-              backgroundColor: "#eee",
-            }}
-          >
-            <iframe
-              title="Check-in location"
-              src={`https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`}
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              loading="lazy"
-            />
-          </div>
+          {/* ArcGIS Map */}
+          <ArcGISMap
+            inspectors={[
+              {
+                id: 1,
+                name: "Inspector A",
+                nameAr: "المفتش",
+                lat: 25.1972,
+                lng: 55.2743,
+                status: "Active",
+                statusAr: "نشط",
+              },
+            ]}
+            center={[55.2743, 25.1972]}
+            zoom={15}
+            height="200px"
+          />
         </Card>
 
         <Divider />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Modal,
   Card,
@@ -24,6 +24,9 @@ import {
   useLazyGetLookupsQuery,
 } from "../../services/rtkApiFactory";
 import { useAppNotification } from "../../utils/notificationManager";
+import "@arcgis/core/assets/esri/themes/light/main.css";
+import Map from "@arcgis/core/Map";
+import MapView from "@arcgis/core/views/MapView";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -40,6 +43,8 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const [form] = Form.useForm();
+   const mapRef = useRef<HTMLDivElement>(null);
+  const viewRef = useRef<__esri.MapView | null>(null);
 
   const [triggerGetDisputeById, { data: disputeData, isLoading }] = useLazyGetDisputeByIdQuery();
   const [updateDisputeStatus, { isLoading: isUpdating }] = useUpdateDisputeStatusMutation();
@@ -49,6 +54,32 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   const [storedDisputeId, setStoredDisputeId] = useState<string>("");
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
+
+
+    // Initialize map
+  useEffect(() => {
+    if (open && mapRef.current) {
+      const map = new Map({
+        basemap: "streets-navigation-vector"
+      });
+
+      const view = new MapView({
+        container: mapRef.current,
+        map: map,
+        center: [55.2743, 25.1972],
+        zoom: 12
+      });
+
+      viewRef.current = view;
+
+      return () => {
+        if (viewRef.current) {
+          viewRef.current.destroy();
+          viewRef.current = null;
+        }
+      };
+    }
+  }, [open]);
 
   // Store disputeId in localStorage when it changes
   useEffect(() => {
@@ -180,15 +211,32 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   };
 
   return (
-    <Modal
-      open={open}
-      onCancel={onClose}
-      width={1400}
-      footer={null}
-      title={null}
-      closable={false}
-      bodyStyle={{ padding: 24 }}
-    >
+   <Modal
+  open={open}
+  onCancel={onClose}
+  afterOpenChange={(visible) => {
+    if (visible && mapRef.current && !viewRef.current) {
+      const map = new Map({
+        basemap: "streets-navigation-vector",
+      });
+
+      const view = new MapView({
+        container: mapRef.current,
+        map,
+        center: [55.2743, 25.1972],
+        zoom: 12,
+      });
+
+      viewRef.current = view;
+    }
+  }}
+  width={1400}
+  footer={null}
+  title={null}
+  closable={false}
+  bodyStyle={{ padding: 24 }}
+>
+
       <Spin spinning={isLoading || isUpdating || isLoadingLookups}>
         <Card bordered={false} style={{ borderRadius: 12 }} bodyStyle={{ padding: 0 }}>
           {/* Custom Header */}
@@ -375,6 +423,16 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     <Empty description="No Fine Details Available" />
                   )}
                 </Card>
+
+                {/* Map Section - Added below Fine Details */}
+                <Card
+  title="Location Map"
+  size="small"
+  style={{ borderRadius: 12, marginBottom: 16 }}
+  headStyle={{ background: "#fafafa", fontWeight: 600 }}
+>
+  <div ref={mapRef} style={{ width: "100%", height: "300px", borderRadius: "8px" }} />
+</Card>
               </Col>
 
               {/* RIGHT SIDE - Review Timeline */}
