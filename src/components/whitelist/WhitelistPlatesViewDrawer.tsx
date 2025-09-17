@@ -87,10 +87,10 @@ const WhitelistPlatesViewDrawer: React.FC<WhitelistPlatesViewDrawerProps> = ({
 
   // Define the specific fields we want to show for whitelist plates
   const displayFields = [
-    { key: "plateNumber", title: "form.plateNumber", type: "text" },
-    { key: "plateSource", title: "form.plateSource", type: "text" },
-    { key: "plateType", title: "form.plateType", type: "text" },
-    { key: "plateColor", title: "form.plateColor", type: "text" },
+    { key: "plateNumber", title: "form.Number", type: "text" },
+    { key: "plateSource", title: "form.Source", type: "text" },
+    { key: "plateType", title: "form.Type", type: "text" },
+    { key: "plateColor", title: "form.Color", type: "text" },
     { key: "exemptionReason", title: "form.exemptionReason", type: "text" },
     { key: "plateStatus", title: "form.status", type: "text" },
     { key: "isByLawLabel", title: "form.isByLaw", type: "text" },

@@ -2,7 +2,7 @@ import UAEPlate from "../../components/UAEPlate";
 import type { PageConfig } from "../../types/config";
 import { IdcardOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 
-export const EMIRATES: Record<number,{ en: string; ar: string; code: string }> = {
+export const EMIRATES: Record<number, { en: string; ar: string; code: string }> = {
   2001: { en: "Dubai", ar: "دبي", code: "DXB" },
   2002: { en: "Abu Dhabi", ar: "أبو ظبي", code: "AUH" },
   2003: { en: "Sharjah", ar: "الشارقة", code: "SHJ" },
@@ -63,10 +63,10 @@ export const whitelistPlateConfig: PageConfig = {
           );
         },
       },
-      { key: "plateNumber", title: "form.plateNumber", dataIndex: "plateNumber", type: "string", sortable: true },
+      { key: "plateNumber", title: "form.Number", dataIndex: "plateNumber", type: "string", sortable: true },
       {
         key: "plateSource_Id",
-        title: "form.plateSource",
+        title: "form.Source",
         dataIndex: "plateSource_Id",
         type: "string",
         sortable: true,
@@ -75,7 +75,7 @@ export const whitelistPlateConfig: PageConfig = {
       },
       {
         key: "plateType_Id",
-        title: "form.plateType",
+        title: "form.Type",
         dataIndex: "plateType_Id",
         type: "string",
         filterable: true,
@@ -83,7 +83,7 @@ export const whitelistPlateConfig: PageConfig = {
       },
       {
         key: "plateColor_Id",
-        title: "form.plateColor",
+        title: "form.Color",
         dataIndex: "plateColor_Id",
         type: "badge",
         lookupCategory: 400,

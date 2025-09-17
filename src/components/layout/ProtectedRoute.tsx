@@ -1,41 +1,55 @@
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { Spin } from 'antd';
-import { useAuth } from '../../contexts/AuthContext';
-import { FULL_PATHS } from '../../constants/paths';
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { Spin } from "antd";
+import { useAuth } from "../../contexts/AuthContext";
+import { FULL_PATHS } from "../../constants/paths";
 
 interface ProtectedRouteProps {
   children: React.ReactElement;
   requiredPermission?: string;
-  requiredAction?: 'create' | 'read' | 'update' | 'delete';
+  requiredAction?: "create" | "read" | "update" | "delete";
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
   requiredPermission,
-  requiredAction = 'read',
+  requiredAction = "read",
 }) => {
   const { isAuthenticated, isLoading, hasPermission, validateToken } = useAuth();
   const location = useLocation();
 
   React.useEffect(() => {
-    if (isAuthenticated) validateToken();
+    if (isAuthenticated) {
+      validateToken();
+    }
   }, [location.pathname, isAuthenticated, validateToken]);
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
         <Spin size="large" />
       </div>
     );
   }
 
-  if (!isAuthenticated) return <Navigate to={FULL_PATHS.SPLASH} replace />;
+  // Not logged in → go to Splash (which will eventually send to SSO if needed)
+  if (!isAuthenticated) {
+    return <Navigate to={FULL_PATHS.SPLASH} replace />;
+  }
 
+  // Logged in but doesn’t have permission → go to Forbidden
   if (requiredPermission && !hasPermission(requiredPermission, requiredAction)) {
     return <Navigate to="/403" replace />;
   }
 
+  // Otherwise → allow route
   return children;
 };
 

@@ -28,7 +28,7 @@ interface DataTableWrapperProps {
   lookupOptions?: any[];
   getLabelFromValue?: (value: number, options: any[], i18n: any) => string;
   filterOptions?: Record<string, Array<{ text: string; value: string | number }>>;
-  showPagination?: boolean; 
+  showPagination?: boolean;
 }
 
 const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
@@ -84,10 +84,10 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
       exemptionReason_ID: 100,
       sourceOfObstacle: 800,
       pledgeType: 900,
-      inspectionType:1400,
-      inspectionCategory:1300,
-      inspectionStatus:1500,
-      payment_Type:1100,
+      inspectionType: 1400,
+      inspectionCategory: 1300,
+      inspectionStatus: 1500,
+      payment_Type: 1100,
     };
 
     const categoryId = columnToCategoryMap[columnKey];
@@ -139,12 +139,12 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
         antdCol.filters = getFilterOptionsWithLabels(col.key);
         antdCol.filterMode = "tree";
         antdCol.filterSearch = true;
-        
+
         // Add onFilter function for custom filtering
         if (!col.onFilter) {
           antdCol.onFilter = (value: any, record: any) => {
             // Handle numeric values (like status)
-            if (typeof record[col.key] === 'number' || typeof value === 'number') {
+            if (typeof record[col.key] === "number" || typeof value === "number") {
               return record[col.key] === Number(value);
             }
             // Handle string values
@@ -171,7 +171,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
 
           switch (col.type) {
             case "date":
-              return dayjs(text as string).isValid() ? dayjs(text as string).format("YYYY-MM-DD") : String(text);
+              return dayjs(text as string).isValid() ? dayjs(text as string).format("DD-MM-YYYY") : String(text);
 
             case "tag": {
               const statusKey = String(text).toLowerCase();
@@ -248,7 +248,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
           sortColumn: state.sortBy,
         })}
       />
-     {showPagination && (
+      {showPagination && (
         <div
           style={{
             position: "sticky",
@@ -264,9 +264,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
             current={apiParams.PageNumber}
             pageSize={apiParams.PageSize}
             total={total}
-            showTotal={(total, range) =>
-              `${range[0]}-${range[1]} of ${total} ${t("common.items")}`
-            }
+            showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} ${t("common.items")}`}
             showSizeChanger={{ showSearch: false }}
             pageSizeOptions={["10", "20", "50"]}
             onChange={handlePaginationChange}

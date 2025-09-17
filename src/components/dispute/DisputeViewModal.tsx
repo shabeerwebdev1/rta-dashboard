@@ -43,7 +43,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const [form] = Form.useForm();
-   const mapRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<__esri.MapView | null>(null);
 
   const [triggerGetDisputeById, { data: disputeData, isLoading }] = useLazyGetDisputeByIdQuery();
@@ -55,19 +55,18 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
 
-
-    // Initialize map
+  // Initialize map
   useEffect(() => {
     if (open && mapRef.current) {
       const map = new Map({
-        basemap: "streets-navigation-vector"
+        basemap: "streets-navigation-vector",
       });
 
       const view = new MapView({
         container: mapRef.current,
         map: map,
         center: [55.2743, 25.1972],
-        zoom: 12
+        zoom: 12,
       });
 
       viewRef.current = view;
@@ -211,32 +210,31 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   };
 
   return (
-   <Modal
-  open={open}
-  onCancel={onClose}
-  afterOpenChange={(visible) => {
-    if (visible && mapRef.current && !viewRef.current) {
-      const map = new Map({
-        basemap: "streets-navigation-vector",
-      });
+    <Modal
+      open={open}
+      onCancel={onClose}
+      afterOpenChange={(visible) => {
+        if (visible && mapRef.current && !viewRef.current) {
+          const map = new Map({
+            basemap: "streets-navigation-vector",
+          });
 
-      const view = new MapView({
-        container: mapRef.current,
-        map,
-        center: [55.2743, 25.1972],
-        zoom: 12,
-      });
+          const view = new MapView({
+            container: mapRef.current,
+            map,
+            center: [55.2743, 25.1972],
+            zoom: 12,
+          });
 
-      viewRef.current = view;
-    }
-  }}
-  width={1400}
-  footer={null}
-  title={null}
-  closable={false}
-  bodyStyle={{ padding: 24 }}
->
-
+          viewRef.current = view;
+        }
+      }}
+      width={1400}
+      footer={null}
+      title={null}
+      closable={false}
+      bodyStyle={{ padding: 24 }}
+    >
       <Spin spinning={isLoading || isUpdating || isLoadingLookups}>
         <Card bordered={false} style={{ borderRadius: 12 }} bodyStyle={{ padding: 0 }}>
           {/* Custom Header */}
@@ -244,11 +242,11 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
             <Col>
               <Title level={4} style={{ margin: 0 }}>
                 Dispute Review <Text type="danger">#{dispute?.fine_Number || storedDisputeId}</Text>
-                {dispute?.dispute_Status !== undefined && (
+                {/* {dispute?.dispute_Status !== undefined && (
                   <Tag color={getStatusColor(dispute.dispute_Status)} style={{ marginLeft: 8 }}>
                     {getStatusText(dispute.dispute_Status)}
                   </Tag>
-                )}
+                )} */}
               </Title>
             </Col>
             <Col>
@@ -426,13 +424,13 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
 
                 {/* Map Section - Added below Fine Details */}
                 <Card
-  title="Location Map"
-  size="small"
-  style={{ borderRadius: 12, marginBottom: 16 }}
-  headStyle={{ background: "#fafafa", fontWeight: 600 }}
->
-  <div ref={mapRef} style={{ width: "100%", height: "300px", borderRadius: "8px" }} />
-</Card>
+                  title="Location Map"
+                  size="small"
+                  style={{ borderRadius: 12, marginBottom: 16 }}
+                  headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                >
+                  <div ref={mapRef} style={{ width: "100%", height: "180px", borderRadius: "8px" }} />
+                </Card>
               </Col>
 
               {/* RIGHT SIDE - Review Timeline */}
@@ -489,50 +487,47 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
               <Divider />
               <Form form={form} layout="vertical">
                 <Row gutter={16} align="middle">
-                  {/* Comment Box */}
-                  <Col span={8}>
-                    <Form.Item
-                      name="review_Comments"
-                      label={<Text strong>Comment</Text>}
-                      rules={[{ required: true, message: "Please enter your comments" }]}
-                    >
-                      <TextArea placeholder="Enter your review comments" rows={3} />
+                  {/* Supervisor dropdown */}
+                  <Col span={6}>
+                    <Form.Item name="assignedTo" label={<Text strong>Assign To</Text>}>
+                      <Select placeholder="Select Supervisor">
+                        <Select.Option value="supervisor1">Supervisor 1</Select.Option>
+                        <Select.Option value="supervisor2">Supervisor 2</Select.Option>
+                        <Select.Option value="supervisor3">Supervisor 3</Select.Option>
+                      </Select>
                     </Form.Item>
                   </Col>
 
-                  {/* Supervisor dropdown + Assign button side by side */}
-                  <Col span={6}>
+                  {/* Comment Box + Assign button */}
+                  <Col span={8}>
                     <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
                       <Form.Item
-                        name="assignedTo"
-                        label={<Text strong>Assign To</Text>}
+                        name="review_Comments"
+                        label={<Text strong>Comment</Text>}
                         style={{ flex: 1, marginBottom: 0 }}
+                        rules={[{ required: true, message: "Please enter your comments" }]}
                       >
-                        <Select placeholder="Select Supervisor">
-                          <Select.Option value="supervisor1">Supervisor 1</Select.Option>
-                          <Select.Option value="supervisor2">Supervisor 2</Select.Option>
-                          <Select.Option value="supervisor3">Supervisor 3</Select.Option>
-                        </Select>
+                        <TextArea placeholder="Enter your review comments" rows={2} />
                       </Form.Item>
 
-                      <Button
-                        type="default"
-                        loading={isUpdating && reviewAction === 1}
-                        onClick={() => {
-                          setReviewAction(1);
-                          handleStatusUpdate(1); // Assigned = 1
-                        }}
-                      >
-                        Assign
-                      </Button>
+                      {/* Assign button aligned bottom center */}
+                      <div style={{ display: "flex", alignItems: "flex-end", paddingBottom: 4 }}>
+                        <Button
+                          type="default"
+                          loading={isUpdating && reviewAction === 1}
+                          onClick={() => {
+                            setReviewAction(1);
+                            handleStatusUpdate(1); // Assigned = 1
+                          }}
+                        >
+                          Assign
+                        </Button>
+                      </div>
                     </div>
                   </Col>
 
-                  {/* Approve + Reject + Cancel buttons aligned right */}
+                  {/* Approve + Reject buttons aligned right */}
                   <Col span={10} style={{ textAlign: "right", paddingTop: 30 }}>
-                    <Button onClick={onClose} style={{ marginRight: 8 }} disabled={isUpdating}>
-                      Cancel
-                    </Button>
                     <Button
                       type="primary"
                       style={{ marginRight: 8 }}

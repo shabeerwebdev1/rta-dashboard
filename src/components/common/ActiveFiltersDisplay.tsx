@@ -115,8 +115,8 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
 
   // 3. Date Range Filter
   if (state.dateRange) {
-    const from = state.dateRange[0].format("YYYY-MM-DD");
-    const to = state.dateRange[1].format("YYYY-MM-DD");
+    const from = state.dateRange[0].format("DD-MM-YYYY");
+    const to = state.dateRange[1].format("DD-MM-YYYY");
     filterGroups.push(
       <Space key="date_group" align="center">
         <Text>{t("form.dateRange")}: </Text>

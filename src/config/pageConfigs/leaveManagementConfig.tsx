@@ -28,7 +28,7 @@ export const leaveManagementPageConfig: PageConfig = {
   name: { singular: "Leave Management", plural: "Leave Managements" },
   api: { get: "/api/LeaveManagement", post: "", put: "", delete: "" },
   searchConfig: {
-    globalSearchKeys: [ "employeeId"],
+    globalSearchKeys: [ "Employee Id"],
     columnFilterKeys: ["leaveType", "status"],
     dateRangeKey: "leaveDate",
   },

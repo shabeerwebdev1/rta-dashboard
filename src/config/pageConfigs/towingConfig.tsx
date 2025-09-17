@@ -25,9 +25,9 @@ export const towingConfig: PageConfig = {
   }, // ✅ comment out later when needed
 
   searchConfig: {
-    globalSearchKeys: ["vehiclePlateNumber"],
-    columnFilterKeys: ["status"],
-    dateRangeKey: "createdAt",
+    globalSearchKeys: [ "Employee Id"],
+    columnFilterKeys: ["leaveType", "status"],
+    dateRangeKey: "leaveDate",
   },
 
   // ✅ Commented out stats for now

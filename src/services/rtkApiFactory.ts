@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { serializeParams } from "../hooks/useTableParams";
 
-const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
+const RTA_API_TARGET = "https://qaparkingapi.kandaprojects.live";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: RTA_API_TARGET,
@@ -251,6 +251,28 @@ export const dynamicApi = createApi({
         return response?.data || response || [];
       },
     }),
+    // Areas by ZoneId
+    getAreas: builder.query({
+      query: (zoneId: string) => `/api/Inspection/Areas/${zoneId}`,
+      providesTags: ["Zones"],
+      transformResponse: (response: any) => {
+        return response?.data || response || [];
+      },
+    }),
+
+    // All Areas (no zone filter)
+    // In dynamicApi endpoints
+    getAllAreas: builder.query({
+      query: () => "/api/Inspection/Areas",
+      providesTags: ["Zones"],
+      transformResponse: (response: any) => {
+        // Handle both response structures
+        if (response?.data) {
+          return response.data; // Return the array directly
+        }
+        return response || [];
+      },
+    }),
 
     // Shift
 
@@ -352,6 +374,8 @@ export const {
   useLazyGetInspectionObstacleByIdQuery,
   useAddInspectionObstacleMutation,
   useUpdateInspectionObstacleMutation,
+  // File Upload for Inspection Obstacles
+
   // permit
   useSearchPermitsQuery,
   //Fines (inspections Management)
@@ -370,6 +394,9 @@ export const {
   useGetSupervisorDashboardQuery,
   // Shift Management
   useLazyGetZonesQuery,
+  // Areas by ZoneId
+  useLazyGetAreasQuery,
+  useGetAllAreasQuery,
   useLazyGetShiftsQuery,
   // User code validation
   useValidatecodeQuery,

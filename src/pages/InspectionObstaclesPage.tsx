@@ -1,28 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Space,
-  Card,
-  Input,
-  Button,
-  Modal,
-  Form,
-  Row,
-  Col,
-  Select,
-  App,
-  Upload,
-  DatePicker,
-  Tooltip,
-  Spin,
-  Tag,
-} from "antd";
-import {
-  PlusOutlined,
-  EyeOutlined,
-  DownloadOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
-} from "@ant-design/icons";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Upload, DatePicker, Spin, Tag } from "antd";
+import { PlusOutlined, EyeOutlined, DownloadOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
@@ -33,15 +11,17 @@ import {
   useGetInspectionObstaclesQuery,
   useAddInspectionObstacleMutation,
   useLazyGetLookupsQuery,
-  useLazyGetZonesQuery
+  useLazyGetZonesQuery,
+  useGetAllAreasQuery,
 } from "../services/rtkApiFactory";
-import { useUploadFilesMutation } from "../services/fileApi";
+import { useUploadInspectionFilesMutation } from "../services/inspectionFileApi";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
 import { pageConfigs } from "../config/pageConfigs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import InspectionObstaclesViewDrawer from "../components/inspectionobstacle/InspectionObstaclesViewDrawer";
+import { usePermission } from "../hooks/usePermission";
 
 const { Option } = Select;
 const pageKey = "inspection-obstacles";
@@ -79,7 +59,7 @@ const InspectionObstaclesPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any>(null);
-  const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
+  const [tableSize, setTableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
@@ -90,16 +70,44 @@ const InspectionObstaclesPage: React.FC = () => {
   const { data, isLoading, isFetching } = useGetInspectionObstaclesQuery(apiParams, {
     refetchOnMountOrArgChange: true,
   });
-  const [addObstacle, { isLoading: isAdding }] = useAddInspectionObstacleMutation();
-  const [uploadFiles, { isLoading: isUploading }] = useUploadFilesMutation();
+  const [addObstacle, { isLoading: isAddingObstacle }] = useAddInspectionObstacleMutation();
   const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [triggerGetZones, { data: zonesData, isLoading: isLoadingZones }] = useLazyGetZonesQuery();
+  const menuName = "InspectionObstacle"; // backend permission name
+  const { canCreate } = usePermission();
+  const { data: allAreasData, isLoading: isLoadingAllAreas } = useGetAllAreasQuery({});
+  const [areaOptions, setAreaOptions] = useState<any[]>([]);
+  const [uploadInspectionFiles, { isLoading: isUploading }] = useUploadInspectionFilesMutation();
 
   // Fetch lookup data and zones when language changes
   useEffect(() => {
     fetchLookupData();
-    triggerGetZones();
+    triggerGetZones({});
   }, [i18n.language]);
+
+  // Create a memoized map of area IDs to area names for quick lookup
+  const areaIdToNameMap = useMemo(() => {
+    const map = new Map();
+    if (allAreasData) {
+      allAreasData.forEach((area: any) => {
+        map.set(area.area_Id, area.area);
+      });
+    }
+    return map;
+  }, [allAreasData]);
+
+  // Transform all areas data into options format
+  useEffect(() => {
+    if (allAreasData) {
+      const transformedAreas = allAreasData.map((area: any) => ({
+        label: area.area, // Display name
+        value: area.area_Id, // ID value
+        zoneId: area.zone_Id, // Keep zone reference for filtering
+        original: area,
+      }));
+      setAreaOptions(transformedAreas);
+    }
+  }, [allAreasData]);
 
   const fetchLookupData = async () => {
     setIsLoadingLookups(true);
@@ -117,24 +125,13 @@ const InspectionObstaclesPage: React.FC = () => {
   // Zone options from zones API
   const zoneOptions = useMemo(() => {
     if (!zonesData) return [];
-    
+
     return zonesData.map((zone: any) => ({
       value: zone.zoneId, // Keep as number to match API response
       label: `${zone.zoneCode}-${zone.zone}`,
       original: zone,
     }));
   }, [zonesData, i18n.language]);
-
-  // Area options from lookups
-  const areaOptions = useMemo(
-    () =>
-      filterOptionsByCategory(lookupOptions, 700).map((option) => ({
-        ...option,
-        value: option.value,
-        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
-      })),
-    [lookupOptions, i18n.language],
-  );
 
   // Source options from lookups
   const sourceOptions = useMemo(
@@ -171,45 +168,79 @@ const InspectionObstaclesPage: React.FC = () => {
     form.resetFields();
   };
 
+  // Update the zone onChange handler to filter areas
+  const handleZoneChange = (zoneId: number) => {
+    form.setFieldsValue({ Area: undefined }); // reset Area when Zone changes
+
+    // Filter areas by zoneId
+    const filteredAreas =
+      allAreasData
+        ?.filter((area: any) => area.zone_Id === zoneId)
+        .map((area: any) => ({
+          label: area.area,
+          value: area.area_Id,
+          zoneId: area.zone_Id,
+          original: area,
+        })) || [];
+
+    setAreaOptions(filteredAreas);
+  };
+
+  const generateGuid = () =>
+    "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0,
+        v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+
   const handleFormSubmit = async (values: any) => {
-    const { Photo } = values;
-    let finalPayload: Record<string, any> = {};
-
     try {
-      let savedFileNames: string[] = [];
+      const inspectionGUID = generateGuid();
+      const batchGUID = generateGuid();
 
-      if (Photo && Photo.length > 0) {
-        const formData = new FormData();
-        formData.append("Category", "Obstacles");
-
-        // Append all selected files
-        Photo.forEach((file: any) => {
-          if (file.originFileObj) {
-            formData.append("Files", file.originFileObj);
-          }
-        });
-
-        // Upload multiple files
-        const uploadResult = await uploadFiles(formData).unwrap();
-
-        // Collect all saved file names returned from the server
-        savedFileNames = (uploadResult as any[]).map((f) => f.savedAs);
-      }
-
-      finalPayload = {
+      // 1. First save obstacle data using addObstacle API
+      const obstaclePayload = {
+        inspectionGUID,
         zone: values.Zone,
         area: values.Area,
         sourceOfObstacle: values.SourceOfObstacle,
         closestPaymentDevice: values.ClosestPaymentDevice,
-        comments: values.Comments,
-        photoPath: savedFileNames.join(";"), // join with semicolon for drawer
+        comments: values.Comments || "",
+        requestFrom: "",
       };
 
-      const response = await addObstacle(finalPayload).unwrap();
-      notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
+      await addObstacle(obstaclePayload).unwrap();
+
+      // 2. Then upload files if any using the new inspection file API
+      if (values.Photo && values.Photo.length > 0) {
+        for (const fileItem of values.Photo) {
+          if (fileItem.originFileObj) {
+            const formData = new FormData();
+
+            // Append one file at a time
+            formData.append("File", fileItem.originFileObj);
+            formData.append("FileName", fileItem.name || fileItem.originFileObj.name);
+
+            // Append metadata
+            formData.append("InspectionGUID", inspectionGUID);
+            formData.append("BatchGUID", batchGUID);
+            formData.append("EntityCode", "parking-Obstacle");
+            formData.append("FilePath", "/uploads/temp");
+            formData.append("Description", "Uploaded via inspection obstacle form");
+
+            // Send API request for this file
+            await uploadInspectionFiles(formData).unwrap();
+          }
+        }
+      }
+
+      notification.success({
+        data: { en_Msg: "Inspection Obstacle created successfully" },
+      });
       handleModalClose();
     } catch (err) {
-      notification.error(err as any, "Operation Failed");
+      console.error("Failed to save inspection obstacle:", err);
+      notification.error(err as any, "Failed to save inspection obstacle");
     }
   };
 
@@ -221,16 +252,9 @@ const InspectionObstaclesPage: React.FC = () => {
     [t],
   );
 
-  // Map IDs to labels before showing in drawer
+  // Pass the original record to the drawer, the drawer will handle the mapping
   const handleView = (record: any) => {
-    const mappedRecord = {
-      ...record,
-      zone: getLabelFromValue(record.zone, zoneOptions, i18n),
-      area: getLabelFromValue(record.area, areaOptions, i18n),
-      sourceOfObstacle: getLabelFromValue(record.sourceOfObstacle, sourceOptions, i18n),
-      status: statusLabels[record.status as keyof typeof statusLabels] || record.status,
-    };
-    setViewRecord(mappedRecord);
+    setViewRecord(record);
     setIsDrawerOpen(true);
   };
 
@@ -253,13 +277,18 @@ const InspectionObstaclesPage: React.FC = () => {
         const selectedData = data?.data.filter((item: any) => selectedRowKeys.includes(item.id));
 
         // ✅ Map values → labels before exporting
-        const formattedData = selectedData.map((item: any) => ({
-          ...item,
-          zone: getLabelFromValue(item.zone, zoneOptions, i18n),
-          area: getLabelFromValue(item.area, areaOptions, i18n),
-          sourceOfObstacle: getLabelFromValue(item.sourceOfObstacle, sourceOptions, i18n),
-          status: statusLabels[item.status] || item.status,
-        }));
+        const formattedData = selectedData.map((item: any) => {
+          // Find area name from areaIdToNameMap
+          const areaName = areaIdToNameMap.get(item.area) || item.area;
+
+          return {
+            ...item,
+            zone: getLabelFromValue(item.zone, zoneOptions, i18n),
+            area: areaName,
+            sourceOfObstacle: getLabelFromValue(item.sourceOfObstacle, sourceOptions, i18n),
+            status: statusLabels[item.status] || item.status,
+          };
+        });
 
         exportToCsv(formattedData, `obstacles_export.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
@@ -282,27 +311,27 @@ const InspectionObstaclesPage: React.FC = () => {
           return {
             ...column,
             render: (value: any) => {
-              const zoneOption = zoneOptions.find(opt => opt.value.toString() === value.toString());
+              const zoneOption = zoneOptions.find((opt) => opt.value.toString() === value.toString());
               return zoneOption ? zoneOption.label : value;
-            }
+            },
           };
         }
         if (column.key === "area") {
           return {
             ...column,
             render: (value: any) => {
-              const areaOption = areaOptions.find(opt => opt.value.toString() === value.toString());
-              return areaOption ? areaOption.label : value;
-            }
+              // Find area name from areaIdToNameMap for quick lookup
+              return areaIdToNameMap.get(value) || value;
+            },
           };
         }
         if (column.key === "sourceOfObstacle") {
           return {
             ...column,
             render: (value: any) => {
-              const sourceOption = sourceOptions.find(opt => opt.value.toString() === value.toString());
+              const sourceOption = sourceOptions.find((opt) => opt.value.toString() === value.toString());
               return sourceOption ? sourceOption.label : value;
-            }
+            },
           };
         }
 
@@ -325,7 +354,7 @@ const InspectionObstaclesPage: React.FC = () => {
         return column;
       }),
     }),
-    [config.tableConfig, zoneOptions, areaOptions, sourceOptions, i18n, t],
+    [config.tableConfig, zoneOptions, areaIdToNameMap, sourceOptions, i18n, t],
   );
 
   const actionMenuItems = (record: any) => [
@@ -359,6 +388,7 @@ const InspectionObstaclesPage: React.FC = () => {
               />
               <DatePicker.RangePicker
                 value={state.dateRange}
+                format={"DD-MM-YYYY"}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
             </Space>
@@ -368,13 +398,13 @@ const InspectionObstaclesPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
-              <Tooltip title={tableSize === "middle" ? t("common.compactView") : t("common.standardView")}>
-                <Button
-                  icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
-                  onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
-                />
-              </Tooltip>
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleModalOpen}>
+
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleModalOpen}
+                disabled={!canCreate(menuName)} // ✅ disable if user cannot create
+              >
                 {t("common.addNew")}
               </Button>
             </Space>
@@ -395,7 +425,7 @@ const InspectionObstaclesPage: React.FC = () => {
         pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
         data={data?.data || []}
         total={data?.total || 0}
-        isLoading={isLoading || isFetching}
+        isLoading={isLoading || isFetching || isLoadingAllAreas}
         apiParams={apiParams}
         handleTableChange={handleTableChange}
         handlePaginationChange={handlePaginationChange}
@@ -428,14 +458,14 @@ const InspectionObstaclesPage: React.FC = () => {
           <Button
             key="submit"
             type="primary"
-            loading={isAdding || isUploading || isLoadingLookups || isLoadingZones}
+            loading={isAddingObstacle || isUploading || isLoadingLookups || isLoadingZones || isLoadingAllAreas}
             onClick={() => form.submit()}
           >
             {t("common.submit")}
           </Button>,
         ]}
       >
-        <Spin spinning={isLoadingLookups || isLoadingZones}>
+        <Spin spinning={isLoadingLookups || isLoadingZones || isLoadingAllAreas}>
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
             <Row gutter={24}>
               <Col span={12}>
@@ -443,14 +473,13 @@ const InspectionObstaclesPage: React.FC = () => {
                   <Select
                     placeholder={t("placeholders.zone")}
                     loading={isLoadingZones}
-                    options={zoneOptions.map(opt => ({ 
-                      label: opt.label, 
-                      value: opt.value
+                    options={zoneOptions.map((opt) => ({
+                      label: opt.label,
+                      value: opt.value,
                     }))}
                     showSearch
-                    filterOption={(input, option) =>
-                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                    }
+                    filterOption={(input, option) => (option?.label ?? "").toLowerCase().includes(input.toLowerCase())}
+                    onChange={handleZoneChange}
                   />
                 </Form.Item>
               </Col>
@@ -458,7 +487,10 @@ const InspectionObstaclesPage: React.FC = () => {
                 <Form.Item name="Area" label={t("form.area")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.area")}
-                    options={areaOptions.map((option) => ({ label: option.label, value: option.value }))}
+                    loading={isLoadingAllAreas}
+                    options={areaOptions}
+                    showSearch
+                    filterOption={(input, option) => (option?.label ?? "").toLowerCase().includes(input.toLowerCase())}
                   />
                 </Form.Item>
               </Col>
@@ -473,7 +505,7 @@ const InspectionObstaclesPage: React.FC = () => {
               <Col span={12}>
                 <Form.Item
                   name="ClosestPaymentDevice"
-                  label={t("form.closestPaymentDevice")}
+                  label={t("form.closestPD")}
                   rules={[{ required: true }]}
                 >
                   <Input placeholder={t("placeholders.closestPaymentDevice")} />
@@ -519,6 +551,11 @@ const InspectionObstaclesPage: React.FC = () => {
             // This will trigger a refetch of the data
             // You might need to add a refetch function to your query hook
           }}
+          // Pass the necessary data for mapping
+          zoneOptions={zoneOptions}
+          sourceOptions={sourceOptions}
+          areaIdToNameMap={areaIdToNameMap}
+          statusLabels={statusLabels}
         />
       )}
     </Space>

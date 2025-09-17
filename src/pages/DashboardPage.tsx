@@ -1,19 +1,5 @@
-/* eslint-disable @typescript-eslint/no-namespace */
 import React, { useEffect, useState } from "react";
-import {
-  Card,
-  Col,
-  Row,
-  Select,
-  Table,
-  Tag,
-  Typography,
-  Button,
-  Avatar,
-  Statistic,
-  Spin,
-  message,
-} from "antd";
+import { Card, Col, Row, Select, Table, Tag, Typography, Button, Avatar, Statistic, Spin, message } from "antd";
 import {
   UserOutlined,
   CheckCircleOutlined,
@@ -26,10 +12,7 @@ import {
 } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import DashboardViewDrawer from "../components/dashboard/DashboardViewDrawer";
-import {
-  useGetSupervisorDashboardQuery,
-  useGetActiveShiftsQuery,
-} from "../services/rtkApiFactory";
+import { useGetSupervisorDashboardQuery, useGetActiveShiftsQuery } from "../services/rtkApiFactory";
 import { useTranslation } from "react-i18next";
 import ArcGISMap from "../components/common/ArcGISMap"; // ✅ our new reusable map
 
@@ -44,8 +27,7 @@ const SupervisorViewPage: React.FC = () => {
   const [selectedSupervisor, setSelectedSupervisor] = useState<string | null>(null);
   const [supervisorInfo, setSupervisorInfo] = useState<any>(null);
 
-  const { data: activeShiftsData, isLoading: isLoadingShifts } =
-    useGetActiveShiftsQuery();
+  const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery();
 
   const {
     data: dashboardData,
@@ -55,8 +37,7 @@ const SupervisorViewPage: React.FC = () => {
     skip: !selectedSupervisor,
   });
 
-  const supervisors =
-    activeShiftsData?.filter((shift: any) => shift.roleCode === "PARSUP") || [];
+  const supervisors = activeShiftsData?.filter((shift: any) => shift.roleCode === "PARSUP") || [];
 
   const getLocalizedText = (englishText: string, arabicText: string) => {
     return i18n.language === "ar" ? arabicText : englishText;
@@ -91,9 +72,7 @@ const SupervisorViewPage: React.FC = () => {
   ];
 
   const handleViewClick = (record: any) => {
-    const inspector = inspectorAvatars.find(
-      (insp) => insp.name === record.inspectorName
-    );
+    const inspector = inspectorAvatars.find((insp) => insp.name === record.inspectorName);
     if (inspector) {
       setSelectedInspector(inspector);
       setDrawerVisible(true);
@@ -125,12 +104,9 @@ const SupervisorViewPage: React.FC = () => {
       title: t("form.status", "Status"),
       dataIndex: "status",
       render: (status: string, record: any) => {
-        if (record.originalStatus === "Checked-in")
-          return <Tag color="green">{status}</Tag>;
-        if (record.originalStatus === "Pending")
-          return <Tag color="orange">{status}</Tag>;
-        if (record.originalStatus === "On Leave")
-          return <Tag color="red">{status}</Tag>;
+        if (record.originalStatus === "Checked-in") return <Tag color="green">{status}</Tag>;
+        if (record.originalStatus === "Pending") return <Tag color="orange">{status}</Tag>;
+        if (record.originalStatus === "On Leave") return <Tag color="red">{status}</Tag>;
         return <Tag>{status}</Tag>;
       },
     },
@@ -139,11 +115,7 @@ const SupervisorViewPage: React.FC = () => {
       key: "actions",
       align: "center" as const,
       render: (_: any, record: any) => (
-        <Button
-          type="link"
-          icon={<EyeOutlined />}
-          onClick={() => handleViewClick(record)}
-        >
+        <Button type="link" icon={<EyeOutlined />} onClick={() => handleViewClick(record)}>
           {t("common.view", "View")}
         </Button>
       ),
@@ -200,9 +172,7 @@ const SupervisorViewPage: React.FC = () => {
         </Row>
       </Card>
 
-      {(isLoading || isLoadingShifts) && (
-        <Spin size="large" style={{ display: "block", margin: "50px auto" }} />
-      )}
+      {(isLoading || isLoadingShifts) && <Spin size="large" style={{ display: "block", margin: "50px auto" }} />}
 
       <Row gutter={16} style={{ marginBottom: 20 }}>
         {/* ✅ ArcGIS Map (Reusable Component) */}
@@ -233,23 +203,14 @@ const SupervisorViewPage: React.FC = () => {
                       value={dashboardData?.data?.totalInspectors || 0}
                     />
                   </Col>
-                  <Col
-                    flex="auto"
-                    style={{ display: "flex", justifyContent: "center" }}
-                  >
+                  <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
                       <Statistic
                         title={t("dashboard.checkedIn", "Checked In")}
                         value={dashboardData?.data?.checkedIn || 0}
                       />
-                      <Statistic
-                        title={t("dashboard.missing", "Missing")}
-                        value={dashboardData?.data?.missing || 0}
-                      />
-                      <Statistic
-                        title={t("dashboard.onLeave", "On Leave")}
-                        value={dashboardData?.data?.onLeave || 0}
-                      />
+                      <Statistic title={t("dashboard.missing", "Missing")} value={dashboardData?.data?.missing || 0} />
+                      <Statistic title={t("dashboard.onLeave", "On Leave")} value={dashboardData?.data?.onLeave || 0} />
                     </div>
                   </Col>
                   <Col flex="none">
@@ -271,10 +232,7 @@ const SupervisorViewPage: React.FC = () => {
                       value={dashboardData?.data?.totalApprovals || 0}
                     />
                   </Col>
-                  <Col
-                    flex="auto"
-                    style={{ display: "flex", justifyContent: "center" }}
-                  >
+                  <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
                       <Statistic
                         title={t("dashboard.leave", "Leave")}
@@ -305,15 +263,9 @@ const SupervisorViewPage: React.FC = () => {
                       value={dashboardData?.data?.totalInspections || 0}
                     />
                   </Col>
-                  <Col
-                    flex="auto"
-                    style={{ display: "flex", justifyContent: "center" }}
-                  >
+                  <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
                     <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-                      <Statistic
-                        title={t("dashboard.fines", "Fines")}
-                        value={dashboardData?.data?.totalFines || 0}
-                      />
+                      <Statistic title={t("dashboard.fines", "Fines")} value={dashboardData?.data?.totalFines || 0} />
                       <Statistic
                         title={t("dashboard.amount", "Amount")}
                         value={dashboardData?.data?.fineAmount || 0}
@@ -393,20 +345,11 @@ const SupervisorViewPage: React.FC = () => {
           </>
         }
       >
-        <Table
-          columns={checkInColumns}
-          dataSource={checkInData}
-          pagination={false}
-          size="small"
-        />
+        <Table columns={checkInColumns} dataSource={checkInData} pagination={false} size="small" />
       </Card>
 
       {/* Drawer */}
-      <DashboardViewDrawer
-        open={drawerVisible}
-        onClose={handleDrawerClose}
-        inspector={selectedInspector}
-      />
+      <DashboardViewDrawer open={drawerVisible} onClose={handleDrawerClose} inspector={selectedInspector} />
     </div>
   );
 };

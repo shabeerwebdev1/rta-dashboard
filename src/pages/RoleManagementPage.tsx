@@ -1,15 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState, useMemo } from "react";
-import { Card, Select, Checkbox, Space, Spin, Alert, Table, Button } from "antd";
+import { Card, Select, Checkbox, Space, Spin, Alert, Table, Button, Col, Row } from "antd";
 import { roleManagementConfig } from "../config/pageConfigs/roleManagementConfig";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { useAppNotification } from "../utils/notificationManager";
-import {
-  useGetRolesQuery,
-  useLazyGetRoleByIdQuery,
-  useUpdateRolePermissionsMutation,
-} from "../services/rtkApiFactory";
+import { useGetRolesQuery, useLazyGetRoleByIdQuery, useUpdateRolePermissionsMutation } from "../services/rtkApiFactory";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 
 const { Option } = Select;
@@ -81,9 +77,7 @@ const RoleManagementPage: React.FC = () => {
 
   // Handle checkbox toggle
   const handleCheckboxChange = (recordKey: number, field: keyof TableRow, checked: boolean) => {
-    setTableData((prev) =>
-      prev.map((row) => (row.key === recordKey ? { ...row, [field]: checked ? 1 : 0 } : row))
-    );
+    setTableData((prev) => prev.map((row) => (row.key === recordKey ? { ...row, [field]: checked ? 1 : 0 } : row)));
   };
 
   // Handle role selection
@@ -131,19 +125,13 @@ const RoleManagementPage: React.FC = () => {
       const submissionData = prepareSubmissionData();
 
       if (submissionData.length === 0) {
-        notification.info(
-          t("No changes detected"),
-          t("Please modify at least one permission before updating.")
-        );
+        notification.info(t("No changes detected"), t("Please modify at least one permission before updating."));
         return;
       }
 
       await updateRolePermissions(submissionData).unwrap();
 
-      notification.success(
-        t("Permissions updated successfully"),
-        t("Role permissions have been updated.")
-      );
+      notification.success(t("Permissions updated successfully"), t("Role permissions have been updated."));
 
       // ✅ Reset to default state after update
       setSelectedRoleId("default");
@@ -151,10 +139,7 @@ const RoleManagementPage: React.FC = () => {
       setTableData([]);
       setOriginalData([]);
     } catch (error) {
-      notification.error(
-        t("Update failed"),
-        t("Failed to update permissions. Please try again.")
-      );
+      notification.error(t("Update failed"), t("Failed to update permissions. Please try again."));
       console.error("Update error:", error);
     }
   };
@@ -193,32 +178,37 @@ const RoleManagementPage: React.FC = () => {
   return (
     <Card bordered={false}>
       <Space direction="vertical" style={{ width: "100%" }} size="large">
-        <Select
-          value={selectedRoleId || "default"}
-          style={{ width: 200 }}
-          onChange={handleRoleChange}
-          loading={isLoadingRoles}
-        >
-          <Option value="default" disabled>
-            {t("placeholders.selectRole")}
-          </Option>
-
-          {rolesData?.map((role: any, index: number) => {
-            const keyValue = role.roleId ?? role.roleGUID ?? `role-${index}`;
-            return (
-              <Option key={keyValue} value={keyValue}>
-                {role.roleName ?? "Unnamed Role"}
+        <Row justify="space-between" align="middle" style={{ width: "100%" }}>
+          <Col>
+            <Select
+              value={selectedRoleId || "default"}
+              style={{ width: 200 }}
+              onChange={handleRoleChange}
+              loading={isLoadingRoles}
+            >
+              <Option value="default" disabled>
+                {t("placeholders.selectRole")}
               </Option>
-            );
-          })}
-        </Select>
 
-        {/* Show Update button only when a valid role is selected */}
-        {selectedRoleId !== "default" && (
-          <Button type="primary" onClick={handleUpdate} loading={isUpdating} disabled={isLoadingPermissions}>
-            {t("common.update")}
-          </Button>
-        )}
+              {rolesData?.map((role: any, index: number) => {
+                const keyValue = role.roleId ?? role.roleGUID ?? `role-${index}`;
+                return (
+                  <Option key={keyValue} value={keyValue}>
+                    {role.roleName ?? "Unnamed Role"}
+                  </Option>
+                );
+              })}
+            </Select>
+          </Col>
+
+          <Col>
+            {selectedRoleId !== "default" && (
+              <Button type="primary" onClick={handleUpdate} loading={isUpdating} disabled={isLoadingPermissions}>
+                {t("common.update")}
+              </Button>
+            )}
+          </Col>
+        </Row>
 
         {permissionsError && (
           <Alert message="Error" description="Failed to load permissions for this role." type="error" showIcon />

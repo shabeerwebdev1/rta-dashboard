@@ -12,15 +12,13 @@ import {
   App,
   Upload,
   DatePicker,
-  Tooltip,
   Spin,
 } from "antd";
 import {
   PlusOutlined,
   EyeOutlined,
   DownloadOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
+ 
   EditOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
@@ -45,6 +43,7 @@ import { pageConfigs } from "../config/pageConfigs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import PledgesViewDrawer from "../components/pledge/PledgesViewDrawer";
 import { useSearchParams } from "react-router-dom";
+import { usePermission } from "../hooks/usePermission";
 
 const { Option } = Select;
 const pageKey = "pledges";
@@ -65,6 +64,8 @@ const filterOptionsByCategory = (options: any[], categoryId: number) => {
 
 const PledgesPage: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { canCreate, canEdit } = usePermission();
+  const menuName = "Pledge";
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
@@ -92,7 +93,7 @@ const PledgesPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any>(null);
-  const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
+  const [tableSize, setTableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
@@ -152,8 +153,6 @@ const PledgesPage: React.FC = () => {
       })),
     [lookupOptions, i18n.language],
   );
-
-  
 
   useEffect(() => {
     if (isSingleRecordSuccess && singleRecordData) {
@@ -314,7 +313,6 @@ const PledgesPage: React.FC = () => {
     setViewRecord(record); // ✅ use row data directly
     setIsDrawerOpen(true);
   };
-  
 
   const handleShare = (record: any) => {
     // Create URL with record ID parameter
@@ -376,7 +374,13 @@ const PledgesPage: React.FC = () => {
 
   const actionMenuItems = (record: any) => [
     { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
-    { key: "edit", label: t("common.edit"), icon: <EditOutlined />, onClick: () => handleModalOpen("edit", record) },
+    {
+      key: "edit",
+      label: t("common.edit"),
+      icon: <EditOutlined />,
+      onClick: () => handleModalOpen("edit", record),
+      disabled: !canEdit(menuName),
+    },
   ];
 
   const searchAddon = (
@@ -412,6 +416,8 @@ const PledgesPage: React.FC = () => {
               />
               <DatePicker.RangePicker
                 value={state.dateRange}
+                format={"DD-MM-YYYY"}
+
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
             </Space>
@@ -421,13 +427,13 @@ const PledgesPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
-              <Tooltip title={tableSize === "middle" ? t("common.compactView") : t("common.standardView")}>
-                <Button
-                  icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
-                  onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
-                />
-              </Tooltip>
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => handleModalOpen("add")}>
+             
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => handleModalOpen("add")}
+                disabled={!canCreate(menuName)}
+              >
                 {t("common.addNew")}
               </Button>
             </Space>

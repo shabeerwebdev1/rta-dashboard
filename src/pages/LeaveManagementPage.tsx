@@ -1,11 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Card, Space, Button, Input, DatePicker, Row, Col, Select, Tooltip, App, Tag } from "antd";
-import {
-  EyeOutlined,
-  DownloadOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
-} from "@ant-design/icons";
+import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App, Tag } from "antd";
+import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { useTableParams } from "../hooks/useTableParams";
@@ -18,7 +13,7 @@ import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import { leaveManagementPageConfig } from "../config/pageConfigs/leaveManagementConfig";
 import LeaveViewDrawer from "../components/Leaves/LeaveViewDrawer";
-import { useGetLeaveDetailsQuery } from "../services/rtkApiFactory"; // ✅ correct hook
+import { useGetLeaveDetailsQuery } from "../services/rtkApiFactory";
 
 const { Option } = Select;
 
@@ -40,7 +35,7 @@ const LeaveManagementPage: React.FC = () => {
     state,
   } = useTableParams(config.searchConfig!);
 
-  const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
+  const [tableSize, setTableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -48,21 +43,19 @@ const LeaveManagementPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
-  // ✅ Fetch leave data from API
   const { data, isFetching } = useGetLeaveDetailsQuery(apiParams);
 
   const apiData = data?.data || [];
   const total = data?.total || 0;
 
-
-    const filterOptions = {
-      status: [
-        { text: t("status.approved"), value: 1 },
-        { text: t("status.rejected"), value: 3 },
-        { text: t("status.pending"), value: 0 },
-        { text: t("status.cancelled"), value: 2 },
-      ],
-    };
+  const filterOptions = {
+    status: [
+      { text: t("status.approved"), value: 1 },
+      { text: t("status.rejected"), value: 3 },
+      { text: t("status.pending"), value: 0 },
+      { text: t("status.cancelled"), value: 2 },
+    ],
+  };
 
   const statusLabels = useMemo(() => {
     const statusMap: Record<number, React.ReactNode> = {
@@ -86,11 +79,7 @@ const LeaveManagementPage: React.FC = () => {
     setSearchValue(state.searchValue);
   }, [state.searchValue]);
 
-  const handleClearFilter = (
-    type: "search" | "date" | "column" | "sorter",
-    key?: string,
-    value?: string | number
-  ) => {
+  const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
     if (type === "search") setSearchValue("");
     clearFilter(type, key, value);
   };
@@ -109,22 +98,17 @@ const LeaveManagementPage: React.FC = () => {
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData =
-          apiData.filter((item: any) => selectedRowKeys.includes(item.leaveId)) || [];
+        const selectedData = apiData.filter((item: any) => selectedRowKeys.includes(item.leaveId)) || [];
         exportToCsv(selectedData, `leave_management_export.csv`);
-        notification.success(
-          { data: { en_Msg: t("messages.csvDownloaded") } },
-          t("messages.csvDownloaded")
-        );
+        notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
       },
     });
   };
 
   const columnLabels = useMemo(
-    () =>
-      Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
-    [t, config.tableConfig.columns]
+    () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
+    [t, config.tableConfig.columns],
   );
 
   const actionMenuItems = (record: any) => [
@@ -164,11 +148,7 @@ const LeaveManagementPage: React.FC = () => {
 
         {/* Filters + Search */}
         <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
-          <Row
-            justify="space-between"
-            align="middle"
-            style={{ marginBottom: 16, rowGap: 10 }}
-          >
+          <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
             <Col>
               <Space>
                 <Input
@@ -181,41 +161,17 @@ const LeaveManagementPage: React.FC = () => {
                 />
                 <DatePicker.RangePicker
                   value={state.dateRange}
-                  onChange={(dates) =>
-                    setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)
-                  }
+                  format={"DD-MM-YYYY"}
+
+                  onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
                 />
               </Space>
             </Col>
             <Col>
               <Space>
-                <Button
-                  icon={<DownloadOutlined />}
-                  onClick={handleDownloadCsv}
-                  disabled={selectedRowKeys.length === 0}
-                >
+                <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                   {t("common.downloadCsv")}
                 </Button>
-                <Tooltip
-                  title={
-                    tableSize === "middle"
-                      ? t("common.compactView")
-                      : t("common.standardView")
-                  }
-                >
-                  <Button
-                    icon={
-                      tableSize === "middle" ? (
-                        <AppstoreOutlined />
-                      ) : (
-                        <UnorderedListOutlined />
-                      )
-                    }
-                    onClick={() =>
-                      setTableSize(tableSize === "middle" ? "small" : "middle")
-                    }
-                  />
-                </Tooltip>
               </Space>
             </Col>
           </Row>
@@ -247,22 +203,18 @@ const LeaveManagementPage: React.FC = () => {
           rowKey={config.tableConfig.rowKey}
           state={state}
           filterOptions={{
-          status: [
-            { text: t("status.approved"), value: 1 },
-            { text: t("status.rejected"), value: 3 },
-            { text: t("status.pending"), value: 0 },
-            { text: t("status.cancelled"), value: 2 },
-          ],
-        }}
+            status: [
+              { text: t("status.approved"), value: 1 },
+              { text: t("status.rejected"), value: 3 },
+              { text: t("status.pending"), value: 0 },
+              { text: t("status.cancelled"), value: 2 },
+            ],
+          }}
         />
       </Space>
 
       {/* Drawer for viewing leave details */}
-      <LeaveViewDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        record={selectedRecord}
-      />
+      <LeaveViewDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} record={selectedRecord} />
     </>
   );
 };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Image, Layout, Menu, MenuProps } from "antd";
 import {
   CarOutlined,
@@ -18,166 +18,214 @@ import {
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import { FULL_PATHS } from "../../constants/paths";
+import { useAuth } from "../../contexts/AuthContext";
 
 const { Sider } = Layout;
 
-interface AppSidebarProps {
-  currentTheme?: string; // Add theme prop
-}
+type RawItem = {
+  key: string;
+  icon?: React.ReactNode;
+  labelText: string;
+  permission?: string;
+  children?: RawItem[];
+};
 
-const AppSidebar: React.FC<AppSidebarProps> = ({ currentTheme = "corporateIndigo" }) => {
+const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corporateIndigo" }) => {
   const [collapsed, setCollapsed] = useState(false);
   const { t } = useTranslation();
   const location = useLocation();
+  const { canAccessAny, hasRead } = useAuth();
 
-  // Function to get logo paths based on theme
-  const getLogoPaths = (theme: string) => {
-    switch (theme) {
-      case "corporateRed":
-        return {
-          full: "/images/redlogo.png",
-          mini: "/images/rta_logo_mini.png",
-        };
-      default:
-        return {
-          full: "/images/rta_logo_full.png",
-          mini: "/images/rta_logo_mini.png",
-        };
-    }
-  };
-
-  const logosPaths = getLogoPaths(currentTheme);
-
-  const menuItems: MenuProps["items"] = [
+  const rawMenu: RawItem[] = [
     {
       key: FULL_PATHS.DASHBOARD,
       icon: <DashboardOutlined />,
-      label: <Link to={FULL_PATHS.DASHBOARD}>{t("sidebar.dashboard")}</Link>,
+      labelText: t("sidebar.dashboard"),
+      permission: "WebDashboard",
     },
     {
       key: FULL_PATHS.GENERAL,
       icon: <SearchOutlined />,
-      label: <Link to={FULL_PATHS.GENERAL}>{t("sidebar.general")}</Link>,
+      labelText: t("sidebar.general"),
+      permission: "Vlookups",
     },
     {
       key: "configuration",
       icon: <SettingOutlined />,
-      label: t("sidebar.configuration"),
+      labelText: t("sidebar.management"),
       children: [
         {
           key: FULL_PATHS.WHITELIST_PLATES,
           icon: <FileTextOutlined />,
-          label: <Link to={FULL_PATHS.WHITELIST_PLATES}>{t("sidebar.whitelist")}</Link>,
+          labelText: t("sidebar.whitelists"),
+          permission: "WhiteListPlate",
         },
         {
           key: FULL_PATHS.INSPECTIONS_OBSTACLES,
           icon: <SearchOutlined />,
-          label: <Link to={FULL_PATHS.INSPECTIONS_OBSTACLES}>{t("sidebar.inspectionsObstacles")}</Link>,
+          labelText: t("sidebar.inspectionsObstacles"),
+          permission: "InspectionObstacle",
         },
         {
           key: FULL_PATHS.PLEDGES,
           icon: <AuditOutlined />,
-          label: <Link to={FULL_PATHS.PLEDGES}>{t("sidebar.pledges")}</Link>,
+          labelText: t("sidebar.pledges"),
+          permission: "Pledge",
         },
         {
           key: FULL_PATHS.LEAVE_MANGEMENT,
           icon: <TeamOutlined />,
-          label: <Link to={FULL_PATHS.LEAVE_MANGEMENT}>{t("sidebar.leaveManagement")}</Link>,
+          labelText: t("sidebar.leaves"),
+          permission: "Leave",
         },
         {
           key: FULL_PATHS.ROLE_MANAGEMENT,
           icon: <LinkOutlined />,
-          label: <Link to={FULL_PATHS.ROLE_MANAGEMENT}>{t("sidebar.roleManagement")}</Link>,
+          labelText: t("sidebar.roles"),
+          permission: "RolePermission",
         },
       ],
     },
     {
       key: "inspections",
       icon: <SearchOutlined />,
-      label: t("sidebar.inspections"),
+      labelText: t("sidebar.inspections"),
       children: [
         {
           key: FULL_PATHS.PARKONIC,
           icon: <PushpinOutlined />,
-          label: <Link to={FULL_PATHS.PARKONIC}>{t("sidebar.parkonic")}</Link>,
+          labelText: t("sidebar.parkonic"),
+          permission: "Parkonic",
         },
         {
           key: FULL_PATHS.FINES,
           icon: <DollarOutlined />,
-          label: <Link to={FULL_PATHS.FINES}>{t("sidebar.inspectionmanagement")}</Link>,
+          labelText: t("sidebar.inspectionmanagement"),
+          permission: "Inspection",
         },
       ],
     },
     {
       key: FULL_PATHS.DISPUTE,
       icon: <ExclamationCircleOutlined />,
-      label: <Link to={FULL_PATHS.DISPUTE}>{t("sidebar.dispute")}</Link>,
+      labelText: t("sidebar.dispute"),
+      permission: "Dispute",
     },
-    { key: FULL_PATHS.TOWING, icon: <CarOutlined />, label: <Link to={FULL_PATHS.TOWING}>{t("sidebar.towing")}</Link> },
     {
-      key: "team-assessment-group", // group only, not a path
+      key: FULL_PATHS.TOWING,
+      icon: <CarOutlined />,
+      labelText: t("sidebar.towing"),
+      permission: "AdhocShift",
+    },
+    {
+      key: "team-assessment-group",
       icon: <UsergroupAddOutlined />,
-      label: t("sidebar.traningAndEvaluation"),
+      labelText: t("sidebar.traningAndEvaluation"),
       children: [
         {
           key: FULL_PATHS.TEAM_EVALUATION,
           icon: <UsergroupAddOutlined />,
-          label: <Link to={FULL_PATHS.TEAM_EVALUATION}>{t("sidebar.teamEvaluation")}</Link>,
+          labelText: t("sidebar.teamEvaluation"),
+          permission: "CallIntegration",
         },
         {
           key: FULL_PATHS.TEAM_TRAINING,
           icon: <UsergroupAddOutlined />,
-          label: <Link to={FULL_PATHS.TEAM_TRAINING}>{t("sidebar.training")}</Link>,
+          labelText: t("sidebar.training"),
+          permission: "CallIntegration",
         },
       ],
     },
-
     {
       key: FULL_PATHS.ANALYTICS,
       icon: <BarChartOutlined />,
-      label: <Link to={FULL_PATHS.ANALYTICS}>{t("sidebar.analytics")}</Link>,
+      labelText: t("sidebar.analytics"),
+      permission: "WebDashboard",
     },
-
     {
       key: "shiftplanning",
       icon: <AuditOutlined />,
-      label: t("sidebar.shiftplanning"),
+      labelText: t("sidebar.shiftplanning"),
       children: [
         {
           key: FULL_PATHS.CREATESHIFTPLAN,
           icon: <AuditOutlined />,
-          label: <Link to={FULL_PATHS.CREATESHIFTPLAN}>{t("sidebar.createshiftplan")}</Link>,
+          labelText: t("sidebar.createshiftplan"),
+          permission: "CreateShift",
         },
         {
           key: FULL_PATHS.ADHOCSHIFTPLAN,
           icon: <AuditOutlined />,
-          label: <Link to={FULL_PATHS.ADHOCSHIFTPLAN}>{t("sidebar.adhocshiftplan")}</Link>,
+          labelText: t("sidebar.adhocshiftplan"),
+          permission: "AdhocShift",
         },
         {
           key: FULL_PATHS.SHIFT_MANAGEMENT,
           icon: <AuditOutlined />,
-          label: <Link to={FULL_PATHS.SHIFT_MANAGEMENT}>{t("sidebar.shiftmanagement")}</Link>,
+          labelText: t("sidebar.shiftmanagement"),
+          permission: "ShiftManagement",
         },
       ],
     },
   ];
 
+  // Apply permission logic
+  const applyPermissions = (items: RawItem[]): any[] =>
+    items.map((it) => {
+      if (it.children && it.children.length > 0) {
+        const processedChildren = applyPermissions(it.children);
+        const parentHasRead = it.permission ? hasRead(it.permission) : false;
+        const someChildEnabled = processedChildren.some((c: any) => !c.disabled);
+
+        if (parentHasRead) {
+          const forcedChildren = processedChildren.map((c: any) => ({ ...c, disabled: false }));
+          return { ...it, children: forcedChildren, disabled: false };
+        }
+
+        return { ...it, children: processedChildren, disabled: !someChildEnabled };
+      }
+
+      const allowed = it.permission ? canAccessAny(it.permission) : false;
+      return { ...it, disabled: !allowed };
+    });
+
+  const permApplied = useMemo(() => applyPermissions(rawMenu), [rawMenu, canAccessAny, hasRead]);
+
+  // Transform to Antd Menu items (disable visually without changing color)
+  const transformToAntd = (items: any[]): MenuProps["items"] =>
+    items.map((i) => {
+      const labelNode = i.children ? (
+        i.labelText
+      ) : (
+        <Link
+          to={i.disabled ? "#" : i.key}
+          onClick={(e) => i.disabled && e.preventDefault()}
+          style={{
+            cursor: i.disabled ? "not-allowed" : "pointer",
+            color: "inherit",
+          }}
+        >
+          {i.labelText}
+        </Link>
+      );
+
+      return {
+        key: i.key,
+        icon: i.icon,
+        label: labelNode,
+        disabled: false,
+        children: i.children ? transformToAntd(i.children) : undefined,
+      };
+    });
+
+  const menuItems = useMemo(() => transformToAntd(permApplied), [permApplied]);
+
   const getSelectedKeys = () => {
     const path = location.pathname;
     let bestMatch = "";
-    const flattenItems = (items: any[]): any[] => {
-      let flat: any[] = [];
-      items.forEach((item) => {
-        if (item.children) {
-          flat = flat.concat(flattenItems(item.children));
-        } else {
-          flat.push(item);
-        }
-      });
-      return flat;
-    };
-    for (const item of flattenItems(menuItems as any[])) {
-      if (path.startsWith(item.key) && item.key.length > bestMatch.length) {
+    const flatten = (items: any[]): any[] => items.flatMap((item) => (item.children ? flatten(item.children) : [item]));
+    for (const item of flatten(menuItems as any[])) {
+      if (path.startsWith(String(item.key)) && String(item.key).length > bestMatch.length) {
         bestMatch = item.key;
       }
     }
@@ -187,40 +235,38 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ currentTheme = "corporateIndigo
   const getDefaultOpenKeys = () => {
     const path = location.pathname;
     const openKeys: string[] = [];
-
     const findParents = (items: any[], currentPath: string) => {
       for (const item of items) {
         if (item.children) {
-          if (item.children.some((child: any) => currentPath.startsWith(child.key))) {
+          if (item.children.some((c: any) => currentPath.startsWith(String(c.key)))) {
             openKeys.push(item.key);
             findParents(item.children, currentPath);
           }
         }
       }
     };
-
     findParents(menuItems as any[], path);
     return openKeys;
   };
+
+  const getLogoPaths = (theme: string) => {
+    switch (theme) {
+      case "corporateRed":
+        return { full: "/images/redlogo.png", mini: "/images/rta_logo_mini.png" };
+      default:
+        return { full: "/images/rta_logo_full.png", mini: "/images/rta_logo_mini.png" };
+    }
+  };
+  const logosPaths = getLogoPaths(currentTheme);
 
   return (
     <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} width={250} className="app-sidebar">
       <div className="sidebar-logo-container">
         <div className={`logo-wrapper ${collapsed ? "hidden" : "visible"}`}>
-          <Image
-            src={logosPaths.full}
-            alt="Full Logo"
-            preview={false}
-            style={{ height: 58, width: "auto", objectFit: "contain" }}
-          />
+          <Image src={logosPaths.full} alt="Full Logo" preview={false} style={{ height: 58, width: "auto" }} />
         </div>
         <div className={`logo-wrapper ${collapsed ? "visible" : "hidden"}`}>
-          <Image
-            src={logosPaths.mini}
-            alt="Mini Logo"
-            preview={false}
-            style={{ height: 72, width: "auto", objectFit: "contain" }}
-          />
+          <Image src={logosPaths.mini} alt="Mini Logo" preview={false} style={{ height: 72, width: "auto" }} />
         </div>
       </div>
 

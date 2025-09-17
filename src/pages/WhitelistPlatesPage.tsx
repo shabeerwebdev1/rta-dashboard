@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, DatePicker, App, Tooltip, Spin } from "antd";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, DatePicker, App, Spin, Tag } from "antd";
 import {
   PlusOutlined,
   EyeOutlined,
   EditOutlined,
   DownloadOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
+  CheckCircleTwoTone,
+  CloseCircleTwoTone,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
@@ -28,6 +28,7 @@ import { exportToCsv } from "../utils/csvExporter";
 import { pageConfigs } from "../config/pageConfigs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import WhitelistPlatesViewDrawer from "../components/whitelist/WhitelistPlatesViewDrawer";
+import { usePermission } from "../hooks/usePermission";
 
 const { Option } = Select;
 const pageKey = "whitelist-plates";
@@ -47,7 +48,9 @@ const filterOptionsByCategory = (options: any[], categoryId: number) => {
 };
 
 const WhitelistPlatesPage: React.FC = () => {
-  const { t, i18n } = useTranslation(); // 👈 Get i18n instance
+  const { canCreate, canEdit } = usePermission();
+  const menuName = "WhiteListPlate";
+  const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
@@ -76,7 +79,7 @@ const WhitelistPlatesPage: React.FC = () => {
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any>(null);
-  const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
+  const [tableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
@@ -102,7 +105,11 @@ const WhitelistPlatesPage: React.FC = () => {
       setLookupOptions(result);
     } catch (error) {
       console.error("Failed to fetch lookup data:", error);
-      notification.error({ data: { en_Msg: "Failed to load dropdown options" } }, "Load Failed");
+
+      // Try to read backend error message
+      const backendError = error?.data?.en_Msg || "Failed to load dropdown options";
+
+      notification.error({ data: { en_Msg: backendError } }, "Load Failed");
     } finally {
       setIsLoadingLookups(false);
     }
@@ -231,7 +238,7 @@ const WhitelistPlatesPage: React.FC = () => {
   };
 
   const handleView = (record: any) => {
-    setViewRecord(record); // Pass the raw record, not the mapped one
+    setViewRecord(record);
     setIsDrawerOpen(true);
   };
 
@@ -306,7 +313,18 @@ const WhitelistPlatesPage: React.FC = () => {
         if (column.key === "plateStatus_Id") {
           return {
             ...column,
-            render: (value: any) => getLabelFromValue(value, plateStatusOptions, i18n),
+            render: (value: any) => {
+              const label = getLabelFromValue(value, plateStatusOptions, i18n);
+
+              if (value === 5001) {
+                return <Tag color="green">{label}</Tag>;
+              }
+              if (value === 5002) {
+                return <Tag color="red">{label}</Tag>;
+              }
+
+              return <Tag>{label}</Tag>; // fallback
+            },
           };
         }
         if (column.key === "exemptionReason_ID") {
@@ -318,7 +336,8 @@ const WhitelistPlatesPage: React.FC = () => {
         if (column.key === "isByLaw") {
           return {
             ...column,
-            render: (value: any) => (value ? t("common.true") : t("common.false")),
+            render: (value: any) =>
+              value ? <CheckCircleTwoTone twoToneColor="#52c41a" /> : <CloseCircleTwoTone twoToneColor="#ff4d4f" />,
           };
         }
         return column;
@@ -338,7 +357,13 @@ const WhitelistPlatesPage: React.FC = () => {
 
   const actionMenuItems = (record: any) => [
     { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
-    { key: "edit", label: t("common.edit"), icon: <EditOutlined />, onClick: () => handleModalOpen("edit", record) },
+    {
+      key: "edit",
+      label: t("common.edit"),
+      icon: <EditOutlined />,
+      onClick: () => handleModalOpen("edit", record),
+      disabled: !canEdit(menuName),
+    },
   ];
 
   const searchAddon = (
@@ -368,6 +393,7 @@ const WhitelistPlatesPage: React.FC = () => {
               />
               <DatePicker.RangePicker
                 value={state.dateRange}
+                format={"DD-MM-YYYY"}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
             </Space>
@@ -377,13 +403,13 @@ const WhitelistPlatesPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
-              <Tooltip title={tableSize === "middle" ? t("common.compactView") : t("common.standardView")}>
-                <Button
-                  icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
-                  onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
-                />
-              </Tooltip>
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => handleModalOpen("add")}>
+
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => handleModalOpen("add")}
+                disabled={!canCreate(menuName)}
+              >
                 {t("common.addNew")}
               </Button>
             </Space>
@@ -436,12 +462,12 @@ const WhitelistPlatesPage: React.FC = () => {
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
             <Row gutter={24}>
               <Col span={12}>
-                <Form.Item name="plateNumber" label={t("form.plateNumber")} rules={[{ required: true }]}>
+                <Form.Item name="plateNumber" label={t("form.Number")} rules={[{ required: true }]}>
                   <Input placeholder={t("placeholders.plateNumber")} />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="plateSource_Id" label={t("form.plateSource")} rules={[{ required: true }]}>
+                <Form.Item name="plateSource_Id" label={t("form.Source")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.plateSource")}
                     options={plateSourceOptions.map((option) => ({
@@ -452,7 +478,7 @@ const WhitelistPlatesPage: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="plateType_Id" label={t("form.plateType")} rules={[{ required: true }]}>
+                <Form.Item name="plateType_Id" label={t("form.Type")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.plateType")}
                     options={plateTypeOptions.map((option) => ({
@@ -463,7 +489,7 @@ const WhitelistPlatesPage: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="plateColor_Id" label={t("form.plateColor")} rules={[{ required: true }]}>
+                <Form.Item name="plateColor_Id" label={t("form.Color")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.plateColor")}
                     options={plateColorOptions.map((option) => ({

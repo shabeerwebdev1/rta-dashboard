@@ -14,7 +14,7 @@ export const finesConfig: PageConfig = {
     delete: "",
   },
   searchConfig: {
-    globalSearchKeys: ["plateNumber", "vehicleBrand", "tradeLicenseNumber"],
+    globalSearchKeys: ["Fine Number", "Plate Number", "TL Number"],
     columnFilterKeys: ["inspectionStatus", "vehicleColor", "fineType", "inspectionType"],
     dateRangeKey: "entityDateTime",
   },
@@ -42,6 +42,7 @@ export const finesConfig: PageConfig = {
   tableConfig: {
     rowKey: "inspectionGUID",
     columns: [
+      { key: "entityNo", title: "form.fineNumber", type: "string" },
       {
         key: "identification",
         title: "form.tradeLicenseOrPlate",

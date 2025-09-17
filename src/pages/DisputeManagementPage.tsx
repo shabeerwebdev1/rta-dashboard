@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, DatePicker, Tooltip, Spin } from "antd";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, DatePicker, Tooltip, Spin, Tag } from "antd";
 import {
   PlusOutlined,
   EyeOutlined,
@@ -276,7 +276,6 @@ const DisputeManagementPage: React.FC = () => {
   );
 
   // Enhanced table config with render functions for dropdown values
-  // Enhanced table config with render functions for dropdown values
   const enhancedTableConfig = useMemo(
     () => ({
       ...config.tableConfig,
@@ -285,8 +284,25 @@ const DisputeManagementPage: React.FC = () => {
           return {
             ...column,
             filterable: true,
-            render: (value: number) => getLabelFromValue(value, disputeStatusEnum, i18n),
-            // Add these filter properties:
+            render: (value: number) => {
+              const label =
+                i18n.language === "ar"
+                  ? disputeStatusEnum.find((s) => s.value === value)?.labelAr
+                  : disputeStatusEnum.find((s) => s.value === value)?.labelEn;
+
+              switch (value) {
+                case 1: // Pending
+                  return <Tag color="orange">{label}</Tag>;
+                case 2: // Approved
+                  return <Tag color="green">{label}</Tag>;
+                case 3: // Rejected
+                  return <Tag color="red">{label}</Tag>;
+                case 4: // Recalled
+                  return <Tag color="blue">{label}</Tag>;
+                default:
+                  return <Tag>{label || "-"}</Tag>;
+              }
+            },
             filters: disputeStatusEnum.map((status) => ({
               text: i18n.language === "ar" ? status.labelAr : status.labelEn,
               value: status.value,
@@ -347,7 +363,7 @@ const DisputeManagementPage: React.FC = () => {
 
   const statusLabels: Record<number, string> = Object.fromEntries(
     disputeStatusEnum.map((status) => [status.value, i18n.language === "ar" ? status.labelAr : status.labelEn]),
-    );
+  );
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -368,6 +384,7 @@ const DisputeManagementPage: React.FC = () => {
 
               <DatePicker.RangePicker
                 value={state.dateRange}
+                format={"DD-MM-YYYY"}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
             </Space>

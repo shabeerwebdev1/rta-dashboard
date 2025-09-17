@@ -26,10 +26,7 @@ const AppHeader = () => {
     }
   };
 
-  const userMenuItems: MenuProps["items"] = [
-    { key: "1", icon: <UserOutlined />, label: t("Profile") },
-    { key: "2", icon: <LogoutOutlined />, label: t("Logout"), danger: true },
-  ];
+  const userMenuItems: MenuProps["items"] = [{ key: "2", icon: <LogoutOutlined />, label: t("Logout"), danger: true }];
 
   return (
     <Header

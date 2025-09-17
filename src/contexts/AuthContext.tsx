@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { useNavigate } from "react-router-dom";
 
 interface RolePermission {
@@ -33,8 +39,12 @@ interface AuthContextType {
   isLoading: boolean;
   login: (userData: UserData) => void;
   logout: () => void;
-  hasPermission: (menuName: string, permission: "create" | "read" | "update" | "delete") => boolean;
+  hasPermission: (
+    menuName: string,
+    permission: "create" | "read" | "update" | "delete"
+  ) => boolean;
   validateToken: () => boolean;
+  canAccessAny: (menuName: string) => boolean; // 👈 new
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -98,7 +108,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem("userImage");
 
     // Redirect to sTafteesh login
-    window.location.href = "https://sso.kandaprojects.live/webapp/ui/common/login.aspx";
+    window.location.href =
+      "https://sso.kandaprojects.live/webapp/ui/common/login.aspx";
   };
 
   const validateToken = (): boolean => {
@@ -111,7 +122,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      const userData = JSON.parse(userDataStr);
+      JSON.parse(userDataStr); // just to validate JSON
       return true;
     } catch (error) {
       console.error("Error validating token:", error);
@@ -120,10 +131,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const hasPermission = (menuName: string, permission: "create" | "read" | "update" | "delete"): boolean => {
+  const hasPermission = (
+    menuName: string,
+    permission: "create" | "read" | "update" | "delete"
+  ): boolean => {
     if (!user) return false;
 
-    const permissionObj = user.rolePermissions.find((perm) => perm.menuName.toLowerCase() === menuName.toLowerCase());
+    const permissionObj = user.rolePermissions.find(
+      (perm) => perm.menuName.toLowerCase() === menuName.toLowerCase()
+    );
 
     if (!permissionObj) return false;
 
@@ -141,7 +157,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const value = {
+  const canAccessAny = (menuName: string): boolean => {
+    if (!user) return false;
+
+    const permissionObj = user.rolePermissions.find(
+      (perm) => perm.menuName.toLowerCase() === menuName.toLowerCase()
+    );
+
+    if (!permissionObj) return false;
+
+    return (
+      permissionObj.canCreate === 1 ||
+      permissionObj.canRead === 1 ||
+      permissionObj.canUpdate === 1 ||
+      permissionObj.canDelete === 1
+    );
+  };
+
+  const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
     isLoading,
@@ -149,6 +182,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     hasPermission,
     validateToken,
+    canAccessAny, // 👈 exposed here
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

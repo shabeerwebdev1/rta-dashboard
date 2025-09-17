@@ -1,55 +1,58 @@
 import React from "react";
-import {
-  Drawer,
-  Descriptions,
-  Tag,
-  Typography,
-  Button,
-  Image,
-  Empty,
-  Space,
-  Modal,
-} from "antd";
+import { Drawer, Descriptions, Tag, Typography, Button, Image, Empty, Space, Modal, Spin } from "antd";
 import { useTranslation } from "react-i18next";
 import { DeleteOutlined, ShareAltOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
 import { useAppNotification } from "../../utils/notificationManager";
 import { useUpdateInspectionObstacleMutation } from "../../services/rtkApiFactory";
-import { getFileUrl } from "../../services/fileApi";
+import { useGetInspectionAttachmentsQuery, getInspectionFileUrl } from "../../services/inspectionFileApi";
+import { skipToken } from "@reduxjs/toolkit/query";
 
 interface InspectionObstaclesViewDrawerProps {
   open: boolean;
   onClose: () => void;
-  record: Record<string, unknown> | null;
+  record: Record<string, any> | null;
   config: PageConfig;
   onShare: () => void;
   onStatusChange: () => void;
+  // New props for data mapping
+  zoneOptions: any[];
+  sourceOptions: any[];
+  areaIdToNameMap: Map<number, string>;
+  statusLabels: Record<number, string>;
 }
 
-const InspectionObstaclesViewDrawer: React.FC<
-  InspectionObstaclesViewDrawerProps
-> = ({ open, onClose, record, config, onShare, onStatusChange }) => {
+const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps> = ({
+  open,
+  onClose,
+  record,
+  config,
+  onShare,
+  onStatusChange,
+  zoneOptions,
+  sourceOptions,
+  areaIdToNameMap,
+  statusLabels,
+}) => {
   const { t } = useTranslation();
   const notification = useAppNotification();
   const [updateObstacle] = useUpdateInspectionObstacleMutation();
   const [modal, contextHolder] = Modal.useModal();
 
+  // ✅ Always call hook; skip with skipToken if record is null
+  const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
+    record ? { inspectionGUID: record.inspectionGUID, entityCode: "parking-Obstacle" } : skipToken,
+  );
+
   if (!record) return null;
 
-  // ✅ Normalize "removed" check
-  const isRemoved =
-    String(record.status).toLowerCase() === "removed" ||
-    Number(record.status) === 1;
+  const isRemoved = Number(record.status) === 1;
 
   const displayFields = [
     { key: "zone", title: "form.zone", type: "text" },
     { key: "area", title: "form.area", type: "text" },
     { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "text" },
-    {
-      key: "closestPaymentDevice",
-      title: "form.closestPaymentDevice",
-      type: "text",
-    },
+    { key: "closestPaymentDevice", title: "form.closestPD", type: "text" },
     { key: "comments", title: "form.comments", type: "text" },
     { key: "status", title: "form.status", type: "status" },
     { key: "removeAction", title: "common.remove obstacle", type: "action" },
@@ -66,10 +69,7 @@ const InspectionObstaclesViewDrawer: React.FC<
       onOk: async () => {
         try {
           const response = await updateObstacle(obstacleCode).unwrap();
-          notification.success(
-            response,
-            t("messages.updateSuccess", { entity: t(config.name.singular) })
-          );
+          notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
           onStatusChange();
           onClose();
         } catch (err: any) {
@@ -85,10 +85,6 @@ const InspectionObstaclesViewDrawer: React.FC<
       },
     });
   };
-
-  const imageNames = record.photoPath
-    ? String(record.photoPath).split(";").filter(Boolean)
-    : [];
 
   return (
     <>
@@ -107,16 +103,13 @@ const InspectionObstaclesViewDrawer: React.FC<
       >
         <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
           {displayFields.map((field) => {
-            // Completely skip "removeAction" row if removed
             if (field.type === "action") {
               if (isRemoved) return null;
               return (
                 <Descriptions.Item label={t(field.title)} key={field.key}>
                   <Button
                     icon={<DeleteOutlined />}
-                    onClick={() =>
-                      handleRemoveObstacle(record.obstacleCode as string)
-                    }
+                    onClick={() => handleRemoveObstacle(record.obstacleCode as string)}
                     danger
                   >
                     {t("common.remove")}
@@ -125,32 +118,34 @@ const InspectionObstaclesViewDrawer: React.FC<
               );
             }
 
-            const text = record[field.key];
+            const rawValue = record[field.key];
+            const displayValue = (() => {
+              if (rawValue === undefined || rawValue === null) {
+                return t("common.noData");
+              }
+
+              if (field.key === "zone") {
+                const zoneOption = zoneOptions.find((opt) => opt.value === rawValue);
+                return zoneOption ? zoneOption.label : rawValue;
+              }
+              if (field.key === "area") {
+                return areaIdToNameMap.get(rawValue) || rawValue;
+              }
+              if (field.key === "sourceOfObstacle") {
+                const sourceOption = sourceOptions.find((opt) => opt.value === rawValue);
+                return sourceOption ? sourceOption.label : rawValue;
+              }
+              if (field.type === "status") {
+                const statusKey = Number(rawValue);
+                const color = statusKey === 1 ? "green" : "orange";
+                return <Tag color={color}>{statusLabels[statusKey] || rawValue}</Tag>;
+              }
+              return String(rawValue);
+            })();
 
             return (
               <Descriptions.Item label={t(field.title)} key={field.key}>
-                {(() => {
-                  if (!text) return t("common.noData");
-                  switch (field.type) {
-                    case "status":
-                      const statusKey =
-                        typeof text === "string"
-                          ? text.toLowerCase()
-                          : Number(text) === 1
-                          ? "removed"
-                          : "reported";
-                      return (
-                        <Tag
-                          color={statusKey === "removed" ? "green" : "orange"}
-                        >
-                          {t(`status.${statusKey}`)}
-                        </Tag>
-                      );
-
-                    default:
-                      return String(text);
-                  }
-                })()}
+                {displayValue}
               </Descriptions.Item>
             );
           })}
@@ -160,26 +155,25 @@ const InspectionObstaclesViewDrawer: React.FC<
           {t("form.photo")}
         </Typography.Title>
 
-        {imageNames.length > 0 ? (
-          <Image.PreviewGroup>
-            <Space wrap>
-              {imageNames.map((name, index) => (
-                <Image
-                  key={index}
-                  width={100}
-                  height={100}
-                  src={getFileUrl(name)}
-                  alt={name}
-                />
-              ))}
-            </Space>
-          </Image.PreviewGroup>
-        ) : (
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={t("common.noData")}
-          />
-        )}
+        <Spin spinning={isLoadingAttachments}>
+          {attachments.length > 0 ? (
+            <Image.PreviewGroup>
+              <Space wrap>
+                {attachments.map((file) => (
+                  <Image
+                    key={file.attachmentGUID}
+                    width={100}
+                    height={100}
+                    src={getInspectionFileUrl(file.filePath, file.fileName)}
+                    alt={file.fileName}
+                  />
+                ))}
+              </Space>
+            </Image.PreviewGroup>
+          ) : (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
+          )}
+        </Spin>
       </Drawer>
     </>
   );

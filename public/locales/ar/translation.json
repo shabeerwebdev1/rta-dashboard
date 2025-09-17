@@ -1,7 +1,6 @@
 {
   "sidebar": {
     "dashboard": "لوحة التحكم",
-    "whitelist": "إدارة القائمة البيضاء",
     "inspections": "التفتيش",
     "inspectionsObstacles": "معوقات",
     "pledges": "إدارة التعهدات",
@@ -28,7 +27,12 @@
     "shiftmanagement": "إدارة النوبات",
     "inspectionmanagement": "إدارة التفتيش",
     "shiftplanning": "تخطيط النوبات",
-    "roleManagement": "إدارة الأدوار"
+    "roleManagement": "إدارة الأدوار",
+    "management": "الإدارة",
+    "roles": "الأدوار",
+    "leaves": "الإجازات",
+    "whitelists": "القوائم البيضاء"
+
     },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -78,10 +82,10 @@
      "errorLoading": "خطأ في تحميل بيانات لوحة التحكم"
   },
   "form": {
-    "plateNumber": "رقم اللوحة",
-    "plateSource": "مصدر اللوحة",
-    "plateType": "نوع اللوحة",
-    "plateColor": "لون اللوحة",
+   "Number": "الرقم",
+    "Source": "المصدر",
+    "Type": "النوع",
+    "Color": "اللون",
     "tradeLicenseNumber": "رقم الرخصة التجارية",
     "tradeLicense_EN_Name": "اسم الرخصة (إنجليزي)",
     "tradeLicense_AR_Name": "اسم الرخصة (عربي)",
@@ -102,7 +106,7 @@
     "zone": "المنطقة",
     "area": "المساحة",
     "sourceOfObstacle": "مصدر العائق",
-    "closestPaymentDevice": "أقرب جهاز دفع",
+    "closestPD": "أقرب جهاز دفع",
     "comments": "تعليقات",
     "photo": "صورة (صور)",
     "reportedBy": "تم الإبلاغ بواسطة",

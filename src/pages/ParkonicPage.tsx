@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Card, Space, Button, Input, DatePicker, Row, Col, Select, Tooltip, App } from "antd";
-import { EyeOutlined, DownloadOutlined, AppstoreOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App } from "antd";
+import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { useSearchParkonicsQuery } from "../services/rtkApiFactory";
@@ -37,7 +37,7 @@ const ParkonicPage: React.FC = () => {
 
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
+  const [tableSize, setTableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
@@ -147,6 +147,7 @@ const ParkonicPage: React.FC = () => {
               />
               <DatePicker.RangePicker
                 value={state.dateRange}
+                format={"DD-MM-YYYY"}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
             </Space>
@@ -156,12 +157,6 @@ const ParkonicPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
-              <Tooltip title={tableSize === "middle" ? t("common.compactView") : t("common.standardView")}>
-                <Button
-                  icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
-                  onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
-                />
-              </Tooltip>
             </Space>
           </Col>
         </Row>

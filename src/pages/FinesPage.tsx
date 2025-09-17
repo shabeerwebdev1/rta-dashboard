@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tooltip, Spin } from "antd";
-import { EyeOutlined, DownloadOutlined, AppstoreOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Spin } from "antd";
+import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -55,7 +55,7 @@ const FinesPage: React.FC = () => {
 
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedFineData, setSelectedFineData] = useState<any>(null);
-  const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
+  const [tableSize, setTableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
@@ -279,6 +279,7 @@ const FinesPage: React.FC = () => {
               />
               <RangePicker
                 value={state.dateRange}
+                format={"DD-MM-YYYY"}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
             </Space>
@@ -288,12 +289,6 @@ const FinesPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
-              <Tooltip title={tableSize === "middle" ? t("common.compactView") : t("common.standardView")}>
-                <Button
-                  icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
-                  onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
-                />
-              </Tooltip>
             </Space>
           </Col>
         </Row>

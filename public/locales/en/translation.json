@@ -1,7 +1,6 @@
 {
   "sidebar": {
     "dashboard": "Dashboard",
-    "whitelist": "Whitelist",
     "inspectionsObstacles": "Obstacles",
     "inspections": "Inspections",
     "pledges": "Pledges",
@@ -25,8 +24,13 @@
     "createshiftplan": "Create Shift Plan",
     "adhocshiftplan": "Adhoc Shift Plan",
     "inspectionmanagement": "Inspections Management",
-    "roleManagement": "Role Management",
-    "leaveManagement": "Leave Management"
+    "roles": "Roles",
+    "leaves": "Leaves",
+    "whitelists": "Whitelists",
+    "carplateinspections": "Car Plate ",
+    "tradelicenseinspections": "Trade License ",
+
+    "management": "Management"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -75,10 +79,10 @@
     "errorLoading": "Error loading dashboard data"
   },
   "form": {
-    "plateNumber": "Plate Number",
-    "plateSource": "Plate Source",
-    "plateType": "Plate Type",
-    "plateColor": "Plate Color",
+    "Number": "Number",
+    "Source": "Source",
+    "Type": "Type",
+    "Color": "Color",
     "tradeLicenseNumber": "Trade License Number",
     "tradeLicense_EN_Name": "Trade License Name (EN)",
     "tradeLicense_AR_Name": "Trade License Name (AR)",
@@ -99,7 +103,7 @@
     "zone": "Zone",
     "area": "Area",
     "sourceOfObstacle": "Source Of Obstacle",
-    "closestPaymentDevice": "Closest Payment Device",
+    "closestPD": "Closest PD",
     "comments": "Comments",
     "photo": "Photo(s)",
     "reportedBy": "Reported By",
@@ -168,25 +172,24 @@
     "Shift": "Shift",
     "AssignmentType": "Assignment Type",
     "WeekOffs": "Week Offs",
-     "Actions": "Actions",
-     "employeeId": "Employee ID",
-     "leaveType": "Leave Type",
-      "leaveReason": "Leave Reason",
-      "totalLeaveDays": "Total Leave Days",
-      "plateCategory": "Plate Category",
-      "plateCode": "Plate Code",
-      "actions": "Actions",
-      "totalLeaves": "Total Leaves",
-      "approved": "Approved",
-      "rejected": "Rejected",
-      "pending": "Pending",
-      "menuItem": "Menu Item",
-      "create": "Create",
-      "read": "Read",
-      "update": "Update",
-      "delete": "Delete"
-
-  }, 
+    "Actions": "Actions",
+    "employeeId": "Employee ID",
+    "leaveType": "Leave Type",
+    "leaveReason": "Leave Reason",
+    "totalLeaveDays": "Total Leave Days",
+    "plateCategory": "Plate Category",
+    "plateCode": "Plate Code",
+    "actions": "Actions",
+    "totalLeaves": "Total Leaves",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "pending": "Pending",
+    "menuItem": "Menu Item",
+    "create": "Create",
+    "read": "Read",
+    "update": "Update",
+    "delete": "Delete"
+  },
   "common": {
     "action": "Action",
     "items": "items",
@@ -274,14 +277,13 @@
     "phoneNumber": "Enter your phone number",
     "address": "Enter your address",
     "SourceUser": "Enter source user",
-   
+
     "plateCategory": "Select plate category",
     "plateCode": "Select plate code",
     "selectShift": "Select Shift",
     "selectZones": "Select Zone(s)",
     "selectAssignmentTypes": "Select Assignment Type(s)",
     "selectRole": "Select Role"
-
   },
 
   "dashboard": {

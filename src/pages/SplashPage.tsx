@@ -12,19 +12,14 @@ export default function SplashPage() {
   const location = useLocation();
   const [showSplash, setShowSplash] = useState(true);
 
-  // read from URL or use the provided fallback
+  // read code from URL or fallback
   const codeFromUrl = new URLSearchParams(location.search).get("code") || "";
   const code = codeFromUrl || FALLBACK_CODE;
 
-  // call RTK Query
+  // API call
   const { data, isLoading, isError } = useValidatecodeQuery(code);
 
   const { login } = useAuth();
-
-  if (data?.data?.sTafteeshToken) {
-    login(data.data);
-    navigate("/dashboard", { replace: true });
-  }
 
   useEffect(() => {
     if (isLoading) return;
@@ -36,20 +31,22 @@ export default function SplashPage() {
       } else {
         const u = data.data;
 
-        // store token + expiry
         localStorage.setItem("sTafteeshToken", u.sTafteeshToken);
         if (u.tokenExpiry) localStorage.setItem("tokenExpiry", u.tokenExpiry);
 
-        // store user profile
         localStorage.setItem("displayNameEn", u.displayNameEn ?? "");
         localStorage.setItem("displayNameAr", u.displayNameAr ?? "");
         localStorage.setItem("userImage", u.userImage ?? "");
         localStorage.setItem("userGUID", u.userGUID ?? "");
 
-        // store role info
+        // ✅ Store role info
         localStorage.setItem("roleGUID", u.roleGUID ?? "");
         localStorage.setItem("rolePermissions", JSON.stringify(u.rolePermissions ?? []));
 
+        // ✅ Tell AuthContext "we're logged in"
+        login(u);
+
+        // ✅ Redirect
         navigate("/dashboard", { replace: true });
       }
 
@@ -57,7 +54,7 @@ export default function SplashPage() {
     }, SPLASH_DELAY);
 
     return () => clearTimeout(timer);
-  }, [isLoading, isError, data, navigate]);
+  }, [isLoading, isError, data, navigate, login]);
 
   return (
     <Row style={{ height: "100vh", width: "100%" }} justify="center" align="middle">

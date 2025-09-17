@@ -1,9 +1,5 @@
 import type { PageConfig } from "../../types/config";
-import {
-  IdcardOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-} from "@ant-design/icons";
+import { IdcardOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { Tag } from "antd";
 
 export const parkonicPageConfig: PageConfig = {
@@ -34,6 +30,7 @@ export const parkonicPageConfig: PageConfig = {
   tableConfig: {
     rowKey: "fineId",
     columns: [
+      { key: "fineId", title: "form.fineNumber", type: "string", sortable: true },
       { key: "plateNumber", title: "form.vehicleNumber", type: "string", sortable: true },
       {
         key: "reviewStatus",
