@@ -2,88 +2,68 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
-  StopOutlined,
   IdcardOutlined,
 } from "@ant-design/icons";
 import { PageConfig } from "../../types/config";
-import { Tag } from "antd";
 
-export enum LeaveStatus {
+export enum TowingStatus {
   Pending = 0,
   Approved = 1,
   Cancelled = 2,
   Rejected = 3,
 }
 
-const statusMap: Record<LeaveStatus, { text: string; color: string }> = {
-  [LeaveStatus.Pending]: { text: "Pending", color: "blue" },
-  [LeaveStatus.Approved]: { text: "Approved", color: "green" },
-  [LeaveStatus.Cancelled]: { text: "Cancelled", color: "orange" },
-  [LeaveStatus.Rejected]: { text: "Rejected", color: "red" },
-};
-
 export const towingConfig: PageConfig = {
   key: "towing",
   title: "page.title.towing",
   name: { singular: "Towing", plural: "Towings" },
-  api: { get: "/api/LeaveManagement", post: "", put: "", delete: "" },
+  api: { 
+    get: "/api/Towing", 
+    post: "", 
+    put: "", 
+    delete: "" 
+  }, // ✅ comment out later when needed
+
   searchConfig: {
-    globalSearchKeys: [ "employeeId"],
-    columnFilterKeys: ["leaveType", "status"],
-    dateRangeKey: "leaveDate",
+    globalSearchKeys: ["vehiclePlateNumber"],
+    columnFilterKeys: ["status"],
+    dateRangeKey: "createdAt",
   },
+
+  // ✅ Commented out stats for now
   statsConfig: [
-    { title: "Total Leaves", icon: <IdcardOutlined />, value: (data) => data.length },
+    { title: "Total Towings", icon: <IdcardOutlined />, value: (data) => data.length },
     {
       title: "Approved",
       icon: <CheckCircleOutlined />,
-      value: (data) => data.filter((d) => d.status === LeaveStatus.Approved).length,
+      value: (data) => data.filter((d) => d.status === TowingStatus.Approved).length,
       color: "#52c41a",
     },
     {
       title: "Rejected",
       icon: <CloseCircleOutlined />,
-      value: (data) => data.filter((d) => d.status === LeaveStatus.Rejected).length,
+      value: (data) => data.filter((d) => d.status === TowingStatus.Rejected).length,
       color: "#ff4d4f",
     },
     {
       title: "Pending",
       icon: <ClockCircleOutlined />,
-      value: (data) => data.filter((d) => d.status === LeaveStatus.Pending).length,
+      value: (data) => data.filter((d) => d.status === TowingStatus.Pending).length,
       color: "#1890ff",
     },
   ],
+
   tableConfig: {
-    rowKey: "leaveId",
+    rowKey: "towingId",
     columns: [
-      { key: "userId", title: "form.employeeId", type: "string", sortable: false },
-      { key: "leaveType", title: "form.leaveType", type: "string", sortable: false, filterable: false },
-      { key: "fromDate", title: "form.fromDate", type: "date", sortable: false },
-      { key: "toDate", title: "form.toDate", type: "date", sortable: false },
-      {
-        key: "totalLeaveDays",
-        title: "form.totalLeaveDays",
-        type: "custom",
-        sortable: false,
-        render: (value: number) => (
-          <Tag color="default" style={{ borderRadius: "10px", padding: "4px 8px" }}>
-            {value} {value === 1 ? "Day" : "Days"}
-          </Tag>
-        ),
-      },
-      {
-        key: "status",
-        title: "form.status",
-        type: "custom",
-        sortable: false,
-        filterable: true,
-        render: (status: LeaveStatus) => {
-          const { text, color } = statusMap[status] || { text: "Unknown", color: "default" };
-          return <Tag color={color}>{text}</Tag>;
-        },
-      },
+      { key: "vehicleName", title: "form.vehicleName", type: "string" },
+      { key: "vehiclePlateNumber", title: "form.vehiclePlateNumber", type: "string" },
+      { key: "towingDriverName", title: "form.towingDriverName", type: "string" },
+      { key: "addedBy", title: "form.addedBy", type: "string" },
+      { key: "status", title: "form.status", type: "string" },
     ],
     viewRecord: true,
   },
+
   formConfig: { modalWidth: "0", fields: [] },
 };
