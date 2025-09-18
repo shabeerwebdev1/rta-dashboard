@@ -81,8 +81,7 @@ function UserZoneLinking() {
     refetch: refetchActiveShifts,
   } = useGetActiveShiftsQuery();
 
-  const [updateShiftManagement, { isLoading: isUpdating }] =
-    useUpdateShiftManagementMutation();
+  const [updateShiftManagement, { isLoading: isUpdating }] = useUpdateShiftManagementMutation();
 
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
   const [isLoadingZones, setIsLoadingZones] = useState(false);
@@ -101,10 +100,7 @@ function UserZoneLinking() {
     fetchShiftsData();
   }, [i18n.language]);
 
-  const availableShiftIds = useMemo(
-    () => shifts.map((shift) => shift.shiftTypeGUID),
-    [shifts]
-  );
+  const availableShiftIds = useMemo(() => shifts.map((shift) => shift.shiftTypeGUID), [shifts]);
 
   useEffect(() => {
     if (activeShiftsResponse) {
@@ -115,13 +111,10 @@ function UserZoneLinking() {
       const transformedData: InspectorData[] = activeShiftsData
         .filter((item: ActiveShiftData) => item.roleCode === "PARINSP")
         .map((item: ActiveShiftData, index: number) => {
-          const isValidShift =
-            item.shiftId && availableShiftIds.includes(item.shiftId);
+          const isValidShift = item.shiftId && availableShiftIds.includes(item.shiftId);
           const zoneIds = (item.zoneIds || []).map((id) => id.toString());
 
-          const weekOffDays = item.wO_Days
-            ? item.wO_Days.split(",").filter(Boolean)
-            : [];
+          const weekOffDays = item.wO_Days ? item.wO_Days.split(",").filter(Boolean) : [];
           const weekOffNumbers = weekOffDays.map((day) => {
             const dayMap: Record<string, string> = {
               Monday: "1",
@@ -219,7 +212,7 @@ function UserZoneLinking() {
           value: item.value,
           label: i18n.language === "ar" ? item.labelAr : item.labelEn,
         })),
-    [lookupOptions, i18n.language]
+    [lookupOptions, i18n.language],
   );
 
   const zoneOptions = useMemo(
@@ -229,21 +222,17 @@ function UserZoneLinking() {
         label: `${zone.zoneCode}-${zone.zone}`,
         original: zone,
       })),
-    [zones, i18n.language]
+    [zones, i18n.language],
   );
 
   const shiftOptions = useMemo(
     () =>
       shifts.map((shift) => ({
         value: shift.shiftTypeGUID,
-        label: `${shift.shiftTypeCode} - ${
-          i18n.language === "ar"
-            ? shift.shiftTypeNameAr
-            : shift.shiftTypeNameEn
-        }`,
+        label: `${shift.shiftTypeCode} - ${i18n.language === "ar" ? shift.shiftTypeNameAr : shift.shiftTypeNameEn}`,
         original: shift,
       })),
-    [shifts, i18n.language]
+    [shifts, i18n.language],
   );
 
   const weekDayOptions = useMemo(
@@ -252,36 +241,24 @@ function UserZoneLinking() {
         label: t(day.label),
         value: day.value,
       })),
-    [i18n.language, t]
+    [i18n.language, t],
   );
 
   // === Handlers ===
   const handleZoneChange = (value: string[], record: InspectorData) => {
-    setData((prev) =>
-      prev.map((item) => (item.key === record.key ? { ...item, zone: value } : item))
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, zone: value } : item)));
   };
 
   const handleShiftChange = (value: string, record: InspectorData) => {
-    setData((prev) =>
-      prev.map((item) => (item.key === record.key ? { ...item, shift: value } : item))
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, shift: value } : item)));
   };
 
   const handleWeekOffChange = (checkedValues: string[], record: InspectorData) => {
-    setData((prev) =>
-      prev.map((item) =>
-        item.key === record.key ? { ...item, weekOffs: checkedValues } : item
-      )
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, weekOffs: checkedValues } : item)));
   };
 
   const handleAssignmentTypeChange = (value: number[], record: InspectorData) => {
-    setData((prev) =>
-      prev.map((item) =>
-        item.key === record.key ? { ...item, assignmentType: value } : item
-      )
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, assignmentType: value } : item)));
   };
 
   // === Update Handler ===
@@ -302,17 +279,11 @@ function UserZoneLinking() {
 
       await updateShiftManagement(updateData).unwrap();
 
-      notification.success(
-        t("Update successful"),
-        t("Inspector data has been updated successfully.")
-      );
+      notification.success(t("Update successful"), t("Inspector data has been updated successfully."));
 
       refetchActiveShifts();
     } catch {
-      notification.error(
-        t("Update failed"),
-        t("Failed to update inspector data. Please try again.")
-      );
+      notification.error(t("Update failed"), t("Failed to update inspector data. Please try again."));
     }
   };
 
@@ -392,9 +363,7 @@ function UserZoneLinking() {
             <Checkbox.Group
               options={weekDayOptions}
               value={record.weekOffs || []}
-              onChange={(vals) =>
-                handleWeekOffChange(vals as string[], record)
-              }
+              onChange={(vals) => handleWeekOffChange(vals as string[], record)}
               style={{ display: "flex", flexDirection: "column", gap: 4 }}
             />
           ),
@@ -408,11 +377,7 @@ function UserZoneLinking() {
           width: 120,
           render: (_: any, record: InspectorData) => (
             <Space>
-              <Button
-                type="primary"
-                onClick={() => handleUpdate(record)}
-                loading={isUpdating}
-              >
+              <Button type="primary" onClick={() => handleUpdate(record)} loading={isUpdating}>
                 {t("common.update")}
               </Button>
             </Space>
@@ -437,15 +402,7 @@ function UserZoneLinking() {
   ]);
 
   return (
-    <Spin
-      spinning={
-        isLoadingActiveShifts ||
-        isLoadingLookups ||
-        isLoadingZones ||
-        isLoadingShifts ||
-        isUpdating
-      }
-    >
+    <Spin spinning={isLoadingActiveShifts || isLoadingLookups || isLoadingZones || isLoadingShifts || isUpdating}>
       <DataTableWrapper
         pageConfig={{
           ...UserZoneLinkingConfig,
@@ -473,8 +430,10 @@ function UserZoneLinking() {
           pageSize={pageSize}
           total={data.length}
           onChange={handlePageChange}
-          showSizeChanger
+          showSizeChanger={{ showSearch: false }}
           pageSizeOptions={["5", "10", "20", "50"]}
+          showQuickJumper={false}
+          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
         />
       </div>
     </Spin>

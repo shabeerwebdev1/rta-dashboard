@@ -205,6 +205,11 @@ function SupervisorManagement() {
     );
   };
 
+  const handlePageChange = (page: number, size?: number) => {
+    setCurrentPage(page);
+    if (size) setPageSize(size);
+  };
+
   const handleUpdate = async (record: SupervisorData) => {
     try {
       setUpdatingRowKey(record.key);
@@ -365,17 +370,18 @@ function SupervisorManagement() {
 
       {/*  Fresh Pagination */}
       <div style={{ marginTop: 16, textAlign: "right" }}>
-        <Pagination
-          current={currentPage}
-          pageSize={pageSize}
-          total={data.length}
-          onChange={(page, size) => {
-            setCurrentPage(page);
-            setPageSize(size);
-          }}
-          showSizeChanger
-        />
-      </div>
+             <Pagination
+               current={currentPage}
+               pageSize={pageSize}
+               total={data.length}
+               onChange={handlePageChange}
+              
+               showSizeChanger={{showSearch: false }}
+               pageSizeOptions={["5", "10", "20", "50"]}
+               showQuickJumper={false}
+               showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+             />
+           </div>
     </Spin>
   );
 }

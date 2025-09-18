@@ -1,5 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { Card, Col, Row, Select, Table, Tag, Typography, Button, Avatar, Statistic, Spin, message } from "antd";
+import {
+  Card,
+  Col,
+  Row,
+  Select,
+  Table,
+  Tag,
+  Typography,
+  Button,
+  Avatar,
+  Statistic,
+  Spin,
+  message,
+  DatePicker,
+} from "antd";
 import {
   UserOutlined,
   CheckCircleOutlined,
@@ -12,7 +26,7 @@ import {
 } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import DashboardViewDrawer from "../components/dashboard/DashboardViewDrawer";
-import { useGetSupervisorDashboardQuery, useGetActiveShiftsQuery } from "../services/rtkApiFactory";
+import { useGetSupervisorDashboardQuery, useGetActiveShiftsQuery,useLazyGetShiftsQuery } from "../services/rtkApiFactory";
 import { useTranslation } from "react-i18next";
 import ArcGISMap from "../components/common/ArcGISMap"; // ✅ our new reusable map
 
@@ -25,9 +39,26 @@ const SupervisorViewPage: React.FC = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedInspector, setSelectedInspector] = useState<any>(null);
   const [selectedSupervisor, setSelectedSupervisor] = useState<string | null>(null);
-  const [supervisorInfo, setSupervisorInfo] = useState<any>(null);
+  const [selectedInspectorDropdown, setSelectedInspectorDropdown] = useState<string | null>(null);
+   const [shifts, setShifts] = useState<any[]>([]);
+  const [selectedShift, setSelectedShift] = useState<string | null>(null);
 
-  const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery();
+  const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery({});
+   const [triggerGetShifts, { isLoading: isLoadingShiftsDropdown }] = useLazyGetShiftsQuery();
+
+   useEffect(() => {
+    // Fetch shifts when page loads
+    const fetchShifts = async () => {
+      try {
+        const result = await triggerGetShifts({}).unwrap();
+        setShifts(result);
+      } catch (err) {
+        message.error(t("messages.errorLoading", "Error loading shifts"));
+      }
+    };
+    fetchShifts();
+  }, [triggerGetShifts, t]);
+
 
   const {
     data: dashboardData,
@@ -38,6 +69,7 @@ const SupervisorViewPage: React.FC = () => {
   });
 
   const supervisors = activeShiftsData?.filter((shift: any) => shift.roleCode === "PARSUP") || [];
+  const inspectors = activeShiftsData?.filter((shift: any) => shift.roleCode === "PARINSP") || [];
 
   const getLocalizedText = (englishText: string, arabicText: string) => {
     return i18n.language === "ar" ? arabicText : englishText;
@@ -45,6 +77,10 @@ const SupervisorViewPage: React.FC = () => {
 
   const handleSupervisorChange = (value: string) => {
     setSelectedSupervisor(value);
+  };
+
+  const handleInspectorChange = (value: string) => {
+    setSelectedInspectorDropdown(value);
   };
 
   // Mock Inspectors (replace with API data if needed)
@@ -152,24 +188,46 @@ const SupervisorViewPage: React.FC = () => {
             </Select>
           </Col>
           <Col span={6}>
-            <div>
-              <Text strong>{t("form.supervisorName", "Name")}</Text> <br />
-              {dashboardData?.data?.users?.[0]?.employeeName || "N/A"}
-            </div>
+             <Select
+              placeholder={t("common.selectInspector", "Select Inspector")}
+              style={{ width: "100%" }}
+              value={selectedInspectorDropdown}
+              onChange={handleInspectorChange}
+              allowClear
+              loading={isLoadingShifts}
+            >
+              {inspectors.map((insp: any) => (
+                <Select.Option key={insp.employeeId} value={insp.employeeId}>
+                  {insp.employeeName}
+                </Select.Option>
+              ))}
+            </Select>
           </Col>
           <Col span={6}>
-            <div>
-              <Text strong>{t("form.zone", "Zone")}</Text> <br />
-              {dashboardData?.data?.users?.[0]?.zones?.join(", ") || "N/A"}
-            </div>
+<Select
+              placeholder={t("common.selectShift", "Select Shift")}
+              style={{ width: "100%" }}
+              value={selectedShift}
+              onChange={(val) => setSelectedShift(val)}
+              allowClear
+              loading={isLoadingShiftsDropdown}
+            >
+              {shifts.map((shift) => (
+                <Select.Option key={shift.shiftTypeGUID} value={shift.shiftTypeGUID}>
+                  {`${shift.shiftTypeCode} - ${
+                    i18n.language === "ar" ? shift.shiftTypeNameAr : shift.shiftTypeNameEn
+                  }`}
+                </Select.Option>
+              ))}
+            </Select>
+              
           </Col>
           <Col span={6}>
-            <div>
-              <Text strong>{t("form.shift", "Shift")}</Text> <br />
-              {supervisorInfo ? supervisorInfo.role : "N/A"}
-            </div>
+           
+             <DatePicker.RangePicker format={"DD-MM-YYYY"} />
           </Col>
         </Row>
+       
       </Card>
 
       {(isLoading || isLoadingShifts) && <Spin size="large" style={{ display: "block", margin: "50px auto" }} />}
