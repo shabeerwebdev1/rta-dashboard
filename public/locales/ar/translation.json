@@ -192,7 +192,8 @@
     "read": "قراءة",
     "update": "تحديث",
     "delete": "حذف",
-    "plateNumber": "رقم اللوحة"
+    "plateNumber": "رقم اللوحة",
+     "employeeName": " اس"
   },
   "common": {
     "action": "إجراء",
