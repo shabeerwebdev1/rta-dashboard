@@ -1,39 +1,41 @@
-import { CheckCircleOutlined, CloseCircleOutlined, DollarCircleOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, FileSearchOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
-import UAEPlate from "../../components/UAEPlate";
+import TradeLicenseCard from "../../components/TradeLicenseCard";
 
-export const finesConfig: PageConfig = {
-  key: "fines",
-  title: "page.title.CarPlateInspections",
-  name: { singular: "Fine", plural: "Fines" },
+export const tradeLicenseConfig: PageConfig = {
+  key: "tradeLicenseInspections",
+  title: "page.title.tradeLicenseInspections",
+  name: { singular: "Trade License Inspection", plural: "Trade License Inspections" },
+
   api: {
     get: "/api/Inspection",
     post: "",
     put: "",
     delete: "",
   },
+
   searchConfig: {
-    globalSearchKeys: ["Plate Number ", "Fine Number"],
-    columnFilterKeys: ["inspectionStatus", "vehicleColor", "fineType", "inspectionType"],
+    globalSearchKeys: [" TL Number", "Fine Number"],
+    columnFilterKeys: ["inspectionStatus", "inspectionType", "inspectionCategory"],
     dateRangeKey: "entityDateTime",
   },
 
   statsConfig: [
     {
-      title: "Total Fines",
-      icon: <DollarCircleOutlined />,
+      title: "Total Inspections",
+      icon: <FileSearchOutlined />,
       value: (data) => data.length,
     },
     {
-      title: "Paid Fines",
+      title: "Approved",
       icon: <CheckCircleOutlined />,
-      value: (data) => data.filter((d) => d.isPaid).length,
+      value: (data) => data.filter((d) => d.inspectionStatus === "Approved").length,
       color: "#52c41a",
     },
     {
-      title: "Unpaid Fines",
+      title: "Rejected",
       icon: <CloseCircleOutlined />,
-      value: (data) => data.filter((d) => !d.isPaid).length,
+      value: (data) => data.filter((d) => d.inspectionStatus === "Rejected").length,
       color: "#ff4d4f",
     },
   ],
@@ -43,19 +45,17 @@ export const finesConfig: PageConfig = {
     columns: [
       { key: "entityNo", title: "form.fineNumber", type: "string" },
       {
-        key: "plateNumber",
-        title: "form.plateNumber",
+        key: "tradeLicense",
+        title: "form.tradeLicense",
         type: "custom",
         render: (_, record) => (
-          <UAEPlate
-            code={record?.plateCategoryValue}
-            number={record?.plateNumber}
-            emirateEn={record?.plateSourceValue}
-            emirateAr={record?.plateCodeValue}
+          <TradeLicenseCard
+            code={record?.tradeLicenseNumber}
+            number={record?.tradeLicenseNameEn}
+            emirateAr={record?.tradeLicenseNameAr}
           />
         ),
       },
-
       { key: "inspectionType", title: "form.inspectionType", type: "number", filterable: true },
       { key: "inspectionCategory", title: "form.fineType", type: "string", filterable: true },
       { key: "fineAmount", title: "form.fineAmount", type: "number" },

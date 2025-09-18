@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { serializeParams } from "../hooks/useTableParams";
 
-const RTA_API_TARGET = "https://qaparkingapi.kandaprojects.live";
+const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: RTA_API_TARGET,
@@ -187,7 +187,26 @@ export const dynamicApi = createApi({
 
     // FIXED: searchFines query to handle the correct response structure
     searchFines: builder.query({
-      query: (params) => ({ url: "/api/Inspection", params }),
+      query: (params) => ({ url: "/api/Inspection/CarInspections", params }),
+      providesTags: ["FineSearch"],
+      transformResponse: (response: any) => {
+        if (!response) return { data: [], total: 0 };
+
+        const normalizedData = (response.data || []).map((item: any) => ({
+          ...item,
+          inspectionCategory: item.inspectionCategory ? parseInt(item.inspectionCategory, 10) : null,
+        }));
+
+        return {
+          data: normalizedData,
+          total: response.totalCount || 0,
+        };
+      },
+    }),
+  
+// FIXED: searchTrade query to handle the correct response structure    
+    searchTrade: builder.query({
+      query: (params) => ({ url: "/api/Inspection/TLInspections", params }),
       providesTags: ["FineSearch"],
       transformResponse: (response: any) => {
         if (!response) return { data: [], total: 0 };
@@ -409,4 +428,8 @@ export const {
   // Leave Management
   useGetLeaveDetailsQuery,
   useUpdateLeaveStatusMutation,
+
+  useSearchTradeQuery,
+
+
 } = dynamicApi;

@@ -30,7 +30,9 @@
     "carplateinspections": "Car Plate ",
     "tradelicenseinspections": "Trade License ",
 
-    "management": "Management"
+    "management": "Management",
+    "carplate": "Car Plate",
+    "tradeLicense": "Trade License"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -58,7 +60,9 @@
       "inspectionmanagement": "Inspections Management",
       "roleManagement": "Role Management",
       "leaveManagement": "Leave Management",
-      "towing": "Towing Management"
+      "towing": "Towing Management",
+      "CarPlateInspections": "Car Plate Inspections",
+      "tradeLicenseInspections": "Trade License Inspections"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",
@@ -188,7 +192,8 @@
     "create": "Create",
     "read": "Read",
     "update": "Update",
-    "delete": "Delete"
+    "delete": "Delete",
+    "plateNumber": "Plate Number"
   },
   "common": {
     "action": "Action",

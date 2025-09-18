@@ -10,7 +10,6 @@ import GeneralSearchPage from "./pages/GeneralSearchPage";
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const PermitsPage = lazy(() => import("./pages/PermitsPage"));
 const WhitelistPlatesPage = lazy(() => import("./pages/WhitelistPlatesPage"));
-const WhitelistTradeLicensesPage = lazy(() => import("./pages/WhitelistTradeLicensesPage"));
 const PledgesPage = lazy(() => import("./pages/PledgesPage"));
 const InspectionObstaclesPage = lazy(() => import("./pages/InspectionObstaclesPage"));
 const FinesPage = lazy(() => import("./pages/FinesPage"));
@@ -23,6 +22,7 @@ const ShiftManagement = lazy(() => import("./pages/ShiftManagement"));
 const RoleManagementPage = lazy(() => import("./pages/RoleManagementPage"));
 const LeaveManagementPage = lazy(() => import("./pages/LeaveManagementPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
+const TradeLicenseInspectionPage = lazy(() => import("./pages/TradeLicenseInspectionPage"));
 import TowingPage from "./pages/TowingPage";
 
 const AppRoutes = () => (
@@ -106,15 +106,16 @@ const AppRoutes = () => (
               </ProtectedRoute>
             }
           />
-          <Route
-            path={PATHS.TRADELICENSES}
-            element={
-              <ProtectedRoute>
-                <WhitelistTradeLicensesPage />
-              </ProtectedRoute>
-            }
-          />
         </Route>
+
+        <Route
+          path={PATHS.TRADE_LICENSE_INSPECTIONS}
+          element={
+            <ProtectedRoute>
+              <TradeLicenseInspectionPage />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path={PATHS.PLEDGES}

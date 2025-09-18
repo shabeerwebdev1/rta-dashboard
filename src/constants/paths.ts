@@ -13,6 +13,9 @@ export const PATHS = {
   PLEDGES: "pledges",
   INSPECTIONS: "inspections",
   FINES: "fines",
+  TRADE_LICENSE_INSPECTIONS: "trade-license-inspections", // ✅ renamed
+
+  
   PARKONIC: "parkonic",
   DISPUTE: "dispute",
   GENERAL: "general",
@@ -51,6 +54,8 @@ export const FULL_PATHS = {
   PARKONIC: "/parkonic",
   FINES: "/fines",
   DISPUTE: "/dispute",
+  TRADE_LICENSE_INSPECTIONS: "/trade-license-inspections", // ✅ renamed
+
 
 
   LEAVE_MANGEMENT: "/leave-management",

@@ -64,7 +64,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
 
   // Fetch attachments for the fine
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
-    fine ? { inspectionGUID: fine.inspectionGUID, entityCode: "parking-inspection" } : skipToken,
+    fine ? { inspectionGUID: fine.inspectionGUID, entityCode: fine.entityCode } : skipToken,
   );
 
   // Fetch lookups if not provided externally

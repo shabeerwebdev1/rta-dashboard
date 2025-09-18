@@ -31,9 +31,10 @@
     "management": "الإدارة",
     "roles": "الأدوار",
     "leaves": "الإجازات",
-    "whitelists": "القوائم البيضاء"
-
-    },
+    "whitelists": "القوائم البيضاء",
+    "carplate": "لوحات السيارات",
+    "tradeLicense": "الرخص التجارية"
+  },
   "header": {
     "compactMode": "الوضع المضغوط",
     "standardMode": "الوضع القياسي"
@@ -60,8 +61,9 @@
       "inspectionmanagement": "إدارة التفتيش",
       "roleManagement": "إدارة الأدوار",
       "leaveManagement": "إدارة الإجازات",
-      "towing": "إدارة سحب المركبات"
-
+      "towing": "إدارة سحب المركبات",
+      "CarPlateInspections": "تفتيشات لوحات السيارات",
+      "tradeLicenseInspections": "تفتيشات الرخص التجارية"
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",
@@ -79,10 +81,10 @@
     "selectRows": "يرجى تحديد صف واحد على الأقل للتنزيل.",
     "fileUploadSuccess": "تم رفع الملف بنجاح: {fileName}",
     "fileUploadError": "فشل رفع الملف: {fileName}",
-     "errorLoading": "خطأ في تحميل بيانات لوحة التحكم"
+    "errorLoading": "خطأ في تحميل بيانات لوحة التحكم"
   },
   "form": {
-   "Number": "الرقم",
+    "Number": "الرقم",
     "Source": "المصدر",
     "Type": "النوع",
     "Color": "اللون",
@@ -158,8 +160,8 @@
     "vehicleOwnerEmail": "البريد الإلكتروني لمالك المركبة",
     "vehicleOwnerMobile": "جوال مالك المركبة",
     "notPaid": "لم يتم الدفع",
-    "pledgeDate":  "تاريخ التعهد",
-    "pledgeEndDate":  "تاريخ انتهاء التعهد",
+    "pledgeDate": "تاريخ التعهد",
+    "pledgeEndDate": "تاريخ انتهاء التعهد",
     "disputestatus": "حالة النزاع",
     "assinedto": "مُعين إلى",
     "sourceUser": "المستخدم المصدر",
@@ -167,30 +169,30 @@
     "approvalActions": "إجراءات الموافقة",
     "approve": "الموافقة",
     "reject": "الرفض",
-    
-   
+
     "InspectorName": "اسم المفتش",
     "Zone": "المنطقة",
     "Shift": "الوردية",
     "AssignmentType": "نوع التكليف",
     "WeekOffs": "أيام العطلة",
     "Actions": "الإجراءات",
-      "employeeId": "معرف الموظف",
-     "leaveType": "نوع الإجازة",
-      "leaveReason": "سبب الإجازة",
-      "totalLeaveDays": "إجمالي أيام الإجازة",
-      "plateCategory": "فئة اللوحة",
-      "plateCode": "رمز اللوحة",
-      "actions": "الإجراءات",
-      "totalLeaves": "إجمالي الإجازات",
-      "approved": "موافق",
-      "rejected": "مرفوض",
-      "pending": "قيد الانتظار",
-      "menuItem": "عنصر القائمة",
-      "create": "إنشاء",
-      "read": "قراءة",
-      "update": "تحديث",
-      "delete": "حذف"
+    "employeeId": "معرف الموظف",
+    "leaveType": "نوع الإجازة",
+    "leaveReason": "سبب الإجازة",
+    "totalLeaveDays": "إجمالي أيام الإجازة",
+    "plateCategory": "فئة اللوحة",
+    "plateCode": "رمز اللوحة",
+    "actions": "الإجراءات",
+    "totalLeaves": "إجمالي الإجازات",
+    "approved": "موافق",
+    "rejected": "مرفوض",
+    "pending": "قيد الانتظار",
+    "menuItem": "عنصر القائمة",
+    "create": "إنشاء",
+    "read": "قراءة",
+    "update": "تحديث",
+    "delete": "حذف",
+    "plateNumber": "رقم اللوحة"
   },
   "common": {
     "action": "إجراء",
@@ -277,11 +279,10 @@
     "SourceUser": "أدخل المستخدم المصدر",
     "plateCategory": "اختر فئة اللوحة",
     "plateCode": "اختر رمز اللوحة",
-     "selectShift": "اختر الوردية",
+    "selectShift": "اختر الوردية",
     "selectZones": "اختر المنطقة (المناطق)",
     "selectAssignmentTypes": "اختر نوع التكليف (التكليفات)",
     "selectRole": "اختر الدور"
-
   },
   "dashboard": {
     "totalInspectors": "إجمالي المفتشين",
@@ -301,7 +302,7 @@
     "leaveRequests": "طلبات الإجازة",
     "obstacle": "عائق"
   },
-    "weekdays": {
+  "weekdays": {
     "Monday": "الإثنين",
     "Tuesday": "الثلاثاء",
     "Wednesday": "الأربعاء",

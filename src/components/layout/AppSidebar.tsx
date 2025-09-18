@@ -100,7 +100,13 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         {
           key: FULL_PATHS.FINES,
           icon: <DollarOutlined />,
-          labelText: t("sidebar.inspectionmanagement"),
+          labelText: t("sidebar.carplate"),
+          permission: "Inspection",
+        },
+        {
+          key: FULL_PATHS.TRADE_LICENSE_INSPECTIONS,
+          icon: <FileTextOutlined />,
+          labelText: t("sidebar.tradeLicense"),
           permission: "Inspection",
         },
       ],

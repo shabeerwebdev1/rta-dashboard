@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-const RTA_API_TARGET = "https://qaparkingapi.kandaprojects.live";
-const INSPECTION_FILES_BASE_URL = "https://kandaprojects.live/documents/parking";
+const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
+const INSPECTION_FILES_BASE_URL = "http://kandaprojects.live/documents/parking";
 
 const MOBILE_FILES_BASE_URL = "https://kandaprojects.live/documents";
 
