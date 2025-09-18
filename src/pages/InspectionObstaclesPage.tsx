@@ -306,6 +306,7 @@ const InspectionObstaclesPage: React.FC = () => {
   const enhancedTableConfig = useMemo(
     () => ({
       ...config.tableConfig,
+
       columns: config.tableConfig.columns.map((column) => {
         if (column.key === "zone") {
           return {
@@ -316,6 +317,7 @@ const InspectionObstaclesPage: React.FC = () => {
             },
           };
         }
+
         if (column.key === "area") {
           return {
             ...column,
@@ -335,22 +337,13 @@ const InspectionObstaclesPage: React.FC = () => {
           };
         }
 
-        // ✅ Status column with badges
         if (column.key === "status") {
           return {
             ...column,
-            render: (v: number) => {
-              const statusKey = v === 1 ? "removed" : "reported";
-              const color = v === 1 ? "green" : "orange";
-              return <Tag color={color}>{t(`status.${statusKey}`)}</Tag>;
-            },
-            filters: [
-              { text: t("status.reported"), value: 0 },
-              { text: t("status.removed"), value: 1 },
-            ],
-            onFilter: (value: any, record: any) => record.status === value,
+            render: () => <Tag color="green">{t("status.active")}</Tag>,
           };
         }
+
         return column;
       }),
     }),
@@ -503,11 +496,7 @@ const InspectionObstaclesPage: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item
-                  name="ClosestPaymentDevice"
-                  label={t("form.closestPD")}
-                  rules={[{ required: true }]}
-                >
+                <Form.Item name="ClosestPaymentDevice" label={t("form.closestPD")} rules={[{ required: true }]}>
                   <Input placeholder={t("placeholders.closestPaymentDevice")} />
                 </Form.Item>
               </Col>
@@ -519,10 +508,10 @@ const InspectionObstaclesPage: React.FC = () => {
                   valuePropName="fileList"
                   getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
                 >
-                  <Upload listType="picture-card" beforeUpload={() => false} multiple={true} accept=".jpg,.jpeg">
+                  <Upload listType="picture-card" beforeUpload={() => false} multiple={true}>
                     <div>
                       <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>{t("form.UploadJPG/JPEG")}</div>
+                      <div style={{ marginTop: 8 }}>{t("form.upload")}</div>
                     </div>
                   </Upload>
                 </Form.Item>

@@ -1,26 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import {
-  Space,
-  Card,
-  Input,
-  Button,
-  Modal,
-  Form,
-  Row,
-  Col,
-  Select,
-  App,
-  Upload,
-  DatePicker,
-  Spin,
-} from "antd";
-import {
-  PlusOutlined,
-  EyeOutlined,
-  DownloadOutlined,
- 
-  EditOutlined,
-} from "@ant-design/icons";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Upload, DatePicker, Spin } from "antd";
+import { PlusOutlined, EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
@@ -417,7 +397,6 @@ const PledgesPage: React.FC = () => {
               <DatePicker.RangePicker
                 value={state.dateRange}
                 format={"DD-MM-YYYY"}
-
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
             </Space>
@@ -427,7 +406,7 @@ const PledgesPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
-             
+
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
@@ -517,23 +496,10 @@ const PledgesPage: React.FC = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item
-                  name="dateRange"
-                  label={t("form.dateRange")}
-                  rules={[
-                    {
-                      required: true,
-                      validator: (_, value) => {
-                        if (!value || value.length !== 2) {
-                          return Promise.reject(new Error(t("messages.dateRangeRequired")));
-                        }
-                        return Promise.resolve();
-                      },
-                    },
-                  ]}
-                >
+                <Form.Item name="dateRange" label={t("form.dateRange")} rules={[{ required: true }]}>
                   <DatePicker.RangePicker
                     style={{ width: "100%" }}
+                    format={"DD-MM-YYYY"}
                     disabledDate={(d) => d && d < dayjs().startOf("day")}
                     placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                   />
@@ -544,11 +510,11 @@ const PledgesPage: React.FC = () => {
                 <Form.Item
                   name="document"
                   label={t("form.document")}
-                  rules={[{ required: modalMode === "add" }]} // Only required for add mode
+                  rules={[{ required: modalMode === "add" }]}
                   valuePropName="fileList"
                   getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
                 >
-                  <Upload listType="picture-card" beforeUpload={() => false} multiple={true} accept=".jpg,.jpeg">
+                  <Upload listType="picture-card" beforeUpload={() => false} multiple={true}>
                     <div>
                       <PlusOutlined />
                       <div style={{ marginTop: 8 }}>{t("form.UploadJPG/JPEG")}</div>

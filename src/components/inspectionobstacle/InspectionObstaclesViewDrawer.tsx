@@ -5,7 +5,7 @@ import { DeleteOutlined, ShareAltOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
 import { useAppNotification } from "../../utils/notificationManager";
 import { useUpdateInspectionObstacleMutation } from "../../services/rtkApiFactory";
-import { useGetInspectionAttachmentsQuery, getInspectionFileUrl } from "../../services/inspectionFileApi";
+import { useGetInspectionAttachmentsQuery,  getMobileFileUrl } from "../../services/inspectionFileApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 
 interface InspectionObstaclesViewDrawerProps {
@@ -54,7 +54,6 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
     { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "text" },
     { key: "closestPaymentDevice", title: "form.closestPD", type: "text" },
     { key: "comments", title: "form.comments", type: "text" },
-    { key: "status", title: "form.status", type: "status" },
     { key: "removeAction", title: "common.remove obstacle", type: "action" },
   ];
 
@@ -107,11 +106,7 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
               if (isRemoved) return null;
               return (
                 <Descriptions.Item label={t(field.title)} key={field.key}>
-                  <Button
-                    icon={<DeleteOutlined />}
-                    onClick={() => handleRemoveObstacle(record.obstacleCode as string)}
-                    danger
-                  >
+                  <Button icon={<DeleteOutlined />} onClick={() => handleRemoveObstacle(record.inspectionGUID)} danger>
                     {t("common.remove")}
                   </Button>
                 </Descriptions.Item>
@@ -135,11 +130,7 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
                 const sourceOption = sourceOptions.find((opt) => opt.value === rawValue);
                 return sourceOption ? sourceOption.label : rawValue;
               }
-              if (field.type === "status") {
-                const statusKey = Number(rawValue);
-                const color = statusKey === 1 ? "green" : "orange";
-                return <Tag color={color}>{statusLabels[statusKey] || rawValue}</Tag>;
-              }
+
               return String(rawValue);
             })();
 
@@ -164,7 +155,7 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
                     key={file.attachmentGUID}
                     width={100}
                     height={100}
-                    src={getInspectionFileUrl(file.filePath, file.fileName)}
+                    src={getMobileFileUrl(file.filePath,)}
                     alt={file.fileName}
                   />
                 ))}

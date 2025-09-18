@@ -145,8 +145,8 @@ export const dynamicApi = createApi({
       invalidatesTags: ["InspectionObstacle"],
     }),
     updateInspectionObstacle: builder.mutation({
-      query: (obstacleCode) => ({
-        url: `/api/InspectionObstacle/markremoved/${obstacleCode}`,
+      query: (InspectionGUID) => ({
+        url: `/api/InspectionObstacle/markremoved/${InspectionGUID}`,
         method: "PUT",
       }),
       invalidatesTags: ["InspectionObstacle"],
@@ -203,8 +203,8 @@ export const dynamicApi = createApi({
         };
       },
     }),
-  
-// FIXED: searchTrade query to handle the correct response structure    
+
+    // FIXED: searchTrade query to handle the correct response structure
     searchTrade: builder.query({
       query: (params) => ({ url: "/api/Inspection/TLInspections", params }),
       providesTags: ["FineSearch"],
@@ -430,6 +430,4 @@ export const {
   useUpdateLeaveStatusMutation,
 
   useSearchTradeQuery,
-
-
 } = dynamicApi;

@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, DatePicker, Tooltip, Spin, Tag } from "antd";
-import {
-  PlusOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DownloadOutlined,
-  AppstoreOutlined,
-  UnorderedListOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -65,7 +58,7 @@ const DisputeManagementPage: React.FC = () => {
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any>(null);
-  const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
+  const [tableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
@@ -168,7 +161,6 @@ const DisputeManagementPage: React.FC = () => {
 
     if (mode === "edit" && record) {
       try {
-        // Fetch the latest dispute data for editing
         const result = await triggerGetDisputeById(record.dispute_Id).unwrap();
         if (result.data) {
           form.setFieldsValue({
@@ -180,16 +172,16 @@ const DisputeManagementPage: React.FC = () => {
             email: result.data.email,
             phone: result.data.phone,
             address: result.data.address,
-            sourceUser: result.data.sourceUser,
-            actualDisputeDate: result.data.actualDisputeDate ? dayjs(result.data.actualDisputeDate) : null,
+            sourceUser: result.data.sourceUser || "", // default to empty string if null
+            actualDisputeDate: result.data.actualDisputeDate
+              ? dayjs(result.data.actualDisputeDate, "YYYY-MM-DD")
+              : null,
           });
         }
       } catch (error) {
         console.error("Failed to fetch dispute details:", error);
         notification.error({ data: { en_Msg: "Failed to load dispute details" } }, "Load Failed");
       }
-    } else {
-      form.resetFields();
     }
   };
 
@@ -334,18 +326,13 @@ const DisputeManagementPage: React.FC = () => {
 
   const handleSearchKeyChange = (newKey: string) => {
     const currentValue = searchValue;
-
-    // Clear the input field with a slight delay
     setTimeout(() => {
       setSearchValue("");
     }, 0);
-
-    // If there's a current search value, preserve it as a column filter
     if (currentValue.trim()) {
       setGlobalSearch(state.searchKey, currentValue);
     }
 
-    // Update the search key with empty value
     setGlobalSearch(newKey, "");
   };
 
@@ -394,12 +381,7 @@ const DisputeManagementPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
-              <Tooltip title={tableSize === "middle" ? t("common.compactView") : t("common.standardView")}>
-                <Button
-                  icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
-                  onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
-                />
-              </Tooltip>
+
               <Button type="primary" icon={<PlusOutlined />} onClick={() => handleModalOpen("add")}>
                 {t("common.addNew")}
               </Button>
@@ -472,7 +454,7 @@ const DisputeManagementPage: React.FC = () => {
                   label={t("form.fineNumber")}
                   rules={[{ required: true, message: t("messages.requiredField") }]}
                 >
-                  <Input placeholder={t("placeholders.fineNumber")} type="number" />
+                  <Input placeholder={t("placeholders.fineNumber")} type="text" />
                 </Form.Item>
               </Col>
               <Col span={12}>

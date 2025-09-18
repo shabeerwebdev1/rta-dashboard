@@ -13,7 +13,7 @@ export const disputeManagementConfig: PageConfig = {
     delete: "",
   },
   searchConfig: {
-    globalSearchKeys: ["fine_Number", "crM_Ref", "phone", "email"],
+    globalSearchKeys: ["crM_Ref", "phone", "email"],
     columnFilterKeys: ["department", "payment_Type"],
     dateRangeKey: "createdAt",
   },

@@ -217,8 +217,8 @@ const WhitelistPlatesPage: React.FC = () => {
     const { dateRange, ...rest } = values;
     const payload = {
       ...rest,
-      fromDate: dateRange[0].toISOString(),
-      toDate: dateRange[1].toISOString(),
+      fromDate: dateRange[0].format("YYYY-MM-DD"), 
+      toDate: dateRange[1].format("YYYY-MM-DD"),
       plateStatus_Id: modalMode === "add" ? 5001 : rest.plateStatus_Id,
     };
 
@@ -503,6 +503,7 @@ const WhitelistPlatesPage: React.FC = () => {
                 <Form.Item name="dateRange" label={t("form.dateRange")} rules={[{ required: true }]}>
                   <DatePicker.RangePicker
                     style={{ width: "100%" }}
+                    format={"DD-MM-YYYY"}
                     disabledDate={(d) => d && d < dayjs().startOf("day")}
                     placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                   />

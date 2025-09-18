@@ -139,7 +139,7 @@ const RoleManagementPage: React.FC = () => {
       setTableData([]);
       setOriginalData([]);
     } catch (error) {
-      notification.error(t("Update failed"), t("Failed to update permissions. Please try again."));
+      notification.error(t("Update failed"), t("Please select at least one role before updating."));
       console.error("Update error:", error);
     }
   };

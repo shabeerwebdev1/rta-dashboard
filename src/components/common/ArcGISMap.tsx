@@ -1,4 +1,3 @@
- 
 import React, { useEffect, useRef, useState } from "react";
 import Map from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView";
@@ -18,6 +17,8 @@ type Inspector = {
   status: string;
   statusAr: string;
   details?: { zone: string; lastCheckIn: string };
+  markerType?: "default" | "google-pin"; 
+
 };
 
 interface ArcGISMapProps {
@@ -59,13 +60,26 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       viewRef.current = view;
 
       // Add inspector markers
+      // Add inspector markers
       inspectors.forEach((inspector) => {
-        const point = new Point({ longitude: inspector.lng, latitude: inspector.lat });
-        const symbol = new PictureMarkerSymbol({
-          url: "/images/Inspector.png",
-          width: "40px",
-          height: "40px",
+        const point = new Point({
+          longitude: inspector.lng,
+          latitude: inspector.lat,
         });
+
+        // Choose marker type
+        const symbol =
+          inspector.markerType === "google-pin"
+            ? new PictureMarkerSymbol({
+                url: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png", // Google pin
+                width: "32px",
+                height: "32px",
+              })
+            : new PictureMarkerSymbol({
+                url: "/images/Inspector.png", // Default inspector icon
+                width: "40px",
+                height: "40px",
+              });
 
         const graphic = new Graphic({
           geometry: point,

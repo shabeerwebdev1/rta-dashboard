@@ -12,6 +12,7 @@ import { useAppNotification } from "../../utils/notificationManager";
 // Import inspection attachments API
 import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
 import { skipToken } from "@reduxjs/toolkit/query";
+import ArcGISMap from "../common/ArcGISMap";
 
 const { Title } = Typography;
 
@@ -336,15 +337,24 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
             {/* Fine Location */}
             <h4 style={{ marginTop: 16 }}>{t("form.FineLocation")}</h4>
             {mappedFine.latitude && mappedFine.longitude ? (
-              <iframe
-                title="Fine Location"
-                width="100%"
-                height="300"
-                style={{ border: 0 }}
-                loading="lazy"
-                allowFullScreen
-                src={`https://www.google.com/maps?q=${mappedFine.latitude},${mappedFine.longitude}&z=15&output=embed`}
-              ></iframe>
+              <ArcGISMap
+                inspectors={[
+                  {
+                    id: 1,
+                    name: "Fine Location",
+                    nameAr: "Fine Location",
+                    lat: mappedFine.latitude,
+                    lng: mappedFine.longitude,
+                    status: "Fine",
+                    statusAr: "Fine",
+                    details: { zone: "", lastCheckIn: "" },
+                    markerType: "google-pin",
+                  },
+                ]}
+                center={[mappedFine.longitude, mappedFine.latitude]}
+                zoom={16}
+                height="300px"
+              />
             ) : (
               <Empty description="No Location Data Available" />
             )}
@@ -362,7 +372,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                         key={file.attachmentGUID}
                         width={100}
                         height={100}
-                        src={getMobileFileUrl(file.filePath, file.fileName)}
+                        src={getMobileFileUrl(file.filePath)}
                         alt={file.fileName}
                         style={{ objectFit: "cover", borderRadius: 8 }}
                       />

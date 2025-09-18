@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
-const INSPECTION_FILES_BASE_URL = "http://kandaprojects.live/documents/parking";
+
 
 const MOBILE_FILES_BASE_URL = "https://kandaprojects.live/documents";
 
@@ -39,10 +39,15 @@ export const inspectionFileApi = createApi({
 });
 
 //  Helper to build a download URL for preview
-export const getInspectionFileUrl = (filePath: string, fileName: string) =>
-  `${INSPECTION_FILES_BASE_URL}/${filePath}/${encodeURIComponent(fileName)}`;
 
-export const getMobileFileUrl = (filePath: string, fileName: string) =>
-  `${MOBILE_FILES_BASE_URL}/${filePath}/${encodeURIComponent(fileName)}`;
+
+export const getMobileFileUrl = (filePath: string) => {
+  if (!filePath) return "";
+  let normalizedPath = filePath.replace(/\\/g, "/"); // Replace backslashes with forward slashes
+  normalizedPath = normalizedPath.replace(/\/+/g, "/"); // Replace multiple slashes with a single slash
+  normalizedPath = normalizedPath.replace(/^\/+/, ""); // Remove leading slashes
+
+  return `${MOBILE_FILES_BASE_URL}/${normalizedPath}`;
+};
 
 export const { useUploadInspectionFilesMutation, useGetInspectionAttachmentsQuery } = inspectionFileApi;

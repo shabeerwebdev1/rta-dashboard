@@ -5,6 +5,9 @@ import { useValidatecodeQuery } from "../services/rtkApiFactory";
 import { useAuth } from "../contexts/AuthContext";
 
 const FALLBACK_CODE = "20250912C044F1F1A4F64D338C2EC17A";
+
+// 20250915CEC3A7E185164CBF92353511
+
 const SPLASH_DELAY = 1300;
 
 export default function SplashPage() {

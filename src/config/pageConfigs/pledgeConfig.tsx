@@ -14,7 +14,7 @@ export const pledgeConfig: PageConfig = {
   searchConfig: {
     globalSearchKeys: ["tradeLicenseNumber", "businessName"],
     columnFilterKeys: ["pledgeType"],
-    dateRangeKey: "submittedAt",
+    dateRangeKey: "pledgeDate",
   },
   statsConfig: [
     { title: "Total Pledges", icon: <AuditOutlined />, value: (data) => data.length },

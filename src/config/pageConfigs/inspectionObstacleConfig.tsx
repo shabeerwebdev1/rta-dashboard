@@ -15,7 +15,7 @@ export const inspectionObstacleConfig: PageConfig = {
   searchConfig: {
     globalSearchKeys: ["zone", "area"],
     columnFilterKeys: ["sourceOfObstacle", "status"],
-    dateRangeKey: "reportedAt",
+    dateRangeKey: "createdDateTime",
   },
   statsConfig: [
     {
@@ -23,17 +23,11 @@ export const inspectionObstacleConfig: PageConfig = {
       icon: <SearchOutlined />,
       value: (data) => data.length,
     },
-    {
-      title: "Reported Obstacles",
-      icon: <SearchOutlined />,
-      value: (data) => data.filter((d) => d.status === 0).length,
-    },
-    {
-      title: "Removed Obstacles",
+   {
+      title: "Active Obstacles",
       icon: <CheckSquareOutlined />,
-      value: (data) => data.filter((d) => d.status === 1).length,
-      color: "#52c41a",
-    },
+      value: (data) => data.length,
+   }
   ],
 
   tableConfig: {
@@ -42,7 +36,7 @@ export const inspectionObstacleConfig: PageConfig = {
       { key: "area", title: "form.area", type: "string", sortable: true },
       { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "string", filterable: true },
 
-      { key: "status", title: "form.status", type: "tag", filterable: true },
+      { key: "status", title: "form.status", type: "tag" },
     ],
     viewRecord: true,
     showEdit: false,
