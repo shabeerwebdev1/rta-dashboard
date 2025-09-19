@@ -12,7 +12,7 @@ import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import { towingConfig } from "../config/pageConfigs/towingConfig";
-import { useGetLeaveDetailsQuery } from "../services/rtkApiFactory";
+// import { useGetLeaveDetailsQuery } from "../services/rtkApiFactory";
 import TowingViewDrawer from "../components/Towing/TowingViewDrawer";
 
 const { Option } = Select;
@@ -44,10 +44,10 @@ const TowingPage: React.FC = () => {
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
   //  Fetch leave data from API
-  const { data, isFetching } = useGetLeaveDetailsQuery(apiParams);
+  // const { data, isFetching } = useGetLeaveDetailsQuery(apiParams);
 
-  const apiData = data?.data || [];
-  const total = data?.total || 0;
+  // const apiData = data?.data || [];
+  // const total = data?.total || 0;
 
   const filterOptions = {
     status: [
@@ -145,7 +145,7 @@ const TowingPage: React.FC = () => {
     <>
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         {/* Stats */}
-        <StatsDisplay statsConfig={config.statsConfig} data={apiData} loading={isFetching} />
+        {/* <StatsDisplay statsConfig={config.statsConfig} data={apiData} loading={isFetching} /> */}
 
         {/* Filters + Search */}
         <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
@@ -194,9 +194,9 @@ const TowingPage: React.FC = () => {
         {/* Table */}
         <DataTableWrapper
           pageConfig={config}
-          data={apiData}
-          total={total}
-          isLoading={isFetching}
+          // data={apiData}
+          // total={total}
+          // isLoading={isFetching}
           apiParams={apiParams}
           handleTableChange={handleTableChange}
           handlePaginationChange={handlePaginationChange}

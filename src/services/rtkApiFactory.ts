@@ -39,6 +39,7 @@ export const dynamicApi = createApi({
     "Roles",
     "ShiftManagement",
     "LeaveDetails",
+    "CallIntegration",
   ],
 
   endpoints: (builder) => ({
@@ -366,6 +367,17 @@ export const dynamicApi = createApi({
       }),
       invalidatesTags: ["LeaveDetails"], // refreshes leave list after update
     }),
+
+    getCarPlateDetails: builder.query({
+  query: (body) => ({
+    url: "/api/CallIntegration",
+    method: "POST",
+    body,
+  }),
+  providesTags: ["CallIntegration"], // 👈 use CallIntegration tag
+}),
+
+    
   }),
 });
 
@@ -430,4 +442,7 @@ export const {
   useUpdateLeaveStatusMutation,
 
   useSearchTradeQuery,
+  useLazyGetCarPlateDetailsQuery,
+
+
 } = dynamicApi;
