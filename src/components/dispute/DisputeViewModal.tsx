@@ -27,6 +27,11 @@ import { useAppNotification } from "../../utils/notificationManager";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import Map from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView";
+import { useGetActiveShiftsQuery } from "../../services/rtkApiFactory";
+import { Image, Space } from "antd";
+import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
+import { skipToken } from "@reduxjs/toolkit/query";
+import ArcGISMap from "../common/ArcGISMap";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -54,6 +59,23 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   const [storedDisputeId, setStoredDisputeId] = useState<string>("");
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
+  const { data: activeShiftsData, isLoading: isLoadingSupervisors } = useGetActiveShiftsQuery({});
+  const supervisors = activeShiftsData?.filter((shift: any) => shift.roleCode === "PARSUP") || [];
+
+  // Use disputeData instead of dispute to avoid reference before initialization
+  const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
+    disputeData?.data?.fineDetails?.inspectionId
+      ? {
+          inspectionGUID: disputeData.data.fineDetails.inspectionId,
+          entityCode: disputeData.data.fineDetails.entityCode,
+        }
+      : skipToken,
+  );
+
+  const getSupervisorName = (id: string) => {
+    const sup = supervisors.find((s: any) => s.employeeId === id);
+    return sup ? sup.employeeName : id; // fallback to ID if not found
+  };
 
   // Initialize map
   useEffect(() => {
@@ -422,15 +444,68 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                   )}
                 </Card>
 
-                {/* Map Section - Added below Fine Details */}
-                <Card
-                  title="Location Map"
-                  size="small"
-                  style={{ borderRadius: 12, marginBottom: 16 }}
-                  headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                >
-                  <div ref={mapRef} style={{ width: "100%", height: "180px", borderRadius: "8px" }} />
-                </Card>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Card
+                      title="Location Map"
+                      size="small"
+                      style={{ borderRadius: 12, marginBottom: 16 }}
+                      headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                    >
+                      {dispute?.lat && dispute?.lng ? (
+                        <ArcGISMap
+                          inspectors={[
+                            {
+                              id: 1,
+                              name: "Fine Location",
+                              nameAr: "موقع المخالفة",
+                              lat: parseFloat(dispute.lat),
+                              lng: parseFloat(dispute.lng),
+                              status: "Fine",
+                              statusAr: "مخالفة",
+                              details: { zone: "", lastCheckIn: "" },
+                              markerType: "google-pin",
+                            },
+                          ]}
+                          center={[parseFloat(dispute.lng), parseFloat(dispute.lat)]}
+                          zoom={16}
+                          height="180px"
+                        />
+                      ) : (
+                        <Empty description="No Location Data Available" />
+                      )}
+                    </Card>
+                  </Col>
+
+                  <Col span={12}>
+                    <Card
+                      title="Evidence Photos"
+                      size="small"
+                      style={{ borderRadius: 12, marginBottom: 16 }}
+                      headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                    >
+                      {isLoadingAttachments ? (
+                        <Spin />
+                      ) : attachments.length > 0 ? (
+                        <Image.PreviewGroup>
+                          <Space wrap>
+                            {attachments.map((file: any) => (
+                              <Image
+                                key={file.attachmentGUID}
+                                width={100}
+                                height={100}
+                                src={getMobileFileUrl(file.filePath)}
+                                alt={file.fileName}
+                              />
+                            ))}
+                          </Space>
+                        </Image.PreviewGroup>
+                      ) : (
+                        <Empty description="No Photos Available" />
+                      )}
+                    </Card>
+                  </Col>
+                </Row>
               </Col>
 
               {/* RIGHT SIDE - Review Timeline */}
@@ -459,9 +534,10 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                           {review.assignedTo && (
                             <>
                               <br />
-                              <Text type="secondary">Assigned to: {review.assignedTo}</Text>
+                              <Text type="secondary">Assigned to: {getSupervisorName(review.assignedTo)}</Text>
                             </>
                           )}
+
                           {review.createdAt && (
                             <>
                               <br />
@@ -490,10 +566,18 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                   {/* Supervisor dropdown */}
                   <Col span={6}>
                     <Form.Item name="assignedTo" label={<Text strong>Assign To</Text>}>
-                      <Select placeholder="Select Supervisor">
-                        <Select.Option value="supervisor1">Supervisor 1</Select.Option>
-                        <Select.Option value="supervisor2">Supervisor 2</Select.Option>
-                        <Select.Option value="supervisor3">Supervisor 3</Select.Option>
+                      <Select
+                        placeholder="Select Supervisor"
+                        loading={isLoadingSupervisors}
+                        allowClear
+                        showSearch
+                        optionFilterProp="children"
+                      >
+                        {supervisors.map((sup: any) => (
+                          <Select.Option key={sup.employeeId} value={sup.employeeId}>
+                            {sup.employeeName}
+                          </Select.Option>
+                        ))}
                       </Select>
                     </Form.Item>
                   </Col>

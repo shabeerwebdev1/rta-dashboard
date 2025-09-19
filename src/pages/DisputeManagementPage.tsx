@@ -124,7 +124,7 @@ const DisputeManagementPage: React.FC = () => {
       { value: 1, labelEn: "Pending", labelAr: "قيد الانتظار" },
       { value: 2, labelEn: "Approved", labelAr: "موافقة" },
       { value: 3, labelEn: "Rejected", labelAr: "مرفوض" },
-      { value: 4, labelEn: "Recalled", labelAr: "تم الاسترجاع" },
+      { value: 4, labelEn: "In Review", labelAr: "قيد المراجعة"},
     ],
     [],
   );
@@ -172,7 +172,7 @@ const DisputeManagementPage: React.FC = () => {
             email: result.data.email,
             phone: result.data.phone,
             address: result.data.address,
-            sourceUser: result.data.sourceUser || "", // default to empty string if null
+            sourceUser: result.data.source_user || "", // default to empty string if null
             actualDisputeDate: result.data.actualDisputeDate
               ? dayjs(result.data.actualDisputeDate, "YYYY-MM-DD")
               : null,
@@ -449,20 +449,12 @@ const DisputeManagementPage: React.FC = () => {
             <Row gutter={24}>
               {/* Change fine_Number to fineId to match API payload */}
               <Col span={12}>
-                <Form.Item
-                  name="fineId"
-                  label={t("form.fineNumber")}
-                  rules={[{ required: true, message: t("messages.requiredField") }]}
-                >
+                <Form.Item name="fineId" label={t("form.fineNumber")} rules={[{ required: true }]}>
                   <Input placeholder={t("placeholders.fineNumber")} type="text" />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item
-                  name="department"
-                  label={t("form.department")}
-                  rules={[{ required: true, message: t("messages.requiredField") }]}
-                >
+                <Form.Item name="department" label={t("form.department")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.department")}
                     loading={isLoadingLookups}
@@ -474,11 +466,7 @@ const DisputeManagementPage: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item
-                  name="payment_Type"
-                  label={t("form.paymentType")}
-                  rules={[{ required: true, message: t("messages.requiredField") }]}
-                >
+                <Form.Item name="payment_Type" label={t("form.paymentType")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.paymentType")}
                     loading={isLoadingLookups}
@@ -490,32 +478,17 @@ const DisputeManagementPage: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item
-                  name="dispute_Reason"
-                  label={t("form.reason")}
-                  rules={[{ required: true, message: t("messages.requiredField") }]}
-                >
+                <Form.Item name="dispute_Reason" label={t("form.reason")} rules={[{ required: true }]}>
                   <Input placeholder={t("placeholders.reason")} />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item
-                  name="crM_Ref"
-                  label={t("form.crmReference")}
-                  rules={[{ required: true, message: t("messages.requiredField") }]}
-                >
+                <Form.Item name="crM_Ref" label={t("form.crmReference")} rules={[{ required: true }]}>
                   <Input placeholder={t("placeholders.crmReference")} />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item
-                  name="email"
-                  label={t("form.email")}
-                  rules={[
-                    { required: true, message: t("messages.requiredField") },
-                    { type: "email", message: t("messages.invalidEmail") },
-                  ]}
-                >
+                <Form.Item name="email" label={t("form.email")} rules={[{ required: true }, { type: "email" }]}>
                   <Input placeholder={t("placeholders.email")} />
                 </Form.Item>
               </Col>
@@ -523,41 +496,30 @@ const DisputeManagementPage: React.FC = () => {
                 <Form.Item
                   name="phone"
                   label={t("form.phoneNumber")}
-                  rules={[
-                    { required: true, message: t("messages.requiredField") },
-                    { pattern: /^[0-9]+$/, message: t("messages.numbersOnly") },
-                  ]}
+                  rules={[{ required: true }, { pattern: /^[0-9]+$/ }]}
                 >
                   <Input placeholder={t("placeholders.phoneNumber")} maxLength={10} />
                 </Form.Item>
               </Col>
 
               <Col span={12}>
-                <Form.Item
-                  name="sourceUser"
-                  label={t("form.sourceUser")}
-                  rules={[{ required: true, message: t("messages.requiredField") }]}
-                >
+                <Form.Item name="sourceUser" label={t("form.sourceUser")} rules={[{ required: true }]}>
                   <Input placeholder={t("placeholders.SourceUser")} />
                 </Form.Item>
               </Col>
 
               <Col span={12}>
-                <Form.Item
-                  name="actualDisputeDate"
-                  label={t("form.actualDisputeDate")}
-                  rules={[{ required: true, message: t("messages.requiredField") }]}
-                >
-                  <DatePicker style={{ width: "100%" }} format="YYYY-MM-DD" />
+                <Form.Item name="actualDisputeDate" label={t("form.actualDisputeDate")} rules={[{ required: true }]}>
+                  <DatePicker
+                    style={{ width: "100%" }}
+                    format="DD-MM-YYYY"
+                    disabledDate={(current) => current && current > dayjs().endOf("day")}
+                  />
                 </Form.Item>
               </Col>
 
               <Col span={24}>
-                <Form.Item
-                  name="address"
-                  label={t("form.address")}
-                  rules={[{ required: true, message: t("messages.requiredField") }]}
-                >
+                <Form.Item name="address" label={t("form.address")} rules={[{ required: true }]}>
                   <Input.TextArea placeholder={t("placeholders.address")} rows={3} />
                 </Form.Item>
               </Col>

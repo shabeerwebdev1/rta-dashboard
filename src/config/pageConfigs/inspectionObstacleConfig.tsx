@@ -23,11 +23,11 @@ export const inspectionObstacleConfig: PageConfig = {
       icon: <SearchOutlined />,
       value: (data) => data.length,
     },
-   {
+    {
       title: "Active Obstacles",
       icon: <CheckSquareOutlined />,
       value: (data) => data.length,
-   }
+    },
   ],
 
   tableConfig: {
@@ -35,7 +35,7 @@ export const inspectionObstacleConfig: PageConfig = {
       { key: "zone", title: "form.zone", type: "string", sortable: true },
       { key: "area", title: "form.area", type: "string", sortable: true },
       { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "string", filterable: true },
-
+      { key: "createdDateTime", title: "form.createdDate", type: "date" },
       { key: "status", title: "form.status", type: "tag" },
     ],
     viewRecord: true,

@@ -193,7 +193,9 @@
     "read": "Read",
     "update": "Update",
     "delete": "Delete",
-    "plateNumber": "Plate Number"
+    "plateNumber": "Plate Number",
+    "createdDate": "Created Date",
+    "upload": "Upload 5MB Each Max"
   },
   "common": {
     "action": "Action",

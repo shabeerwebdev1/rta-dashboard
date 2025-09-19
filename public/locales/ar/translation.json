@@ -193,7 +193,11 @@
     "update": "تحديث",
     "delete": "حذف",
     "plateNumber": "رقم اللوحة",
-     "employeeName": " اس"
+     "employeeName": " اس",
+     "createdDate": "تاريخ الإنشاء",
+     "upload": "رفع"
+
+
   },
   "common": {
     "action": "إجراء",

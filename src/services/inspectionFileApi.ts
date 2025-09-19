@@ -2,7 +2,6 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
 
-
 const MOBILE_FILES_BASE_URL = "https://kandaprojects.live/documents";
 
 export const inspectionFileApi = createApi({
@@ -39,7 +38,6 @@ export const inspectionFileApi = createApi({
 });
 
 //  Helper to build a download URL for preview
-
 
 export const getMobileFileUrl = (filePath: string) => {
   if (!filePath) return "";

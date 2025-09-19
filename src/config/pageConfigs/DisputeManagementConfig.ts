@@ -13,7 +13,7 @@ export const disputeManagementConfig: PageConfig = {
     delete: "",
   },
   searchConfig: {
-    globalSearchKeys: ["crM_Ref", "phone", "email"],
+    globalSearchKeys: ["fineId", "crM_Ref", "phone", "email"],
     columnFilterKeys: ["department", "payment_Type"],
     dateRangeKey: "createdAt",
   },
@@ -47,7 +47,6 @@ export const disputeManagementConfig: PageConfig = {
       { key: "crM_Ref", title: "form.crmReference", type: "string", sortable: true },
       { key: "email", title: "form.email", type: "string" },
       { key: "dispute_Status", title: "form.disputestatus", type: "string" },
-      { key: "assignedTo", title: "form.assinedto", type: "string" },
     ],
     viewRecord: true,
     showEdit: true,

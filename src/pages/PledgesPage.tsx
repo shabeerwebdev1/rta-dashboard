@@ -514,7 +514,8 @@ const PledgesPage: React.FC = () => {
                   valuePropName="fileList"
                   getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
                 >
-                  <Upload listType="picture-card" beforeUpload={() => false} multiple={true}>
+                  <Upload listType="picture-card" beforeUpload={() => false} multiple={true}   accept=".jpg,.jpeg,image/jpeg"
+                  >
                     <div>
                       <PlusOutlined />
                       <div style={{ marginTop: 8 }}>{t("form.UploadJPG/JPEG")}</div>

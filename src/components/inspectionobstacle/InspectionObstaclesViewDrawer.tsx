@@ -5,7 +5,7 @@ import { DeleteOutlined, ShareAltOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
 import { useAppNotification } from "../../utils/notificationManager";
 import { useUpdateInspectionObstacleMutation } from "../../services/rtkApiFactory";
-import { useGetInspectionAttachmentsQuery,  getMobileFileUrl } from "../../services/inspectionFileApi";
+import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 
 interface InspectionObstaclesViewDrawerProps {
@@ -155,7 +155,7 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
                     key={file.attachmentGUID}
                     width={100}
                     height={100}
-                    src={getMobileFileUrl(file.filePath,)}
+                    src={getMobileFileUrl(file.filePath)}
                     alt={file.fileName}
                   />
                 ))}

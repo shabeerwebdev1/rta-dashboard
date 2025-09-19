@@ -15,7 +15,7 @@ export const tradeLicenseConfig: PageConfig = {
   },
 
   searchConfig: {
-    globalSearchKeys: [" TL Number", "Fine Number"],
+    globalSearchKeys: ["entityNo", "tradeLicenseNumber"],
     columnFilterKeys: ["inspectionStatus", "inspectionType", "inspectionCategory"],
     dateRangeKey: "entityDateTime",
   },
@@ -45,7 +45,7 @@ export const tradeLicenseConfig: PageConfig = {
     columns: [
       { key: "entityNo", title: "form.fineNumber", type: "string" },
       {
-        key: "tradeLicense",
+        key: "tradeLicenseNumber",
         title: "form.tradeLicense",
         type: "custom",
         render: (_, record) => (

@@ -27,11 +27,11 @@ const AppContent = () => {
 function AppContainer() {
   return (
     <AuthProvider>
-    <ThemeProvider>
-      <PageProvider>
-        <AppContent />
-      </PageProvider>
-    </ThemeProvider>
+      <ThemeProvider>
+        <PageProvider>
+          <AppContent />
+        </PageProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }
