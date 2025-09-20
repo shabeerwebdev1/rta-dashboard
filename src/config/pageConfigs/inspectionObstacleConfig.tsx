@@ -13,7 +13,7 @@ export const inspectionObstacleConfig: PageConfig = {
     delete: "",
   },
   searchConfig: {
-    globalSearchKeys: ["zone", "area"],
+    globalSearchKeys: [],
     columnFilterKeys: ["sourceOfObstacle", "status"],
     dateRangeKey: "createdDateTime",
   },

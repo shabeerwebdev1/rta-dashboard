@@ -52,18 +52,15 @@ export const whitelistPlateConfig: PageConfig = {
         align: "center",
         render: (_, record) => {
           return (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
               <UAEPlate
                 code={record.plateType_Id}
                 number={record.plateNumber}
                 emirateEn={EMIRATES[record.plateSource_Id]?.en || ""}
                 emirateAr={EMIRATES[record.plateSource_Id]?.ar || ""}
               />
-            </div>
           );
         },
       },
-      { key: "plateNumber", title: "form.Number", dataIndex: "plateNumber", type: "string", sortable: true },
       {
         key: "plateSource_Id",
         title: "form.Source",
@@ -107,7 +104,7 @@ export const whitelistPlateConfig: PageConfig = {
         lookupCategory: 100,
         filterable: true,
       },
-      { key: "isByLaw", title: "form.isByLaw", dataIndex: "isByLaw", type: "string" },
+      { key: "isByLaw", title: "form.isByLaw", dataIndex: "isByLaw", type: "string", align: 'center', },
     ],
     viewRecord: true,
   },

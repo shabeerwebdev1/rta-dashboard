@@ -1,5 +1,6 @@
+import { TableColumnsType } from "antd";
 import type { Rule } from "antd/es/form";
-import { ColumnsType } from "antd/es/table";
+import { ColumnsType, ColumnType } from "antd/es/table";
 import type { ReactNode } from "react";
 
 export type FormFieldType = "text" | "textarea" | "select" | "date" | "dateRange" | "file" | "hidden" | "email";
@@ -61,8 +62,16 @@ export interface SearchConfig {
   columnFilterKeys: string[];
   dateRangeKey: string;
 }
+export interface AppColumn<T = any> extends ColumnType<T> {
+  type?: "string" | "date" | "badge" | "tag" | "ReactNode";
+  sortable?: boolean;
+  filterable?: boolean;
+  lookupCategory?: number;
+}
 
-export interface PageConfig {
+export type AppColumns<T = any> = AppColumn<T>[];
+
+export interface PageConfig<T = any> {
   key: string;
   title: string;
   name: {
@@ -79,7 +88,9 @@ export interface PageConfig {
     search?: string;
   };
   searchConfig?: SearchConfig;
-  tableConfig: TableConfig;
+  tableConfig: {
+    columns: AppColumns<T>;
+  };
   formConfig: FormConfig;
   statsConfig?: StatConfig[];
 }

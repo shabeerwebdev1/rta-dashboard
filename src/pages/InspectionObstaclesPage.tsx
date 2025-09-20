@@ -60,10 +60,10 @@ const InspectionObstaclesPage: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any>(null);
   const [tableSize, setTableSize] = useState<"middle" | "small">("small");
+  const [filteredAreaOptions, setFilteredAreaOptions] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
-
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
@@ -364,6 +364,58 @@ const InspectionObstaclesPage: React.FC = () => {
     </Select>
   );
 
+  useEffect(() => {
+    const selectedZoneId = state.columnFilters.zone?.[0];
+    if (selectedZoneId && allAreasData) {
+      const filtered = allAreasData
+        .filter((area: any) => area.zone_Id === selectedZoneId)
+        .map((area: any) => ({ label: area.area, value: area.area_Id }));
+      setFilteredAreaOptions(filtered);
+    } else {
+      setFilteredAreaOptions(
+        allAreasData?.map((area: any) => ({ label: area.area, value: area.area_Id })) || [],
+      );
+    }
+  }, [state.columnFilters.zone, allAreasData]);
+
+  useEffect(() => {
+    setPageTitle(t(config.title));
+  }, [setPageTitle, t, config.title, i18n.language]);
+
+  const handleDropdownFilterChange = (key: "zone" | "area", value: string | null) => {
+    const newFilters: Record<string, any> = { ...state.columnFilters };
+
+    if (value) {
+      newFilters[key] = [value];
+    } else {
+      delete newFilters[key];
+    }
+
+    if (key === "zone") {
+      delete newFilters.area;
+    }
+
+    const sorter = state.sortBy
+      ? ({ field: state.sortBy, order: state.sortOrder } as SorterResult<any>)
+      : {};
+
+    handleTableChange(
+      { current: 1, pageSize: apiParams.PageSize },
+      newFilters,
+      sorter,
+    );
+  };
+
+  const getCustomLabelFromValue = (value: number | string, options: any[], i18nInstance: any) => {
+    const zone = zoneOptions.find((z) => z.value === value);
+    if (zone) return zone.label;
+
+    const area = areaOptions.find((a) => a.value === value);
+    if (area) return area.label;
+
+    return getLabelFromValue(value, options, i18nInstance); // Fallback to original
+  };
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <StatsDisplay statsConfig={config.statsConfig} data={data?.data || []} loading={isLoading} />
@@ -371,13 +423,24 @@ const InspectionObstaclesPage: React.FC = () => {
         <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
           <Col>
             <Space>
-              <Input
-                addonBefore={searchAddon}
-                placeholder={t("common.searchPlaceholder")}
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                style={{ width: 450 }}
+              <Select
+                placeholder={t("form.zone")}
+                style={{ width: 220 }}
                 allowClear
+                options={zoneOptions}
+                loading={isLoadingZones}
+                value={state.columnFilters.zone?.[0] as string | undefined}
+                onChange={(value) => handleDropdownFilterChange("zone", value)}
+              />
+              <Select
+                placeholder={t("form.area")}
+                style={{ width: 220 }}
+                allowClear
+                options={filteredAreaOptions}
+                loading={isLoadingAllAreas}
+                value={state.columnFilters.area?.[0] as string | undefined}
+                onChange={(value) => handleDropdownFilterChange("area", value)}
+                disabled={!state.columnFilters.zone?.[0]}
               />
               <DatePicker.RangePicker
                 value={state.dateRange}
@@ -405,11 +468,11 @@ const InspectionObstaclesPage: React.FC = () => {
         </Row>
         <ActiveFiltersDisplay
           state={state}
-          onClearFilter={handleClearFilter}
+          onClearFilter={clearFilter}
           onClearAll={handleClearAll}
           columnLabels={columnLabels}
           lookupOptions={lookupOptions}
-          getLabelFromValue={getLabelFromValue}
+          getLabelFromValue={getCustomLabelFromValue}
           statusLabels={statusLabels}
         />
       </Card>

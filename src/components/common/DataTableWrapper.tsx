@@ -6,7 +6,6 @@ import dayjs from "dayjs";
 import { STATUS_COLORS } from "../../constants/ui";
 import type { PageConfig } from "../../types/config";
 import { MoreOutlined } from "@ant-design/icons";
-import { ColumnsType } from "antd/es/table";
 
 interface DataTableWrapperProps {
   pageConfig: PageConfig;
@@ -120,6 +119,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
   const columns = React.useMemo(() => {
     const generatedColumns = pageConfig.tableConfig.columns.map((col: any) => {
       const antdCol: any = {
+        ...col,
         key: col.key,
         title: t(col.title),
         dataIndex: col.key,
