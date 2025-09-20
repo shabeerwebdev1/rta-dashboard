@@ -33,7 +33,8 @@
     "leaves": "الإجازات",
     "whitelists": "القوائم البيضاء",
     "carplate": "لوحات السيارات",
-    "tradeLicense": "الرخص التجارية"
+    "tradeLicense": "الرخص التجارية",
+    "parkonicLocation" : "الموقع باركونيك"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -63,7 +64,9 @@
       "leaveManagement": "إدارة الإجازات",
       "towing": "إدارة سحب المركبات",
       "CarPlateInspections": "تفتيشات لوحات السيارات",
-      "tradeLicenseInspections": "تفتيشات الرخص التجارية"
+      "tradeLicenseInspections": "تفتيشات الرخص التجارية",
+      "parkonicLocation" : "الموقع باركونيك"
+
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",
@@ -169,6 +172,7 @@
     "approvalActions": "إجراءات الموافقة",
     "approve": "الموافقة",
     "reject": "الرفض",
+    
 
     "InspectorName": "اسم المفتش",
     "Zone": "المنطقة",
@@ -195,7 +199,10 @@
     "plateNumber": "رقم اللوحة",
      "employeeName": " اس",
      "createdDate": "تاريخ الإنشاء",
-     "upload": "رفع"
+     "upload": "رفع",
+     "street": "شارع",
+    "lat": "خطوط العرض",
+    "long": "طويل"
 
 
   },

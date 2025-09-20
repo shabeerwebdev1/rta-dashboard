@@ -23,7 +23,9 @@ const RoleManagementPage = lazy(() => import("./pages/RoleManagementPage"));
 const LeaveManagementPage = lazy(() => import("./pages/LeaveManagementPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 const TradeLicenseInspectionPage = lazy(() => import("./pages/TradeLicenseInspectionPage"));
-import TowingPage from "./pages/TowingPage";
+const TowingPage = lazy(() => import("./pages/TowingPage"));
+const ParkonicLocationPage = lazy(() => import("./pages/ParkonicLocationPage"))
+
 
 const AppRoutes = () => (
   <Routes>
@@ -170,6 +172,15 @@ const AppRoutes = () => (
           element={
             <ProtectedRoute>
               <TowingPage />
+            </ProtectedRoute>
+          }
+        />
+
+         <Route
+          path={PATHS.PARKONIC_LOCATION}
+          element={
+            <ProtectedRoute>
+              <ParkonicLocationPage />
             </ProtectedRoute>
           }
         />

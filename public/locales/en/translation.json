@@ -29,10 +29,11 @@
     "whitelists": "Whitelists",
     "carplateinspections": "Car Plate ",
     "tradelicenseinspections": "Trade License ",
-
+     
     "management": "Management",
     "carplate": "Car Plate",
-    "tradeLicense": "Trade License"
+    "tradeLicense": "Trade License",
+    "parkonicLocation" : "Parkonic Location"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -62,7 +63,8 @@
       "leaveManagement": "Leave Management",
       "towing": "Towing Management",
       "CarPlateInspections": "Car Plate Inspections",
-      "tradeLicenseInspections": "Trade License Inspections"
+      "tradeLicenseInspections": "Trade License Inspections",
+      "parkonicLocation" : "Parkonic Location"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",
@@ -195,7 +197,10 @@
     "delete": "Delete",
     "plateNumber": "Plate Number",
     "createdDate": "Created Date",
-    "upload": "Upload 5MB Each Max"
+    "upload": "Upload 5MB Each Max",
+    "street": "Street",
+    "lat": "lat",
+    "long": "long"
   },
   "common": {
     "action": "Action",

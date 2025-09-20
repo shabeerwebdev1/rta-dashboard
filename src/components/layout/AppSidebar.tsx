@@ -14,6 +14,7 @@ import {
   AuditOutlined,
   SettingOutlined,
   LinkOutlined,
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -82,6 +83,12 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           key: FULL_PATHS.ROLE_MANAGEMENT,
           icon: <LinkOutlined />,
           labelText: t("sidebar.roles"),
+          permission: "RolePermission",
+        },
+        {
+          key: FULL_PATHS.PARKONIC_LOCATION,
+          icon: <EnvironmentOutlined />,
+          labelText: t("sidebar.parkonicLocation"),
           permission: "RolePermission",
         },
       ],

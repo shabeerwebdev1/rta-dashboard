@@ -32,6 +32,7 @@ import { Image, Space } from "antd";
 import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../common/ArcGISMap";
+import { useAuth } from "../../contexts/AuthContext";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -60,7 +61,16 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
   const { data: activeShiftsData, isLoading: isLoadingSupervisors } = useGetActiveShiftsQuery({});
-  const supervisors = activeShiftsData?.filter((shift: any) => shift.roleCode === "PARSUP") || [];
+  const allowedRoles = ["PARSUP", "PARDC", "PARDIR", "PARMGR", "PARSRSUP"];
+  const filteredSupervisors = activeShiftsData?.filter((shift: any) => allowedRoles.includes(shift.roleCode)) || [];
+
+  const { user } = useAuth();
+
+  // Updated condition to include all three role GUIDs that can approve/reject
+  const isSupervisorRole =
+    user?.roleGUID === "9e8331a6-3828-421b-9c5d-835f7b6f8710" ||
+    user?.roleGUID === "EFB6EF6A-128B-4DD9-9641-2B04205C8CF8" ||
+    user?.roleGUID === "137db453-07cc-4218-9ef8-3aa236d9e951"; 
 
   // Use disputeData instead of dispute to avoid reference before initialization
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
@@ -73,7 +83,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   );
 
   const getSupervisorName = (id: string) => {
-    const sup = supervisors.find((s: any) => s.employeeId === id);
+    const sup = filteredSupervisors.find((s: any) => s.employeeId === id);
     return sup ? sup.employeeName : id; // fallback to ID if not found
   };
 
@@ -563,76 +573,82 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
               <Divider />
               <Form form={form} layout="vertical">
                 <Row gutter={16} align="middle">
-                  {/* Supervisor dropdown */}
-                  <Col span={6}>
-                    <Form.Item name="assignedTo" label={<Text strong>Assign To</Text>}>
-                      <Select
+                  {/* Assignment Controls - Only show for non-supervisor roles */}
+                  {!isSupervisorRole && (
+                    <>
+                      <Col span={6}>
+                        <Form.Item name="assignedTo" label={<Text strong>Assign To</Text>}>
+                          <Select
                         placeholder="Select Supervisor"
                         loading={isLoadingSupervisors}
                         allowClear
                         showSearch
                         optionFilterProp="children"
                       >
-                        {supervisors.map((sup: any) => (
+                        {filteredSupervisors.map((sup: any) => (
                           <Select.Option key={sup.employeeId} value={sup.employeeId}>
-                            {sup.employeeName}
+                            {sup.employeeName} ({sup.roleCode})
                           </Select.Option>
                         ))}
                       </Select>
+
+                        </Form.Item>
+                      </Col>
+                    </>
+                  )}
+
+                  {/* Comment Box */}
+                  <Col span={isSupervisorRole ? 14 : 8}>
+                    <Form.Item
+                      name="review_Comments"
+                      label={<Text strong>Comment</Text>}
+                      style={{ marginBottom: 0 }}
+                      rules={[{ required: true, message: "Please enter your comments" }]}
+                    >
+                      <TextArea placeholder="Enter your review comments" rows={2} />
                     </Form.Item>
                   </Col>
 
-                  {/* Comment Box + Assign button */}
-                  <Col span={8}>
-                    <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-                      <Form.Item
-                        name="review_Comments"
-                        label={<Text strong>Comment</Text>}
-                        style={{ flex: 1, marginBottom: 0 }}
-                        rules={[{ required: true, message: "Please enter your comments" }]}
-                      >
-                        <TextArea placeholder="Enter your review comments" rows={2} />
-                      </Form.Item>
-
-                      {/* Assign button aligned bottom center */}
-                      <div style={{ display: "flex", alignItems: "flex-end", paddingBottom: 4 }}>
+                  {/* Action Buttons */}
+                  <Col span={isSupervisorRole ? 10 : 8} style={{ textAlign: "right", paddingTop: 30 }}>
+                    {isSupervisorRole ? (
+                      // Supervisor buttons (Approve/Reject)
+                      <>
                         <Button
-                          type="default"
-                          loading={isUpdating && reviewAction === 1}
+                          type="primary"
+                          style={{ marginRight: 8 }}
+                          loading={isUpdating && reviewAction === 2}
                           onClick={() => {
-                            setReviewAction(1);
-                            handleStatusUpdate(1); // Assigned = 1
+                            setReviewAction(2);
+                            handleStatusUpdate(2); // Approved = 2
                           }}
                         >
-                          Assign
+                          Approve
                         </Button>
-                      </div>
-                    </div>
-                  </Col>
-
-                  {/* Approve + Reject buttons aligned right */}
-                  <Col span={10} style={{ textAlign: "right", paddingTop: 30 }}>
-                    <Button
-                      type="primary"
-                      style={{ marginRight: 8 }}
-                      loading={isUpdating && reviewAction === 2}
-                      onClick={() => {
-                        setReviewAction(2);
-                        handleStatusUpdate(2); // Approved = 2
-                      }}
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      danger
-                      loading={isUpdating && reviewAction === 3}
-                      onClick={() => {
-                        setReviewAction(3);
-                        handleStatusUpdate(3); // Rejected = 3
-                      }}
-                    >
-                      Reject
-                    </Button>
+                        <Button
+                          danger
+                          loading={isUpdating && reviewAction === 3}
+                          onClick={() => {
+                            setReviewAction(3);
+                            handleStatusUpdate(3); // Rejected = 3
+                          }}
+                        >
+                          Reject
+                        </Button>
+                      </>
+                    ) : (
+                      // Regular user button (Assign)
+                      <Button
+                        type="default"
+                        loading={isUpdating && reviewAction === 1}
+                        onClick={() => {
+                          setReviewAction(1);
+                          handleStatusUpdate(1); // Assigned = 1
+                        }}
+                      >
+                        Assign
+                      </Button>
+                    )}
                   </Col>
                 </Row>
               </Form>

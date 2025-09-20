@@ -33,6 +33,7 @@ export const PATHS = {
   TEAM_TRAINING: "team-assessment",
   ROLE_MANAGEMENT: "role-management",
   LEAVE_MANAGEMENT: "leave-management",
+  PARKONIC_LOCATION: "parkonic-location",
 };
 
 export const FULL_PATHS = {
@@ -70,4 +71,5 @@ export const FULL_PATHS = {
   CREATESHIFTPLAN: "/createshiftplan",
   ADHOCSHIFTPLAN:"/adhocshiftplan",
   ROLE_MANAGEMENT: "/role-management",
+  PARKONIC_LOCATION: "/parkonic-location"
 };

@@ -30,7 +30,7 @@ export const leaveManagementPageConfig: PageConfig = {
   searchConfig: {
     globalSearchKeys: [ "userName"],
     columnFilterKeys: ["leaveType", "status"],
-    dateRangeKey: "fromDate",
+    dateRangeKey: "LeaveFromDate",
   },
   statsConfig: [
     { title: "Total Leaves", icon: <IdcardOutlined />, value: (data) => data.length },

@@ -20,6 +20,7 @@ import { pageConfigs } from "../config/pageConfigs";
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import DisputeViewModal from "../components/dispute/DisputeViewModal";
+import { usePermission } from "../hooks/usePermission";
 
 const { Option } = Select;
 const pageKey = "dispute-management";
@@ -35,6 +36,8 @@ const columnToCategoryMap: Record<string, number> = {
 };
 
 const DisputeManagementPage: React.FC = () => {
+  const { canCreate, canEdit } = usePermission();
+  const menuName = "Dispute";
   const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
@@ -124,7 +127,7 @@ const DisputeManagementPage: React.FC = () => {
       { value: 1, labelEn: "Pending", labelAr: "قيد الانتظار" },
       { value: 2, labelEn: "Approved", labelAr: "موافقة" },
       { value: 3, labelEn: "Rejected", labelAr: "مرفوض" },
-      { value: 4, labelEn: "In Review", labelAr: "قيد المراجعة"},
+      { value: 4, labelEn: "In Review", labelAr: "قيد المراجعة" },
     ],
     [],
   );
@@ -319,7 +322,13 @@ const DisputeManagementPage: React.FC = () => {
 
   const actionMenuItems = (record: any) => [
     { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
-    { key: "edit", label: t("common.edit"), icon: <EditOutlined />, onClick: () => handleModalOpen("edit", record) },
+    {
+      key: "edit",
+      label: t("common.edit"),
+      icon: <EditOutlined />,
+      onClick: () => handleModalOpen("edit", record),
+      disabled: !canEdit(menuName),
+    },
   ];
 
   // Handle search key change - preserve current search as filter and clear input
@@ -382,7 +391,12 @@ const DisputeManagementPage: React.FC = () => {
                 {t("common.downloadCsv")}
               </Button>
 
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => handleModalOpen("add")}>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => handleModalOpen("add")}
+                disabled={!canCreate(menuName)}
+              >
                 {t("common.addNew")}
               </Button>
             </Space>

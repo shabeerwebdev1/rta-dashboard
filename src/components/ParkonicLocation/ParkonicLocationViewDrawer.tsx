@@ -24,19 +24,19 @@ const ParkonicLocationViewDrawer: React.FC<ViewDrawerProps> = ({
     >
       {record ? (
         <Descriptions bordered column={1}>
-          <Descriptions.Item label={t("parkonicLocation.zone")}>
+          <Descriptions.Item label={t("form.zone")}>
             {record.zone}
           </Descriptions.Item>
-          <Descriptions.Item label={t("parkonicLocation.area")}>
+          <Descriptions.Item label={t("form.area")}>
             {record.area}
           </Descriptions.Item>
-          <Descriptions.Item label={t("parkonicLocation.street")}>
+          <Descriptions.Item label={t("form.street")}>
             {record.street}
           </Descriptions.Item>
-          <Descriptions.Item label={t("parkonicLocation.lat")}>
+          <Descriptions.Item label={t("form.lat")}>
             {record.lat}
           </Descriptions.Item>
-          <Descriptions.Item label={t("parkonicLocation.long")}>
+          <Descriptions.Item label={t("form.long")}>
             {record.long}
           </Descriptions.Item>
         </Descriptions>
