@@ -200,7 +200,8 @@
     "upload": "Upload 5MB Each Max",
     "street": "Street",
     "lat": "lat",
-    "long": "long"
+    "long": "long",
+    "plateSource": "Plate Source"
   },
   "common": {
     "action": "Action",

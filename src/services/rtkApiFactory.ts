@@ -370,12 +370,21 @@ export const dynamicApi = createApi({
 
     getCarPlateDetails: builder.query({
   query: (body) => ({
-    url: "/api/CallIntegration",
+    url: "/api/CallIntegration/ReadCarPlate",
     method: "POST",
     body,
   }),
-  providesTags: ["CallIntegration"], // 👈 use CallIntegration tag
+  providesTags: ["CallIntegration"], 
 }),
+   
+   getTradeLicenseDetails: builder.query({
+     query: (body) => ({
+      url: "/api/CallIntegration/ReadTL",
+      method: "POST",
+      body,
+     }),
+     providesTags:["CallIntegration"],
+   }),
 
     
   }),
@@ -442,7 +451,10 @@ export const {
   useUpdateLeaveStatusMutation,
 
   useSearchTradeQuery,
+  //General Search
   useLazyGetCarPlateDetailsQuery,
+  useLazyGetTradeLicenseDetailsQuery,
+
 
 
 } = dynamicApi;

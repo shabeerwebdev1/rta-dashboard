@@ -3,13 +3,19 @@ import { Card, Space, Button, Row, Col, Form, Select, Input, Tabs, Descriptions 
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { SearchOutlined } from "@ant-design/icons";
-import { useLazyGetLookupsQuery, useSearchFinesQuery, useLazyGetCarPlateDetailsQuery } from "../services/rtkApiFactory";
+import {
+  useLazyGetLookupsQuery,
+  useSearchFinesQuery,
+  useLazyGetCarPlateDetailsQuery,
+  useLazyGetTradeLicenseDetailsQuery,
+} from "../services/rtkApiFactory";
 import dayjs from "dayjs";
 import FineViewDrawer from "../components/GeneralSearch/GeneralSearchViewDrawer";
 import { carPlatePageConfig, tradeLicensePageConfig } from "../config/pageConfigs/generalSearchConfig";
 import i18n from "../config/i18n";
 import DataTableWrapper from "../components/common/DataTableWrapper";
-import { useAppNotification } from "../utils/notificationManager"; // 
+import { useAppNotification } from "../utils/notificationManager"; //
+import { data } from "react-router-dom";
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -32,12 +38,26 @@ const GeneralSearchPage: React.FC = () => {
 
   const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [triggerGetCarPlateDetails, { isFetching: isFetchingCarDetails }] = useLazyGetCarPlateDetailsQuery();
+  const [triggerGetTradeLicenseDetails, { isFetching: isFetchingTL }] = useLazyGetTradeLicenseDetailsQuery();
 
   // Fetch fines using only the plate number
+  // const { data: finesData, isFetching: isFetchingFines } = useSearchFinesQuery(
+  //   { plateNumber: plateNumber },
+  //   { skip: !plateNumber },
+  // );
+
   const { data: finesData, isFetching: isFetchingFines } = useSearchFinesQuery(
-    { plateNumber: plateNumber },
-    { skip: !plateNumber },
-  );
+  { 
+    OrFilters: {
+      plateNumber: plateNumber
+    },
+    PageSize: 999999,
+    PageNumber: 0
+  },
+  { skip: !plateNumber }
+);
+
+  console.log("Data", data);
 
   useEffect(() => {
     fetchLookupData();
@@ -98,9 +118,9 @@ const GeneralSearchPage: React.FC = () => {
 
     const params = {
       plateNumber: plateNumber?.toString() || "",
-      plateSource_Id: plateSource?.toString() || "",
-      plateType_Id: plateCategory?.toString() || "",
-      plateColor_Id: plateCode?.toString() || "",
+      plateSource: plateSource?.toString() || "",
+      plateCategory: plateCategory?.toString() || "",
+      plateCode: plateCode?.toString() || "",
     };
 
     try {
@@ -110,33 +130,49 @@ const GeneralSearchPage: React.FC = () => {
       notification.success(result, t("messages.vehicleDetailsFetched"));
     } catch (error: any) {
       console.error("Car plate details fetch failed:", error);
-      notification.error(error, t("messages.failedToFetchVehicleDetails"));
+      notification.error(error, t("messages.vehicleDetailsFetched"));
       setVehicleDetails(null);
     }
   };
 
-  const handleTlSearch = (values: any) => {
-    setTlData({
-      licenseNumber: values.licenseNumber,
-      companyName: "ABC Trading LLC",
-      ownerName: "Mohammed Ali",
-      ownerContact: "+971 55 987 6543",
-      issuedYear: "2015",
-      fines: [
-        {
-          entityNo: "T001",
-          violation: "Late Renewal",
-          amount: "1000 AED",
-          date: "15-12-2022",
-        },
-        {
-          entityNo: "T002",
-          violation: "Expired Permit",
-          amount: "1500 AED",
-          date: "20-02-2023",
-        },
-      ],
-    });
+  // const handleCarSearch = async (values: any) => {
+  //   const { plateNumber } = values;
+
+  //   // Set plate number for fines query
+  //   setPlateNumber(plateNumber);
+
+  //   // API payload: last three dropdowns forced to "111"
+  //   const params = {
+  //     plateNumber: plateNumber?.toString() || "",
+  //     plateSource: plateSource?.toString() || "",
+  //     plateCategory: plateCategory?.toString() || "",
+  //     plateCode: plateCode?.toString() || "",
+  //   };
+
+  //   try {
+  //     const result = await triggerGetCarPlateDetails(params).unwrap();
+  //     setVehicleDetails(result?.data || null);
+  //     notification.success(result, t("messages.vehicleDetailsFetched"));
+  //   } catch (error: any) {
+  //     console.error("Car plate details fetch failed:", error);
+  //     notification.error(error, t("messages.vehicleDetailsFetched"));
+  //     setVehicleDetails(null);
+  //   }
+  // };
+
+  const handleTlSearch = async (values: any) => {
+    try {
+      const result = await triggerGetTradeLicenseDetails({
+        licenseNumber: values.licenseNumber?.toString() || "",
+      }).unwrap();
+
+      setTlData(result?.data || result); // assuming API returns { data: {...} }
+      notification.success(result, t("messages.tradeLicenseFetched"));
+    } catch (error: any) {
+      console.error("Trade License fetch failed:", error);
+      notification.error(error, t("messages.failedToFetchTradeLicense"));
+      setTlData(null);
+    }
   };
 
   const handleViewFine = (fine: any, vehicleInfo: any) => {
@@ -149,7 +185,12 @@ const GeneralSearchPage: React.FC = () => {
   };
 
   // Extract fines data
-  const finesList = finesData?.data || [];
+  // Filter fines by plateNumber
+  // const finesList = finesData?.data?.filter((fine: any) => fine.plateNumber === plateNumber) || [];
+
+  const finesList = finesData?.data.filter((fine: any) => fine.plateNumber === plateNumber) || [];
+
+  console.log("finesList", finesList);
 
   return (
     <>
@@ -215,11 +256,24 @@ const GeneralSearchPage: React.FC = () => {
             {vehicleDetails && (
               <>
                 <Card title="Vehicle Details" className="mt-4">
-                  <Descriptions bordered column={2} size="small">
-                    <Descriptions.Item label="Plate No">{vehicleDetails.PlateNo || "N/A"}</Descriptions.Item>
-                    <Descriptions.Item label="Plate Category">
-                      {vehicleDetails.PlateCategory || "N/A"}
+                  <Descriptions bordered column={5} size="small">
+                    <Descriptions.Item label="Plate No">{vehicleDetails.plateNo || "N/A"}</Descriptions.Item>
+                   
+                    <Descriptions.Item label="Traffic File No">
+                      {vehicleDetails.trafficFileNo || "N/A"}
                     </Descriptions.Item>
+                    <Descriptions.Item label="Company Name">{vehicleDetails.companyName || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label="Company Email">{vehicleDetails.companyEmail || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label="Vehicle Type">{vehicleDetails.vehicleType || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label="Vehicle Color">{vehicleDetails.vehicleColor || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label="Owner Name">{vehicleDetails.ownerName || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label="Owner Email">{vehicleDetails.ownerEmail || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label="Owner Mobile">{vehicleDetails.ownerMobile || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label="Owner Phone">{vehicleDetails.ownerPhone || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label="Manufacture Year">
+                      {vehicleDetails.manufactureYear || "N/A"}
+                    </Descriptions.Item>
+                   
                   </Descriptions>
                 </Card>
 
@@ -251,6 +305,7 @@ const GeneralSearchPage: React.FC = () => {
           </TabPane>
 
           {/* Trade License Tab */}
+          {/* Trade License Tab */}
           <TabPane tab="Trade License" key="2">
             <Form form={formTL} layout="vertical" onFinish={handleTlSearch}>
               <Row gutter={16}>
@@ -264,8 +319,8 @@ const GeneralSearchPage: React.FC = () => {
                   </Form.Item>
                 </Col>
                 <Col span={6}>
-                  <Button type="primary" htmlType="submit" icon={<SearchOutlined />}>
-                    {t("actions.search")}
+                  <Button type="primary" htmlType="submit" icon={<SearchOutlined />} loading={isFetchingTL}>
+                    {t("common.search")}
                   </Button>
                 </Col>
               </Row>
@@ -274,11 +329,11 @@ const GeneralSearchPage: React.FC = () => {
             {tlData && (
               <Card title="Trade License Details" className="mt-4">
                 <Descriptions bordered column={2} size="small">
-                  <Descriptions.Item label="License No">{tlData.licenseNumber}</Descriptions.Item>
-                  <Descriptions.Item label="Company Name">{tlData.companyName}</Descriptions.Item>
-                  <Descriptions.Item label="Owner Name">{tlData.ownerName}</Descriptions.Item>
-                  <Descriptions.Item label="Owner Contact">{tlData.ownerContact}</Descriptions.Item>
-                  <Descriptions.Item label="Issued Year">{tlData.issuedYear}</Descriptions.Item>
+                  <Descriptions.Item label="License No">{tlData.licenseNumber || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label="Company Name">{tlData.companyName || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label="Owner Name">{tlData.ownerName || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label="Owner Contact">{tlData.ownerContact || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label="Issued Year">{tlData.issuedYear || "N/A"}</Descriptions.Item>
                 </Descriptions>
               </Card>
             )}

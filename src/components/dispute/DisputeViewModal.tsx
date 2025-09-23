@@ -70,7 +70,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   const isSupervisorRole =
     user?.roleGUID === "9e8331a6-3828-421b-9c5d-835f7b6f8710" ||
     user?.roleGUID === "EFB6EF6A-128B-4DD9-9641-2B04205C8CF8" ||
-    user?.roleGUID === "137db453-07cc-4218-9ef8-3aa236d9e951"; 
+    user?.roleGUID === "137db453-07cc-4218-9ef8-3aa236d9e951";
 
   // Use disputeData instead of dispute to avoid reference before initialization
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
@@ -573,83 +573,92 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
               <Divider />
               <Form form={form} layout="vertical">
                 <Row gutter={16} align="middle">
-                  {/* Assignment Controls - Only show for non-supervisor roles */}
-                  {!isSupervisorRole && (
-                    <>
-                      <Col span={6}>
-                        <Form.Item name="assignedTo" label={<Text strong>Assign To</Text>}>
-                          <Select
-                        placeholder="Select Supervisor"
-                        loading={isLoadingSupervisors}
-                        allowClear
-                        showSearch
-                        optionFilterProp="children"
-                      >
-                        {filteredSupervisors.map((sup: any) => (
-                          <Select.Option key={sup.employeeId} value={sup.employeeId}>
-                            {sup.employeeName} ({sup.roleCode})
-                          </Select.Option>
-                        ))}
-                      </Select>
+                {/* Assignment Controls - Only show for non-supervisor roles and fineStatus ≠ 15005 and dispute_Status ≠ 3 */}
+{!isSupervisorRole &&
+  dispute?.fineDetails?.fineStatus !== 15005 &&
+  dispute?.fineDetails?.dispute_Status !== 3 && (
+    <Col span={6}>
+      <Form.Item name="assignedTo" label={<Text strong>Assign To</Text>}>
+        <Select
+          placeholder="Select Supervisor"
+          loading={isLoadingSupervisors}
+          allowClear
+          showSearch
+          optionFilterProp="children"
+        >
+          {filteredSupervisors.map((sup: any) => (
+            <Select.Option key={sup.employeeId} value={sup.employeeId}>
+              {sup.employeeName} ({sup.roleCode})
+            </Select.Option>
+          ))}
+        </Select>
+      </Form.Item>
+    </Col>
+  )}
 
-                        </Form.Item>
-                      </Col>
-                    </>
-                  )}
+{/* Comment Box - Only show when fineStatus = 15005 and dispute_Status ≠ 3 */}
+{dispute?.fineDetails?.fineStatus === 15005 &&
+  dispute?.fineDetails?.dispute_Status !== 3 && (
+    <Col span={isSupervisorRole ? 14 : 8}>
+      <Form.Item
+        name="review_Comments"
+        label={<Text strong>Comment</Text>}
+        style={{ marginBottom: 0 }}
+        rules={[{ required: true, message: "Please enter your comments" }]}
+      >
+        <TextArea placeholder="Enter your review comments" rows={2} />
+      </Form.Item>
+    </Col>
+  )}
 
-                  {/* Comment Box */}
-                  <Col span={isSupervisorRole ? 14 : 8}>
-                    <Form.Item
-                      name="review_Comments"
-                      label={<Text strong>Comment</Text>}
-                      style={{ marginBottom: 0 }}
-                      rules={[{ required: true, message: "Please enter your comments" }]}
-                    >
-                      <TextArea placeholder="Enter your review comments" rows={2} />
-                    </Form.Item>
-                  </Col>
+{/* Action Buttons - Only show if dispute_Status ≠ 3 */}
+{dispute?.fineDetails?.dispute_Status !== 3 && (
+  <Col span={isSupervisorRole ? 10 : 8} style={{ textAlign: "right", paddingTop: 30 }}>
+    {isSupervisorRole ? (
+      // Supervisor buttons (Approve/Reject) - Only show when fineStatus = 15005
+      dispute?.fineDetails?.fineStatus === 15005 && (
+        <>
+          <Button
+            type="primary"
+            style={{ marginRight: 8 }}
+            loading={isUpdating && reviewAction === 2}
+            onClick={() => {
+              setReviewAction(2);
+              handleStatusUpdate(2); // Approved = 2
+            }}
+          >
+            Approve
+          </Button>
+          <Button
+            danger
+            loading={isUpdating && reviewAction === 3}
+            onClick={() => {
+              setReviewAction(3);
+              handleStatusUpdate(3); // Rejected = 3
+            }}
+          >
+            Reject
+          </Button>
+        </>
+      )
+    ) : (
+      // Regular user button (Assign) - Only show when fineStatus ≠ 15005
+      dispute?.fineDetails?.fineStatus !== 15005 && (
+        <Button
+          type="default"
+          loading={isUpdating && reviewAction === 1}
+          onClick={() => {
+            setReviewAction(1);
+            handleStatusUpdate(1); // Assigned = 1
+          }}
+        >
+          Assign
+        </Button>
+      )
+    )}
+  </Col>
+)}
 
-                  {/* Action Buttons */}
-                  <Col span={isSupervisorRole ? 10 : 8} style={{ textAlign: "right", paddingTop: 30 }}>
-                    {isSupervisorRole ? (
-                      // Supervisor buttons (Approve/Reject)
-                      <>
-                        <Button
-                          type="primary"
-                          style={{ marginRight: 8 }}
-                          loading={isUpdating && reviewAction === 2}
-                          onClick={() => {
-                            setReviewAction(2);
-                            handleStatusUpdate(2); // Approved = 2
-                          }}
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          danger
-                          loading={isUpdating && reviewAction === 3}
-                          onClick={() => {
-                            setReviewAction(3);
-                            handleStatusUpdate(3); // Rejected = 3
-                          }}
-                        >
-                          Reject
-                        </Button>
-                      </>
-                    ) : (
-                      // Regular user button (Assign)
-                      <Button
-                        type="default"
-                        loading={isUpdating && reviewAction === 1}
-                        onClick={() => {
-                          setReviewAction(1);
-                          handleStatusUpdate(1); // Assigned = 1
-                        }}
-                      >
-                        Assign
-                      </Button>
-                    )}
-                  </Col>
                 </Row>
               </Form>
             </>

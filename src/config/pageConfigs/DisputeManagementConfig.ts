@@ -15,7 +15,7 @@ export const disputeManagementConfig: PageConfig = {
   searchConfig: {
     globalSearchKeys: ["fineId", "crM_Ref", "phone", "email"],
     columnFilterKeys: ["department", "payment_Type"],
-    dateRangeKey: "createdAt",
+    dateRangeKey: "addon",
   },
   statsConfig: [
     {
