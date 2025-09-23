@@ -1,4 +1,32 @@
-import { IdcardOutlined, CheckCircleOutlined, CloseCircleOutlined, WarningOutlined } from "@ant-design/icons";
+// Define the PageConfig interface if not already defined
+interface PageConfig {
+  key: string;
+  title: string;
+  name: { singular: string; plural: string };
+  api: {
+    get: string;
+    post: string;
+    put: string;
+    delete: string;
+  };
+  searchConfig?: {
+    globalSearchKeys: string[];
+    columnFilterKeys?: string[];
+    dateRangeKey?: string;
+  };
+  tableConfig: {
+    columns: Array<{
+      key: string;
+      title: string;
+      dataIndex: string;
+      type: string;
+      sortable?: boolean;
+      filterable?: boolean;
+      lookupCategory?: number;
+    }>;
+    viewRecord: boolean;
+  };
+}
 
 export const parkonicLocationPageConfig: PageConfig = {
   key: "parkonic-location",
@@ -11,39 +39,18 @@ export const parkonicLocationPageConfig: PageConfig = {
     delete: "/api/ParkonicLocation/:id",
   },
   searchConfig: {
-    globalSearchKeys: ["locationName", "locationCode"],
-    columnFilterKeys: ["status_Id", "city_Id"],
+    globalSearchKeys: ["zone", "area"],
+    columnFilterKeys: ["zone", "area"],
     dateRangeKey: "createdDate",
   },
-  statsConfig: [
-    {
-      title: "Total Locations",
-      icon: <IdcardOutlined />,
-      value: (data) => data.length,
-    },
-    {
-      title: "Active Locations",
-      icon: <CheckCircleOutlined />,
-      value: (data) => data.filter((d) => d.status_Id === 1).length, // 1 = Active
-      color: "#52c41a",
-    },
-    {
-      title: "Inactive Locations",
-      icon: <CloseCircleOutlined />,
-      value: (data) => data.filter((d) => d.status_Id === 2).length, // 2 = Inactive
-      color: "#ff4d4f",
-    },
-    
-  ],
   tableConfig: {
     columns: [
-      { key: "zone", title: "form.zone", dataIndex: "locationName", type: "string", sortable: true },
-      { key: "area", title: "form.area", dataIndex: "locationCode", type: "string", sortable: true },
-      { key: "street", title: "form.street", dataIndex: "city_Id", type: "string", filterable: true, lookupCategory: 700 },
-      { key: "lat", title: "form.lat", dataIndex: "status_Id", type: "tag", filterable: true, lookupCategory: 800 },
-      { key: "long", title: "form.long", dataIndex: "createdDate", type: "date", sortable: true },
+      { key: "zone", title: "form.zone", dataIndex: "zone", type: "string", sortable: true },
+      { key: "area", title: "form.area", dataIndex: "area", type: "string", sortable: true },
+      { key: "street", title: "form.street", dataIndex: "street", type: "string", sortable: true },
+      { key: "latitude", title: "form.lat", dataIndex: "lat", type: "string", sortable: true },
+      { key: "longitude", title: "form.long", dataIndex: "long", type: "string", sortable: true },
     ],
     viewRecord: true,
   },
-
 };

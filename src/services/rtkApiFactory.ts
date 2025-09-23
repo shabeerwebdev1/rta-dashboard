@@ -40,6 +40,8 @@ export const dynamicApi = createApi({
     "ShiftManagement",
     "LeaveDetails",
     "CallIntegration",
+    "Towing",
+    "ParkonicsLocation",
   ],
 
   endpoints: (builder) => ({
@@ -368,6 +370,8 @@ export const dynamicApi = createApi({
       invalidatesTags: ["LeaveDetails"], // refreshes leave list after update
     }),
 
+    //General Search
+
     getCarPlateDetails: builder.query({
       query: (body) => ({
         url: "/api/CallIntegration/ReadCarPlate",
@@ -377,13 +381,46 @@ export const dynamicApi = createApi({
       providesTags: ["CallIntegration"],
     }),
 
-    getTradeLicenseDetails: builder.query({
-      query: (body) => ({
-        url: "/api/CallIntegration/ReadTL",
+    getTradeLicenseDetails: builder.query<any, string>({
+      query: (licenseNumber) => ({
+        url: "/CallIntegration/ReadTL",
         method: "POST",
-        body,
+        headers: {
+          "Content-Type": "text/plain", // must be plain text
+          Accept: "text/plain",
+        },
+        body: licenseNumber, // send the plain string exactly
       }),
       providesTags: ["CallIntegration"],
+    }),
+
+    //Towing Approvals
+    getTowingDetails: builder.query({
+      query: (params) => ({ url: "/api/Towing", params }),
+      transformResponse: transformListResponse,
+      providesTags: ["Towing"],
+    }),
+
+    //Parkonic Location
+    getParkonicsLocation: builder.query({
+      query: (params) => ({ url: "/api/ParkonicsLocation", params }),
+      transformResponse: transformListResponse,
+      providesTags: ["ParkonicsLocation"],
+    }),
+    getParkonicsLocationById: builder.query({
+      query: (id) => `/api/ParkonicsLocation/${id}`,
+    }),
+    addParkonicsLocation: builder.mutation({
+      query: (body) => ({ url: "/api/ParkonicsLocation", method: "POST", body }),
+      invalidatesTags: ["ParkonicsLocation"],
+    }),
+    updateParkonicsLocation: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: `/api/ParkonicsLocation/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["ParkonicsLocation"],
     }),
   }),
 });
@@ -452,4 +489,11 @@ export const {
   //General Search
   useLazyGetCarPlateDetailsQuery,
   useLazyGetTradeLicenseDetailsQuery,
+  //Towing Aprovals
+  useGetTowingDetailsQuery,
+  //Parkonic Location
+  useGetParkonicsLocationQuery,
+  useLazyGetParkonicsLocationByIdQuery,
+  useAddParkonicsLocationMutation,
+  useUpdateParkonicsLocationMutation,
 } = dynamicApi;

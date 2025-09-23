@@ -47,17 +47,15 @@ const GeneralSearchPage: React.FC = () => {
   // );
 
   const { data: finesData, isFetching: isFetchingFines } = useSearchFinesQuery(
-  { 
-    OrFilters: {
-      plateNumber: plateNumber
+    {
+      OrFilters: {
+        plateNumber: plateNumber,
+      },
+      PageSize: 9999,
+      PageNumber: 0,
     },
-    PageSize: 999999,
-    PageNumber: 0
-  },
-  { skip: !plateNumber }
-);
-
-  console.log("Data", data);
+    { skip: !plateNumber },
+  );
 
   useEffect(() => {
     fetchLookupData();
@@ -162,15 +160,13 @@ const GeneralSearchPage: React.FC = () => {
 
   const handleTlSearch = async (values: any) => {
     try {
-      const result = await triggerGetTradeLicenseDetails({
-        licenseNumber: values.licenseNumber?.toString() || "",
-      }).unwrap();
+      const result = await triggerGetTradeLicenseDetails(values.licenseNumber.toString()).unwrap();
 
-      setTlData(result?.data || result); // assuming API returns { data: {...} }
-      notification.success(result, t("messages.tradeLicenseFetched"));
+      setTlData(result?.data || result); // bind response to state
+      notification.success({ message: t("messages.tradeLicenseFetched") });
     } catch (error: any) {
       console.error("Trade License fetch failed:", error);
-      notification.error(error, t("messages.failedToFetchTradeLicense"));
+      notification.error({ message: t("messages.failedToFetchTradeLicense") });
       setTlData(null);
     }
   };
@@ -189,8 +185,6 @@ const GeneralSearchPage: React.FC = () => {
   // const finesList = finesData?.data?.filter((fine: any) => fine.plateNumber === plateNumber) || [];
 
   const finesList = finesData?.data.filter((fine: any) => fine.plateNumber === plateNumber) || [];
-
-  console.log("finesList", finesList);
 
   return (
     <>
@@ -256,9 +250,9 @@ const GeneralSearchPage: React.FC = () => {
             {vehicleDetails && (
               <>
                 <Card title="Vehicle Details" className="mt-4">
-                  <Descriptions bordered column={5} size="small">
+                  <Descriptions bordered column={2} size="small">
                     <Descriptions.Item label="Plate No">{vehicleDetails.plateNo || "N/A"}</Descriptions.Item>
-                   
+
                     <Descriptions.Item label="Traffic File No">
                       {vehicleDetails.trafficFileNo || "N/A"}
                     </Descriptions.Item>
@@ -273,7 +267,6 @@ const GeneralSearchPage: React.FC = () => {
                     <Descriptions.Item label="Manufacture Year">
                       {vehicleDetails.manufactureYear || "N/A"}
                     </Descriptions.Item>
-                   
                   </Descriptions>
                 </Card>
 

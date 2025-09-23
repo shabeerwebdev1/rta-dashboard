@@ -1,23 +1,44 @@
 import React from "react";
-import { Drawer, Descriptions } from "antd";
+import { Drawer, Descriptions, Button, Space } from "antd";
+import { ShareAltOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 
-interface ViewDrawerProps {
+interface ParkonicLocationViewDrawerProps {
   open: boolean;
   onClose: () => void;
   record: any | null;
+  config: any;
+  onShare?: () => void;
 }
 
-const ParkonicLocationViewDrawer: React.FC<ViewDrawerProps> = ({
+const ParkonicLocationViewDrawer: React.FC<ParkonicLocationViewDrawerProps> = ({
   open,
   onClose,
   record,
+  config,
+  onShare,
 }) => {
   const { t } = useTranslation();
 
+  const title = (
+    <Space>
+      <span>{t("parkonicLocation.viewTitle")}</span>
+      {onShare && (
+        <Button
+          type="text"
+          icon={<ShareAltOutlined />}
+          onClick={onShare}
+          size="small"
+        >
+          {t("common.share")}
+        </Button>
+      )}
+    </Space>
+  );
+
   return (
     <Drawer
-      title={t("parkonicLocation.viewTitle")}
+      title={title}
       open={open}
       onClose={onClose}
       width={480}
@@ -33,11 +54,11 @@ const ParkonicLocationViewDrawer: React.FC<ViewDrawerProps> = ({
           <Descriptions.Item label={t("form.street")}>
             {record.street}
           </Descriptions.Item>
-          <Descriptions.Item label={t("form.lat")}>
-            {record.lat}
+          <Descriptions.Item label={t("form.latitude")}>
+            {record.latitude}
           </Descriptions.Item>
-          <Descriptions.Item label={t("form.long")}>
-            {record.long}
+          <Descriptions.Item label={t("form.longitude")}>
+            {record.longitude}
           </Descriptions.Item>
         </Descriptions>
       ) : (

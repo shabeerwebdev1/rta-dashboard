@@ -56,11 +56,11 @@ export const towingConfig: PageConfig = {
   tableConfig: {
     rowKey: "towingId",
     columns: [
-      { key: "vehicleName", title: "form.vehicleName", type: "string" },
-      { key: "vehiclePlateNumber", title: "form.vehiclePlateNumber", type: "string" },
-      { key: "towingDriverName", title: "form.towingDriverName", type: "string" },
-      { key: "addedBy", title: "form.addedBy", type: "string" },
-      { key: "status", title: "form.status", type: "string" },
+      { key: "vehicleBrand", title: "form.vehicleName", type: "string" },
+      { key: "plateNumber", title: "form.plateNumber", type: "string" },
+      { key: "vehicleColor", title: "form.vehicleOwnerName", type: "string" },
+      { key: "vehicleOwnerMobile", title: "form.vehicleOwnerMobile", type: "string" },
+      { key: "vehicleOwnerName", title: "form.status", type: "string" },
     ],
     viewRecord: true,
   },
