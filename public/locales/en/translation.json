@@ -82,7 +82,8 @@
     "selectRows": "Please select at least one row to download.",
     "fileUploadSuccess": "File uploaded successfully: {fileName}",
     "fileUploadError": "File upload failed for: {fileName}",
-    "errorLoading": "Error loading dashboard data"
+    "errorLoading": "Error loading dashboard data",
+    "enterRejectionReason": "Please enter a reason for rejection"
   },
   "form": {
     "Number": "Number",
@@ -201,7 +202,13 @@
     "street": "Street",
     "lat": "lat",
     "long": "long",
-    "plateSource": "Plate Source"
+    "plateSource": "Plate Source",
+    "description": "Description",
+    "parkonicdetails": "Parkonic Details",
+    "disputereview": "Dispute Review",
+    "disputedetails": "Dispute Details",
+    "reviewtimeline": "Review Timeline"
+
   },
   "common": {
     "action": "Action",
@@ -235,7 +242,9 @@
     "compactView": "Compact View",
     "standardView": "Standard View",
     "confirm": "Confirm",
-    "selectSupervisor": "Select Supervisor"
+    "selectSupervisor": "Select Supervisor",
+    "reject": "Reject",
+    "review": "Review"
   },
   "entity": {
     "plate": "Plate",
@@ -255,7 +264,8 @@
     "approved": "Approved",
     "rejected": "Rejected",
     "cancelled": "Cancelled",
-    "recalled": "Recalled"
+    "recalled": "Recalled",
+    "assigned": "Assigned"
   },
 
   "placeholders": {
@@ -296,7 +306,8 @@
     "selectShift": "Select Shift",
     "selectZones": "Select Zone(s)",
     "selectAssignmentTypes": "Select Assignment Type(s)",
-    "selectRole": "Select Role"
+    "selectRole": "Select Role",
+    "enterComments": "Enter comments"
   },
 
   "dashboard": {

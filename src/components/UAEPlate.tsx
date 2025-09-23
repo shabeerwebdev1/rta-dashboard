@@ -1,4 +1,5 @@
 import React from "react";
+import { theme } from "antd";
 
 interface PlateProps {
   code: string;
@@ -8,6 +9,8 @@ interface PlateProps {
 }
 
 const UAEPlate: React.FC<PlateProps> = ({ code, number, emirateEn, emirateAr }) => {
+  const { token } = theme.useToken();
+
   const safeNumber = String(number);
   const truncatedNumber = safeNumber.length > 6 ? safeNumber.slice(0, 6) : safeNumber;
 
@@ -19,22 +22,48 @@ const UAEPlate: React.FC<PlateProps> = ({ code, number, emirateEn, emirateAr }) 
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        border: "1px solid rgba(0, 0, 0, 0.2)",
+        border: `1px solid ${token.colorBorder}`,
         borderRadius: "8px",
         padding: "6px",
         maxWidth: "160px",
-        width: "fit-content",
-        height: "35px",
-        background: "#fff",
+        width: "100%",
+        height: "42px",
+        background: token.colorBgContainer,
         fontFamily: "Arial, sans-serif",
         boxSizing: "border-box",
       }}
     >
-      <span style={{ fontWeight: "semi-bold", fontSize: "12px", marginRight: "6px" }}>{code}</span>
+      <span
+        style={{
+          fontWeight: "semi-bold",
+          fontSize: "12px",
+          marginRight: "6px",
+        }}
+      >
+        {code}
+      </span>
 
       <div style={{ textAlign: "center", flexGrow: 1 }}>
-        {showArabic && <div style={{ fontSize: "10px", lineHeight: "14px" }}>{emirateAr}</div>}
-        {emirateEn && <div style={{ fontSize: "10px", lineHeight: "10px" }}>{emirateEn}</div>}
+        {showArabic && (
+          <div
+            style={{
+              fontSize: "10px",
+              lineHeight: "14px",
+            }}
+          >
+            {emirateAr}
+          </div>
+        )}
+        {emirateEn && (
+          <div
+            style={{
+              fontSize: "10px",
+              lineHeight: "10px",
+            }}
+          >
+            {emirateEn}
+          </div>
+        )}
       </div>
 
       <span

@@ -46,7 +46,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
 
   // Helper: get label for a filter value
   const getFilterLabel = (columnKey: string, value: string | number) => {
-    if ((columnKey === "status" || columnKey === "dispute_Status") && statusLabels) {
+    if ((columnKey === "status" || columnKey === "dispute_Status" || columnKey === "reviewStatus") && statusLabels) {
       return statusLabels[Number(value)] || String(value);
     }
 

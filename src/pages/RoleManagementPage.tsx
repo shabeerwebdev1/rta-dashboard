@@ -125,21 +125,34 @@ const RoleManagementPage: React.FC = () => {
       const submissionData = prepareSubmissionData();
 
       if (submissionData.length === 0) {
-        notification.info(t("No changes detected"), t("Please modify at least one permission before updating."));
+        notification.error({
+          data: {
+            en_Msg: t("Please modify at least one permission before updating."),
+          },
+        });
         return;
       }
 
       await updateRolePermissions(submissionData).unwrap();
 
-      notification.success(t("Permissions updated successfully"), t("Role permissions have been updated."));
+      notification.success({
+        data: {
+          en_Msg: t("Role permissions have been updated."),
+        },
+      });
 
       // ✅ Reset to default state after update
       setSelectedRoleId("default");
       setSelectedRoleName("");
       setTableData([]);
       setOriginalData([]);
-    } catch (error) {
-      notification.error(t("Update failed"), t("Please select at least one role before updating."));
+    } catch (error: any) {
+      notification.error({
+        data: {
+          en_Msg: t("Update failed"),
+          en_Desc: error?.data?.message || error?.message || t("Please select at least one role before updating."),
+        },
+      });
       console.error("Update error:", error);
     }
   };
@@ -169,10 +182,6 @@ const RoleManagementPage: React.FC = () => {
 
   if (isLoadingRoles) {
     return <Spin size="large" style={{ display: "block", margin: "50px auto" }} />;
-  }
-
-  if (rolesError) {
-    return <Alert message="Error" description="Failed to load roles. Please try again later." type="error" showIcon />;
   }
 
   return (

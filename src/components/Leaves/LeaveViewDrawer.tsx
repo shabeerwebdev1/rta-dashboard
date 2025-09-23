@@ -25,31 +25,30 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
   }, [record]);
 
   const handleUpdateStatus = async (newStatus: LeaveStatus) => {
-  const leaveId = record?.leaveId || record?.id; // ✅ Support both
+    const leaveId = record?.leaveId || record?.id; // ✅ Support both
 
-  if (!leaveId) {
-    notification.error({ message: "Missing leave ID" });
-    return;
-  }
+    if (!leaveId) {
+      notification.error({ message: "Missing leave ID" });
+      return;
+    }
 
-  try {
-    await updateLeaveStatus({
-      id: leaveId, // ✅ now always sends correct id
-      status: newStatus,
-    }).unwrap();
+    try {
+      await updateLeaveStatus({
+        id: leaveId, // ✅ now always sends correct id
+        status: newStatus,
+      }).unwrap();
 
-    setStatus(newStatus);
-    notification.success({
-      message: `Leave updated to ${LeaveStatus[newStatus]}`,
-    });
-    onClose();
-  } catch (err: any) {
-    notification.error({
-      message: err?.data?.message || "Failed to update leave",
-    });
-  }
-};
-
+      setStatus(newStatus);
+      notification.success({
+        message: `Leave updated to ${LeaveStatus[newStatus]}`,
+      });
+      onClose();
+    } catch (err: any) {
+      notification.error({
+        message: err?.data?.message || "Failed to update leave",
+      });
+    }
+  };
 
   return (
     <Drawer
@@ -78,10 +77,10 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
                   status === LeaveStatus.Approved
                     ? "green"
                     : status === LeaveStatus.Pending
-                    ? "blue"
-                    : status === LeaveStatus.Cancelled
-                    ? "orange"
-                    : "red"
+                      ? "blue"
+                      : status === LeaveStatus.Cancelled
+                        ? "orange"
+                        : "red"
                 }
               >
                 {LeaveStatus[status]}
@@ -92,18 +91,10 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
             {status !== LeaveStatus.Approved && (
               <Descriptions.Item label={t("form.actions")}>
                 <Space>
-                  <Button
-                    type="primary"
-                    loading={isLoading}
-                    onClick={() => handleUpdateStatus(LeaveStatus.Approved)}
-                  >
+                  <Button type="primary" loading={isLoading} onClick={() => handleUpdateStatus(LeaveStatus.Approved)}>
                     {t("form.approve")}
                   </Button>
-                  <Button
-                    danger
-                    loading={isLoading}
-                    onClick={() => handleUpdateStatus(LeaveStatus.Rejected)}
-                  >
+                  <Button danger loading={isLoading} onClick={() => handleUpdateStatus(LeaveStatus.Rejected)}>
                     {t("form.reject")}
                   </Button>
                 </Space>

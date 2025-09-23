@@ -463,7 +463,7 @@ const WhitelistPlatesPage: React.FC = () => {
             <Row gutter={24}>
               <Col span={12}>
                 <Form.Item name="plateNumber" label={t("form.Number")} rules={[{ required: true }]}>
-                  <Input placeholder={t("placeholders.plateNumber")} />
+                  <Input placeholder={t("placeholders.plateNumber")}  />
                 </Form.Item>
               </Col>
               <Col span={12}>

@@ -84,7 +84,9 @@
     "selectRows": "يرجى تحديد صف واحد على الأقل للتنزيل.",
     "fileUploadSuccess": "تم رفع الملف بنجاح: {fileName}",
     "fileUploadError": "فشل رفع الملف: {fileName}",
-    "errorLoading": "خطأ في تحميل بيانات لوحة التحكم"
+    "errorLoading": "خطأ في تحميل بيانات لوحة التحكم",
+    "enterRejectionReason": "يرجى إدخال سبب الرفض"
+
   },
   "form": {
     "Number": "الرقم",
@@ -172,8 +174,6 @@
     "approvalActions": "إجراءات الموافقة",
     "approve": "الموافقة",
     "reject": "الرفض",
-    
-
     "InspectorName": "اسم المفتش",
     "Zone": "المنطقة",
     "Shift": "الوردية",
@@ -203,7 +203,12 @@
      "street": "شارع",
     "lat": "خطوط العرض",
     "long": "طويل",
-    "plateSource": "مصدر اللوحة"
+    "plateSource": "مصدر اللوحة",
+     "description": "الوصف",
+    "parkonicdetails": "تفاصيل باركونيك",
+    "disputereview": "مراجعة النزاع",
+    "disputedetails": "تفاصيل النزاع",
+    "reviewtimeline": "الجدول الزمني للمراجعة"
 
 
   },
@@ -235,7 +240,9 @@
     "compactView": "عرض مضغوط",
     "standardView": "عرض قياسي",
     "confirm": "تأكيد",
-    "selectSupervisor": "اختر المشرف"
+    "selectSupervisor": "اختر المشرف",
+      "reject": "رفض",
+    "review": "مراجعة"
   },
   "entity": {
     "plate": "لوحة",
@@ -255,7 +262,9 @@
     "approved": "موافق",
     "rejected": "مرفوض",
     "cancelled": "ملغى",
-    "recalled": "تم الاسترجاع"
+    "recalled": "تم الاسترجاع",
+    "assigned": "مُعين"
+
   },
 
   "placeholders": {
@@ -295,7 +304,9 @@
     "selectShift": "اختر الوردية",
     "selectZones": "اختر المنطقة (المناطق)",
     "selectAssignmentTypes": "اختر نوع التكليف (التكليفات)",
-    "selectRole": "اختر الدور"
+    "selectRole": "اختر الدور",
+    "enterComments": "أدخل التعليقات"
+
   },
   "dashboard": {
     "totalInspectors": "إجمالي المفتشين",

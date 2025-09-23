@@ -265,7 +265,7 @@ export const dynamicApi = createApi({
 
     // Zones
     getZones: builder.query({
-      query: () => "/api/Inspection/Zones",
+      query: () => "/api/VLookups/Zones",
       providesTags: ["Zones"],
       transformResponse: (response: any) => {
         return response?.data || response || [];
@@ -273,7 +273,7 @@ export const dynamicApi = createApi({
     }),
     // Areas by ZoneId
     getAreas: builder.query({
-      query: (zoneId: string) => `/api/Inspection/Areas/${zoneId}`,
+      query: (zoneId: string) => `/api/VLookups/Areas/${zoneId}`,
       providesTags: ["Zones"],
       transformResponse: (response: any) => {
         return response?.data || response || [];
@@ -283,7 +283,7 @@ export const dynamicApi = createApi({
     // All Areas (no zone filter)
     // In dynamicApi endpoints
     getAllAreas: builder.query({
-      query: () => "/api/Inspection/Areas",
+      query: () => "/api/VLookups/Areas",
       providesTags: ["Zones"],
       transformResponse: (response: any) => {
         // Handle both response structures
@@ -298,7 +298,7 @@ export const dynamicApi = createApi({
 
     // In dynamicApi endpoints
     getShifts: builder.query({
-      query: () => "/api/Inspection/Shifts",
+      query: () => "/api/VLookups/Shifts",
       providesTags: ["Shifts"],
       transformResponse: (response: any) => {
         return response?.data || response || [];
@@ -369,24 +369,22 @@ export const dynamicApi = createApi({
     }),
 
     getCarPlateDetails: builder.query({
-  query: (body) => ({
-    url: "/api/CallIntegration/ReadCarPlate",
-    method: "POST",
-    body,
-  }),
-  providesTags: ["CallIntegration"], 
-}),
-   
-   getTradeLicenseDetails: builder.query({
-     query: (body) => ({
-      url: "/api/CallIntegration/ReadTL",
-      method: "POST",
-      body,
-     }),
-     providesTags:["CallIntegration"],
-   }),
+      query: (body) => ({
+        url: "/api/CallIntegration/ReadCarPlate",
+        method: "POST",
+        body,
+      }),
+      providesTags: ["CallIntegration"],
+    }),
 
-    
+    getTradeLicenseDetails: builder.query({
+      query: (body) => ({
+        url: "/api/CallIntegration/ReadTL",
+        method: "POST",
+        body,
+      }),
+      providesTags: ["CallIntegration"],
+    }),
   }),
 });
 
@@ -454,7 +452,4 @@ export const {
   //General Search
   useLazyGetCarPlateDetailsQuery,
   useLazyGetTradeLicenseDetailsQuery,
-
-
-
 } = dynamicApi;

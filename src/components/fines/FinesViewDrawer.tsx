@@ -8,8 +8,6 @@ import { ShareAltOutlined } from "@ant-design/icons";
 import TradeLicenseCard from "../TradeLicenseCard";
 import { useUpdateFineCancelStatusMutation } from "../../services/rtkApiFactory";
 import { useAppNotification } from "../../utils/notificationManager";
-
-// Import inspection attachments API
 import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../common/ArcGISMap";
@@ -28,14 +26,12 @@ interface FinesViewDrawerProps {
   onReject?: (comment: string) => void;
 }
 
-// Helper to get label from value
 const getLabelFromValue = (value: number, options: any[], i18n: any) => {
   const option = options.find((opt) => opt.value === value || opt.id === value);
   if (!option) return String(value);
   return i18n.language === "ar" ? option.labelAr || option.label : option.labelEn || option.label;
 };
 
-// Filter options by category
 const filterOptionsByCategory = (options: any[], categoryId: number) =>
   options.filter((option) => option.categoryId === categoryId);
 
@@ -63,22 +59,16 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
 
   const isStatus15003 = mappedFine?.inspectionStatus === 15003;
 
-  // Fetch attachments for the fine
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
     fine ? { inspectionGUID: fine.inspectionGUID, entityCode: fine.entityCode } : skipToken,
   );
 
-  // Fetch lookups if not provided externally
   useEffect(() => {
-    if (externalLookupOptions.length === 0 && open) {
-      fetchLookupData();
-    }
+    if (externalLookupOptions.length === 0 && open) fetchLookupData();
   }, [open, externalLookupOptions]);
 
   useEffect(() => {
-    if (fine && lookupOptionsToUse.length > 0) {
-      mapFineToLabels();
-    }
+    if (fine && lookupOptionsToUse.length > 0) mapFineToLabels();
   }, [fine, lookupOptionsToUse, i18n.language]);
 
   useEffect(() => {
@@ -91,7 +81,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
       const result = await triggerGetLookups([1400, 1300, 1500]).unwrap();
       setInternalLookupOptions(result);
     } catch (error) {
-      console.error("Failed to fetch lookup data:", error);
+      notification.error({ data: error });
     } finally {
       setIsLoadingLookups(false);
     }
@@ -104,7 +94,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
     const inspectionCategoryOptions = filterOptionsByCategory(lookupOptionsToUse, 1300);
     const inspectionStatusOptions = filterOptionsByCategory(lookupOptionsToUse, 1500);
 
-    const mapped = {
+    setMappedFine({
       ...fine,
       inspectionTypeLabel: fine.inspectionType
         ? getLabelFunction(fine.inspectionType, inspectionTypeOptions, i18n)
@@ -123,19 +113,13 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
       statusLabel: getStatusLabel(fine.isPaid, fine.inspectionStatus),
       statusColor: getStatusColor(fine.isPaid, fine.inspectionStatus),
       blackPointsFormatted: (fine.blackPoint ?? fine.blackPoint === 0) ? fine.blackPoint : "0",
-    };
-
-    setMappedFine(mapped);
+    });
   };
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "No Data";
     try {
-      return new Date(dateString).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
+      return new Date(dateString).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
     } catch {
       return "Invalid Date";
     }
@@ -179,16 +163,11 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
         action_cancel_comment: comment || "",
       }).unwrap();
 
-      notification.success(
-        { data: { en_Msg: t("messages.approved") || "Approved successfully" } },
-        "Approved successfully",
-      );
-
+      notification.success({ data: { en_Msg: t("messages.approved") || "Approved successfully" } });
       setComment("");
       onClose();
     } catch (error: any) {
-      const errMsg = error?.data?.message || error?.message || t("messages.actionFailed") || "Action failed";
-      notification.error(errMsg);
+      notification.error({ data: error });
     } finally {
       setIsProcessing(false);
     }
@@ -204,16 +183,11 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
         action_cancel_comment: comment || "",
       }).unwrap();
 
-      notification.success(
-        { data: { en_Msg: t("messages.rejected") || "Rejected successfully" } },
-        "Rejected successfully",
-      );
-
+      notification.success({ data: { en_Msg: t("messages.rejected") || "Rejected successfully" } });
       setComment("");
       onClose();
     } catch (error: any) {
-      const errMsg = error?.data?.message || error?.message || t("messages.actionFailed") || "Action failed";
-      notification.error(errMsg);
+      notification.error({ data: error });
     } finally {
       setIsProcessing(false);
     }

@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { theme } from "antd";
 
 interface TradeLicenseProps {
   code: string; // TL Number
@@ -9,6 +10,7 @@ interface TradeLicenseProps {
 
 const TradeLicenseCard: React.FC<TradeLicenseProps> = ({ code, number, emirateAr }) => {
   const { i18n } = useTranslation();
+  const { token } = theme.useToken();
 
   const displayName = i18n.language === "ar" ? emirateAr || number : number || emirateAr;
 
@@ -16,17 +18,17 @@ const TradeLicenseCard: React.FC<TradeLicenseProps> = ({ code, number, emirateAr
     <div
       style={{
         display: "flex",
-        flexDirection: "column", // stack vertically
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        border: "1px solid rgba(0, 0, 0, 0.2)",
-        borderRadius: "8px",
+        border: `1px solid ${token.colorBorder}`,
+        borderRadius: token.borderRadius,
         padding: "6px",
         maxWidth: "160px",
         width: "60%",
         height: "40px",
-        background: "#fff",
-        fontFamily: "Arial, sans-serif",
+        background: token.colorBgContainer, // theme background
+        fontFamily: token.fontFamily,
         boxSizing: "border-box",
       }}
     >

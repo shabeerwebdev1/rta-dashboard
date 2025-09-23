@@ -47,6 +47,14 @@ const ParkonicPage: React.FC = () => {
     refetchOnMountOrArgChange: true,
   });
 
+  const statusLabels = useMemo(() => {
+    const statusMap: Record<number, string> = {
+      2: t("status.rejected"),
+      1: t("status.approved"),
+    };
+    return statusMap;
+  }, [t]);
+
   useEffect(() => {
     setPageTitle(t(config.title));
   }, [setPageTitle, t, config.title]);
@@ -105,18 +113,12 @@ const ParkonicPage: React.FC = () => {
 
   const handleSearchKeyChange = (newKey: string) => {
     const currentValue = searchValue;
-
-    // Clear the input field with a slight delay
     setTimeout(() => {
       setSearchValue("");
     }, 0);
-
-    // If there's a current search value, preserve it as a column filter
     if (currentValue.trim()) {
       setGlobalSearch(state.searchKey, currentValue);
     }
-
-    // Update the search key with empty value
     setGlobalSearch(newKey, "");
   };
 
@@ -165,6 +167,7 @@ const ParkonicPage: React.FC = () => {
           onClearFilter={handleClearFilter}
           onClearAll={handleClearAll}
           columnLabels={columnLabels}
+          statusLabels={statusLabels}
         />
       </Card>
 
@@ -181,6 +184,12 @@ const ParkonicPage: React.FC = () => {
         tableSize={tableSize}
         rowKey={config.tableConfig.rowKey}
         state={state}
+        filterOptions={{
+          reviewStatus: [
+            { text: t("status.approved"), value: 1 },
+            { text: t("status.rejected"), value: 2 },
+          ],
+        }}
       />
 
       <ParkonicViewDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} record={selectedRecord} />

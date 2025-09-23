@@ -1,8 +1,23 @@
-import React, { useState } from "react";
-import { Drawer, Descriptions, Tag, Space, Image, Timeline, Empty, Button, Select, Input, App } from "antd";
+import React, { useState, useEffect } from "react";
+import {
+  Drawer,
+  Descriptions,
+  Tag,
+  Space,
+  Image,
+  Empty,
+  Button,
+  Select,
+  Input,
+  Typography,
+  Spin,
+} from "antd";
 import { getFileUrl } from "../../services/fileApi";
 import { useReviewParkonicMutation } from "../../services/rtkApiFactory";
 import { ShareAltOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
+import { useAppNotification } from "../../utils/notificationManager";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -14,14 +29,30 @@ interface ParkonicViewDrawerProps {
 }
 
 const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, record }) => {
-  const { notification } = App.useApp();
+  const { t, i18n } = useTranslation();
+  const { success, error } = useAppNotification();
+
   const [reviewParkonic, { isLoading }] = useReviewParkonicMutation();
-  const [reviewStatus, setReviewStatus] = useState<number>(record?.reviewStatus || 0);
+  const [reviewStatus, setReviewStatus] = useState<number>(record?.reviewStatus ?? 2);
   const [rejectionReason, setRejectionReason] = useState<string>(record?.rejectionReason || "");
+
+  const entryPhotos = record?.entryImageUrl ? record.entryImageUrl.split(",") : [];
+  const exitPhotos = record?.exitImageUrl ? record.exitImageUrl.split(",") : [];
+
+  const statusLabels: Record<number, { en: string; ar: string }> = {
+    1: { en: t("status.approved"), ar: "موافق" },
+    0: { en: t("status.rejected"), ar: "مرفوض" },
+  };
+
+  const getStatusTag = (status: number) => {
+    const label = statusLabels[status] || { en: t("common.noData"), ar: "غير معروف" };
+    const color = status === 1 ? "green" : status === 0 ? "red" : "blue";
+    return <Tag color={color}>{label[i18n.language === "ar" ? "ar" : "en"]}</Tag>;
+  };
 
   const handleSubmitReview = async () => {
     if (reviewStatus === 0 && !rejectionReason) {
-      notification.error({ message: "Please provide a rejection reason" });
+      error({ data: { en_Msg: t("messages.enterRejectionReason") || "Please provide a rejection reason", ar_Msg: "يرجى تقديم سبب الرفض" } }, "");
       return;
     }
 
@@ -35,117 +66,118 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
         rejectionReason,
       }).unwrap();
 
-      notification.success({ message: "Review submitted successfully" });
+      success({ data: { en_Msg: t("messages.reviewSubmitted") || "Review submitted successfully", ar_Msg: "تم إرسال المراجعة بنجاح" } }, "");
       onClose();
-    } catch (error: any) {
-      notification.error({ message: error?.data?.message || "Failed to submit review" });
+    } catch (err: any) {
+      error(err, t("messages.reviewFailed") || "Failed to submit review");
     }
   };
 
   const handleShare = () => {
     const shareUrl = `${window.location.origin}/parkonic/${record?.fineId}`;
     navigator.clipboard.writeText(shareUrl).then(
-      () => notification.success({ message: "Share link copied to clipboard!" }),
-      () => notification.error({ message: "Failed to copy link." }),
+      () => success({ data: { en_Msg: t("common.share") || "Share link copied to clipboard!", ar_Msg: "تم نسخ الرابط!" } }, ""),
+      () => error({ data: { en_Msg: t("common.shareFailed") || "Failed to copy link.", ar_Msg: "فشل في نسخ الرابط." } }, ""),
     );
   };
+
+  useEffect(() => {
+    setReviewStatus(record?.reviewStatus ?? 2);
+    setRejectionReason(record?.rejectionReason || "");
+  }, [record]);
 
   return (
     <Drawer
       open={open}
       onClose={onClose}
       width={500}
-      title="Parkonic Details"
+      title={t("form.parkonicdetails")}
       bodyStyle={{ overflowY: "auto", height: "calc(100vh - 64px)" }}
       extra={
         <Button icon={<ShareAltOutlined />} onClick={handleShare}>
-          Share
+          {t("common.share")}
         </Button>
       }
       footer={
         <div style={{ textAlign: "right" }}>
           <Button onClick={onClose} style={{ marginRight: 8 }}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="primary" loading={isLoading} onClick={handleSubmitReview}>
-            Submit Review
+            {t("common.submit")}
           </Button>
         </div>
       }
     >
       {!record ? (
-        <Empty description="No Data" />
+        <Empty description={t("common.noData")} />
       ) : (
         <>
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Fine ID">{record.fineId || "No Data"}</Descriptions.Item>
-            <Descriptions.Item label="Vehicle Number">{record.plateNumber || "No Data"}</Descriptions.Item>
-            <Descriptions.Item label="Review Status">
-              <Tag color={record.reviewStatus === 1 ? "green" : record.reviewStatus === 0 ? "red" : "blue"}>
-                {record.reviewStatus === 1 ? "Approved" : record.reviewStatus === 0 ? "Rejected" : "Unknown"}
-              </Tag>
+            <Descriptions.Item label={t("form.fineNumber")}>{record.fineId || t("common.noData")}</Descriptions.Item>
+            <Descriptions.Item label={t("form.vehicleNumber")}>{record.plateNumber || t("common.noData")}</Descriptions.Item>
+            <Descriptions.Item label={t("form.reviewStatus")}>{getStatusTag(record.reviewStatus)}</Descriptions.Item>
+            <Descriptions.Item label={t("form.entryDateTime")}>
+              {record.entryDateTime ? dayjs(record.entryDateTime).format("DD-MM-YYYY") : t("common.noData")}
             </Descriptions.Item>
-            <Descriptions.Item label="Entry Date Time">{record.entryDateTime || "No Data"}</Descriptions.Item>
-            <Descriptions.Item label="Exit Date Time">{record.exitDateTime || "No Data"}</Descriptions.Item>
+            <Descriptions.Item label={t("form.exitDateTime")}>
+              {record.exitDateTime ? dayjs(record.exitDateTime).format("DD-MM-YYYY ") : t("common.noData")}
+            </Descriptions.Item>
           </Descriptions>
 
-          <h4 style={{ marginTop: 16 }}>Location Details</h4>
+          <h4 style={{ marginTop: 16 }}>{t("common.location")}</h4>
           {record.locationDescription ? (
             <Descriptions bordered column={1} size="small">
-              <Descriptions.Item label="Description">{record.locationDescription}</Descriptions.Item>
+              <Descriptions.Item label={t("form.description")}>{record.locationDescription}</Descriptions.Item>
             </Descriptions>
           ) : (
-            <Empty description="No Location Data" />
+            <Empty description={t("common.noData")} />
           )}
 
-          {record.location?.lat && record.location?.lng && (
-            <iframe
-              title="Parkonic Location"
-              width="100%"
-              height={300}
-              style={{ border: 0, marginTop: 16 }}
-              loading="lazy"
-              allowFullScreen
-              src={`https://www.google.com/maps?q=${record.location.lat},${record.location.lng}&z=15&output=embed`}
-            />
-          )}
+          <Typography.Title level={5} style={{ marginBottom: 16, marginTop: 16 }}>
+            {t("form.entryDateTime")}
+          </Typography.Title>
+          <Spin spinning={false}>
+            {entryPhotos.length > 0 ? (
+              <Image.PreviewGroup>
+                <Space wrap>
+                  {entryPhotos.map((photo: string, idx: number) => (
+                    <Image key={idx} width={100} height={100} src={getFileUrl(photo)} alt={`entry-${idx}`} />
+                  ))}
+                </Space>
+              </Image.PreviewGroup>
+            ) : (
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("messages.noEntryPhotos")} />
+            )}
+          </Spin>
 
-          <h4 style={{ marginTop: 16 }}>Attached Photos</h4>
-          {record.photos && record.photos.length ? (
-            <Image.PreviewGroup>
-              <Space wrap>
-                {record.photos.map((photo: string, idx: number) => (
-                  <Image key={idx} width={120} src={getFileUrl(photo)} />
-                ))}
-              </Space>
-            </Image.PreviewGroup>
-          ) : (
-            <Empty description="No Photos" />
-          )}
+          <Typography.Title level={5} style={{ marginBottom: 16, marginTop: 16 }}>
+            {t("form.exitDateTime")}
+          </Typography.Title>
+          <Spin spinning={false}>
+            {exitPhotos.length > 0 ? (
+              <Image.PreviewGroup>
+                <Space wrap>
+                  {exitPhotos.map((photo: string, idx: number) => (
+                    <Image key={idx} width={100} height={100} src={getFileUrl(photo)} alt={`exit-${idx}`} />
+                  ))}
+                </Space>
+              </Image.PreviewGroup>
+            ) : (
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("messages.noExitPhotos")} />
+            )}
+          </Spin>
 
-          <h4 style={{ marginTop: 16 }}>Permits</h4>
-          {record.permits && record.permits.length ? (
-            <Timeline>
-              {record.permits.map((permit: any, idx: number) => (
-                <Timeline.Item key={idx}>
-                  <strong>{permit.number}</strong> - {permit.type}
-                </Timeline.Item>
-              ))}
-            </Timeline>
-          ) : (
-            <Empty description="No Permits" />
-          )}
-
-          <h4 style={{ marginTop: 16 }}>Review Fine</h4>
+          <h4 style={{ marginTop: 16 }}>{t("common.review")}</h4>
           <Space direction="vertical" style={{ width: "100%" }}>
             <Select value={reviewStatus} onChange={(value) => setReviewStatus(value)} style={{ width: "100%" }}>
-              <Option value={1}>Approve</Option>
-              <Option value={0}>Reject</Option>
+              <Option value={1}>{t("common.approve")}</Option>
+              <Option value={0}>{t("common.reject")}</Option>
             </Select>
 
             {reviewStatus === 0 && (
               <TextArea
-                placeholder="Enter rejection reason"
+                placeholder={t("messages.enterRejectionReason")}
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
               />

@@ -84,7 +84,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
 
   const getSupervisorName = (id: string) => {
     const sup = filteredSupervisors.find((s: any) => s.employeeId === id);
-    return sup ? sup.employeeName : id; // fallback to ID if not found
+    return sup ? sup.employeeName : id;
   };
 
   // Initialize map
@@ -187,7 +187,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
       };
 
       const response = await updateDisputeStatus(payload).unwrap();
-      notification.success(response, t("messages.updateSuccess", { entity: "Dispute Status" }));
+      notification.success(response, t("messages.updateSuccess", { entity: t("sidebar.dispute") }));
 
       // Refresh the dispute data to get the updated reviews
       triggerGetDisputeById(storedDisputeId);
@@ -218,21 +218,6 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
         return "blue"; // Under Review
       default:
         return "default";
-    }
-  };
-
-  const getStatusText = (status: number) => {
-    switch (status) {
-      case 0:
-        return "Pending";
-      case 1:
-        return "Approved";
-      case 2:
-        return "Rejected";
-      case 3:
-        return "Under Review";
-      default:
-        return "Unknown";
     }
   };
 
@@ -273,12 +258,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
           <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
             <Col>
               <Title level={4} style={{ margin: 0 }}>
-                Dispute Review <Text type="danger">#{dispute?.fine_Number || storedDisputeId}</Text>
-                {/* {dispute?.dispute_Status !== undefined && (
-                  <Tag color={getStatusColor(dispute.dispute_Status)} style={{ marginLeft: 8 }}>
-                    {getStatusText(dispute.dispute_Status)}
-                  </Tag>
-                )} */}
+                {t("form.disputereview")} <Text type="danger">#{dispute?.fine_Number || storedDisputeId}</Text>
               </Title>
             </Col>
             <Col>
@@ -287,7 +267,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
           </Row>
 
           {!dispute ? (
-            <Empty description="No Data Available" />
+            <Empty description={t("common.noData")} />
           ) : (
             <Row gutter={24}>
               {/* LEFT SIDE */}
@@ -296,122 +276,122 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                   {/* Dispute Details */}
                   <Col span={12}>
                     <Card
-                      title="Dispute Details"
+                      title={t("form.disputedetails")}
                       size="small"
                       headStyle={{ background: "#fafafa", fontWeight: 600 }}
                       style={{ marginBottom: 16 }}
                     >
                       <Row gutter={[0, 12]}>
                         <Col span={10}>
-                          <Text strong>Fine Number:</Text>
+                          <Text strong>{t("form.fineNumber")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.fine_Number || "No Data"}</Col>
+                        <Col span={14}>{dispute.fine_Number || t("common.noData")}</Col>
 
                         <Col span={10}>
-                          <Text strong>Department:</Text>
+                          <Text strong>{t("form.department")}:</Text>
                         </Col>
                         <Col span={14}>
-                          {dispute.department ? getLabelFromValue(dispute.department, 1000) : "No Data"}
+                          {dispute.department ? getLabelFromValue(dispute.department, 1000) : t("common.noData")}
                         </Col>
 
                         <Col span={10}>
-                          <Text strong>Payment Type:</Text>
+                          <Text strong>{t("form.paymentType")}:</Text>
                         </Col>
                         <Col span={14}>
-                          {dispute.payment_Type ? getLabelFromValue(dispute.payment_Type, 1100) : "No Data"}
+                          {dispute.payment_Type ? getLabelFromValue(dispute.payment_Type, 1100) : t("common.noData")}
                         </Col>
 
                         <Col span={10}>
-                          <Text strong>Dispute Reason:</Text>
+                          <Text strong>{t("form.reason")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.dispute_Reason || "No Data"}</Col>
+                        <Col span={14}>{dispute.dispute_Reason || t("common.noData")}</Col>
 
                         <Col span={10}>
-                          <Text strong>Email:</Text>
+                          <Text strong>{t("form.email")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.email || "No Data"}</Col>
+                        <Col span={14}>{dispute.email || t("common.noData")}</Col>
 
                         <Col span={10}>
-                          <Text strong>Phone Number:</Text>
+                          <Text strong>{t("form.phoneNumber")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.phone || "No Data"}</Col>
+                        <Col span={14}>{dispute.phone || t("common.noData")}</Col>
 
                         <Col span={10}>
-                          <Text strong>CRM Reference:</Text>
+                          <Text strong>{t("form.crmReference")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.crM_Ref || "No Data"}</Col>
+                        <Col span={14}>{dispute.crM_Ref || t("common.noData")}</Col>
 
                         <Col span={10}>
-                          <Text strong>Address:</Text>
+                          <Text strong>{t("form.address")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.address || "No Data"}</Col>
+                        <Col span={14}>{dispute.address || t("common.noData")}</Col>
                       </Row>
                     </Card>
                   </Col>
 
-                  {/* Vehicle Details (changed to column layout like Dispute Details) */}
+                  {/* Vehicle Details */}
                   {dispute.vehicle && (
                     <Col span={12}>
                       <Card
-                        title="Vehicle Details"
+                        title={t("form.vehicleDetails")}
                         size="small"
                         headStyle={{ background: "#fafafa", fontWeight: 600 }}
                         style={{ marginBottom: 16 }}
                       >
                         <Row gutter={[0, 12]}>
                           <Col span={10}>
-                            <Text strong>Plate Number:</Text>
+                            <Text strong>{t("form.plateNumber")}:</Text>
                           </Col>
-                          <Col span={14}>{dispute.vehicle.plateNumber || "No Data"}</Col>
+                          <Col span={14}>{dispute.vehicle.plateNumber || t("common.noData")}</Col>
 
                           <Col span={10}>
-                            <Text strong>Plate Color:</Text>
+                            <Text strong>{t("form.Color")}:</Text>
                           </Col>
-                          <Col span={14}>{dispute.vehicle.plateColor || "No Data"}</Col>
+                          <Col span={14}>{dispute.vehicle.plateColor || t("common.noData")}</Col>
 
                           <Col span={10}>
-                            <Text strong>Plate Type:</Text>
+                            <Text strong>{t("form.Type")}:</Text>
                           </Col>
-                          <Col span={14}>{dispute.vehicle.plateType || "No Data"}</Col>
+                          <Col span={14}>{dispute.vehicle.plateType || t("common.noData")}</Col>
 
                           <Col span={10}>
-                            <Text strong>Plate Source:</Text>
+                            <Text strong>{t("form.Source")}:</Text>
                           </Col>
-                          <Col span={14}>{dispute.vehicle.plateSource || "No Data"}</Col>
+                          <Col span={14}>{dispute.vehicle.plateSource || t("common.noData")}</Col>
 
                           <Col span={10}>
-                            <Text strong>Vehicle Brand:</Text>
+                            <Text strong>{t("form.vehicleBrand")}:</Text>
                           </Col>
-                          <Col span={14}>{dispute.vehicle.vehicleBrand || "No Data"}</Col>
+                          <Col span={14}>{dispute.vehicle.vehicleBrand || t("common.noData")}</Col>
 
                           <Col span={10}>
-                            <Text strong>Vehicle Type:</Text>
+                            <Text strong>{t("form.vehicleType")}:</Text>
                           </Col>
-                          <Col span={14}>{dispute.vehicle.vehicleType || "No Data"}</Col>
+                          <Col span={14}>{dispute.vehicle.vehicleType || t("common.noData")}</Col>
 
                           <Col span={10}>
-                            <Text strong>Vehicle Color:</Text>
+                            <Text strong>{t("form.vehicleColor")}:</Text>
                           </Col>
-                          <Col span={14}>{dispute.vehicle.vehicleColor || "No Data"}</Col>
+                          <Col span={14}>{dispute.vehicle.vehicleColor || t("common.noData")}</Col>
 
                           <Col span={10}>
-                            <Text strong>Manufacturer Year:</Text>
+                            <Text strong>{t("form.manufacturerYear")}:</Text>
                           </Col>
-                          <Col span={14}>{dispute.vehicle.manufacturerYear || "No Data"}</Col>
+                          <Col span={14}>{dispute.vehicle.manufacturerYear || t("common.noData")}</Col>
 
                           <Col span={10}>
-                            <Text strong>Owner Name:</Text>
+                            <Text strong>{t("form.vehicleOwnerName")}:</Text>
                           </Col>
-                          <Col span={14}>{dispute.vehicle.ownerName || "No Data"}</Col>
+                          <Col span={14}>{dispute.vehicle.ownerName || t("common.noData")}</Col>
                         </Row>
                       </Card>
                     </Col>
                   )}
                 </Row>
 
-                {/* Fine Details (changed to row layout like Vehicle Details) */}
+                {/* Fine Details */}
                 <Card
-                  title="Fine Details"
+                  title={t("form.finedetails")}
                   size="small"
                   style={{ borderRadius: 12, marginBottom: 16 }}
                   headStyle={{ background: "#fafafa", fontWeight: 600 }}
@@ -419,18 +399,18 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                   {dispute.fineDetails ? (
                     <Row gutter={16}>
                       <Col span={8}>
-                        <Text strong>Fine Amount:</Text>
+                        <Text strong>{t("form.fineAmount")}:</Text>
                         {dispute.fineDetails.fineAmount !== null && dispute.fineDetails.fineAmount !== undefined ? (
                           <Text type="danger" strong style={{ display: "block", marginTop: 4 }}>
                             {dispute.fineDetails.fineAmount} AED
                           </Text>
                         ) : (
-                          <Text style={{ display: "block", marginTop: 4 }}>No Data</Text>
+                          <Text style={{ display: "block", marginTop: 4 }}>{t("common.noData")}</Text>
                         )}
                       </Col>
 
                       <Col span={8}>
-                        <Text strong>Fine Status:</Text>
+                        <Text strong>{t("form.status")}:</Text>
                         {dispute.fineDetails.fineStatus ? (
                           <div style={{ marginTop: 4 }}>
                             <Tag color={getStatusColor(dispute.fineDetails.fineStatus)}>
@@ -438,14 +418,14 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                             </Tag>
                           </div>
                         ) : (
-                          <Text style={{ display: "block", marginTop: 4 }}>No Data</Text>
+                          <Text style={{ display: "block", marginTop: 4 }}>{t("common.noData")}</Text>
                         )}
                       </Col>
 
                       <Col span={8}>
-                        <Text strong>Fine Number:</Text>
+                        <Text strong>{t("form.fineNumber")}:</Text>
                         <Text style={{ display: "block", marginTop: 4 }}>
-                          {dispute.fineDetails.fineNo || "No Data"}
+                          {dispute.fineDetails.fineNo || t("common.noData")}
                         </Text>
                       </Col>
                     </Row>
@@ -457,7 +437,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                 <Row gutter={16}>
                   <Col span={12}>
                     <Card
-                      title="Location Map"
+                      title={t("common.location")}
                       size="small"
                       style={{ borderRadius: 12, marginBottom: 16 }}
                       headStyle={{ background: "#fafafa", fontWeight: 600 }}
@@ -482,14 +462,14 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                           height="180px"
                         />
                       ) : (
-                        <Empty description="No Location Data Available" />
+                        <Empty description={t("common.noData")} />
                       )}
                     </Card>
                   </Col>
 
                   <Col span={12}>
                     <Card
-                      title="Evidence Photos"
+                      title={t("form.photo")}
                       size="small"
                       style={{ borderRadius: 12, marginBottom: 16 }}
                       headStyle={{ background: "#fafafa", fontWeight: 600 }}
@@ -511,7 +491,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                           </Space>
                         </Image.PreviewGroup>
                       ) : (
-                        <Empty description="No Photos Available" />
+                        <Empty description={t("common.noData")} />
                       )}
                     </Card>
                   </Col>
@@ -521,7 +501,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
               {/* RIGHT SIDE - Review Timeline */}
               <Col span={6}>
                 <Card
-                  title="Review Timeline"
+                  title={t("form.reviewtimeline")}
                   size="small"
                   style={{ borderRadius: 12, background: "#f0f7ff", marginBottom: 16 }}
                   headStyle={{ background: "#e6f2ff", fontWeight: 600 }}
@@ -532,19 +512,21 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                         <Timeline.Item dot={<ClockCircleOutlined />} color="blue" key={idx}>
                           <Text strong>
                             {review.review_Action === 1
-                              ? "Assigned"
+                              ? t("status.assigned")
                               : review.review_Action === 2
-                                ? "Approved"
+                                ? t("status.approved")
                                 : review.review_Action === 3
-                                  ? "Rejected"
-                                  : "Review"}
+                                  ? t("status.rejected")
+                                  : t("common.review")}
                           </Text>
                           <br />
                           <Text type="secondary">{review.review_Comments || "No Comments"}</Text>
                           {review.assignedTo && (
                             <>
                               <br />
-                              <Text type="secondary">Assigned to: {getSupervisorName(review.assignedTo)}</Text>
+                              <Text type="secondary">
+                                {t("form.assignedTo")} {getSupervisorName(review.assignedTo)}
+                              </Text>
                             </>
                           )}
 
@@ -573,92 +555,88 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
               <Divider />
               <Form form={form} layout="vertical">
                 <Row gutter={16} align="middle">
-                {/* Assignment Controls - Only show for non-supervisor roles and fineStatus ≠ 15005 and dispute_Status ≠ 3 */}
-{!isSupervisorRole &&
-  dispute?.fineDetails?.fineStatus !== 15005 &&
-  dispute?.fineDetails?.dispute_Status !== 3 && (
-    <Col span={6}>
-      <Form.Item name="assignedTo" label={<Text strong>Assign To</Text>}>
-        <Select
-          placeholder="Select Supervisor"
-          loading={isLoadingSupervisors}
-          allowClear
-          showSearch
-          optionFilterProp="children"
-        >
-          {filteredSupervisors.map((sup: any) => (
-            <Select.Option key={sup.employeeId} value={sup.employeeId}>
-              {sup.employeeName} ({sup.roleCode})
-            </Select.Option>
-          ))}
-        </Select>
-      </Form.Item>
-    </Col>
-  )}
+                  {/* Assignment Controls - Only show for non-supervisor roles and fineStatus ≠ 15005 and dispute_Status ≠ 3 */}
+                  {!isSupervisorRole &&
+                    dispute?.fineDetails?.fineStatus !== 15005 &&
+                    dispute?.fineDetails?.dispute_Status !== 3 && (
+                      <Col span={6}>
+                        <Form.Item name="assignedTo" label={<Text strong>{t("form.assinedto")}</Text>}>
+                          <Select
+                            placeholder={t("common.selectSupervisor")}
+                            loading={isLoadingSupervisors}
+                            allowClear
+                            showSearch
+                            optionFilterProp="children"
+                          >
+                            {filteredSupervisors.map((sup: any) => (
+                              <Select.Option key={sup.employeeId} value={sup.employeeId}>
+                                {sup.employeeName} ({sup.roleCode})
+                              </Select.Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                    )}
 
-{/* Comment Box - Only show when fineStatus = 15005 and dispute_Status ≠ 3 */}
-{dispute?.fineDetails?.fineStatus === 15005 &&
-  dispute?.fineDetails?.dispute_Status !== 3 && (
-    <Col span={isSupervisorRole ? 14 : 8}>
-      <Form.Item
-        name="review_Comments"
-        label={<Text strong>Comment</Text>}
-        style={{ marginBottom: 0 }}
-        rules={[{ required: true, message: "Please enter your comments" }]}
-      >
-        <TextArea placeholder="Enter your review comments" rows={2} />
-      </Form.Item>
-    </Col>
-  )}
+                  {/* Comment Box - Only show when fineStatus = 15005 and dispute_Status ≠ 3 */}
+                  {dispute?.fineDetails?.fineStatus === 15005 && dispute?.fineDetails?.dispute_Status !== 3 && (
+                    <Col span={isSupervisorRole ? 14 : 8}>
+                      <Form.Item
+                        name="review_Comments"
+                        label={<Text strong>{t("form.comments")}</Text>}
+                        style={{ marginBottom: 0 }}
+                        rules={[{ required: true, message: "Please enter your comments" }]}
+                      >
+                        <TextArea placeholder={t("placeholders.enterComments")} rows={2} />
+                      </Form.Item>
+                    </Col>
+                  )}
 
-{/* Action Buttons - Only show if dispute_Status ≠ 3 */}
-{dispute?.fineDetails?.dispute_Status !== 3 && (
-  <Col span={isSupervisorRole ? 10 : 8} style={{ textAlign: "right", paddingTop: 30 }}>
-    {isSupervisorRole ? (
-      // Supervisor buttons (Approve/Reject) - Only show when fineStatus = 15005
-      dispute?.fineDetails?.fineStatus === 15005 && (
-        <>
-          <Button
-            type="primary"
-            style={{ marginRight: 8 }}
-            loading={isUpdating && reviewAction === 2}
-            onClick={() => {
-              setReviewAction(2);
-              handleStatusUpdate(2); // Approved = 2
-            }}
-          >
-            Approve
-          </Button>
-          <Button
-            danger
-            loading={isUpdating && reviewAction === 3}
-            onClick={() => {
-              setReviewAction(3);
-              handleStatusUpdate(3); // Rejected = 3
-            }}
-          >
-            Reject
-          </Button>
-        </>
-      )
-    ) : (
-      // Regular user button (Assign) - Only show when fineStatus ≠ 15005
-      dispute?.fineDetails?.fineStatus !== 15005 && (
-        <Button
-          type="default"
-          loading={isUpdating && reviewAction === 1}
-          onClick={() => {
-            setReviewAction(1);
-            handleStatusUpdate(1); // Assigned = 1
-          }}
-        >
-          Assign
-        </Button>
-      )
-    )}
-  </Col>
-)}
-
+                  {/* Action Buttons - Only show if dispute_Status ≠ 3 */}
+                  {dispute?.fineDetails?.dispute_Status !== 3 && (
+                    <Col span={isSupervisorRole ? 10 : 8} style={{ textAlign: "right", paddingTop: 30 }}>
+                      {isSupervisorRole
+                        ? // Supervisor buttons (Approve/Reject) - Only show when fineStatus = 15005
+                          dispute?.fineDetails?.fineStatus === 15005 && (
+                            <>
+                              <Button
+                                type="primary"
+                                style={{ marginRight: 8 }}
+                                loading={isUpdating && reviewAction === 2}
+                                onClick={() => {
+                                  setReviewAction(2);
+                                  handleStatusUpdate(2); // Approved = 2
+                                }}
+                              >
+                                {t("form.approve")}
+                              </Button>
+                              <Button
+                                danger
+                                loading={isUpdating && reviewAction === 3}
+                                onClick={() => {
+                                  setReviewAction(3);
+                                  handleStatusUpdate(3); // Rejected = 3
+                                }}
+                              >
+                                {t("common.reject")}
+                              </Button>
+                            </>
+                          )
+                        : // Regular user button (Assign) - Only show when fineStatus ≠ 15005
+                          dispute?.fineDetails?.fineStatus !== 15005 && (
+                            <Button
+                              type="default"
+                              loading={isUpdating && reviewAction === 1}
+                              onClick={() => {
+                                setReviewAction(1);
+                                handleStatusUpdate(1); // Assigned = 1
+                              }}
+                            >
+                              {t("form.assign")}
+                            </Button>
+                          )}
+                    </Col>
+                  )}
                 </Row>
               </Form>
             </>
