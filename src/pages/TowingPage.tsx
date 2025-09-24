@@ -12,7 +12,7 @@ import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import { towingConfig } from "../config/pageConfigs/towingConfig";
- import { useGetTowingDetailsQuery } from "../services/rtkApiFactory";
+import { useGetTowingDetailsQuery } from "../services/rtkApiFactory";
 import TowingViewDrawer from "../components/Towing/TowingViewDrawer";
 
 const { Option } = Select;
@@ -43,27 +43,18 @@ const TowingPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
-  //  Fetch leave data from API
+  // Fetch towing data from API
   const { data, isFetching } = useGetTowingDetailsQuery(apiParams);
 
   const apiData = data?.data || [];
   const total = data?.total || 0;
 
-  const filterOptions = {
-    status: [
-      { text: t("status.approved"), value: 1 },
-      { text: t("status.rejected"), value: 3 },
-      { text: t("status.pending"), value: 0 },
-      { text: t("status.cancelled"), value: 2 },
-    ],
-  };
-
   const statusLabels = useMemo(() => {
-    const statusMap: Record<number, React.ReactNode> = {
-      0: t("status.pending"),
-      1: t("status.approved"),
-      2: t("status.cancelled"),
-      3: t("status.rejected"),
+    const statusMap: Record<string, React.ReactNode> = {
+      "pending": <Tag color="blue">{t("status.pending")}</Tag>,
+      "Approved": <Tag color="green">{t("status.approved")}</Tag>,
+      "Rejected": <Tag color="red">{t("status.rejected")}</Tag>,
+      "cancelled": <Tag color="orange">{t("status.cancelled")}</Tag>,
     };
     return statusMap;
   }, [t]);
@@ -99,8 +90,8 @@ const TowingPage: React.FC = () => {
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = apiData.filter((item: any) => selectedRowKeys.includes(item.leaveId)) || [];
-        exportToCsv(selectedData, `leave_management_export.csv`);
+        const selectedData = apiData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID)) || [];
+        exportToCsv(selectedData, `towing_export.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
       },
@@ -145,7 +136,7 @@ const TowingPage: React.FC = () => {
     <>
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         {/* Stats */}
-        {/* <StatsDisplay statsConfig={config.statsConfig} data={apiData} loading={isFetching} /> */}
+        <StatsDisplay statsConfig={config.statsConfig} data={apiData} loading={isFetching} />
 
         {/* Filters + Search */}
         <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
@@ -209,11 +200,11 @@ const TowingPage: React.FC = () => {
           rowKey={config.tableConfig.rowKey}
           state={state}
           filterOptions={{
-            status: [
-              { text: t("status.approved"), value: 1 },
-              { text: t("status.rejected"), value: 3 },
-              { text: t("status.pending"), value: 0 },
-              { text: t("status.cancelled"), value: 2 },
+            towing_Status: [
+              { text: t("status.approved"), value: "Approved" },
+              { text: t("status.rejected"), value: "Rejected" },
+              { text: t("status.pending"), value: "pending" },
+              { text: t("status.cancelled"), value: "cancelled" },
             ],
           }}
         />

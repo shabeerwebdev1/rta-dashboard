@@ -2,20 +2,18 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Card, Space, Button, Row, Col, Form, Select, Input, Tabs, Descriptions } from "antd";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
-import { SearchOutlined } from "@ant-design/icons";
 import {
   useLazyGetLookupsQuery,
   useSearchFinesQuery,
   useLazyGetCarPlateDetailsQuery,
   useLazyGetTradeLicenseDetailsQuery,
 } from "../services/rtkApiFactory";
-import dayjs from "dayjs";
+
 import FineViewDrawer from "../components/GeneralSearch/GeneralSearchViewDrawer";
-import { carPlatePageConfig, tradeLicensePageConfig } from "../config/pageConfigs/generalSearchConfig";
+import { carPlatePageConfig } from "../config/pageConfigs/generalSearchConfig";
 import i18n from "../config/i18n";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import { useAppNotification } from "../utils/notificationManager"; //
-import { data } from "react-router-dom";
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -133,40 +131,16 @@ const GeneralSearchPage: React.FC = () => {
     }
   };
 
-  // const handleCarSearch = async (values: any) => {
-  //   const { plateNumber } = values;
-
-  //   // Set plate number for fines query
-  //   setPlateNumber(plateNumber);
-
-  //   // API payload: last three dropdowns forced to "111"
-  //   const params = {
-  //     plateNumber: plateNumber?.toString() || "",
-  //     plateSource: plateSource?.toString() || "",
-  //     plateCategory: plateCategory?.toString() || "",
-  //     plateCode: plateCode?.toString() || "",
-  //   };
-
-  //   try {
-  //     const result = await triggerGetCarPlateDetails(params).unwrap();
-  //     setVehicleDetails(result?.data || null);
-  //     notification.success(result, t("messages.vehicleDetailsFetched"));
-  //   } catch (error: any) {
-  //     console.error("Car plate details fetch failed:", error);
-  //     notification.error(error, t("messages.vehicleDetailsFetched"));
-  //     setVehicleDetails(null);
-  //   }
-  // };
-
   const handleTlSearch = async (values: any) => {
     try {
-      const result = await triggerGetTradeLicenseDetails(values.licenseNumber.toString()).unwrap();
+      // API expects only a string in JSON (e.g., "1234")
+      const result = await triggerGetTradeLicenseDetails(JSON.stringify(values.licenseNo.toString())).unwrap();
 
       setTlData(result?.data || result); // bind response to state
-      notification.success({ message: t("messages.tradeLicenseFetched") });
+      notification.success(result, t("messages.tradeLicenseFetched"));
     } catch (error: any) {
       console.error("Trade License fetch failed:", error);
-      notification.error({ message: t("messages.failedToFetchTradeLicense") });
+      notification.error(error, t("messages.failedToFetchTradeLicense"));
       setTlData(null);
     }
   };
@@ -180,10 +154,6 @@ const GeneralSearchPage: React.FC = () => {
     setDrawerVisible(true);
   };
 
-  // Extract fines data
-  // Filter fines by plateNumber
-  // const finesList = finesData?.data?.filter((fine: any) => fine.plateNumber === plateNumber) || [];
-
   const finesList = finesData?.data.filter((fine: any) => fine.plateNumber === plateNumber) || [];
 
   return (
@@ -191,142 +161,178 @@ const GeneralSearchPage: React.FC = () => {
       <Card bordered={false}>
         <Tabs defaultActiveKey="1" type="card">
           {/* Car Plate Tab */}
-          <TabPane tab="Car Plate" key="1">
-            <Form form={formCar} layout="vertical" onFinish={handleCarSearch} initialValues={{}}>
-              <Row gutter={16}>
-                <Col span={6}>
-                  <Form.Item
-                    name="plateNumber"
-                    label={t("form.plateNumber")}
-                    rules={[{ required: true, message: t("validation.required") }]}
-                  >
-                    <Input placeholder={t("placeholders.plateNumber")} />
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item name="plateSource" label={t("form.plateSource")}>
-                    <Select showSearch loading={isLoadingLookups} placeholder={t("placeholders.plateSource")}>
-                      {plateSourceOptions.map((opt) => (
-                        <Option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item name="plateCategory" label={t("form.plateCategory")}>
-                    <Select showSearch loading={isLoadingLookups} placeholder={t("placeholders.plateCategory")}>
-                      {plateCategoryOptions.map((opt) => (
-                        <Option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col span={6}>
-                  <Form.Item name="plateCode" label={t("form.plateCode")}>
-                    <Select showSearch loading={isLoadingLookups} placeholder={t("placeholders.plateCode")}>
-                      {plateCodeOptions.map((opt) => (
-                        <Option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row>
-                <Col span={24} style={{ textAlign: "right" }}>
-                  <Button type="primary" htmlType="submit" loading={isFetchingCarDetails}>
-                    {t("common.search")}
-                  </Button>
-                </Col>
-              </Row>
-            </Form>
+          <TabPane tab={t("tabs.carPlate")} key="1">
+            <Space direction="vertical" size="large" style={{ width: "100%" }}>
+              {/* Search Form */}
+              <Form form={formCar} layout="vertical" onFinish={handleCarSearch} initialValues={{}}>
+                <Row gutter={16}>
+                  <Col span={6}>
+                    <Form.Item
+                      name="plateNumber"
+                      label={t("form.plateNumber")}
+                      rules={[{ required: true, message: t("validation.required") }]}
+                    >
+                      <Input placeholder={t("placeholders.plateNumber")} />
+                    </Form.Item>
+                  </Col>
+                  <Col span={6}>
+                    <Form.Item name="plateSource" label={t("form.plateSource")}>
+                      <Select showSearch loading={isLoadingLookups} placeholder={t("placeholders.plateSource")}>
+                        {plateSourceOptions.map((opt) => (
+                          <Option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={6}>
+                    <Form.Item name="plateCategory" label={t("form.plateCategory")}>
+                      <Select showSearch loading={isLoadingLookups} placeholder={t("placeholders.plateCategory")}>
+                        {plateCategoryOptions.map((opt) => (
+                          <Option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={6}>
+                    <Form.Item name="plateCode" label={t("form.plateCode")}>
+                      <Select showSearch loading={isLoadingLookups} placeholder={t("placeholders.plateCode")}>
+                        {plateCodeOptions.map((opt) => (
+                          <Option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Row>
+                  <Col span={24} style={{ textAlign: "right" }}>
+                    <Button type="primary" htmlType="submit" loading={isFetchingCarDetails}>
+                      {t("common.search")}
+                    </Button>
+                  </Col>
+                </Row>
+              </Form>
 
-            {/* Show vehicle details and fines only if vehicleDetails exist */}
-            {vehicleDetails && (
-              <>
-                <Card title="Vehicle Details" className="mt-4">
-                  <Descriptions bordered column={2} size="small">
-                    <Descriptions.Item label="Plate No">{vehicleDetails.plateNo || "N/A"}</Descriptions.Item>
-
-                    <Descriptions.Item label="Traffic File No">
-                      {vehicleDetails.trafficFileNo || "N/A"}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Company Name">{vehicleDetails.companyName || "N/A"}</Descriptions.Item>
-                    <Descriptions.Item label="Company Email">{vehicleDetails.companyEmail || "N/A"}</Descriptions.Item>
-                    <Descriptions.Item label="Vehicle Type">{vehicleDetails.vehicleType || "N/A"}</Descriptions.Item>
-                    <Descriptions.Item label="Vehicle Color">{vehicleDetails.vehicleColor || "N/A"}</Descriptions.Item>
-                    <Descriptions.Item label="Owner Name">{vehicleDetails.ownerName || "N/A"}</Descriptions.Item>
-                    <Descriptions.Item label="Owner Email">{vehicleDetails.ownerEmail || "N/A"}</Descriptions.Item>
-                    <Descriptions.Item label="Owner Mobile">{vehicleDetails.ownerMobile || "N/A"}</Descriptions.Item>
-                    <Descriptions.Item label="Owner Phone">{vehicleDetails.ownerPhone || "N/A"}</Descriptions.Item>
-                    <Descriptions.Item label="Manufacture Year">
-                      {vehicleDetails.manufactureYear || "N/A"}
-                    </Descriptions.Item>
-                  </Descriptions>
-                </Card>
-
-                {finesList.length > 0 && (
-                  <Card title="All Fines" className="mt-4">
-                    <DataTableWrapper
-                      pageConfig={carPlatePageConfig}
-                      data={finesList}
-                      total={finesList.length}
-                      isLoading={isFetchingFines}
-                      apiParams={{}}
-                      state={{ columnFilters: {} }}
-                      handleTableChange={() => {}}
-                      handlePaginationChange={() => {}}
-                      actionMenuItems={(record: any) => [
-                        {
-                          key: "view",
-                          label: "View",
-                          onClick: () => handleViewFine(record, vehicleDetails || {}),
-                        },
-                      ]}
-                      tableSize="small"
-                      showPagination={false}
-                    />
+              {/* Show vehicle details and fines only if vehicleDetails exist */}
+              {vehicleDetails && (
+                <>
+                  <Card title={t("info.basicDetails")}>
+                    <Descriptions bordered column={2} size="small">
+                      <Descriptions.Item label={t("form.plateNumber")}>
+                        {vehicleDetails.plateNo || "N/A"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.tradeLicenseNumber")}>
+                        {vehicleDetails.trafficFileNo || "N/A"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.businessName")}>
+                        {vehicleDetails.companyName || "N/A"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.email")}>
+                        {vehicleDetails.companyEmail || "N/A"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.vehicleType")}>
+                        {vehicleDetails.vehicleType || "N/A"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.vehicleColor")}>
+                        {vehicleDetails.vehicleColor || "N/A"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.vehicleOwnerName")}>
+                        {vehicleDetails.ownerName || "N/A"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.vehicleOwnerEmail")}>
+                        {vehicleDetails.ownerEmail || "N/A"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.vehicleOwnerMobile")}>
+                        {vehicleDetails.ownerMobile || "N/A"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.phoneNumber")}>
+                        {vehicleDetails.ownerPhone || "N/A"}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.manufacturerYear")}>
+                        {vehicleDetails.manufactureYear || "N/A"}
+                      </Descriptions.Item>
+                    </Descriptions>
                   </Card>
-                )}
-              </>
-            )}
+
+                  {finesList.length > 0 && (
+                    <Card title={t("info.allFines")}>
+                      <DataTableWrapper
+                        pageConfig={carPlatePageConfig}
+                        data={finesList}
+                        total={finesList.length}
+                        isLoading={isFetchingFines}
+                        apiParams={{}}
+                        state={{ columnFilters: {} }}
+                        handleTableChange={() => {}}
+                        handlePaginationChange={() => {}}
+                        actionMenuItems={(record: any) => [
+                          {
+                            key: "view",
+                            label: "View",
+                            onClick: () => handleViewFine(record, vehicleDetails || {}),
+                          },
+                        ]}
+                        tableSize="small"
+                        showPagination={false}
+                      />
+                    </Card>
+                  )}
+                </>
+              )}
+            </Space>
           </TabPane>
 
           {/* Trade License Tab */}
-          {/* Trade License Tab */}
-          <TabPane tab="Trade License" key="2">
+          <TabPane tab={t("tabs.tradeLicense")} key="2">
             <Form form={formTL} layout="vertical" onFinish={handleTlSearch}>
-              <Row gutter={16}>
-                <Col span={6}>
+              <Row gutter={16} align="bottom">
+                <Col span={8}>
                   <Form.Item
-                    name="licenseNumber"
-                    label={t("fields.licenseNumber")}
+                    name="licenseNo"
+                    label={t("form.tradeLicenseNumber")}
                     rules={[{ required: true, message: t("validation.required") }]}
                   >
-                    <Input placeholder={t("placeholders.enterLicenseNumber")} />
+                    <Input placeholder={t("placeholders.tradeLicenseNumber")} />
                   </Form.Item>
                 </Col>
-                <Col span={6}>
-                  <Button type="primary" htmlType="submit" icon={<SearchOutlined />} loading={isFetchingTL}>
-                    {t("common.search")}
-                  </Button>
+                <Col>
+                  <Form.Item label="&nbsp;">
+                    {" "}
+                    {/* Empty label to align with input */}
+                    <Button type="primary" htmlType="submit" loading={isFetchingTL} style={{ marginTop: "4px" }}>
+                      {t("common.search")}
+                    </Button>
+                  </Form.Item>
                 </Col>
               </Row>
             </Form>
 
             {tlData && (
-              <Card title="Trade License Details" className="mt-4">
+              <Card title={t("info.basicDetails")} className="mt-4">
                 <Descriptions bordered column={2} size="small">
-                  <Descriptions.Item label="License No">{tlData.licenseNumber || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label="Company Name">{tlData.companyName || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label="Owner Name">{tlData.ownerName || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label="Owner Contact">{tlData.ownerContact || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label="Issued Year">{tlData.issuedYear || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label={t("form.licenseNo")}>{tlData.licenseNo || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label={t("form.companyName")}>{tlData.companyName || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label={t("form.companyEmail")}>{tlData.companyEmail || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label={t("form.blackPoints")}>
+                    {tlData.totalBlackPoints || "N/A"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label={t("form.goldenPoints")}>{tlData.goldenPoints || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label={t("form.mobileNumber")}>{tlData.mobileNo || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label={t("form.faxNumber")}>{tlData.faxNo || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label={t("form.streetName")}>{tlData.streetName || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label={t("form.streetNumber")}>{tlData.streetNo || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label={t("form.buildingName")}>{tlData.buildingName || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label={t("form.floorNumber")}>{tlData.floorNo || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label={t("form.premiseNameEn")}>{tlData.premiseNameEn || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label={t("form.premiseNameAr")}>{tlData.premiseNameAr || "N/A"}</Descriptions.Item>
+                  <Descriptions.Item label={t("form.licenseIssuedDate")}>
+                    {tlData.licenseIssueDate || "N/A"}
+                  </Descriptions.Item>
                 </Descriptions>
               </Card>
             )}

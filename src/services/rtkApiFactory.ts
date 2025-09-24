@@ -381,15 +381,12 @@ export const dynamicApi = createApi({
       providesTags: ["CallIntegration"],
     }),
 
-    getTradeLicenseDetails: builder.query<any, string>({
-      query: (licenseNumber) => ({
-        url: "/CallIntegration/ReadTL",
+    getTradeLicenseDetails: builder.query({
+      query: (body) => ({
+        url: "/api/CallIntegration/ReadTL",
         method: "POST",
-        headers: {
-          "Content-Type": "text/plain", // must be plain text
-          Accept: "text/plain",
-        },
-        body: licenseNumber, // send the plain string exactly
+        headers: { "Content-Type": "application/json" },
+        body, // body should already be a string (e.g., "\"1234\"")
       }),
       providesTags: ["CallIntegration"],
     }),
@@ -400,6 +397,15 @@ export const dynamicApi = createApi({
       transformResponse: transformListResponse,
       providesTags: ["Towing"],
     }),
+
+   updateTowingStatus: builder.mutation({
+  query: (body) => ({
+    url: "/api/Towing/approval",
+    method: "PUT",
+    body, // expects { inspectionGUID, statusCode, lastReviewComments }
+  }),
+  invalidatesTags: ["Towing"],
+}),
 
     //Parkonic Location
     getParkonicsLocation: builder.query({
@@ -491,6 +497,7 @@ export const {
   useLazyGetTradeLicenseDetailsQuery,
   //Towing Aprovals
   useGetTowingDetailsQuery,
+  useUpdateTowingStatusMutation,
   //Parkonic Location
   useGetParkonicsLocationQuery,
   useLazyGetParkonicsLocationByIdQuery,

@@ -34,7 +34,7 @@
     "whitelists": "القوائم البيضاء",
     "carplate": "لوحات السيارات",
     "tradeLicense": "الرخص التجارية",
-    "parkonicLocation" : "الموقع باركونيك"
+    "parkonicLocation": "الموقع باركونيك"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -45,6 +45,12 @@
     "supervisors": "المشرفون",
     "carPlate": "لوحة السيارة",
     "tradeLicense": "الرخصة التجارية"
+  },
+  "info":{
+     "basicDetails": "التفاصيل الأساسية",
+     "allFines": "جميع الغرامات"
+
+
   },
   "page": {
     "title": {
@@ -65,8 +71,7 @@
       "towing": "إدارة سحب المركبات",
       "CarPlateInspections": "تفتيشات لوحات السيارات",
       "tradeLicenseInspections": "تفتيشات الرخص التجارية",
-      "parkonicLocation" : "الموقع باركونيك"
-
+      "parkonicLocation": "الموقع باركونيك"
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",
@@ -86,7 +91,6 @@
     "fileUploadError": "فشل رفع الملف: {fileName}",
     "errorLoading": "خطأ في تحميل بيانات لوحة التحكم",
     "enterRejectionReason": "يرجى إدخال سبب الرفض"
-
   },
   "form": {
     "Number": "الرقم",
@@ -197,20 +201,31 @@
     "update": "تحديث",
     "delete": "حذف",
     "plateNumber": "رقم اللوحة",
-     "employeeName": " اس",
-     "createdDate": "تاريخ الإنشاء",
-     "upload": "رفع",
-     "street": "شارع",
+    "employeeName": " اس",
+    "createdDate": "تاريخ الإنشاء",
+    "upload": "رفع",
+    "street": "شارع",
     "lat": "خطوط العرض",
     "long": "طويل",
     "plateSource": "مصدر اللوحة",
-     "description": "الوصف",
+    "description": "الوصف",
     "parkonicdetails": "تفاصيل باركونيك",
     "disputereview": "مراجعة النزاع",
     "disputedetails": "تفاصيل النزاع",
-    "reviewtimeline": "الجدول الزمني للمراجعة"
-
-
+    "reviewtimeline": "الجدول الزمني للمراجعة",
+    "licenseNo": "رقم الرخصة",
+    "companyName": "اسم الشركة",
+    "companyEmail": "البريد الإلكتروني للشركة",
+    "goldenPoints": "النقاط الذهبية",
+    "mobileNumber": "رقم الجوال",
+    "faxNumber": "رقم الفاكس",
+    "streetName": "اسم الشارع",
+    "streetNumber": "رقم الشارع",
+    "buildingName": "اسم المبنى",
+    "floorNumber": "رقم الطابق",
+    "premiseNameEn": "اسم المنشأة (بالإنجليزية)",
+    "premiseNameAr": "اسم المنشأة (بالعربية)",
+    "licenseIssuedDate": "تاريخ إصدار الرخصة"
   },
   "common": {
     "action": "إجراء",
@@ -241,7 +256,7 @@
     "standardView": "عرض قياسي",
     "confirm": "تأكيد",
     "selectSupervisor": "اختر المشرف",
-      "reject": "رفض",
+    "reject": "رفض",
     "review": "مراجعة"
   },
   "entity": {
@@ -264,7 +279,6 @@
     "cancelled": "ملغى",
     "recalled": "تم الاسترجاع",
     "assigned": "مُعين"
-
   },
 
   "placeholders": {
@@ -306,7 +320,6 @@
     "selectAssignmentTypes": "اختر نوع التكليف (التكليفات)",
     "selectRole": "اختر الدور",
     "enterComments": "أدخل التعليقات"
-
   },
   "dashboard": {
     "totalInspectors": "إجمالي المفتشين",

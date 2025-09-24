@@ -23,9 +23,10 @@ export const useAppNotification = () => {
     return i18n.language === "ar" && arMsg ? arMsg : enMsg;
   };
 
-  const success = (response: unknown, defaultMessage: string) => {
-    const data = response?.data ?? response;
-    const title = getLangMsg(data?.en_Msg, data?.ar_Msg) || defaultMessage;
+  const success = (response: any, defaultMessage: string) => {
+   const enMsg = response?.en_Msg ?? response?.data?.en_Msg;
+  const arMsg = response?.ar_Msg ?? response?.data?.ar_Msg;
+   const title = getLangMsg(enMsg, arMsg) || defaultMessage;
     notification.success({
       message: title,
       placement: "topRight",

@@ -29,11 +29,11 @@
     "whitelists": "Whitelists",
     "carplateinspections": "Car Plate ",
     "tradelicenseinspections": "Trade License ",
-     
+
     "management": "Management",
     "carplate": "Car Plate",
     "tradeLicense": "Trade License",
-    "parkonicLocation" : "Parkonic Location"
+    "parkonicLocation": "Parkonic Location"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -44,6 +44,10 @@
     "supervisors": "Supervisors",
     "carPlate": "Car Plate",
     "tradeLicense": "Trade License"
+  },
+  "info":{
+     "basicDetails": "Basic Details",
+     "allFines": "All Fines"
   },
   "page": {
     "title": {
@@ -64,7 +68,7 @@
       "towing": "Towing Management",
       "CarPlateInspections": "Car Plate Inspections",
       "tradeLicenseInspections": "Trade License Inspections",
-      "parkonicLocation" : "Parkonic Location"
+      "parkonicLocation": "Parkonic Location"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",
@@ -207,8 +211,21 @@
     "parkonicdetails": "Parkonic Details",
     "disputereview": "Dispute Review",
     "disputedetails": "Dispute Details",
-    "reviewtimeline": "Review Timeline"
+    "reviewtimeline": "Review Timeline",
 
+    "licenseNo": "License No",
+    "companyName": "Company Name",
+    "companyEmail": "Company Email",
+    "goldenPoints": "Golden Points",
+    "mobileNumber": "Mobile Number",
+    "faxNumber": "Fax Number",
+    "streetName": "Street Name",
+    "streetNumber": "Street Number",
+    "buildingName": "Building Name",
+    "floorNumber": "Floor Number",
+    "premiseNameEn": "Premise Name (EN)",
+    "premiseNameAr": "Premise Name (AR)",
+    "licenseIssuedDate": "License Issued Date"
   },
   "common": {
     "action": "Action",
