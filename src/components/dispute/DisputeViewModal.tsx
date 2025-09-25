@@ -69,8 +69,23 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   // Updated condition to include all three role GUIDs that can approve/reject
   const isSupervisorRole =
     user?.roleGUID === "9e8331a6-3828-421b-9c5d-835f7b6f8710" ||
-    user?.roleGUID === "EFB6EF6A-128B-4DD9-9641-2B04205C8CF8" ||
-    user?.roleGUID === "137db453-07cc-4218-9ef8-3aa236d9e951";
+    user?.roleGUID === "137db453-07cc-4218-9ef8-3aa236d9e951" ||
+    user?.roleGUID === "6d20d858-1128-4cd2-af7e-e8eb3c4bf887"
+
+  // Special role ID that should ALWAYS see comment, dropdown, assign BUT NOT approve/reject
+  const isSpecialRoleId = user?.roleGUID === "efb6ef6a-128b-4dd9-9641-2b04205c8cf8";
+
+
+  // Checks if current user is assigned to this dispute (look at last review)
+const isUserAssignedToDispute = useMemo(() => {
+  if (!disputeData?.data?.reviews?.length || !user?.userGUID) return false;
+
+
+  const lastReview = disputeData.data.reviews[disputeData.data.reviews.length - 1];
+
+  return lastReview?.assignedTo === user.userGUID;
+}, [disputeData?.data?.reviews, user?.userGUID]);
+
 
   // Use disputeData instead of dispute to avoid reference before initialization
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
@@ -86,6 +101,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
     const sup = filteredSupervisors.find((s: any) => s.employeeId === id);
     return sup ? sup.employeeName : id;
   };
+  
   const disputeStatusEnum = useMemo(
     () => [
       { value: 1, labelEn: "Pending", labelAr: "قيد الانتظار", color: "orange" },
@@ -191,7 +207,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
         dispute_Id: storedDisputeId,
         review_Action: action,
         review_Comments: values.review_Comments,
-        assignedTo: values.assignedTo || "string",
+        assignedTo: values.assignedTo || "",
         action_type: action === 1 ? "Assigned" : action === 2 ? "Approved" : "Rejected",
       };
 
@@ -272,7 +288,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
       bodyStyle={{ padding: 24 }}
     >
       <Spin spinning={isLoading || isUpdating || isLoadingLookups}>
-        <Card bordered={false} style={{ borderRadius: 12 }} bodyStyle={{ padding: 0 }}>
+        
           {/* Custom Header */}
           <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
             <Col>
@@ -361,11 +377,29 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                           <Text strong>{t("form.address")}:</Text>
                         </Col>
                         <Col span={14}>{dispute.address || t("common.noData")}</Col>
+
+                        {/* Show assigned to information */}
+                        <Col span={10}>
+                          <Text strong>{t("form.assignedTo")}:</Text>
+                        </Col>
+                        <Col span={14}>
+                          {dispute.assignedTo ? (
+                            <>
+                              {getSupervisorName(dispute.assignedTo)}
+                              {isUserAssignedToDispute && (
+                                <Tag color="blue" style={{ marginLeft: 8 }}>
+                                  {t("common.assignedToYou")}
+                                </Tag>
+                              )}
+                            </>
+                          ) : (
+                            t("common.noData")
+                          )}
+                        </Col>
                       </Row>
                     </Card>
                   </Col>
 
-                  {/* Vehicle Details */}
                   {/* Vehicle Details */}
                   {dispute.vehicle && Object.values(dispute.vehicle).some((val) => val !== null && val !== "") && (
                     <Col span={12}>
@@ -536,88 +570,122 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
               </Col>
 
               {/* RIGHT SIDE - Review Timeline */}
-              <Col span={6}>
-                <Card
-                  title={t("form.reviewtimeline")}
-                  size="small"
-                  style={{ borderRadius: 12, background: "#f0f7ff", marginBottom: 16 }}
-                  headStyle={{ background: "#e6f2ff", fontWeight: 600 }}
-                >
-                  {dispute.reviews && dispute.reviews.length > 0 ? (
-                    <Timeline>
-                      {dispute.reviews.map((review: any, idx: number) => (
-                        <Timeline.Item dot={<ClockCircleOutlined />} color="blue" key={idx}>
-                          <Text strong>
-                            {review.review_Action === 1
-                              ? t("status.assigned")
-                              : review.review_Action === 2
-                                ? t("status.approved")
-                                : review.review_Action === 3
-                                  ? t("status.rejected")
-                                  : t("common.review")}
-                          </Text>
-                          <br />
-                          <Text type="secondary">{review.review_Comments || "No Comments"}</Text>
-                          {review.assignedTo && (
-                            <>
-                              <br />
-                              <Text type="secondary">
-                                {t("form.assignedTo")} {getSupervisorName(review.assignedTo)}
-                              </Text>
-                            </>
-                          )}
+            <Col span={6}>
+  <Card
+    title={t("form.reviewtimeline")}
+    size="small"
+    style={{
+      borderRadius: 12,
+      background: "#f0f7ff",
+      marginBottom: 16,
+      height: 760,
+      overflow: "hidden",
+    }}
+    headStyle={{ 
+      background: "#e6f2ff", 
+      fontWeight: 600,
+      color: "#1d4ed8" // Darker blue for title
+    }}
+    bodyStyle={{ paddingRight: 8, height: "100%", overflowY: "auto" }}
+  >
+    {dispute.reviews && dispute.reviews.length > 0 ? (
+      <Timeline>
+        {dispute.reviews.map((review: any, idx: number) => (
+          <Timeline.Item 
+            dot={<ClockCircleOutlined style={{ color: "#3b82f6" }} />} 
+            color="blue" 
+            key={idx}
+          >
+            <div
+              style={{
+                background: "#fff",
+                border: "1px solid #d9d9d9", // Gray border
+                borderRadius: 8,
+                padding: "8px 12px",
+                // Shadow removed
+              }}
+            >
+              <Text
+                strong
+                style={{
+                  color:
+                    review.review_Action === 2
+                      ? "green"
+                      : review.review_Action === 3
+                      ? "red"
+                      : undefined,
+                }}
+              >
+                {review.review_Action === 1
+                  ? t("status.assigned")
+                  : review.review_Action === 2
+                  ? t("status.approved")
+                  : review.review_Action === 3
+                  ? t("status.rejected")
+                  : t("common.review")}
+              </Text>
+              <br />
+              <Text type="secondary">{review.review_Comments || "No Comments"}</Text>
+              {review.assignedTo && (
+                <>
+                  <br />
+                  <Text type="secondary" style={{ color: "#2563eb" }}>
+                    {getSupervisorName(review.assignedTo)}
+                  </Text>
+                </>
+              )}
+              {review.createdAt && (
+                <>
+                  <br />
+                  <Text type="secondary" style={{ fontSize: "10px" }}>
+                    {formatDateTime(review.createdAt)}
+                  </Text>
+                </>
+              )}
+            </div>
+          </Timeline.Item>
+        ))}
+      </Timeline>
+    ) : (
+      <Empty description="No Review History" />
+    )}
+  </Card>
+</Col>
 
-                          {review.createdAt && (
-                            <>
-                              <br />
-                              <Text type="secondary" style={{ fontSize: "10px" }}>
-                                {formatDateTime(review.createdAt)}
-                              </Text>
-                            </>
-                          )}
-                        </Timeline.Item>
-                      ))}
-                    </Timeline>
-                  ) : (
-                    <Empty description="No Review History" />
-                  )}
-                </Card>
-              </Col>
+
             </Row>
           )}
 
-          {/* FOOTER - Action Form */}
-          {dispute && (
+          {/* FOOTER - Action Form - Show for assigned users OR the special role ID */}
+          {dispute && (isUserAssignedToDispute || isSpecialRoleId) && (
             <>
               <Divider />
               <Form form={form} layout="vertical">
                 <Row gutter={16} align="middle">
-                  {/* Assignment Controls - Only show for non-supervisor roles and fineStatus ≠ 15005 and dispute_Status ≠ 3 */}
-                  {!isSupervisorRole &&
-                    dispute?.fineDetails?.fineStatus !== 15005 &&
-                    dispute?.fineDetails?.dispute_Status !== 3 && (
-                      <Col span={6}>
-                        <Form.Item name="assignedTo" label={<Text strong>{t("form.assinedto")}</Text>}>
-                          <Select
-                            placeholder={t("common.selectSupervisor")}
-                            loading={isLoadingSupervisors}
-                            allowClear
-                            showSearch
-                            optionFilterProp="children"
-                          >
-                            {filteredSupervisors.map((sup: any) => (
-                              <Select.Option key={sup.employeeId} value={sup.employeeId}>
-                                {sup.employeeName} ({sup.roleCode})
-                              </Select.Option>
-                            ))}
-                          </Select>
-                        </Form.Item>
-                      </Col>
-                    )}
+                  {/* Assignment Controls - Always show for special role ID OR (non-supervisor roles with specific conditions) */}
+                  {(isSpecialRoleId || (!isSupervisorRole && dispute?.fineDetails?.fineStatus !== 15005 && dispute?.dispute_Status !== 3)) && (
+                    <Col span={6}>
+                      <Form.Item name="assignedTo" label={<Text strong>{t("form.assinedto")}</Text>}>
+                        <Select
+                          placeholder={t("common.selectSupervisor")}
+                          loading={isLoadingSupervisors}
+                          allowClear
+                          showSearch
+                          optionFilterProp="children"
+                        >
+                          {filteredSupervisors.map((sup: any) => (
+                            <Select.Option key={sup.employeeId} value={sup.employeeId}>
+                              {sup.employeeName} ({sup.roleCode})
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                  )}
 
-                  {/* Comment Box - Only show when fineStatus = 15005 and dispute_Status ≠ 3 */}
-                  {dispute?.fineDetails?.fineStatus === 15005 && dispute?.fineDetails?.dispute_Status !== 3 && (
-                    <Col span={isSupervisorRole ? 14 : 8}>
+                  {/* Comment Box - Always show for special role ID OR when other conditions are met */}
+                  {(isSpecialRoleId || (dispute?.fineDetails?.fineStatus === 15005 && dispute?.dispute_Status !== 3)) && (
+                    <Col span={isSupervisorRole && !isSpecialRoleId ? 14 : 8}>
                       <Form.Item
                         name="review_Comments"
                         label={<Text strong>{t("form.comments")}</Text>}
@@ -629,56 +697,70 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     </Col>
                   )}
 
-                  {/* Action Buttons - Only show if dispute_Status ≠ 3 */}
-                  {dispute?.fineDetails?.dispute_Status !== 3 && (
-                    <Col span={isSupervisorRole ? 10 : 8} style={{ textAlign: "right", paddingTop: 30 }}>
-                      {isSupervisorRole
-                        ? // Supervisor buttons (Approve/Reject) - Only show when fineStatus = 15005
-                          dispute?.fineDetails?.fineStatus === 15005 && (
-                            <>
-                              <Button
-                                type="primary"
-                                style={{ marginRight: 8 }}
-                                loading={isUpdating && reviewAction === 2}
-                                onClick={() => {
-                                  setReviewAction(2);
-                                  handleStatusUpdate(2); // Approved = 2
-                                }}
-                              >
-                                {t("form.approve")}
-                              </Button>
-                              <Button
-                                danger
-                                loading={isUpdating && reviewAction === 3}
-                                onClick={() => {
-                                  setReviewAction(3);
-                                  handleStatusUpdate(3); // Rejected = 3
-                                }}
-                              >
-                                {t("common.reject")}
-                              </Button>
-                            </>
-                          )
-                        : // Regular user button (Assign) - Only show when fineStatus ≠ 15005
-                          dispute?.fineDetails?.fineStatus !== 15005 && (
+                  {/* Action Buttons - Handle special role ID separately */}
+                  {(isSpecialRoleId || dispute?.dispute_Status !== 3) && (
+                    <Col span={isSupervisorRole && !isSpecialRoleId ? 10 : 8} style={{ textAlign: "right", paddingTop: 30 }}>
+                      {isSpecialRoleId ? (
+                        // Special role ID efb6ef6a-128b-4dd9-9641-2b04205c8cf8 - ONLY assign button, NO approve/reject
+                        <Button
+                          type="default"
+                          loading={isUpdating && reviewAction === 1}
+                          onClick={() => {
+                            setReviewAction(1);
+                            handleStatusUpdate(1); // Assigned = 1
+                          }}
+                        >
+                          {t("form.assign")}
+                        </Button>
+                      ) : isSupervisorRole ? (
+                        // Supervisor buttons (Approve/Reject) - Only show when fineStatus = 15005
+                        dispute?.fineDetails?.fineStatus === 15005 && (
+                          <>
                             <Button
-                              type="default"
-                              loading={isUpdating && reviewAction === 1}
+                              type="primary"
+                              style={{ marginRight: 8 }}
+                              loading={isUpdating && reviewAction === 2}
                               onClick={() => {
-                                setReviewAction(1);
-                                handleStatusUpdate(1); // Assigned = 1
+                                setReviewAction(2);
+                                handleStatusUpdate(2); // Approved = 2
                               }}
                             >
-                              {t("form.assign")}
+                              {t("form.approve")}
                             </Button>
-                          )}
+                            <Button
+                              danger
+                              loading={isUpdating && reviewAction === 3}
+                              onClick={() => {
+                                setReviewAction(3);
+                                handleStatusUpdate(3); // Rejected = 3
+                              }}
+                            >
+                              {t("common.reject")}
+                            </Button>
+                          </>
+                        )
+                      ) : (
+                        // Regular user button (Assign) - Only show when fineStatus ≠ 15005
+                        dispute?.fineDetails?.fineStatus !== 15005 && (
+                          <Button
+                            type="default"
+                            loading={isUpdating && reviewAction === 1}
+                            onClick={() => {
+                              setReviewAction(1);
+                              handleStatusUpdate(1); // Assigned = 1
+                            }}
+                          >
+                            {t("form.assign")}
+                          </Button>
+                        )
+                      )}
                     </Col>
                   )}
                 </Row>
               </Form>
             </>
           )}
-        </Card>
+        
       </Spin>
     </Modal>
   );
