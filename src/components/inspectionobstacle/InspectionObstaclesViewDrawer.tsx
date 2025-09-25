@@ -143,7 +143,7 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
         </Descriptions>
 
         <Typography.Title level={5} style={{ marginBottom: 16 }}>
-          {t("form.photo")}
+          {t("form.AttachedPhotos")}
         </Typography.Title>
 
         <Spin spinning={isLoadingAttachments}>

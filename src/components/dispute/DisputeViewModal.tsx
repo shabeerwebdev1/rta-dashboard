@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Modal,
   Card,
@@ -86,6 +86,15 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
     const sup = filteredSupervisors.find((s: any) => s.employeeId === id);
     return sup ? sup.employeeName : id;
   };
+  const disputeStatusEnum = useMemo(
+    () => [
+      { value: 1, labelEn: "Pending", labelAr: "قيد الانتظار", color: "orange" },
+      { value: 2, labelEn: "Approved", labelAr: "موافقة", color: "green" },
+      { value: 3, labelEn: "Rejected", labelAr: "مرفوض", color: "red" },
+      { value: 4, labelEn: "In Review", labelAr: "قيد المراجعة", color: "blue" },
+    ],
+    [],
+  );
 
   // Initialize map
   useEffect(() => {
@@ -182,7 +191,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
         dispute_Id: storedDisputeId,
         review_Action: action,
         review_Comments: values.review_Comments,
-        assignedTo: values.assignedTo || "",
+        assignedTo: values.assignedTo || "string",
         action_type: action === 1 ? "Assigned" : action === 2 ? "Approved" : "Rejected",
       };
 
@@ -221,6 +230,16 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
     }
   };
 
+  const fineStatusColorMap: Record<number, string> = {
+    15001: "orange",
+    15002: "green",
+    15003: "red",
+    15004: "blue",
+    15005: "purple", // example
+  };
+
+  const getFineStatusColor = (status: number) => fineStatusColorMap[status] || "default";
+
   const formatDateTime = (dateString: string) => {
     if (!dateString) return "No Date";
     return new Date(dateString).toLocaleString();
@@ -257,10 +276,21 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
           {/* Custom Header */}
           <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
             <Col>
-              <Title level={4} style={{ margin: 0 }}>
-                {t("form.disputereview")} <Text type="danger">#{dispute?.fine_Number || storedDisputeId}</Text>
-              </Title>
+              <Space size="middle" align="center">
+                <Title level={4} style={{ margin: 0 }}>
+                  {t("form.disputereview")} <Text type="danger">#{dispute?.fine_Number || storedDisputeId}</Text>
+                </Title>
+
+                {dispute?.dispute_Status !== undefined &&
+                  (() => {
+                    const status = disputeStatusEnum.find((s) => s.value === dispute.dispute_Status);
+                    return status ? (
+                      <Tag color={status.color}>{i18n.language === "ar" ? status.labelAr : status.labelEn}</Tag>
+                    ) : null;
+                  })()}
+              </Space>
             </Col>
+
             <Col>
               <Button type="text" icon={<CloseOutlined />} onClick={onClose} style={{ fontSize: 16 }} />
             </Col>
@@ -274,7 +304,13 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
               <Col span={18}>
                 <Row gutter={16}>
                   {/* Dispute Details */}
-                  <Col span={12}>
+                  <Col
+                    span={
+                      dispute.vehicle && Object.values(dispute.vehicle).some((val) => val !== null && val !== "")
+                        ? 12
+                        : 24
+                    }
+                  >
                     <Card
                       title={t("form.disputedetails")}
                       size="small"
@@ -330,7 +366,8 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                   </Col>
 
                   {/* Vehicle Details */}
-                  {dispute.vehicle && (
+                  {/* Vehicle Details */}
+                  {dispute.vehicle && Object.values(dispute.vehicle).some((val) => val !== null && val !== "") && (
                     <Col span={12}>
                       <Card
                         title={t("form.vehicleDetails")}
@@ -413,7 +450,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                         <Text strong>{t("form.status")}:</Text>
                         {dispute.fineDetails.fineStatus ? (
                           <div style={{ marginTop: 4 }}>
-                            <Tag color={getStatusColor(dispute.fineDetails.fineStatus)}>
+                            <Tag color={getFineStatusColor(dispute.fineDetails.fineStatus)}>
                               {getLabelFromValue(dispute.fineDetails.fineStatus, 1500)}
                             </Tag>
                           </div>
@@ -469,7 +506,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
 
                   <Col span={12}>
                     <Card
-                      title={t("form.photo")}
+                      title={t("form.AttachedPhotos")}
                       size="small"
                       style={{ borderRadius: 12, marginBottom: 16 }}
                       headStyle={{ background: "#fafafa", fontWeight: 600 }}

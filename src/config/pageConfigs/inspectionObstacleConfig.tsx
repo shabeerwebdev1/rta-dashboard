@@ -36,7 +36,7 @@ export const inspectionObstacleConfig: PageConfig = {
       { key: "area", title: "form.area", type: "string", sortable: true },
       { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "string", filterable: true },
       { key: "createdDateTime", title: "form.createdDate", type: "date" },
-      { key: "status", title: "form.status", type: "tag" },
+      {key:"closestPaymentDevice", title: "form.closestPD", type: "string" },
     ],
     viewRecord: true,
     showEdit: false,

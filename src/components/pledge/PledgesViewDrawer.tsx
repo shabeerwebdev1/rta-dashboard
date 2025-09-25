@@ -153,7 +153,7 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({
             {imageNames.length > 0 ? (
               <>
                 <Typography.Title level={5} style={{ marginBottom: 16 }}>
-                  {t("form.document")}
+                  {t("form.AttachedPhotos")}
                 </Typography.Title>
                 <Image.PreviewGroup>
                   <Space wrap>
@@ -166,7 +166,7 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({
             ) : (
               <>
                 <Typography.Title level={5} style={{ marginBottom: 16 }}>
-                  {t("form.document")}
+                  {t("form.AttachedPhotos")}
                 </Typography.Title>
                 <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
               </>

@@ -176,7 +176,7 @@ const handleUpdateStatus = async (statusCode: number, statusLabel: string) => {
 
           {/* Photos */}
           <Title level={5} style={{ marginTop: 16, marginBottom: 12 }}>
-            {t("form.photo")}
+            {t("form.AttachedPhotos")}
           </Title>
           <Spin spinning={isLoadingAttachments}>
             {attachments.length > 0 ? (

@@ -509,7 +509,7 @@ const PledgesPage: React.FC = () => {
               <Col span={24}>
                 <Form.Item
                   name="document"
-                  label={t("form.document")}
+                  label={t("form.photo")}
                   rules={[{ required: modalMode === "add" }]}
                   valuePropName="fileList"
                   getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}

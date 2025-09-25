@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Card, Space, Button, Input, DatePicker, Row, Col, Select, Tooltip, App, Tag } from "antd";
-import { EyeOutlined, DownloadOutlined, AppstoreOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { Card, Space, Button, Input, DatePicker, Row, Col, Select,  App, Tag } from "antd";
+import { EyeOutlined, DownloadOutlined} from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { useTableParams } from "../hooks/useTableParams";
@@ -35,7 +35,7 @@ const TowingPage: React.FC = () => {
     state,
   } = useTableParams(config.searchConfig!);
 
-  const [tableSize, setTableSize] = useState<"middle" | "small">("middle");
+  const [tableSize, setTableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -51,10 +51,10 @@ const TowingPage: React.FC = () => {
 
   const statusLabels = useMemo(() => {
     const statusMap: Record<string, React.ReactNode> = {
-      "pending": <Tag color="blue">{t("status.pending")}</Tag>,
-      "Approved": <Tag color="green">{t("status.approved")}</Tag>,
-      "Rejected": <Tag color="red">{t("status.rejected")}</Tag>,
-      "cancelled": <Tag color="orange">{t("status.cancelled")}</Tag>,
+      pending: <Tag color="blue">{t("status.pending")}</Tag>,
+      Approved: <Tag color="green">{t("status.approved")}</Tag>,
+      Rejected: <Tag color="red">{t("status.rejected")}</Tag>,
+      cancelled: <Tag color="orange">{t("status.cancelled")}</Tag>,
     };
     return statusMap;
   }, [t]);
@@ -163,12 +163,6 @@ const TowingPage: React.FC = () => {
                 <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                   {t("common.downloadCsv")}
                 </Button>
-                <Tooltip title={tableSize === "middle" ? t("common.compactView") : t("common.standardView")}>
-                  <Button
-                    icon={tableSize === "middle" ? <AppstoreOutlined /> : <UnorderedListOutlined />}
-                    onClick={() => setTableSize(tableSize === "middle" ? "small" : "middle")}
-                  />
-                </Tooltip>
               </Space>
             </Col>
           </Row>

@@ -372,9 +372,7 @@ const InspectionObstaclesPage: React.FC = () => {
         .map((area: any) => ({ label: area.area, value: area.area_Id }));
       setFilteredAreaOptions(filtered);
     } else {
-      setFilteredAreaOptions(
-        allAreasData?.map((area: any) => ({ label: area.area, value: area.area_Id })) || [],
-      );
+      setFilteredAreaOptions(allAreasData?.map((area: any) => ({ label: area.area, value: area.area_Id })) || []);
     }
   }, [state.columnFilters.zone, allAreasData]);
 
@@ -395,15 +393,9 @@ const InspectionObstaclesPage: React.FC = () => {
       delete newFilters.area;
     }
 
-    const sorter = state.sortBy
-      ? ({ field: state.sortBy, order: state.sortOrder } as SorterResult<any>)
-      : {};
+    const sorter = state.sortBy ? ({ field: state.sortBy, order: state.sortOrder } as SorterResult<any>) : {};
 
-    handleTableChange(
-      { current: 1, pageSize: apiParams.PageSize },
-      newFilters,
-      sorter,
-    );
+    handleTableChange({ current: 1, pageSize: apiParams.PageSize }, newFilters, sorter);
   };
 
   const getCustomLabelFromValue = (value: number | string, options: any[], i18nInstance: any) => {

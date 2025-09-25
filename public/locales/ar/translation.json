@@ -46,11 +46,9 @@
     "carPlate": "لوحة السيارة",
     "tradeLicense": "الرخصة التجارية"
   },
-  "info":{
-     "basicDetails": "التفاصيل الأساسية",
-     "allFines": "جميع الغرامات"
-
-
+  "info": {
+    "basicDetails": "التفاصيل الأساسية",
+    "allFines": "جميع الغرامات"
   },
   "page": {
     "title": {
@@ -225,7 +223,17 @@
     "floorNumber": "رقم الطابق",
     "premiseNameEn": "اسم المنشأة (بالإنجليزية)",
     "premiseNameAr": "اسم المنشأة (بالعربية)",
-    "licenseIssuedDate": "تاريخ إصدار الرخصة"
+    "licenseIssuedDate": "تاريخ إصدار الرخصة",
+    "towingDate": "تاريخ السحب",
+    "vehicleName": "اسم المركبة",
+    "towingDetails": "تفاصيل السحب",
+    "location": "الموقع",
+    "lastReviewComments": "آخر تعليقات المراجعة",
+    "reviewComments": "تعليقات المراجعة",
+    "ticketNumber": "رقم التذكرة",
+    "finestatus": "حالة الغرامة",
+    "assign": "تعيين"
+
   },
   "common": {
     "action": "إجراء",
@@ -257,7 +265,9 @@
     "confirm": "تأكيد",
     "selectSupervisor": "اختر المشرف",
     "reject": "رفض",
-    "review": "مراجعة"
+    "review": "مراجعة",
+    "approve": "موافقة"
+
   },
   "entity": {
     "plate": "لوحة",

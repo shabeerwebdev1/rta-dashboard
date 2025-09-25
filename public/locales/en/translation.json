@@ -225,7 +225,16 @@
     "floorNumber": "Floor Number",
     "premiseNameEn": "Premise Name (EN)",
     "premiseNameAr": "Premise Name (AR)",
-    "licenseIssuedDate": "License Issued Date"
+    "licenseIssuedDate": "License Issued Date",
+    "towingDate": "Towing Date",
+    "vehicleName": "Vehicle Name",
+    "towingDetails": "Towing Details",
+    "location": "Location",
+    "lastReviewComments": "Last Review Comments",
+    "reviewComments": "Review Comments",
+    "ticketNumber": "Ticket Number",
+    "finestatus": "Fine Status",
+    "assign": "Assign"
   },
   "common": {
     "action": "Action",
@@ -261,7 +270,8 @@
     "confirm": "Confirm",
     "selectSupervisor": "Select Supervisor",
     "reject": "Reject",
-    "review": "Review"
+    "review": "Review",
+    "approve": "Approve"
   },
   "entity": {
     "plate": "Plate",

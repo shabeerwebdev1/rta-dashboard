@@ -1,6 +1,6 @@
 // components/FinesViewDrawer.tsx
 import React, { useState, useEffect } from "react";
-import { Drawer, Descriptions, Tag, Empty, Spin, Image, Space, Button, Input, Typography } from "antd";
+import { Drawer, Descriptions, Tag, Empty, Spin, Image, Space, Button, Input, Typography, Form, message } from "antd";
 import { useTranslation } from "react-i18next";
 import UAEPlate from "../UAEPlate";
 import { useLazyGetLookupsQuery } from "../../services/rtkApiFactory";
@@ -11,8 +11,22 @@ import { useAppNotification } from "../../utils/notificationManager";
 import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../common/ArcGISMap";
+import { PLATE_COLOR, PLATE_TYPE_SHORT } from "../../config/pageConfigs/finesConfig";
 
-const { Title } = Typography;
+const plateSources: Record<number, string> = {
+  1: "Dubai",
+  2: "Abu Dhabi",
+  3: "Ajman",
+  4: "Sharjah",
+  5: "Umm Al Quwain",
+  6: "Fujairah",
+  7: "Ras Al Khaimah",
+  8: "Al Ain",
+  9: "Other",
+};
+
+const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 interface FinesViewDrawerProps {
   open: boolean;
@@ -46,11 +60,12 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const notification = useAppNotification();
+  const [form] = Form.useForm();
   const [internalLookupOptions, setInternalLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
   const [mappedFine, setMappedFine] = useState<any>(null);
-  const [comment, setComment] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [lastAction, setLastAction] = useState<"approve" | "reject" | null>(null);
   const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [updateFineCancelStatus] = useUpdateFineCancelStatusMutation();
 
@@ -72,8 +87,11 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
   }, [fine, lookupOptionsToUse, i18n.language]);
 
   useEffect(() => {
-    if (open) setComment("");
-  }, [open, fine]);
+    if (open) {
+      form.resetFields();
+      setLastAction(null);
+    }
+  }, [open, fine, form]);
 
   const fetchLookupData = async () => {
     setIsLoadingLookups(true);
@@ -153,44 +171,55 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
     return "orange";
   };
 
-  const handleApprove = async () => {
-    if (!mappedFine) return;
+  const handleFormSubmit = async (values: { comment: string }) => {
+    if (!mappedFine || !lastAction) return;
+
     setIsProcessing(true);
+
     try {
-      await updateFineCancelStatus({
+      const fineCancelStatus = lastAction === "approve" ? 1 : 2;
+
+      const response = await updateFineCancelStatus({
         entityNo: mappedFine.entityNo,
-        fineCancelStatus: 1,
-        action_cancel_comment: comment || "",
+        fineCancelStatus: fineCancelStatus,
+        action_cancel_comment: values.comment || "",
       }).unwrap();
 
-      notification.success({ data: { en_Msg: t("messages.approved") || "Approved successfully" } });
-      setComment("");
+      const successMessage =
+        lastAction === "approve"
+          ? t("messages.approved") || "Approved successfully"
+          : t("messages.rejected") || "Rejected successfully";
+
+      notification.success(response, successMessage);
+
+      form.resetFields();
+      setLastAction(null);
       onClose();
     } catch (error: any) {
-      notification.error({ data: error });
+      notification.error(error, t("messages.error") || "Something went wrong");
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleReject = async () => {
-    if (!mappedFine) return;
-    setIsProcessing(true);
-    try {
-      await updateFineCancelStatus({
-        entityNo: mappedFine.entityNo,
-        fineCancelStatus: 2,
-        action_cancel_comment: comment || "",
-      }).unwrap();
+  const handleApproveClick = () => {
+    setLastAction("approve");
+    form
+      .validateFields(["comment"])
+      .then(() => {
+        form.submit();
+      })
+      .catch(() => {});
+  };
 
-      notification.success({ data: { en_Msg: t("messages.rejected") || "Rejected successfully" } });
-      setComment("");
-      onClose();
-    } catch (error: any) {
-      notification.error({ data: error });
-    } finally {
-      setIsProcessing(false);
-    }
+  const handleRejectClick = () => {
+    setLastAction("reject");
+    form
+      .validateFields(["comment"])
+      .then(() => {
+        form.submit();
+      })
+      .catch(() => {});
   };
 
   return (
@@ -240,10 +269,10 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                 <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
                   {mappedFine?.plateNumber ? (
                     <UAEPlate
-                      code={mappedFine?.plateCategoryValue ?? ""}
+                      code={PLATE_TYPE_SHORT[mappedFine?.plateCategoryValue] ?? "---"}
                       number={mappedFine?.plateNumber ?? "---"}
-                      emirateEn={mappedFine?.plateSourceValue ?? ""}
-                      emirateAr={mappedFine?.plateCodeValue ?? ""}
+                      emirateEn={plateSources[mappedFine?.plateSourceValue] ?? "Unknown"}
+                      emirateAr={PLATE_COLOR[mappedFine?.plateCodeValue] ?? "---"}
                     />
                   ) : (
                     <TradeLicenseCard
@@ -260,21 +289,37 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
             {isStatus15003 && (
               <>
                 <h4 style={{ marginTop: 16 }}>{t("form.approvalActions")}</h4>
-                <Input.TextArea
-                  rows={3}
-                  placeholder={t("placeholders.comments")}
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  style={{ marginBottom: 10 }}
-                />
-                <Space>
-                  <Button type="primary" onClick={handleApprove} disabled={isProcessing}>
-                    {t("form.approve")}
-                  </Button>
-                  <Button danger onClick={handleReject} disabled={isProcessing}>
-                    {t("form.reject")}
-                  </Button>
-                </Space>
+                <Form form={form} onFinish={handleFormSubmit} layout="vertical" disabled={isProcessing}>
+                  <Form.Item
+                    name="comment"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please enter comments before approving or rejecting",
+                      },
+                    ]}
+                  >
+                    <TextArea rows={3} placeholder={t("placeholders.comments")} style={{ marginBottom: 10 }} />
+                  </Form.Item>
+                  <Space>
+                    <Button
+                      type="primary"
+                      onClick={handleApproveClick}
+                      disabled={isProcessing}
+                      loading={isProcessing && lastAction === "approve"}
+                    >
+                      {t("form.approve")}
+                    </Button>
+                    <Button
+                      danger
+                      onClick={handleRejectClick}
+                      disabled={isProcessing}
+                      loading={isProcessing && lastAction === "reject"}
+                    >
+                      {t("form.reject")}
+                    </Button>
+                  </Space>
+                </Form>
               </>
             )}
 

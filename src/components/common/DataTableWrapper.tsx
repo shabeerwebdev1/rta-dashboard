@@ -206,11 +206,20 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
         align: "center" as const,
         fixed: "right",
         width: 50,
-        render: (_: any, record: any) => (
-          <Dropdown menu={{ items: actionMenuItems(record) }} trigger={["click"]}>
-            <Button type="text" icon={<MoreOutlined />} />
-          </Dropdown>
-        ),
+        render: (_: any, record: any) => {
+          const items = actionMenuItems(record);
+
+          if (items.length === 1) {
+            const single = items[0];
+            return <Button type="text" icon={single.icon} onClick={single.onClick} disabled={single.disabled}></Button>;
+          }
+
+          return (
+            <Dropdown menu={{ items }} trigger={["click"]}>
+              <Button type="text" icon={<MoreOutlined />} />
+            </Dropdown>
+          );
+        },
       });
     }
 
