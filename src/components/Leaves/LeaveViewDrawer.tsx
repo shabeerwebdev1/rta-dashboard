@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, Descriptions, Tag, Button, Space, App } from "antd";
+import { Drawer, Descriptions, Tag, Button, Space } from "antd";
 import { LeaveStatus } from "../../config/pageConfigs/leaveManagementConfig";
 import { useUpdateLeaveStatusMutation } from "../../services/rtkApiFactory";
 import dayjs from "dayjs";
 import { t } from "i18next";
+import { useAppNotification } from "../../utils/notificationManager"; 
 
 interface LeaveViewDrawerProps {
   open: boolean;
@@ -12,12 +13,12 @@ interface LeaveViewDrawerProps {
 }
 
 const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record }) => {
-  const { notification } = App.useApp();
+  const notification = useAppNotification(); 
   const [updateLeaveStatus, { isLoading }] = useUpdateLeaveStatusMutation();
 
   const [status, setStatus] = useState<number>(record?.status ?? LeaveStatus.Pending);
 
-  // ✅ Sync status when record changes
+  
   useEffect(() => {
     if (record) {
       setStatus(record.status);
@@ -28,25 +29,21 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
     const leaveId = record?.leaveId || record?.id; // ✅ Support both
 
     if (!leaveId) {
-      notification.error({ message: "Missing leave ID" });
+      notification.error(null, t("messages.missingLeaveId") || "Missing leave ID");
       return;
     }
 
     try {
-      await updateLeaveStatus({
-        id: leaveId, // ✅ now always sends correct id
+      const result = await updateLeaveStatus({
+        id: leaveId, // ✅ always sends correct id
         status: newStatus,
       }).unwrap();
 
       setStatus(newStatus);
-      notification.success({
-        message: `Leave updated to ${LeaveStatus[newStatus]}`,
-      });
+      notification.success(result, t("messages.leaveUpdated")); 
       onClose();
     } catch (err: any) {
-      notification.error({
-        message: err?.data?.message || "Failed to update leave",
-      });
+      notification.error(err, t("messages.failedToUpdateLeave")); 
     }
   };
 
@@ -55,7 +52,7 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
       open={open}
       width={500}
       onClose={onClose}
-      title="Leave Details"
+      title={t("form.leaveDetails")}
       bodyStyle={{ overflowY: "auto", height: "calc(100vh - 64px)" }}
     >
       {record ? (
@@ -77,10 +74,10 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
                   status === LeaveStatus.Approved
                     ? "green"
                     : status === LeaveStatus.Pending
-                      ? "blue"
-                      : status === LeaveStatus.Cancelled
-                        ? "orange"
-                        : "red"
+                    ? "blue"
+                    : status === LeaveStatus.Cancelled
+                    ? "orange"
+                    : "red"
                 }
               >
                 {LeaveStatus[status]}
@@ -91,10 +88,18 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
             {status !== LeaveStatus.Approved && (
               <Descriptions.Item label={t("form.actions")}>
                 <Space>
-                  <Button type="primary" loading={isLoading} onClick={() => handleUpdateStatus(LeaveStatus.Approved)}>
+                  <Button
+                    type="primary"
+                    loading={isLoading}
+                    onClick={() => handleUpdateStatus(LeaveStatus.Approved)}
+                  >
                     {t("form.approve")}
                   </Button>
-                  <Button danger loading={isLoading} onClick={() => handleUpdateStatus(LeaveStatus.Rejected)}>
+                  <Button
+                    danger
+                    loading={isLoading}
+                    onClick={() => handleUpdateStatus(LeaveStatus.Rejected)}
+                  >
                     {t("form.reject")}
                   </Button>
                 </Space>
@@ -103,7 +108,7 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
           </Descriptions>
         </>
       ) : (
-        <p>No Data</p>
+        <p>{t("common.noData")}</p>
       )}
     </Drawer>
   );

@@ -1,7 +1,29 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, Descriptions, Tag, Button, Space, App, Input } from "antd";
+import {
+  Drawer,
+  Descriptions,
+  Tag,
+  Button,
+  Space,
+  App,
+  Input,
+  Typography,
+  Image,
+  Empty,
+  Spin,
+} from "antd";
 import { useUpdateTowingStatusMutation } from "../../services/rtkApiFactory";
 import { useTranslation } from "react-i18next";
+import {
+  useGetInspectionAttachmentsQuery,
+  getMobileFileUrl,
+} from "../../services/inspectionFileApi";
+import { skipToken } from "@reduxjs/toolkit/query";
+import ArcGISMap from "../common/ArcGISMap"; // ✅ map import
+import { useAppNotification } from "../../utils/notificationManager";
+
+
+const { Title } = Typography;
 
 interface TowingViewDrawerProps {
   open: boolean;
@@ -9,13 +31,25 @@ interface TowingViewDrawerProps {
   record: any;
 }
 
-const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, record }) => {
+const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({
+  open,
+  onClose,
+  record,
+}) => {
   const { t } = useTranslation();
-  const { notification } = App.useApp();
+const notification = useAppNotification();
   const [updateTowingStatus, { isLoading }] = useUpdateTowingStatusMutation();
-  
+
   const [comments, setComments] = useState<string>("");
   const [currentStatus, setCurrentStatus] = useState<string>("");
+
+  // ✅ Attachments API call
+  const { data: attachments = [], isLoading: isLoadingAttachments } =
+    useGetInspectionAttachmentsQuery(
+      record
+        ? { inspectionGUID: record.inspectionGUID, entityCode: "parking-towing" }
+        : skipToken
+    );
 
   useEffect(() => {
     if (record) {
@@ -24,60 +58,62 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
     }
   }, [record]);
 
-  const handleUpdateStatus = async (statusCode: number, statusLabel: string) => {
-    const inspectionGUID = record?.inspectionGUID;
+const handleUpdateStatus = async (statusCode: number, statusLabel: string) => {
+  const inspectionGUID = record?.inspectionGUID;
 
-    if (!inspectionGUID) {
-      notification.error({ message: "Missing inspection GUID" });
-      return;
-    }
+  if (!inspectionGUID) {
+    notification.error({}, "Missing inspection GUID");
+    return;
+  }
 
-    if (!comments.trim()) {
-      notification.error({ message: "Please enter review comments" });
-      return;
-    }
+  if (!comments.trim()) {
+    notification.error({}, "Please enter review comments");
+    return;
+  }
 
-    try {
-      await updateTowingStatus({
-        inspectionGUID,
-        statusCode,
-        lastReviewComments: comments.trim()
-      }).unwrap();
-      
-      setCurrentStatus(statusLabel);
-      notification.success({ message: `Towing ${statusLabel.toLowerCase()} successfully` });
-      onClose();
-    } catch (err: any) {
-      notification.error({ 
-        message: err?.data?.message || `Failed to ${statusLabel.toLowerCase()} towing` 
-      });
-    }
-  };
+  try {
+    const res = await updateTowingStatus({
+      inspectionGUID,
+      statusCode,
+      lastReviewComments: comments.trim(),
+    }).unwrap();
+
+    setCurrentStatus(statusLabel);
+    notification.success(res, `Towing ${statusLabel.toLowerCase()} successfully`);
+    onClose();
+  } catch (err: any) {
+    notification.error(err, `Failed to ${statusLabel.toLowerCase()} towing`);
+  }
+};
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
-      case "approved": return "green";
-      case "rejected": return "red";
-      case "cancelled": return "orange";
-      case "pending": 
-      default: return "blue";
+      case "approved":
+        return "green";
+      case "rejected":
+        return "red";
+      case "cancelled":
+        return "orange";
+      case "pending":
+      default:
+        return "blue";
     }
   };
 
-  const isStatusFinal = (status: string) => {
-    return status?.toLowerCase() === "approved" || status?.toLowerCase() === "rejected";
-  };
+  const isStatusFinal = (status: string) =>
+    status?.toLowerCase() === "approved" || status?.toLowerCase() === "rejected";
 
   return (
     <Drawer
       open={open}
-      width={600}
+      width={500}
       onClose={onClose}
-      title={t("page.title.towingDetails")}
+      title={t("form.towingDetails")}
       bodyStyle={{ overflowY: "auto", height: "calc(100vh - 64px)" }}
     >
       {record ? (
-        <Space direction="vertical" size="large" style={{ width: "100%" }}>
+        <>
+          {/* Details */}
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label={t("form.plateNumber")}>
               {record.plateNumber}
@@ -103,16 +139,8 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
             <Descriptions.Item label={t("form.towingDate")}>
               {new Date(record.entityDateTime).toLocaleDateString()}
             </Descriptions.Item>
-            <Descriptions.Item label={t("form.location")}>
-              Lat: {record.latitude}, Long: {record.longitude}
-            </Descriptions.Item>
-            <Descriptions.Item label={t("form.comments")}>
-              {record.comments}
-            </Descriptions.Item>
             <Descriptions.Item label={t("form.status")}>
-              <Tag color={getStatusColor(currentStatus)}>
-                {currentStatus}
-              </Tag>
+              <Tag color={getStatusColor(currentStatus)}>{currentStatus}</Tag>
             </Descriptions.Item>
             {record.lastReviewComments && (
               <Descriptions.Item label={t("form.lastReviewComments")}>
@@ -121,20 +149,76 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
             )}
           </Descriptions>
 
+          {/* Map */}
+          <h4 style={{ marginTop: 16 }}>{t("form.location")}</h4>
+          {record.latitude && record.longitude ? (
+            <ArcGISMap
+              inspectors={[
+                {
+                  id: 1,
+                  name: "Towing Location",
+                  nameAr: "Towing Location",
+                  lat: record.latitude,
+                  lng: record.longitude,
+                  status: "Towing",
+                  statusAr: "Towing",
+                  details: { zone: "", lastCheckIn: "" },
+                  markerType: "google-pin",
+                },
+              ]}
+              center={[record.longitude, record.latitude]}
+              zoom={16}
+              height="300px"
+            />
+          ) : (
+            <Empty description="No Location Data Available" />
+          )}
+
+          {/* Photos */}
+          <Title level={5} style={{ marginTop: 16, marginBottom: 12 }}>
+            {t("form.photo")}
+          </Title>
+          <Spin spinning={isLoadingAttachments}>
+            {attachments.length > 0 ? (
+              <Image.PreviewGroup>
+                <Space wrap>
+                  {attachments.map((file) => (
+                    <Image
+                      key={file.attachmentGUID}
+                      width={100}
+                      height={100}
+                      src={getMobileFileUrl(file.filePath)}
+                      alt={file.fileName}
+                      style={{ objectFit: "cover", borderRadius: 8 }}
+                    />
+                  ))}
+                </Space>
+              </Image.PreviewGroup>
+            ) : (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={t("common.noData")}
+              />
+            )}
+          </Spin>
+
+          {/* Approval Actions */}
           {!isStatusFinal(currentStatus) && (
-            <Space direction="vertical" style={{ width: "100%" }}>
-              <div>
-                <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>
+            <>
+              <h4 style={{ marginTop: 16 }}>{t("form.approvalActions")}</h4>
+              <div style={{ marginBottom: 10 }}>
+                <label
+                  style={{ display: "block", marginBottom: 8, fontWeight: 500 }}
+                >
                   {t("form.reviewComments")} *
                 </label>
                 <Input.TextArea
                   rows={3}
                   value={comments}
                   onChange={(e) => setComments(e.target.value)}
-                  placeholder={t("placeholders.enterReviewComments")}
+                  placeholder={t("placeholders.enterComments")}
                 />
               </div>
-              
               <Space>
                 <Button
                   type="primary"
@@ -153,11 +237,11 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
                   {t("form.reject")}
                 </Button>
               </Space>
-            </Space>
+            </>
           )}
-        </Space>
+        </>
       ) : (
-        <p>{t("common.noData")}</p>
+        <Empty description={t("common.noData")} />
       )}
     </Drawer>
   );
