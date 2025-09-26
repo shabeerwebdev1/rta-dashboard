@@ -20,29 +20,21 @@ const ParkonicLocationViewDrawer: React.FC<ParkonicLocationViewDrawerProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const title = (
-    <Space>
-      <span>{t("parkonicLocation.viewTitle")}</span>
-      {onShare && (
-        <Button
-          type="text"
-          icon={<ShareAltOutlined />}
-          onClick={onShare}
-          size="small"
-        >
-          {t("common.share")}
-        </Button>
-      )}
-    </Space>
-  );
+
 
   return (
     <Drawer
-      title={title}
+       title={t("page.viewTitle", { entity: t(config.name.singular) })}
       open={open}
       onClose={onClose}
-      width={480}
+      width={500}
+      extra={
+              <Button icon={<ShareAltOutlined />} onClick={onShare}>
+                {t("common.share")}
+              </Button>
+            }
     >
+    
       {record ? (
         <Descriptions bordered column={1}>
           <Descriptions.Item label={t("form.zone")}>
@@ -54,10 +46,10 @@ const ParkonicLocationViewDrawer: React.FC<ParkonicLocationViewDrawerProps> = ({
           <Descriptions.Item label={t("form.street")}>
             {record.street}
           </Descriptions.Item>
-          <Descriptions.Item label={t("form.latitude")}>
+          <Descriptions.Item label={t("form.lat")}>
             {record.latitude}
           </Descriptions.Item>
-          <Descriptions.Item label={t("form.longitude")}>
+          <Descriptions.Item label={t("form.long")}>
             {record.longitude}
           </Descriptions.Item>
         </Descriptions>

@@ -3,7 +3,7 @@ import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Spin, T
 import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined, CalendarOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
-import dayjs from "dayjs";
+import dayjs  from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 
 // Enable the isBetween plugin
@@ -63,7 +63,7 @@ const ParkonicLocationPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<string | undefined>();
   const [sortOrder, setSortOrder] = useState<"ascend" | "descend" | undefined>();
 
-  // Pagination states
+  // Pagination states - matching UserZoneLinking pattern
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -78,10 +78,19 @@ const ParkonicLocationPage: React.FC = () => {
     useLazyGetParkonicsLocationByIdQuery();
 
   // Client-side filtering logic
-  const filteredData = useMemo(() => {
-    if (!data?.data) return [];
+  // Client-side filtering logic with formatted dates
+const filteredData = useMemo(() => {
+  if (!data?.data) return [];
 
-    let filtered = [...data.data];
+  // 🔑 Format dates before doing any filtering
+  let formatted = data.data.map((item: any) => ({
+    ...item,
+    created_At: item.created_At ? dayjs(item.created_At).format("DD-MM-YYYY") : "-",
+  }));
+
+  let filtered = [...formatted];
+
+
 
     // Apply search filter
     if (debouncedSearchValue && searchKey) {
@@ -126,7 +135,7 @@ const ParkonicLocationPage: React.FC = () => {
     return filtered;
   }, [data, debouncedSearchValue, searchKey, dateRange, columnFilters, sortBy, sortOrder]);
 
-  // Paginated data for display
+  // Paginated data for display - matching UserZoneLinking pattern
   const paginatedData = useMemo(() => {
     const startIdx = (currentPage - 1) * pageSize;
     return filteredData.slice(startIdx, startIdx + pageSize);
@@ -208,12 +217,10 @@ const ParkonicLocationPage: React.FC = () => {
     form.resetFields();
   };
 
+  // Updated pagination handler to match UserZoneLinking pattern
   const handlePageChange = (page: number, size?: number) => {
     setCurrentPage(page);
-    if (size && size !== pageSize) {
-      setPageSize(size);
-      setCurrentPage(1); // Reset to first page when page size changes
-    }
+    if (size) setPageSize(size);
   };
 
   const handleTableChange = (pagination: any, filters: any, sorter: any) => {
@@ -349,7 +356,7 @@ const ParkonicLocationPage: React.FC = () => {
               <RangePicker
                 value={dateRange}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
-                placeholder={[t("common.startDate"), t("common.endDate")]}
+               
                 format="DD-MM-YYYY"
                 allowClear
                 suffixIcon={<CalendarOutlined />}
@@ -397,23 +404,37 @@ const ParkonicLocationPage: React.FC = () => {
           showPagination={false}
         />
 
-        <Card
-          bordered={false}
-          bodyStyle={{ padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}
-          style={{ marginTop: 16 }}
+       
+        <div 
+          style={{ 
+            marginTop: 1, 
+            textAlign: "right",
+            padding: "12px 16px",
+            backgroundColor: "#fafafa",
+            border: "1px solid #f0f0f0",
+            
+          }}
         >
-         
           <Pagination
             current={currentPage}
             pageSize={pageSize}
             total={filteredData.length}
             onChange={handlePageChange}
-            pageSizeOptions={["5", "10", "20", "50"]}
-            showSizeChanger
-            showQuickJumper
-            showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} filtered items`}
+             showSizeChanger={{ showSearch: false }}
+            pageSizeOptions={[ "10", "20", "50"]}
+            showQuickJumper={false}
+            showTotal={(total, range) => (
+              <span style={{ marginRight: 16, color: "#666" }}>
+                {`${range[0]}-${range[1]} of ${total} items`}
+              </span>
+            )}
+            style={{ 
+              display: "flex", 
+              justifyContent: "space-between", 
+              alignItems: "center" 
+            }}
           />
-        </Card>
+        </div>
       </Spin>
 
       <Modal

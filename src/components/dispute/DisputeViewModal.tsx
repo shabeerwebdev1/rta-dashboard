@@ -281,7 +281,7 @@ const isUserAssignedToDispute = useMemo(() => {
           viewRef.current = view;
         }
       }}
-      width={1400}
+      width={1600}
       footer={null}
       title={null}
       closable={false}
@@ -589,63 +589,65 @@ const isUserAssignedToDispute = useMemo(() => {
     bodyStyle={{ paddingRight: 8, height: "100%", overflowY: "auto" }}
   >
     {dispute.reviews && dispute.reviews.length > 0 ? (
-      <Timeline>
-        {dispute.reviews.map((review: any, idx: number) => (
-          <Timeline.Item 
-            dot={<ClockCircleOutlined style={{ color: "#3b82f6" }} />} 
-            color="blue" 
-            key={idx}
+     <Timeline>
+  {dispute.reviews.map((review: any, idx: number) => (
+    <Timeline.Item
+      dot={<ClockCircleOutlined style={{ color: "#3b82f6" }} />}
+      color="blue"
+      key={idx}
+    >
+      <div
+        style={{
+          background: "#fff",
+          border: "1px solid #d9d9d9",
+          borderRadius: 8,
+          padding: "10px 14px",
+          marginBottom: 8,
+        }}
+      >
+        {/* Action Tag */}
+        <div style={{ marginBottom: 6 }}>
+          <Tag
+            color={
+              review.review_Action === 2
+                ? "green"
+                : review.review_Action === 3
+                ? "red"
+                : "orange"
+            }
           >
-            <div
-              style={{
-                background: "#fff",
-                border: "1px solid #d9d9d9", // Gray border
-                borderRadius: 8,
-                padding: "8px 12px",
-                // Shadow removed
-              }}
-            >
-              <Text
-                strong
-                style={{
-                  color:
-                    review.review_Action === 2
-                      ? "green"
-                      : review.review_Action === 3
-                      ? "red"
-                      : undefined,
-                }}
-              >
-                {review.review_Action === 1
-                  ? t("status.assigned")
-                  : review.review_Action === 2
-                  ? t("status.approved")
-                  : review.review_Action === 3
-                  ? t("status.rejected")
-                  : t("common.review")}
-              </Text>
-              <br />
-              <Text type="secondary">{review.review_Comments || "No Comments"}</Text>
-              {review.assignedTo && (
-                <>
-                  <br />
-                  <Text type="secondary" style={{ color: "#2563eb" }}>
-                    {getSupervisorName(review.assignedTo)}
-                  </Text>
-                </>
-              )}
-              {review.createdAt && (
-                <>
-                  <br />
-                  <Text type="secondary" style={{ fontSize: "10px" }}>
-                    {formatDateTime(review.createdAt)}
-                  </Text>
-                </>
-              )}
-            </div>
-          </Timeline.Item>
-        ))}
-      </Timeline>
+            {review.review_Action === 1
+              ? t("status.assigned")
+              : review.review_Action === 2
+              ? t("status.approved")
+              : review.review_Action === 3
+              ? t("status.rejected")
+              : t("common.review")}
+          </Tag>
+        </div>
+
+        {/* Review Comment */}
+        <Text style={{ display: "block", marginBottom: 6 }}>
+           {review.assignedTo && (
+            <span style={{ marginRight: 8, color: "#2600ffff" }}>
+              {getSupervisorName(review.assignedTo)}
+            </span>
+          )}
+         
+        </Text>
+
+        {/* Reviewer Info */}
+        <div style={{ fontSize: "12px", color: "#6b7280" }}>
+          {review.review_Comments || t("common.noComments")}
+          {review.createdAt && (
+            <span>{formatDateTime(review.createdAt)}</span>
+          )}
+        </div>
+      </div>
+    </Timeline.Item>
+  ))}
+</Timeline>
+
     ) : (
       <Empty description="No Review History" />
     )}

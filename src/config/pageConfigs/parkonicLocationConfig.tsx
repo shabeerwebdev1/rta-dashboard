@@ -41,7 +41,7 @@ export const parkonicLocationPageConfig: PageConfig = {
   searchConfig: {
     globalSearchKeys: ["zone", "area"],
     columnFilterKeys: ["zone", "area"],
-    dateRangeKey: "createdDate",
+    dateRangeKey: "created_At",
   },
   tableConfig: {
     columns: [
@@ -50,6 +50,7 @@ export const parkonicLocationPageConfig: PageConfig = {
       { key: "street", title: "form.street", dataIndex: "street", type: "string", sortable: true },
       { key: "latitude", title: "form.lat", dataIndex: "lat", type: "string", sortable: true },
       { key: "longitude", title: "form.long", dataIndex: "long", type: "string", sortable: true },
+      { key: "created_At", title: "form.created_At", dataIndex: "long", type: "string", sortable: true },
     ],
     viewRecord: true,
   },

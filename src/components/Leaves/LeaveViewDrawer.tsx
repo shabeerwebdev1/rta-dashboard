@@ -4,21 +4,22 @@ import { LeaveStatus } from "../../config/pageConfigs/leaveManagementConfig";
 import { useUpdateLeaveStatusMutation } from "../../services/rtkApiFactory";
 import dayjs from "dayjs";
 import { t } from "i18next";
-import { useAppNotification } from "../../utils/notificationManager"; 
+import { useAppNotification } from "../../utils/notificationManager";
+import { ShareAltOutlined } from "@ant-design/icons";
 
-interface LeaveViewDrawerProps {
+interface ParkonicLocationViewDrawerProps {
   open: boolean;
   onClose: () => void;
-  record: any;
+  record: any | null;
+  config: any;
+  onShare?: () => void;
 }
-
-const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record }) => {
-  const notification = useAppNotification(); 
+const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record, onShare }) => {
+  const notification = useAppNotification();
   const [updateLeaveStatus, { isLoading }] = useUpdateLeaveStatusMutation();
 
   const [status, setStatus] = useState<number>(record?.status ?? LeaveStatus.Pending);
 
-  
   useEffect(() => {
     if (record) {
       setStatus(record.status);
@@ -40,10 +41,10 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
       }).unwrap();
 
       setStatus(newStatus);
-      notification.success(result, t("messages.leaveUpdated")); 
+      notification.success(result, t("messages.leaveUpdated"));
       onClose();
     } catch (err: any) {
-      notification.error(err, t("messages.failedToUpdateLeave")); 
+      notification.error(err, t("messages.failedToUpdateLeave"));
     }
   };
 
@@ -53,8 +54,14 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
       width={500}
       onClose={onClose}
       title={t("form.leaveDetails")}
+       extra={
+          <Button icon={<ShareAltOutlined />} onClick={onShare}>
+            {t("common.share")}
+          </Button>
+        }
       bodyStyle={{ overflowY: "auto", height: "calc(100vh - 64px)" }}
     >
+      
       {record ? (
         <>
           <Descriptions bordered column={1} size="small">
@@ -74,10 +81,10 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
                   status === LeaveStatus.Approved
                     ? "green"
                     : status === LeaveStatus.Pending
-                    ? "blue"
-                    : status === LeaveStatus.Cancelled
-                    ? "orange"
-                    : "red"
+                      ? "blue"
+                      : status === LeaveStatus.Cancelled
+                        ? "orange"
+                        : "red"
                 }
               >
                 {LeaveStatus[status]}
@@ -85,21 +92,13 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
             </Descriptions.Item>
 
             {/* ✅ Show actions only if NOT approved */}
-            {status !== LeaveStatus.Approved && (
+            {status !== LeaveStatus.Approved && Rejected && (
               <Descriptions.Item label={t("form.actions")}>
                 <Space>
-                  <Button
-                    type="primary"
-                    loading={isLoading}
-                    onClick={() => handleUpdateStatus(LeaveStatus.Approved)}
-                  >
+                  <Button type="primary" loading={isLoading} onClick={() => handleUpdateStatus(LeaveStatus.Approved)}>
                     {t("form.approve")}
                   </Button>
-                  <Button
-                    danger
-                    loading={isLoading}
-                    onClick={() => handleUpdateStatus(LeaveStatus.Rejected)}
-                  >
+                  <Button danger loading={isLoading} onClick={() => handleUpdateStatus(LeaveStatus.Rejected)}>
                     {t("form.reject")}
                   </Button>
                 </Space>

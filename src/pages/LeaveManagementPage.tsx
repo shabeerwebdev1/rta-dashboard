@@ -123,6 +123,37 @@ const LeaveManagementPage: React.FC = () => {
     },
   ];
 
+const handleShare = () => {
+  if (!selectedRecord || !selectedRecord.id) {
+    notification.error(
+      { data: { en_Msg: "No record selected" } },
+      "No Record"
+    );
+    return;
+  }
+
+  // Preserve current search params (like PageNumber, PageSize)
+  const params = new URLSearchParams(window.location.search);
+  params.set("viewRecord", selectedRecord.id); // ✅ use correct ID field
+
+  const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+
+  navigator.clipboard.writeText(shareUrl).then(
+    () =>
+      notification.success(
+        { data: { en_Msg: "Share link copied to clipboard!" } },
+        "Link Copied!"
+      ),
+    () =>
+      notification.error(
+        { data: { en_Msg: "Failed to copy link." } },
+        "Copy Failed"
+      )
+  );
+};
+
+
+
   const handleSearchKeyChange = (newKey: string) => {
     const currentValue = searchValue;
     setTimeout(() => setSearchValue(""), 0);
@@ -214,7 +245,7 @@ const LeaveManagementPage: React.FC = () => {
       </Space>
 
       {/* Drawer for viewing leave details */}
-      <LeaveViewDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} record={selectedRecord} />
+      <LeaveViewDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} record={selectedRecord} onShare={handleShare} />
     </>
   );
 };
