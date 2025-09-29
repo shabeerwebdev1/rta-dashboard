@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Upload, DatePicker, Spin } from "antd";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Upload, DatePicker, Spin, Image } from "antd";
 import { PlusOutlined, EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
@@ -91,6 +91,16 @@ const PledgesPage: React.FC = () => {
     useLazyGetPledgeByIdQuery();
 
   const [triggerGetLookups] = useLazyGetLookupsQuery();
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState("");
+
+  const getBase64 = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
 
   // Check for viewRecord parameter in URL on component mount
   useEffect(() => {
@@ -514,14 +524,39 @@ const PledgesPage: React.FC = () => {
                   valuePropName="fileList"
                   getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
                 >
-                  <Upload listType="picture-card" beforeUpload={() => false} multiple={true}   accept=".jpg,.jpeg,image/jpeg"
+                  <Upload
+                    listType="picture-card"
+                    beforeUpload={() => false}
+                    multiple={true}
+                    accept=".jpg,.jpeg,image/jpeg"
+                    onPreview={async (file) => {
+                      let src = file.url;
+                      if (!src && file.originFileObj) {
+                        src = await getBase64(file.originFileObj);
+                      }
+                      setPreviewImage(src || "");
+                      setPreviewOpen(true);
+                    }}
                   >
                     <div>
                       <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>{t("form.UploadJPG/JPEG")}</div>
+                      <div style={{ marginTop: 8 }}>{t("form.upload")}</div>
                     </div>
                   </Upload>
                 </Form.Item>
+
+                {previewImage && (
+                  <Image
+                    style={{ display: "none" }}
+                    preview={{
+                      visible: previewOpen,
+                      src: previewImage,
+                      onVisibleChange: (visible) => setPreviewOpen(visible),
+                      afterClose: () => setPreviewImage(""),
+                    }}
+                    src={previewImage}
+                  />
+                )}
               </Col>
               <Col span={24}>
                 <Form.Item name="remarks" label={t("form.remarks")}>

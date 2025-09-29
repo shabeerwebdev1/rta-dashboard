@@ -44,15 +44,41 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
   // Use the theme's primary color for tags
   const tagColor = token.colorPrimary;
 
-  // Helper: get label for a filter value
+  // Helper function to get lookup options for a specific column
+  const getLookupOptionsForColumn = (columnKey: string) => {
+    const columnToCategoryMap: Record<string, number> = {
+      plateSource_Id: 200,
+      plateType_Id: 300,
+      plateColor_Id: 400,
+      plateStatus_Id: 500,
+      exemptionReason_ID: 100,
+      sourceOfObstacle: 800,
+      pledgeType: 900,
+      inspectionType: 1400,
+      inspectionCategory: 1300,
+      inspectionStatus: 1500,
+      payment_Type: 1100,
+    };
+
+    const categoryId = columnToCategoryMap[columnKey];
+    if (!categoryId) return [];
+
+    return lookupOptions.filter((option) => option.categoryId === categoryId);
+  };
+
+  // Helper to get display label for a filter value
   const getFilterLabel = (columnKey: string, value: string | number) => {
     if ((columnKey === "status" || columnKey === "dispute_Status" || columnKey === "reviewStatus") && statusLabels) {
       return statusLabels[Number(value)] || String(value);
     }
 
     if (getLabelFromValue) {
-      return getLabelFromValue(value as any, lookupOptions, i18n);
+      const optionsForColumn = getLookupOptionsForColumn(columnKey);
+      if (optionsForColumn.length > 0) {
+        return getLabelFromValue(value as any, optionsForColumn, i18n);
+      }
     }
+
     return String(value);
   };
 

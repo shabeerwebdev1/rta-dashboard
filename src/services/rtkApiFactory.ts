@@ -428,6 +428,25 @@ export const dynamicApi = createApi({
       }),
       invalidatesTags: ["ParkonicsLocation"],
     }),
+
+
+    getHtmlReport: builder.mutation<Blob, { reportPath: string; format: "HTML4.0" | "PDF"; parameters: any }>(
+      {
+        query: (body) => ({
+          url: "/api/Report",
+          method: "POST",
+          body,
+          // Important: tell fetchBaseQuery we want a blob
+          responseHandler: async (response) => {
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/pdf")) {
+              return response.blob();
+            }
+            return response.text();
+          },
+        }),
+      }
+    ),
   }),
 });
 
@@ -503,4 +522,5 @@ export const {
   useLazyGetParkonicsLocationByIdQuery,
   useAddParkonicsLocationMutation,
   useUpdateParkonicsLocationMutation,
+  useGetHtmlReportMutation,
 } = dynamicApi;

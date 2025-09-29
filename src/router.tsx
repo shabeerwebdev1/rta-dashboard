@@ -25,6 +25,7 @@ const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 const TradeLicenseInspectionPage = lazy(() => import("./pages/TradeLicenseInspectionPage"));
 const TowingPage = lazy(() => import("./pages/TowingPage"));
 const ParkonicLocationPage = lazy(() => import("./pages/ParkonicLocationPage"))
+const AnalyticsInsightsPage = lazy(() => import("./pages/AnalyticsInsightsPage"))
 
 
 const AppRoutes = () => (
@@ -164,6 +165,14 @@ const AppRoutes = () => (
           element={
             <ProtectedRoute>
               <LeaveManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={FULL_PATHS.ANALYTICS}
+          element={
+            <ProtectedRoute>
+              <AnalyticsInsightsPage />
             </ProtectedRoute>
           }
         />

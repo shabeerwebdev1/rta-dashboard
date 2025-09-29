@@ -70,22 +70,19 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   const isSupervisorRole =
     user?.roleGUID === "9e8331a6-3828-421b-9c5d-835f7b6f8710" ||
     user?.roleGUID === "137db453-07cc-4218-9ef8-3aa236d9e951" ||
-    user?.roleGUID === "6d20d858-1128-4cd2-af7e-e8eb3c4bf887"
+    user?.roleGUID === "6d20d858-1128-4cd2-af7e-e8eb3c4bf887";
 
   // Special role ID that should ALWAYS see comment, dropdown, assign BUT NOT approve/reject
   const isSpecialRoleId = user?.roleGUID === "efb6ef6a-128b-4dd9-9641-2b04205c8cf8";
 
-
   // Checks if current user is assigned to this dispute (look at last review)
-const isUserAssignedToDispute = useMemo(() => {
-  if (!disputeData?.data?.reviews?.length || !user?.userGUID) return false;
+  const isUserAssignedToDispute = useMemo(() => {
+    if (!disputeData?.data?.reviews?.length || !user?.userGUID) return false;
 
+    const lastReview = disputeData.data.reviews[disputeData.data.reviews.length - 1];
 
-  const lastReview = disputeData.data.reviews[disputeData.data.reviews.length - 1];
-
-  return lastReview?.assignedTo === user.userGUID;
-}, [disputeData?.data?.reviews, user?.userGUID]);
-
+    return lastReview?.assignedTo === user.userGUID;
+  }, [disputeData?.data?.reviews, user?.userGUID]);
 
   // Use disputeData instead of dispute to avoid reference before initialization
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
@@ -101,7 +98,7 @@ const isUserAssignedToDispute = useMemo(() => {
     const sup = filteredSupervisors.find((s: any) => s.employeeId === id);
     return sup ? sup.employeeName : id;
   };
-  
+
   const disputeStatusEnum = useMemo(
     () => [
       { value: 1, labelEn: "Pending", labelAr: "قيد الانتظار", color: "orange" },
@@ -288,422 +285,434 @@ const isUserAssignedToDispute = useMemo(() => {
       bodyStyle={{ padding: 24 }}
     >
       <Spin spinning={isLoading || isUpdating || isLoadingLookups}>
-        
-          {/* Custom Header */}
-          <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-            <Col>
-              <Space size="middle" align="center">
-                <Title level={4} style={{ margin: 0 }}>
-                  {t("form.disputereview")} <Text type="danger">#{dispute?.fine_Number || storedDisputeId}</Text>
-                </Title>
+        {/* Custom Header */}
+        <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+          <Col>
+            <Space size="middle" align="center">
+              <Title level={4} style={{ margin: 0 }}>
+                {t("form.disputereview")} <Text type="danger">#{dispute?.fine_Number || storedDisputeId}</Text>
+              </Title>
 
-                {dispute?.dispute_Status !== undefined &&
-                  (() => {
-                    const status = disputeStatusEnum.find((s) => s.value === dispute.dispute_Status);
-                    return status ? (
-                      <Tag color={status.color}>{i18n.language === "ar" ? status.labelAr : status.labelEn}</Tag>
-                    ) : null;
-                  })()}
-              </Space>
-            </Col>
+              {dispute?.dispute_Status !== undefined &&
+                (() => {
+                  const status = disputeStatusEnum.find((s) => s.value === dispute.dispute_Status);
+                  return status ? (
+                    <Tag color={status.color}>{i18n.language === "ar" ? status.labelAr : status.labelEn}</Tag>
+                  ) : null;
+                })()}
+            </Space>
+          </Col>
 
-            <Col>
-              <Button type="text" icon={<CloseOutlined />} onClick={onClose} style={{ fontSize: 16 }} />
-            </Col>
-          </Row>
+          <Col>
+            <Button type="text" icon={<CloseOutlined />} onClick={onClose} style={{ fontSize: 16 }} />
+          </Col>
+        </Row>
 
-          {!dispute ? (
-            <Empty description={t("common.noData")} />
-          ) : (
-            <Row gutter={24}>
-              {/* LEFT SIDE */}
-              <Col span={18}>
-                <Row gutter={16}>
-                  {/* Dispute Details */}
-                  <Col
-                    span={
-                      dispute.vehicle && Object.values(dispute.vehicle).some((val) => val !== null && val !== "")
-                        ? 12
-                        : 24
-                    }
+        {!dispute ? (
+          <Empty description={t("common.noData")} />
+        ) : (
+          <Row gutter={24}>
+            {/* LEFT SIDE */}
+            <Col span={18}>
+              <Row gutter={16}>
+                {/* Dispute Details */}
+                <Col
+                  span={
+                    dispute.vehicle && Object.values(dispute.vehicle).some((val) => val !== null && val !== "")
+                      ? 12
+                      : 24
+                  }
+                >
+                  <Card
+                    title={t("form.disputedetails")}
+                    size="small"
+                    headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                    style={{ marginBottom: 16 }}
                   >
+                    <Row gutter={[0, 12]}>
+                      <Col span={10}>
+                        <Text strong>{t("form.fineNumber")}:</Text>
+                      </Col>
+                      <Col span={14}>{dispute.fine_Number || t("common.noData")}</Col>
+
+                      <Col span={10}>
+                        <Text strong>{t("form.department")}:</Text>
+                      </Col>
+                      <Col span={14}>
+                        {dispute.department ? getLabelFromValue(dispute.department, 1000) : t("common.noData")}
+                      </Col>
+
+                      <Col span={10}>
+                        <Text strong>{t("form.paymentType")}:</Text>
+                      </Col>
+                      <Col span={14}>
+                        {dispute.payment_Type ? getLabelFromValue(dispute.payment_Type, 1100) : t("common.noData")}
+                      </Col>
+
+                      <Col span={10}>
+                        <Text strong>{t("form.reason")}:</Text>
+                      </Col>
+                      <Col span={14}>{dispute.dispute_Reason || t("common.noData")}</Col>
+
+                      <Col span={10}>
+                        <Text strong>{t("form.email")}:</Text>
+                      </Col>
+                      <Col span={14}>{dispute.email || t("common.noData")}</Col>
+
+                      <Col span={10}>
+                        <Text strong>{t("form.phoneNumber")}:</Text>
+                      </Col>
+                      <Col span={14}>{dispute.phone || t("common.noData")}</Col>
+
+                      <Col span={10}>
+                        <Text strong>{t("form.crmReference")}:</Text>
+                      </Col>
+                      <Col span={14}>{dispute.crM_Ref || t("common.noData")}</Col>
+
+                      <Col span={10}>
+                        <Text strong>{t("form.address")}:</Text>
+                      </Col>
+                      <Col span={14}>{dispute.address || t("common.noData")}</Col>
+                    </Row>
+                  </Card>
+                </Col>
+
+                {/* Vehicle Details */}
+                {dispute.vehicle && Object.values(dispute.vehicle).some((val) => val !== null && val !== "") && (
+                  <Col span={12}>
                     <Card
-                      title={t("form.disputedetails")}
+                      title={t("form.vehicleDetails")}
                       size="small"
                       headStyle={{ background: "#fafafa", fontWeight: 600 }}
                       style={{ marginBottom: 16 }}
                     >
                       <Row gutter={[0, 12]}>
                         <Col span={10}>
-                          <Text strong>{t("form.fineNumber")}:</Text>
+                          <Text strong>{t("form.plateNumber")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.fine_Number || t("common.noData")}</Col>
+                        <Col span={14}>{dispute.vehicle.plateNumber || t("common.noData")}</Col>
 
                         <Col span={10}>
-                          <Text strong>{t("form.department")}:</Text>
+                          <Text strong>{t("form.Color")}:</Text>
                         </Col>
-                        <Col span={14}>
-                          {dispute.department ? getLabelFromValue(dispute.department, 1000) : t("common.noData")}
-                        </Col>
+                        <Col span={14}>{dispute.vehicle.plateColor || t("common.noData")}</Col>
 
                         <Col span={10}>
-                          <Text strong>{t("form.paymentType")}:</Text>
+                          <Text strong>{t("form.Type")}:</Text>
                         </Col>
-                        <Col span={14}>
-                          {dispute.payment_Type ? getLabelFromValue(dispute.payment_Type, 1100) : t("common.noData")}
-                        </Col>
+                        <Col span={14}>{dispute.vehicle.plateType || t("common.noData")}</Col>
 
                         <Col span={10}>
-                          <Text strong>{t("form.reason")}:</Text>
+                          <Text strong>{t("form.Source")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.dispute_Reason || t("common.noData")}</Col>
+                        <Col span={14}>{dispute.vehicle.plateSource || t("common.noData")}</Col>
 
                         <Col span={10}>
-                          <Text strong>{t("form.email")}:</Text>
+                          <Text strong>{t("form.vehicleBrand")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.email || t("common.noData")}</Col>
+                        <Col span={14}>{dispute.vehicle.vehicleBrand || t("common.noData")}</Col>
 
                         <Col span={10}>
-                          <Text strong>{t("form.phoneNumber")}:</Text>
+                          <Text strong>{t("form.vehicleType")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.phone || t("common.noData")}</Col>
+                        <Col span={14}>{dispute.vehicle.vehicleType || t("common.noData")}</Col>
 
                         <Col span={10}>
-                          <Text strong>{t("form.crmReference")}:</Text>
+                          <Text strong>{t("form.vehicleColor")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.crM_Ref || t("common.noData")}</Col>
+                        <Col span={14}>{dispute.vehicle.vehicleColor || t("common.noData")}</Col>
 
                         <Col span={10}>
-                          <Text strong>{t("form.address")}:</Text>
+                          <Text strong>{t("form.manufacturerYear")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.address || t("common.noData")}</Col>
+                        <Col span={14}>{dispute.vehicle.manufacturerYear || t("common.noData")}</Col>
 
-                        {/* Show assigned to information */}
                         <Col span={10}>
-                          <Text strong>{t("form.assignedTo")}:</Text>
+                          <Text strong>{t("form.vehicleOwnerName")}:</Text>
                         </Col>
-                        <Col span={14}>
-                          {dispute.assignedTo ? (
-                            <>
-                              {getSupervisorName(dispute.assignedTo)}
-                              {isUserAssignedToDispute && (
-                                <Tag color="blue" style={{ marginLeft: 8 }}>
-                                  {t("common.assignedToYou")}
-                                </Tag>
-                              )}
-                            </>
-                          ) : (
-                            t("common.noData")
-                          )}
-                        </Col>
+                        <Col span={14}>{dispute.vehicle.ownerName || t("common.noData")}</Col>
                       </Row>
                     </Card>
                   </Col>
+                )}
+              </Row>
 
-                  {/* Vehicle Details */}
-                  {dispute.vehicle && Object.values(dispute.vehicle).some((val) => val !== null && val !== "") && (
-                    <Col span={12}>
-                      <Card
-                        title={t("form.vehicleDetails")}
-                        size="small"
-                        headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                        style={{ marginBottom: 16 }}
-                      >
-                        <Row gutter={[0, 12]}>
-                          <Col span={10}>
-                            <Text strong>{t("form.plateNumber")}:</Text>
-                          </Col>
-                          <Col span={14}>{dispute.vehicle.plateNumber || t("common.noData")}</Col>
-
-                          <Col span={10}>
-                            <Text strong>{t("form.Color")}:</Text>
-                          </Col>
-                          <Col span={14}>{dispute.vehicle.plateColor || t("common.noData")}</Col>
-
-                          <Col span={10}>
-                            <Text strong>{t("form.Type")}:</Text>
-                          </Col>
-                          <Col span={14}>{dispute.vehicle.plateType || t("common.noData")}</Col>
-
-                          <Col span={10}>
-                            <Text strong>{t("form.Source")}:</Text>
-                          </Col>
-                          <Col span={14}>{dispute.vehicle.plateSource || t("common.noData")}</Col>
-
-                          <Col span={10}>
-                            <Text strong>{t("form.vehicleBrand")}:</Text>
-                          </Col>
-                          <Col span={14}>{dispute.vehicle.vehicleBrand || t("common.noData")}</Col>
-
-                          <Col span={10}>
-                            <Text strong>{t("form.vehicleType")}:</Text>
-                          </Col>
-                          <Col span={14}>{dispute.vehicle.vehicleType || t("common.noData")}</Col>
-
-                          <Col span={10}>
-                            <Text strong>{t("form.vehicleColor")}:</Text>
-                          </Col>
-                          <Col span={14}>{dispute.vehicle.vehicleColor || t("common.noData")}</Col>
-
-                          <Col span={10}>
-                            <Text strong>{t("form.manufacturerYear")}:</Text>
-                          </Col>
-                          <Col span={14}>{dispute.vehicle.manufacturerYear || t("common.noData")}</Col>
-
-                          <Col span={10}>
-                            <Text strong>{t("form.vehicleOwnerName")}:</Text>
-                          </Col>
-                          <Col span={14}>{dispute.vehicle.ownerName || t("common.noData")}</Col>
-                        </Row>
-                      </Card>
+              {/* Fine Details */}
+              <Card
+                title={t("form.finedetails")}
+                size="small"
+                style={{ borderRadius: 12, marginBottom: 16 }}
+                headStyle={{ background: "#fafafa", fontWeight: 600 }}
+              >
+                {dispute.fineDetails ? (
+                  <Row gutter={16}>
+                    <Col span={8}>
+                      <Text strong>{t("form.fineAmount")}:</Text>
+                      {dispute.fineDetails.fineAmount !== null && dispute.fineDetails.fineAmount !== undefined ? (
+                        <Text type="danger" strong style={{ display: "block", marginTop: 4 }}>
+                          {dispute.fineDetails.fineAmount} AED
+                        </Text>
+                      ) : (
+                        <Text style={{ display: "block", marginTop: 4 }}>{t("common.noData")}</Text>
+                      )}
                     </Col>
-                  )}
-                </Row>
 
-                {/* Fine Details */}
-                <Card
-                  title={t("form.finedetails")}
-                  size="small"
-                  style={{ borderRadius: 12, marginBottom: 16 }}
-                  headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                >
-                  {dispute.fineDetails ? (
-                    <Row gutter={16}>
-                      <Col span={8}>
-                        <Text strong>{t("form.fineAmount")}:</Text>
-                        {dispute.fineDetails.fineAmount !== null && dispute.fineDetails.fineAmount !== undefined ? (
-                          <Text type="danger" strong style={{ display: "block", marginTop: 4 }}>
-                            {dispute.fineDetails.fineAmount} AED
-                          </Text>
-                        ) : (
-                          <Text style={{ display: "block", marginTop: 4 }}>{t("common.noData")}</Text>
-                        )}
-                      </Col>
+                    <Col span={8}>
+                      <Text strong>{t("form.status")}:</Text>
+                      {dispute.fineDetails.fineStatus ? (
+                        <div style={{ marginTop: 4 }}>
+                          <Tag color={getFineStatusColor(dispute.fineDetails.fineStatus)}>
+                            {getLabelFromValue(dispute.fineDetails.fineStatus, 1500)}
+                          </Tag>
+                        </div>
+                      ) : (
+                        <Text style={{ display: "block", marginTop: 4 }}>{t("common.noData")}</Text>
+                      )}
+                    </Col>
 
-                      <Col span={8}>
-                        <Text strong>{t("form.status")}:</Text>
-                        {dispute.fineDetails.fineStatus ? (
-                          <div style={{ marginTop: 4 }}>
-                            <Tag color={getFineStatusColor(dispute.fineDetails.fineStatus)}>
-                              {getLabelFromValue(dispute.fineDetails.fineStatus, 1500)}
+                    <Col span={8}>
+                      <Text strong>{t("form.fineNumber")}:</Text>
+                      <Text style={{ display: "block", marginTop: 4 }}>
+                        {dispute.fineDetails.fineNo || t("common.noData")}
+                      </Text>
+                    </Col>
+                  </Row>
+                ) : (
+                  <Empty description="No Fine Details Available" />
+                )}
+              </Card>
+
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Card
+                    title={t("common.location")}
+                    size="small"
+                    style={{ borderRadius: 12, marginBottom: 16 }}
+                    headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                  >
+                    {dispute?.lat && dispute?.lng ? (
+                      <ArcGISMap
+                        inspectors={[
+                          {
+                            id: 1,
+                            name: "Fine Location",
+                            nameAr: "موقع المخالفة",
+                            lat: parseFloat(dispute.lat),
+                            lng: parseFloat(dispute.lng),
+                            status: "Fine",
+                            statusAr: "مخالفة",
+                            details: { zone: "", lastCheckIn: "" },
+                            markerType: "google-pin",
+                          },
+                        ]}
+                        center={[parseFloat(dispute.lng), parseFloat(dispute.lat)]}
+                        zoom={16}
+                        height="180px"
+                      />
+                    ) : (
+                      <Empty description={t("common.noData")} />
+                    )}
+                  </Card>
+                </Col>
+
+                <Col span={12}>
+                  <Card
+                    title={t("form.AttachedPhotos")}
+                    size="small"
+                    style={{ borderRadius: 12, marginBottom: 16 }}
+                    headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                  >
+                    {isLoadingAttachments ? (
+                      <Spin />
+                    ) : attachments.length > 0 ? (
+                      <Image.PreviewGroup>
+                        <Space wrap>
+                          {attachments.map((file: any) => (
+                            <Image
+                              key={file.attachmentGUID}
+                              width={100}
+                              height={100}
+                              src={getMobileFileUrl(file.filePath)}
+                              alt={file.fileName}
+                            />
+                          ))}
+                        </Space>
+                      </Image.PreviewGroup>
+                    ) : (
+                      <Empty description={t("common.noData")} />
+                    )}
+                  </Card>
+                </Col>
+              </Row>
+            </Col>
+
+            {/* RIGHT SIDE - Review Timeline */}
+            <Col span={6}>
+              <Card
+                title={t("form.reviewtimeline")}
+                size="small"
+                style={{
+                  borderRadius: 12,
+                  background: "#f0f7ff",
+                  marginBottom: 16,
+                  height: 760,
+                  overflow: "hidden",
+                }}
+                headStyle={{
+                  background: "#e6f2ff",
+                  fontWeight: 600,
+                  color: "#1d4ed8", // Darker blue for title
+                }}
+                bodyStyle={{ paddingRight: 8, height: "100%", overflowY: "auto" }}
+              >
+                {dispute.reviews && dispute.reviews.length > 0 ? (
+                  <Timeline>
+                    {dispute.reviews.map((review: any, idx: number) => (
+                      <Timeline.Item dot={<ClockCircleOutlined style={{ color: "#3b82f6" }} />} color="blue" key={idx}>
+                        <div
+                          style={{
+                            background: "#fff",
+                            border: "1px solid #d9d9d9",
+                            borderRadius: 8,
+                            padding: "10px 14px",
+                            marginBottom: 8,
+                          }}
+                        >
+                          {/* Action Tag */}
+                          <div style={{ marginBottom: 6 }}>
+                            <Tag
+                              color={
+                                review.review_Action === 2 ? "green" : review.review_Action === 3 ? "red" : "orange"
+                              }
+                            >
+                              {review.review_Action === 1
+                                ? t("status.assigned")
+                                : review.review_Action === 2
+                                  ? t("status.approved")
+                                  : review.review_Action === 3
+                                    ? t("status.rejected")
+                                    : t("common.review")}
                             </Tag>
                           </div>
-                        ) : (
-                          <Text style={{ display: "block", marginTop: 4 }}>{t("common.noData")}</Text>
-                        )}
-                      </Col>
 
-                      <Col span={8}>
-                        <Text strong>{t("form.fineNumber")}:</Text>
-                        <Text style={{ display: "block", marginTop: 4 }}>
-                          {dispute.fineDetails.fineNo || t("common.noData")}
-                        </Text>
-                      </Col>
-                    </Row>
-                  ) : (
-                    <Empty description="No Fine Details Available" />
-                  )}
-                </Card>
+                          {/* Review Comment */}
+                          <Text style={{ display: "block", marginBottom: 6 }}>
+                            {review.assignedTo && (
+                              <span style={{ marginRight: 8, color: "#2600ffff" }}>
+                                {getSupervisorName(review.assignedTo)}
+                              </span>
+                            )}
+                          </Text>
 
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Card
-                      title={t("common.location")}
-                      size="small"
-                      style={{ borderRadius: 12, marginBottom: 16 }}
-                      headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                    >
-                      {dispute?.lat && dispute?.lng ? (
-                        <ArcGISMap
-                          inspectors={[
-                            {
-                              id: 1,
-                              name: "Fine Location",
-                              nameAr: "موقع المخالفة",
-                              lat: parseFloat(dispute.lat),
-                              lng: parseFloat(dispute.lng),
-                              status: "Fine",
-                              statusAr: "مخالفة",
-                              details: { zone: "", lastCheckIn: "" },
-                              markerType: "google-pin",
-                            },
-                          ]}
-                          center={[parseFloat(dispute.lng), parseFloat(dispute.lat)]}
-                          zoom={16}
-                          height="180px"
-                        />
-                      ) : (
-                        <Empty description={t("common.noData")} />
-                      )}
-                    </Card>
-                  </Col>
+                          {/* Reviewer Info */}
+                          <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                            {review.review_Comments || t("common.noComments")}
+                            {review.createdAt && <span>{formatDateTime(review.createdAt)}</span>}
+                          </div>
+                        </div>
+                      </Timeline.Item>
+                    ))}
+                  </Timeline>
+                ) : (
+                  <Empty description="No Review History" />
+                )}
+              </Card>
+            </Col>
+          </Row>
+        )}
 
-                  <Col span={12}>
-                    <Card
-                      title={t("form.AttachedPhotos")}
-                      size="small"
-                      style={{ borderRadius: 12, marginBottom: 16 }}
-                      headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                    >
-                      {isLoadingAttachments ? (
-                        <Spin />
-                      ) : attachments.length > 0 ? (
-                        <Image.PreviewGroup>
-                          <Space wrap>
-                            {attachments.map((file: any) => (
-                              <Image
-                                key={file.attachmentGUID}
-                                width={100}
-                                height={100}
-                                src={getMobileFileUrl(file.filePath)}
-                                alt={file.fileName}
-                              />
-                            ))}
-                          </Space>
-                        </Image.PreviewGroup>
-                      ) : (
-                        <Empty description={t("common.noData")} />
-                      )}
-                    </Card>
-                  </Col>
-                </Row>
-              </Col>
-
-              {/* RIGHT SIDE - Review Timeline */}
-            <Col span={6}>
-  <Card
-    title={t("form.reviewtimeline")}
-    size="small"
-    style={{
-      borderRadius: 12,
-      background: "#f0f7ff",
-      marginBottom: 16,
-      height: 760,
-      overflow: "hidden",
-    }}
-    headStyle={{ 
-      background: "#e6f2ff", 
-      fontWeight: 600,
-      color: "#1d4ed8" // Darker blue for title
-    }}
-    bodyStyle={{ paddingRight: 8, height: "100%", overflowY: "auto" }}
-  >
-    {dispute.reviews && dispute.reviews.length > 0 ? (
-     <Timeline>
-  {dispute.reviews.map((review: any, idx: number) => (
-    <Timeline.Item
-      dot={<ClockCircleOutlined style={{ color: "#3b82f6" }} />}
-      color="blue"
-      key={idx}
-    >
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid #d9d9d9",
-          borderRadius: 8,
-          padding: "10px 14px",
-          marginBottom: 8,
-        }}
-      >
-        {/* Action Tag */}
-        <div style={{ marginBottom: 6 }}>
-          <Tag
-            color={
-              review.review_Action === 2
-                ? "green"
-                : review.review_Action === 3
-                ? "red"
-                : "orange"
-            }
-          >
-            {review.review_Action === 1
-              ? t("status.assigned")
-              : review.review_Action === 2
-              ? t("status.approved")
-              : review.review_Action === 3
-              ? t("status.rejected")
-              : t("common.review")}
-          </Tag>
-        </div>
-
-        {/* Review Comment */}
-        <Text style={{ display: "block", marginBottom: 6 }}>
-           {review.assignedTo && (
-            <span style={{ marginRight: 8, color: "#2600ffff" }}>
-              {getSupervisorName(review.assignedTo)}
-            </span>
-          )}
-         
-        </Text>
-
-        {/* Reviewer Info */}
-        <div style={{ fontSize: "12px", color: "#6b7280" }}>
-          {review.review_Comments || t("common.noComments")}
-          {review.createdAt && (
-            <span>{formatDateTime(review.createdAt)}</span>
-          )}
-        </div>
-      </div>
-    </Timeline.Item>
-  ))}
-</Timeline>
-
-    ) : (
-      <Empty description="No Review History" />
-    )}
-  </Card>
-</Col>
-
-
-            </Row>
-          )}
-
-          {/* FOOTER - Action Form - Show for assigned users OR the special role ID */}
-          {dispute && (isUserAssignedToDispute || isSpecialRoleId) && (
-            <>
-              <Divider />
-              <Form form={form} layout="vertical">
-                <Row gutter={16} align="middle">
-                  {/* Assignment Controls - Always show for special role ID OR (non-supervisor roles with specific conditions) */}
-                  {(isSpecialRoleId || (!isSupervisorRole && dispute?.fineDetails?.fineStatus !== 15005 && dispute?.dispute_Status !== 3)) && (
-                    <Col span={6}>
-                      <Form.Item name="assignedTo" label={<Text strong>{t("form.assinedto")}</Text>}>
-                        <Select
-                          placeholder={t("common.selectSupervisor")}
-                          loading={isLoadingSupervisors}
-                          allowClear
-                          showSearch
-                          optionFilterProp="children"
-                        >
-                          {filteredSupervisors.map((sup: any) => (
-                            <Select.Option key={sup.employeeId} value={sup.employeeId}>
-                              {sup.employeeName} ({sup.roleCode})
-                            </Select.Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                    </Col>
-                  )}
-
-                  {/* Comment Box - Always show for special role ID OR when other conditions are met */}
-                  {(isSpecialRoleId || (dispute?.fineDetails?.fineStatus === 15005 && dispute?.dispute_Status !== 3)) && (
-                    <Col span={isSupervisorRole && !isSpecialRoleId ? 14 : 8}>
-                      <Form.Item
-                        name="review_Comments"
-                        label={<Text strong>{t("form.comments")}</Text>}
-                        style={{ marginBottom: 0 }}
-                        rules={[{ required: true, message: "Please enter your comments" }]}
+        {/* FOOTER - Action Form - Show for assigned users OR the special role ID */}
+        {dispute && (isUserAssignedToDispute || isSpecialRoleId) && (
+          <>
+            <Divider />
+            <Form form={form} layout="vertical">
+              <Row gutter={16} align="middle">
+                {/* Assignment Controls - Always show for special role ID OR (non-supervisor roles with specific conditions) */}
+                {(isSpecialRoleId ||
+                  (!isSupervisorRole &&
+                    dispute?.fineDetails?.fineStatus !== 15005 &&
+                    dispute?.dispute_Status !== 3)) && (
+                  <Col span={6}>
+                    <Form.Item name="assignedTo" label={<Text strong>{t("form.assinedto")}</Text>}>
+                      <Select
+                        placeholder={t("common.selectSupervisor")}
+                        loading={isLoadingSupervisors}
+                        allowClear
+                        showSearch
+                        optionFilterProp="children"
                       >
-                        <TextArea placeholder={t("placeholders.enterComments")} rows={2} />
-                      </Form.Item>
-                    </Col>
-                  )}
+                        {filteredSupervisors.map((sup: any) => (
+                          <Select.Option key={sup.employeeId} value={sup.employeeId}>
+                            {sup.employeeName} ({sup.roleCode})
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                )}
 
-                  {/* Action Buttons - Handle special role ID separately */}
-                  {(isSpecialRoleId || dispute?.dispute_Status !== 3) && (
-                    <Col span={isSupervisorRole && !isSpecialRoleId ? 10 : 8} style={{ textAlign: "right", paddingTop: 30 }}>
-                      {isSpecialRoleId ? (
-                        // Special role ID efb6ef6a-128b-4dd9-9641-2b04205c8cf8 - ONLY assign button, NO approve/reject
+                {/* Comment Box - Always show for special role ID OR when other conditions are met */}
+                {(isSpecialRoleId || (dispute?.fineDetails?.fineStatus === 15005 && dispute?.dispute_Status !== 3)) && (
+                  <Col span={isSupervisorRole && !isSpecialRoleId ? 14 : 8}>
+                    <Form.Item
+                      name="review_Comments"
+                      label={<Text strong>{t("form.comments")}</Text>}
+                      style={{ marginBottom: 0 }}
+                      rules={[{ required: true, message: "Please enter your comments" }]}
+                    >
+                      <TextArea placeholder={t("placeholders.enterComments")} rows={2} />
+                    </Form.Item>
+                  </Col>
+                )}
+
+                {/* Action Buttons - Handle special role ID separately */}
+                {(isSpecialRoleId || dispute?.dispute_Status !== 3) && (
+                  <Col
+                    span={isSupervisorRole && !isSpecialRoleId ? 10 : 8}
+                    style={{ textAlign: "right", paddingTop: 30 }}
+                  >
+                    {isSpecialRoleId ? (
+                      // Special role ID efb6ef6a-128b-4dd9-9641-2b04205c8cf8 - ONLY assign button, NO approve/reject
+                      <Button
+                        type="default"
+                        loading={isUpdating && reviewAction === 1}
+                        onClick={() => {
+                          setReviewAction(1);
+                          handleStatusUpdate(1); // Assigned = 1
+                        }}
+                      >
+                        {t("form.assign")}
+                      </Button>
+                    ) : isSupervisorRole ? (
+                      // Supervisor buttons (Approve/Reject) - Only show when fineStatus = 15005
+                      dispute?.fineDetails?.fineStatus === 15005 && (
+                        <>
+                          <Button
+                            type="primary"
+                            style={{ marginRight: 8 }}
+                            loading={isUpdating && reviewAction === 2}
+                            onClick={() => {
+                              setReviewAction(2);
+                              handleStatusUpdate(2); // Approved = 2
+                            }}
+                          >
+                            {t("form.approve")}
+                          </Button>
+                          <Button
+                            danger
+                            loading={isUpdating && reviewAction === 3}
+                            onClick={() => {
+                              setReviewAction(3);
+                              handleStatusUpdate(3); // Rejected = 3
+                            }}
+                          >
+                            {t("common.reject")}
+                          </Button>
+                        </>
+                      )
+                    ) : (
+                      // Regular user button (Assign) - Only show when fineStatus ≠ 15005
+                      dispute?.fineDetails?.fineStatus !== 15005 && (
                         <Button
                           type="default"
                           loading={isUpdating && reviewAction === 1}
@@ -714,55 +723,14 @@ const isUserAssignedToDispute = useMemo(() => {
                         >
                           {t("form.assign")}
                         </Button>
-                      ) : isSupervisorRole ? (
-                        // Supervisor buttons (Approve/Reject) - Only show when fineStatus = 15005
-                        dispute?.fineDetails?.fineStatus === 15005 && (
-                          <>
-                            <Button
-                              type="primary"
-                              style={{ marginRight: 8 }}
-                              loading={isUpdating && reviewAction === 2}
-                              onClick={() => {
-                                setReviewAction(2);
-                                handleStatusUpdate(2); // Approved = 2
-                              }}
-                            >
-                              {t("form.approve")}
-                            </Button>
-                            <Button
-                              danger
-                              loading={isUpdating && reviewAction === 3}
-                              onClick={() => {
-                                setReviewAction(3);
-                                handleStatusUpdate(3); // Rejected = 3
-                              }}
-                            >
-                              {t("common.reject")}
-                            </Button>
-                          </>
-                        )
-                      ) : (
-                        // Regular user button (Assign) - Only show when fineStatus ≠ 15005
-                        dispute?.fineDetails?.fineStatus !== 15005 && (
-                          <Button
-                            type="default"
-                            loading={isUpdating && reviewAction === 1}
-                            onClick={() => {
-                              setReviewAction(1);
-                              handleStatusUpdate(1); // Assigned = 1
-                            }}
-                          >
-                            {t("form.assign")}
-                          </Button>
-                        )
-                      )}
-                    </Col>
-                  )}
-                </Row>
-              </Form>
-            </>
-          )}
-        
+                      )
+                    )}
+                  </Col>
+                )}
+              </Row>
+            </Form>
+          </>
+        )}
       </Spin>
     </Modal>
   );
