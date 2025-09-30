@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker } from "antd";
+import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tag } from "antd";
 import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
@@ -63,6 +63,14 @@ const FinesPage: React.FC = () => {
 
   const [triggerGetLookups] = useLazyGetLookupsQuery();
 
+  const fineStatusColorMap: Record<number, string> = {
+    15001: "orange",
+    15002: "green",
+    15003: "red",
+    15004: "blue",
+    15005: "purple",
+  };
+
   useEffect(() => {
     fetchLookupData();
   }, [i18n.language]);
@@ -123,7 +131,7 @@ const FinesPage: React.FC = () => {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
       return;
     }
-    
+
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
@@ -194,11 +202,12 @@ const FinesPage: React.FC = () => {
           return {
             ...column,
             render: (value: any) => {
-              if (value == null || value === "") return t("common.noData");
+              if (value == null) return t("common.noData");
               return getLabelFromValue(value, inspectionTypeOptions, i18n);
             },
           };
         }
+
         if (column.key === "inspectionCategory") {
           return {
             ...column,
@@ -208,6 +217,7 @@ const FinesPage: React.FC = () => {
             },
           };
         }
+
         if (column.key === "fineAmount") {
           return {
             ...column,
@@ -217,10 +227,25 @@ const FinesPage: React.FC = () => {
             },
           };
         }
+
+        if (column.key === "inspectionStatus") {
+          return {
+            ...column,
+            render: (value: number) => {
+              if (value == null) return t("common.noData");
+
+              const label = getLabelFromValue(value, lookupOptions, i18n);
+              const color = fineStatusColorMap[value] || "default";
+
+              return <Tag color={color}>{label}</Tag>;
+            },
+          };
+        }
+
         return column;
       }),
     }),
-    [config.tableConfig, inspectionTypeOptions, inspectionCategoryOptions, i18n, t],
+    [config.tableConfig, inspectionTypeOptions, inspectionCategoryOptions, i18n, t, lookupOptions],
   );
 
   return (
@@ -247,11 +272,7 @@ const FinesPage: React.FC = () => {
             </Space>
           </Col>
           <Col>
-            <Button 
-              icon={<DownloadOutlined />} 
-              onClick={handleDownloadCsv} 
-              disabled={selectedRowKeys.length === 0}
-            >
+            <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
               {t("common.downloadCsv")}
             </Button>
           </Col>
