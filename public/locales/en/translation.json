@@ -234,7 +234,11 @@
     "reviewComments": "Review Comments",
     "ticketNumber": "Ticket Number",
     "finestatus": "Fine Status",
-    "assign": "Assign"
+    "assign": "Assign",
+    "latitude": "latitude",
+    "longitude": "longitude",
+    "street": "street",
+    "assignedTo": "Assigned To"
   },
   "common": {
     "action": "Action",
@@ -271,7 +275,8 @@
     "selectSupervisor": "Select Supervisor",
     "reject": "Reject",
     "review": "Review",
-    "approve": "Approve"
+    "approve": "Approve",
+    "selectUser": "Select User"
   },
   "entity": {
     "plate": "Plate",
@@ -334,7 +339,10 @@
     "selectZones": "Select Zone(s)",
     "selectAssignmentTypes": "Select Assignment Type(s)",
     "selectRole": "Select Role",
-    "enterComments": "Enter comments"
+    "enterComments": "Enter comments",
+    "latitude": "Enter latitude",
+    "longitude": "Enter longitude",
+    "street": "Enter street"
   },
 
   "dashboard": {

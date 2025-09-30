@@ -33,6 +33,7 @@ import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../servic
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../common/ArcGISMap";
 import { useAuth } from "../../contexts/AuthContext";
+import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -70,7 +71,8 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   const isSupervisorRole =
     user?.roleGUID === "9e8331a6-3828-421b-9c5d-835f7b6f8710" ||
     user?.roleGUID === "137db453-07cc-4218-9ef8-3aa236d9e951" ||
-    user?.roleGUID === "6d20d858-1128-4cd2-af7e-e8eb3c4bf887";
+    user?.roleGUID === "6d20d858-1128-4cd2-af7e-e8eb3c4bf887" ||
+    user?.roleGUID === "33fa8623-20f8-417a-b655-18da372f18bd"; 
 
   // Special role ID that should ALWAYS see comment, dropdown, assign BUT NOT approve/reject
   const isSpecialRoleId = user?.roleGUID === "efb6ef6a-128b-4dd9-9641-2b04205c8cf8";
@@ -373,6 +375,14 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                         <Text strong>{t("form.address")}:</Text>
                       </Col>
                       <Col span={14}>{dispute.address || t("common.noData")}</Col>
+                      <Col span={10}>
+                        <Text strong>{t("form.date")}:</Text>
+                      </Col>
+                      <Col span={14}>
+                        {dispute.actualDisputeDate
+                          ? dayjs(dispute.actualDisputeDate).format("DD-MM-YYYY")
+                          : t("common.noData")}
+                      </Col>
                     </Row>
                   </Card>
                 </Col>
@@ -633,9 +643,9 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     dispute?.fineDetails?.fineStatus !== 15005 &&
                     dispute?.dispute_Status !== 3)) && (
                   <Col span={6}>
-                    <Form.Item name="assignedTo" label={<Text strong>{t("form.assinedto")}</Text>}>
+                    <Form.Item name="assignedTo" label={<Text strong>{t("form.assignedTo")}</Text>}>
                       <Select
-                        placeholder={t("common.selectSupervisor")}
+                        placeholder={t("common.selectUser")}
                         loading={isLoadingSupervisors}
                         allowClear
                         showSearch

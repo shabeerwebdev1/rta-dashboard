@@ -48,9 +48,8 @@ export const parkonicLocationPageConfig: PageConfig = {
       { key: "zone", title: "form.zone", dataIndex: "zone", type: "string", sortable: true },
       { key: "area", title: "form.area", dataIndex: "area", type: "string", sortable: true },
       { key: "street", title: "form.street", dataIndex: "street", type: "string", sortable: true },
-      { key: "latitude", title: "form.lat", dataIndex: "lat", type: "string", sortable: true },
-      { key: "longitude", title: "form.long", dataIndex: "long", type: "string", sortable: true },
-      { key: "created_At", title: "form.created_At", dataIndex: "long", type: "string", sortable: true },
+
+      { key: "created_At", title: "form.addedOn", dataIndex: "long", type: "string", sortable: true },
     ],
     viewRecord: true,
   },

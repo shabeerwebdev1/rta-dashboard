@@ -170,13 +170,13 @@ const GeneralSearchPage: React.FC = () => {
                     <Form.Item
                       name="plateNumber"
                       label={t("form.plateNumber")}
-                      rules={[{ required: true, message: t("validation.required") }]}
+                      rules={[{ required: true, message: t("placeholders.plateNumber") }]}
                     >
                       <Input placeholder={t("placeholders.plateNumber")} />
                     </Form.Item>
                   </Col>
                   <Col span={6}>
-                    <Form.Item name="plateSource" label={t("form.plateSource")}>
+                    <Form.Item name="plateSource" label={t("form.plateSource")} rules={[{ required: true, message: t("placeholders.plateSource") }]}>
                       <Select showSearch loading={isLoadingLookups} placeholder={t("placeholders.plateSource")}>
                         {plateSourceOptions.map((opt) => (
                           <Option key={opt.value} value={opt.value}>
@@ -187,7 +187,7 @@ const GeneralSearchPage: React.FC = () => {
                     </Form.Item>
                   </Col>
                   <Col span={6}>
-                    <Form.Item name="plateCategory" label={t("form.plateCategory")}>
+                    <Form.Item name="plateCategory" label={t("form.plateCategory")} rules={[{ required: true, message: t("placeholders.plateCategory") }]}>
                       <Select showSearch loading={isLoadingLookups} placeholder={t("placeholders.plateCategory")}>
                         {plateCategoryOptions.map((opt) => (
                           <Option key={opt.value} value={opt.value}>
@@ -198,7 +198,7 @@ const GeneralSearchPage: React.FC = () => {
                     </Form.Item>
                   </Col>
                   <Col span={6}>
-                    <Form.Item name="plateCode" label={t("form.plateCode")}>
+                    <Form.Item name="plateCode" label={t("form.plateCode")} rules={[{ required: true, message: t("placeholders.plateCode") }]}>
                       <Select showSearch loading={isLoadingLookups} placeholder={t("placeholders.plateCode")}>
                         {plateCodeOptions.map((opt) => (
                           <Option key={opt.value} value={opt.value}>
@@ -295,7 +295,7 @@ const GeneralSearchPage: React.FC = () => {
                   <Form.Item
                     name="licenseNo"
                     label={t("form.tradeLicenseNumber")}
-                    rules={[{ required: true, message: t("validation.required") }]}
+                    rules={[{ required: true, message: t("placeholders.tradeLicenseNumber") }]}
                   >
                     <Input placeholder={t("placeholders.tradeLicenseNumber")} />
                   </Form.Item>

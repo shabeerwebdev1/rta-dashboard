@@ -232,7 +232,11 @@
     "reviewComments": "تعليقات المراجعة",
     "ticketNumber": "رقم التذكرة",
     "finestatus": "حالة الغرامة",
-    "assign": "تعيين"
+    "assign": "تعيين",
+     "latitude": "أدخل خط العرض",
+    "longitude": "أدخل خط الطول",
+    "street": "أدخل الشارع",
+    "assignedTo": "مُعين إلى"
 
   },
   "common": {
@@ -266,7 +270,8 @@
     "selectSupervisor": "اختر المشرف",
     "reject": "رفض",
     "review": "مراجعة",
-    "approve": "موافقة"
+    "approve": "موافقة",
+    "selectUser": "اختر المستخدم"
 
   },
   "entity": {
@@ -329,7 +334,10 @@
     "selectZones": "اختر المنطقة (المناطق)",
     "selectAssignmentTypes": "اختر نوع التكليف (التكليفات)",
     "selectRole": "اختر الدور",
-    "enterComments": "أدخل التعليقات"
+    "enterComments": "أدخل التعليقات",
+     "latitude": "أدخل خط العرض",
+    "longitude": "أدخل خط الطول",
+    "street": "أدخل الشارع"
   },
   "dashboard": {
     "totalInspectors": "إجمالي المفتشين",

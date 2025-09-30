@@ -320,16 +320,23 @@ const DisputeManagementPage: React.FC = () => {
     [config.tableConfig, lookupOptions, i18n, disputeStatusEnum],
   );
 
-  const actionMenuItems = (record: any) => [
-    { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
-    {
-      key: "edit",
-      label: t("common.edit"),
-      icon: <EditOutlined />,
-      onClick: () => handleModalOpen("edit", record),
-      disabled: !canEdit(menuName),
-    },
-  ];
+const actionMenuItems = (record: any) => [
+  {
+    key: "view",
+    label: t("common.view"),
+    icon: <EyeOutlined />,
+    onClick: () => handleView(record),
+  },
+  {
+    key: "edit",
+    label: t("common.edit"),
+    icon: <EditOutlined />,
+    onClick: () => handleModalOpen("edit", record),
+    // Disable if user doesn't have permission OR dispute_Status is 2
+    disabled: !canEdit(menuName) || record.dispute_Status === 2,
+  },
+];
+
 
   // Handle search key change - preserve current search as filter and clear input
 

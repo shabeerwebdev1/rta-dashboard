@@ -393,13 +393,7 @@ const SupervisorViewPage: React.FC = () => {
             >
               {t("dashboard.leaveRequests", "Leave Requests")}
             </Button>
-            <Button
-              type={activeTable === "obstacle" ? "primary" : "default"}
-              onClick={() => setActiveTable("obstacle")}
-              icon={<ExclamationCircleOutlined />}
-            >
-              {t("dashboard.obstacle", "Obstacle")}
-            </Button>
+            
           </>
         }
       >

@@ -62,6 +62,7 @@ const ParkonicLocationPage: React.FC = () => {
   const [columnFilters, setColumnFilters] = useState<Record<string, (string | number)[] | null>>({});
   const [sortBy, setSortBy] = useState<string | undefined>();
   const [sortOrder, setSortOrder] = useState<"ascend" | "descend" | undefined>();
+  
 
   // Pagination states - matching UserZoneLinking pattern
   const [currentPage, setCurrentPage] = useState(1);
@@ -246,6 +247,11 @@ const filteredData = useMemo(() => {
 
   const handleFormSubmit = async (values: any) => {
     try {
+      const payload = {
+      ...values,
+      latitude: parseFloat(values.latitude),
+      longitude: parseFloat(values.longitude),
+    };
       let response;
       if (modalMode === "add") {
         response = await addLocation(values).unwrap();
@@ -305,7 +311,7 @@ const filteredData = useMemo(() => {
         if (column.key === "zone" || column.key === "area") {
           return {
             ...column,
-            filterable: true, // Enable column filtering for zone and area
+            filterable: false, // Enable column filtering for zone and area
           };
         }
         return column;
