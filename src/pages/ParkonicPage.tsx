@@ -3,7 +3,7 @@ import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App } from "a
 import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
-import { useSearchParkonicsQuery } from "../services/rtkApiFactory";
+import { useGetParkonicsQuery } from "../services/rtkApiFactory";
 import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { exportToCsv } from "../utils/csvExporter";
@@ -43,9 +43,10 @@ const ParkonicPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
-  const { data, isLoading, isFetching } = useSearchParkonicsQuery(apiParams, {
+  const { data, isLoading, isFetching } = useGetParkonicsQuery(apiParams, {
     refetchOnMountOrArgChange: true,
   });
+  
 
   const statusLabels = useMemo(() => {
     const statusMap: Record<number, string> = {

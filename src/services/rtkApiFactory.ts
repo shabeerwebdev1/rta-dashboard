@@ -236,16 +236,24 @@ export const dynamicApi = createApi({
       invalidatesTags: ["FineSearch"], // refresh fines listing
     }),
 
-    searchParkonics: builder.query({
-      query: (params) => ({ url: "/api/Parkonic", params }),
+    // Parkonics
+    getParkonics: builder.query({
+      query: (params) => ({ url: "/api/trParkonics", params }),
       providesTags: ["ParkonicSearch"],
       transformResponse: transformListResponse,
     }),
 
-    // Parkonic Review
-    reviewParkonic: builder.mutation({
-      query: (body) => ({ url: "/api/Parkonic/Review", method: "PUT", body }),
+    // Parkonic update
+    updateParkonic: builder.mutation({
+      query: (body) => ({ url: "api/trParkonics/UpdateStatus", method: "PUT", body }),
       invalidatesTags: ["ParkonicSearch"],
+    }),
+
+    // parkonic voilations
+    getParkonicVoilations: builder.query({
+      query: (params) => ({ url: "/api/trParkonics/ParkonincsVoilations", params }),
+      transformResponse: transformListResponse,
+      providesTags: ["ParkonicSearch"],
     }),
 
     // Web Dashboard
@@ -398,14 +406,14 @@ export const dynamicApi = createApi({
       providesTags: ["Towing"],
     }),
 
-   updateTowingStatus: builder.mutation({
-  query: (body) => ({
-    url: "/api/Towing/approval",
-    method: "PUT",
-    body, // expects { inspectionGUID, statusCode, lastReviewComments }
-  }),
-  invalidatesTags: ["Towing"],
-}),
+    updateTowingStatus: builder.mutation({
+      query: (body) => ({
+        url: "/api/Towing/approval",
+        method: "PUT",
+        body, // expects { inspectionGUID, statusCode, lastReviewComments }
+      }),
+      invalidatesTags: ["Towing"],
+    }),
 
     //Parkonic Location
     getParkonicsLocation: builder.query({
@@ -429,24 +437,21 @@ export const dynamicApi = createApi({
       invalidatesTags: ["ParkonicsLocation"],
     }),
 
-
-    getHtmlReport: builder.mutation<Blob, { reportPath: string; format: "HTML4.0" | "PDF"; parameters: any }>(
-      {
-        query: (body) => ({
-          url: "/api/Report",
-          method: "POST",
-          body,
-          // Important: tell fetchBaseQuery we want a blob
-          responseHandler: async (response) => {
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.includes("application/pdf")) {
-              return response.blob();
-            }
-            return response.text();
-          },
-        }),
-      }
-    ),
+    getHtmlReport: builder.mutation<Blob, { reportPath: string; format: "HTML4.0" | "PDF"; parameters: any }>({
+      query: (body) => ({
+        url: "/api/Report",
+        method: "POST",
+        body,
+        // Important: tell fetchBaseQuery we want a blob
+        responseHandler: async (response) => {
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/pdf")) {
+            return response.blob();
+          }
+          return response.text();
+        },
+      }),
+    }),
   }),
 });
 
@@ -481,9 +486,11 @@ export const {
   //Fines (inspections Management)
   useSearchFinesQuery,
   useUpdateFineCancelStatusMutation,
-  useSearchParkonicsQuery,
-  useReviewParkonicMutation,
+  // Parkonics
+  useGetParkonicsQuery,
+  useUpdateParkonicMutation,
   useLazyGetLookupsQuery,
+  useGetParkonicVoilationsQuery,
   // Disputes
   useGetDisputesQuery,
   useLazyGetDisputeByIdQuery,

@@ -54,18 +54,16 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
       width={500}
       onClose={onClose}
       title={t("form.leaveDetails")}
-       extra={
-          <Button icon={<ShareAltOutlined />} onClick={onShare}>
-            {t("common.share")}
-          </Button>
-        }
+      extra={
+        <Button icon={<ShareAltOutlined />} onClick={onShare}>
+          {t("common.share")}
+        </Button>
+      }
       bodyStyle={{ overflowY: "auto", height: "calc(100vh - 64px)" }}
     >
-      
       {record ? (
         <>
           <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label={t("form.employeeId")}>{record.employeeId}</Descriptions.Item>
             <Descriptions.Item label={t("form.fromDate")}>
               {dayjs(record.fromDate).format("DD MMM YYYY, hh:mm A")}
             </Descriptions.Item>
@@ -92,7 +90,7 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
             </Descriptions.Item>
 
             {/* ✅ Show actions only if NOT approved */}
-            {status !== LeaveStatus.Approved && Rejected && (
+            {status !== LeaveStatus.Approved && status !== LeaveStatus.Rejected && (
               <Descriptions.Item label={t("form.actions")}>
                 <Space>
                   <Button type="primary" loading={isLoading} onClick={() => handleUpdateStatus(LeaveStatus.Approved)}>

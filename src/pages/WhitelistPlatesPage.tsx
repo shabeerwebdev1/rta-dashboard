@@ -217,7 +217,7 @@ const WhitelistPlatesPage: React.FC = () => {
     const { dateRange, ...rest } = values;
     const payload = {
       ...rest,
-      fromDate: dateRange[0].format("YYYY-MM-DD"), 
+      fromDate: dateRange[0].format("YYYY-MM-DD"),
       toDate: dateRange[1].format("YYYY-MM-DD"),
       plateStatus_Id: modalMode === "add" ? 5001 : rest.plateStatus_Id,
     };
@@ -376,9 +376,17 @@ const WhitelistPlatesPage: React.FC = () => {
     </Select>
   );
 
+  const metadata = useMemo(() => {
+    if (!data) return {};
+
+    return {
+      totalCount: data.total,
+    };
+  }, [data]);
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <StatsDisplay statsConfig={config.statsConfig} data={data?.data || []} loading={isLoading} />
+      <StatsDisplay statsConfig={config.statsConfig} data={data?.data || []} metadata={metadata} loading={isLoading} />
       <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
         <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
           <Col>
@@ -463,13 +471,19 @@ const WhitelistPlatesPage: React.FC = () => {
             <Row gutter={24}>
               <Col span={12}>
                 <Form.Item name="plateNumber" label={t("form.Number")} rules={[{ required: true }]}>
-                  <Input placeholder={t("placeholders.plateNumber")}  />
+                  <Input placeholder={t("placeholders.plateNumber")} />
                 </Form.Item>
               </Col>
+
               <Col span={12}>
                 <Form.Item name="plateSource_Id" label={t("form.Source")} rules={[{ required: true }]}>
                   <Select
+                    showSearch
                     placeholder={t("placeholders.plateSource")}
+                    optionFilterProp="label"
+                    filterOption={(input, option) =>
+                      (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                    }
                     options={plateSourceOptions.map((option) => ({
                       label: option.label,
                       value: option.value,
@@ -477,10 +491,16 @@ const WhitelistPlatesPage: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
+
               <Col span={12}>
                 <Form.Item name="plateType_Id" label={t("form.Type")} rules={[{ required: true }]}>
                   <Select
+                    showSearch
                     placeholder={t("placeholders.plateType")}
+                    optionFilterProp="label"
+                    filterOption={(input, option) =>
+                      (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                    }
                     options={plateTypeOptions.map((option) => ({
                       label: option.label,
                       value: option.value,
@@ -488,10 +508,16 @@ const WhitelistPlatesPage: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
+
               <Col span={12}>
                 <Form.Item name="plateColor_Id" label={t("form.Color")} rules={[{ required: true }]}>
                   <Select
+                    showSearch
                     placeholder={t("placeholders.plateColor")}
+                    optionFilterProp="label"
+                    filterOption={(input, option) =>
+                      (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                    }
                     options={plateColorOptions.map((option) => ({
                       label: option.label,
                       value: option.value,
@@ -499,6 +525,7 @@ const WhitelistPlatesPage: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
+
               <Col span={24}>
                 <Form.Item name="dateRange" label={t("form.dateRange")} rules={[{ required: true }]}>
                   <DatePicker.RangePicker
@@ -509,10 +536,16 @@ const WhitelistPlatesPage: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
+
               <Col span={12}>
                 <Form.Item name="exemptionReason_ID" label={t("form.exemptionReason")} rules={[{ required: true }]}>
                   <Select
+                    showSearch
                     placeholder={t("placeholders.exemptionReason")}
+                    optionFilterProp="label"
+                    filterOption={(input, option) =>
+                      (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                    }
                     options={exemptionReasons.map((option) => ({
                       label: option.label,
                       value: option.value,
@@ -520,11 +553,17 @@ const WhitelistPlatesPage: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
+
               {modalMode === "edit" && (
                 <Col span={12}>
                   <Form.Item name="plateStatus_Id" label={t("form.status")} rules={[{ required: true }]}>
                     <Select
+                      showSearch
                       placeholder={t("placeholders.status")}
+                      optionFilterProp="label"
+                      filterOption={(input, option) =>
+                        (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                      }
                       options={plateStatusOptions.map((option) => ({
                         label: option.label,
                         value: option.value,
@@ -537,7 +576,12 @@ const WhitelistPlatesPage: React.FC = () => {
               <Col span={12}>
                 <Form.Item name="isByLaw" label={t("form.isByLaw")} rules={[{ required: true }]}>
                   <Select
+                    showSearch
                     placeholder={t("placeholders.isByLaw")}
+                    optionFilterProp="label"
+                    filterOption={(input, option) =>
+                      (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                    }
                     options={[
                       { label: t("common.true"), value: true },
                       { label: t("common.false"), value: false },

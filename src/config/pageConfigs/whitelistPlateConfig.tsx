@@ -169,11 +169,11 @@ export const whitelistPlateConfig: PageConfig = {
     dateRangeKey: "FromDate",
   },
   statsConfig: [
-    { title: "Total Plates", icon: <IdcardOutlined />, value: (data) => data.length },
+    { title: "Total Plates", icon: <IdcardOutlined />, value: (data, metadata) => metadata?.totalCount || data.length },
     {
       title: "Active Plates",
       icon: <CheckCircleOutlined />,
-      value: (data) => data.filter((d) => d.plateStatus_Id === 5001).length,
+      value: (data, metadata) => metadata?.activeRecords || data.filter((d) => d.plateStatus_Id === 5001).length,
       color: "#52c41a",
     },
     {

@@ -47,14 +47,7 @@ export const tradeLicenseConfig: PageConfig = {
       {
         key: "tradeLicenseNumber",
         title: "form.tradeLicense",
-        type: "custom",
-        render: (_, record) => (
-          <TradeLicenseCard
-            code={record?.tradeLicenseNumber}
-            number={record?.tradeLicenseNameEn}
-            emirateAr={record?.tradeLicenseNameAr}
-          />
-        ),
+        type: "string",
       },
       { key: "inspectionType", title: "form.inspectionType", type: "number", filterable: true },
       { key: "inspectionCategory", title: "form.fineType", type: "string", filterable: true },

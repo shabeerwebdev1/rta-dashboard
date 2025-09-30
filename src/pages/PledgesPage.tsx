@@ -487,6 +487,9 @@ const PledgesPage: React.FC = () => {
                   <Select
                     placeholder={t("placeholders.pledgeType")}
                     loading={isLoadingLookups}
+                    showSearch // 👈 enables search input
+                    optionFilterProp="label" // 👈 tells Select to filter by the label
+                    filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
                     options={pledgeTypeOptions.map((option) => ({
                       label: option.label,
                       value: option.value,
@@ -506,7 +509,7 @@ const PledgesPage: React.FC = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item name="dateRange" label={t("form.dateRange")} rules={[{ required: true }]}>
+                <Form.Item name="dateRange" label={t("form.Validity")} rules={[{ required: true }]}>
                   <DatePicker.RangePicker
                     style={{ width: "100%" }}
                     format={"DD-MM-YYYY"}

@@ -7,7 +7,7 @@ const routePermissions: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/permits": "Permit",
   "/fines": "Inspection",
-  "/parkonic": "Parkonic",
+  "/parkonic": "trParkonics",
   "/dispute": "Dispute",
   "/pledges": "Pledge",
   "/createshiftplan": "CreateShift",

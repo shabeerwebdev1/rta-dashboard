@@ -33,7 +33,9 @@
     "management": "Management",
     "carplate": "Car Plate",
     "tradeLicense": "Trade License",
-    "parkonicLocation": "Parkonic Location"
+    "parkonicLocation": "Parkonic Location",
+    "Vehicle": "Vehicles",
+    "Parkings": "Parkings"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -58,7 +60,7 @@
       "permits": "Permits Search",
       "dispute-management": "Dispute Management",
       "fines": "Fines Management",
-      "parkonic": "Parkonic Management",
+      "parkonic": "Parkonics",
       "shiftmanagement": "Shift Management",
       "createshiftplan": "Create Shift Plan",
       "adhocshiftplan": "Adhoc Shift Plan",
@@ -66,8 +68,8 @@
       "roleManagement": "Role Management",
       "leaveManagement": "Leave Management",
       "towing": "Towing Management",
-      "CarPlateInspections": "Car Plate Inspections",
-      "tradeLicenseInspections": "Trade License Inspections",
+      "CarPlateInspections": "Vehicle Inspections",
+      "tradeLicenseInspections": "Parking Inspections",
       "parkonicLocation": "Parkonic Location"
     },
     "addTitle": "Add New {{entity}}",
@@ -117,6 +119,10 @@
     "closestPD": "Closest PD",
     "comments": "Comments",
     "photo": "Photo(s)",
+    "leaveDetails": "Leave Details",
+    "feature": "Feature",
+    "Deactivate": "Deactivate",
+    "trafficFileNo": "Traffic File No",
     "reportedBy": "Reported By",
     "permitType": "Permit Type",
     "permitNumber": "Permit Number",
@@ -169,7 +175,7 @@
     "vehicleOwnerEmail": "Vehicle Owner Email",
     "vehicleOwnerMobile": "Vehicle Owner Mobile",
     "notPaid": "Not Paid",
-    "pledgeDate": "Pledge Date",
+    "pledgestartDate": "Pledge Start Date",
     "pledgeEndDate": "Pledge End Date",
     "disputestatus": "Dispute Status",
     "assinedto": "Assigned To",
@@ -203,7 +209,6 @@
     "plateNumber": "Plate Number",
     "createdDate": "Created Date",
     "upload": "Upload 5MB Each Max",
-    "street": "Street",
     "lat": "lat",
     "long": "long",
     "plateSource": "Plate Source",
@@ -238,7 +243,8 @@
     "latitude": "latitude",
     "longitude": "longitude",
     "street": "street",
-    "assignedTo": "Assigned To"
+    "assignedTo": "Assigned To",
+    "Validity": "Validity"
   },
   "common": {
     "action": "Action",

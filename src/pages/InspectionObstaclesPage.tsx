@@ -434,9 +434,16 @@ const InspectionObstaclesPage: React.FC = () => {
     return getLabelFromValue(value, options, i18nInstance); // Fallback to original
   };
 
+  const metadata = useMemo(() => {
+    if (!data) return {};
+
+    return {
+      totalCount: data.total,
+    };
+  }, [data]);
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <StatsDisplay statsConfig={config.statsConfig} data={data?.data || []} loading={isLoading} />
+      <StatsDisplay statsConfig={config.statsConfig} data={data?.data || []} metadata={metadata} loading={isLoading} />
       <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
         <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
           <Col>
@@ -572,7 +579,13 @@ const InspectionObstaclesPage: React.FC = () => {
                 <Form.Item name="SourceOfObstacle" label={t("form.sourceOfObstacle")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.sourceOfObstacle")}
-                    options={sourceOptions.map((option) => ({ label: option.label, value: option.value }))}
+                    showSearch // enables the search input
+                    optionFilterProp="label" // filter based on the label
+                    filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
+                    options={sourceOptions.map((option) => ({
+                      label: option.label,
+                      value: option.value,
+                    }))}
                   />
                 </Form.Item>
               </Col>

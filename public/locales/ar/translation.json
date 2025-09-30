@@ -34,7 +34,9 @@
     "whitelists": "القوائم البيضاء",
     "carplate": "لوحات السيارات",
     "tradeLicense": "الرخص التجارية",
-    "parkonicLocation": "الموقع باركونيك"
+    "parkonicLocation": "الموقع باركونيك",
+    "Vehicle": "المركبة",
+    "Parkings": "مواقف السيارات"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -155,6 +157,12 @@
     "isPaid": "هل تم الدفع؟",
     "carPlate": "لوحة السيارة",
     "tradeLicense": "الرخصة التجارية",
+    "leaveDetails": "تفاصيل الإجازة",
+    "feature": "الميزة",
+    "Deactivate": "تعطيل",
+    "trafficFileNo": "رقم ملف المرور",
+
+
     "inspectionType": "نوع التفتيش",
     "inspectionStatus": "حالة التفتيش",
     "finedDate": "تاريخ الغرامة",
@@ -167,7 +175,7 @@
     "vehicleOwnerEmail": "البريد الإلكتروني لمالك المركبة",
     "vehicleOwnerMobile": "جوال مالك المركبة",
     "notPaid": "لم يتم الدفع",
-    "pledgeDate": "تاريخ التعهد",
+    "pledgestartDate": "تاريخ بدء التعهد",
     "pledgeEndDate": "تاريخ انتهاء التعهد",
     "disputestatus": "حالة النزاع",
     "assinedto": "مُعين إلى",
@@ -202,7 +210,6 @@
     "employeeName": " اس",
     "createdDate": "تاريخ الإنشاء",
     "upload": "رفع",
-    "street": "شارع",
     "lat": "خطوط العرض",
     "long": "طويل",
     "plateSource": "مصدر اللوحة",
@@ -236,7 +243,9 @@
      "latitude": "أدخل خط العرض",
     "longitude": "أدخل خط الطول",
     "street": "أدخل الشارع",
-    "assignedTo": "مُعين إلى"
+    "assignedTo": "مُعين إلى",
+    "Validity": "الصلاحية"
+
 
   },
   "common": {

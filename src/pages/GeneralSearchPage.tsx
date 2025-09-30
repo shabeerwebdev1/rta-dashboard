@@ -226,7 +226,7 @@ const GeneralSearchPage: React.FC = () => {
                       <Descriptions.Item label={t("form.plateNumber")}>
                         {vehicleDetails.plateNo || "N/A"}
                       </Descriptions.Item>
-                      <Descriptions.Item label={t("form.tradeLicenseNumber")}>
+                      <Descriptions.Item label={t("form.trafficFileNo")}>
                         {vehicleDetails.trafficFileNo || "N/A"}
                       </Descriptions.Item>
                       <Descriptions.Item label={t("form.businessName")}>

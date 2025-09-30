@@ -320,23 +320,22 @@ const DisputeManagementPage: React.FC = () => {
     [config.tableConfig, lookupOptions, i18n, disputeStatusEnum],
   );
 
-const actionMenuItems = (record: any) => [
-  {
-    key: "view",
-    label: t("common.view"),
-    icon: <EyeOutlined />,
-    onClick: () => handleView(record),
-  },
-  {
-    key: "edit",
-    label: t("common.edit"),
-    icon: <EditOutlined />,
-    onClick: () => handleModalOpen("edit", record),
-    // Disable if user doesn't have permission OR dispute_Status is 2
-    disabled: !canEdit(menuName) || record.dispute_Status === 2,
-  },
-];
-
+  const actionMenuItems = (record: any) => [
+    {
+      key: "view",
+      label: t("common.view"),
+      icon: <EyeOutlined />,
+      onClick: () => handleView(record),
+    },
+    {
+      key: "edit",
+      label: t("common.edit"),
+      icon: <EditOutlined />,
+      onClick: () => handleModalOpen("edit", record),
+      // Disable if user doesn't have permission OR dispute_Status is 2
+      disabled: !canEdit(menuName) || record.dispute_Status === 2,
+    },
+  ];
 
   // Handle search key change - preserve current search as filter and clear input
 
@@ -479,6 +478,9 @@ const actionMenuItems = (record: any) => [
                   <Select
                     placeholder={t("placeholders.department")}
                     loading={isLoadingLookups}
+                    showSearch
+                    optionFilterProp="label"
+                    filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
                     options={departmentOptions.map((option) => ({
                       label: option.label,
                       value: option.value,
@@ -491,6 +493,9 @@ const actionMenuItems = (record: any) => [
                   <Select
                     placeholder={t("placeholders.paymentType")}
                     loading={isLoadingLookups}
+                    showSearch
+                    optionFilterProp="label"
+                    filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
                     options={paymentTypeOptions.map((option) => ({
                       label: option.label,
                       value: option.value,

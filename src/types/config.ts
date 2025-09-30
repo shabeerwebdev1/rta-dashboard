@@ -53,7 +53,7 @@ export interface TableConfig {
 export interface StatConfig {
   title: string;
   icon: ReactNode;
-  value: (data: any[]) => number | string;
+  value: (data: any[], metadata?: any) => number | string; // ✅ Add optional metadata parameter
   color?: string;
 }
 

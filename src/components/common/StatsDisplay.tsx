@@ -5,10 +5,18 @@ import type { StatConfig } from "../../types/config";
 interface StatsDisplayProps {
   statsConfig?: StatConfig[];
   data: any[];
+  response?: any;
   loading?: boolean;
+  metadata?: any; // ✅ Add metadata prop
 }
 
-const StatsDisplay: React.FC<StatsDisplayProps> = ({ statsConfig, data, loading }) => {
+const StatsDisplay: React.FC<StatsDisplayProps> = ({
+  statsConfig,
+  response,
+  data,
+  loading,
+  metadata = {}, 
+}) => {
   if (!statsConfig || statsConfig.length === 0) return null;
 
   return (
@@ -20,7 +28,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({ statsConfig, data, loading 
               <Skeleton loading={loading} active paragraph={{ rows: 1 }} title={false}>
                 <Statistic
                   title={stat.title}
-                  value={stat.value(data)}
+                  value={stat.value(data, metadata)}
                   valueStyle={{ color: stat.color }}
                   prefix={stat.icon}
                 />
