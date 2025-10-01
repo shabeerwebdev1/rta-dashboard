@@ -171,11 +171,31 @@ const handleShare = () => {
     </Select>
   );
 
+  const platesData = useMemo(() => {
+    if (!data) return [];
+    return Array.isArray(data) ? data : data.data || [];
+  }, [data]);
+
+  const totalCount = useMemo(() => {
+    if (!data) return 0;
+    return Array.isArray(data) ? data.length : data.totalCount || 0;
+  }, [data]);
+
+  const metadata = useMemo(() => {
+    if (!data || Array.isArray(data)) return {};
+    return {
+      totalRecords: data.totalRecords,
+      approvedRecords: data.approvedRecords,
+      rejectedRecords: data.rejectedRecords,
+      pendingRecords: data.pendingRecords,
+    };
+  }, [data]);
+
   return (
     <>
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         {/* Stats */}
-        <StatsDisplay statsConfig={config.statsConfig} data={apiData} loading={isFetching} />
+        <StatsDisplay statsConfig={config.statsConfig} data={platesData} metadata={metadata} loading={isFetching} />
 
         {/* Filters + Search */}
         <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
@@ -219,8 +239,8 @@ const handleShare = () => {
         {/* Table */}
         <DataTableWrapper
           pageConfig={config}
-          data={apiData}
-          total={total}
+          data={platesData} // Use the extracted array
+        total={totalCount}
           isLoading={isFetching}
           apiParams={apiParams}
           handleTableChange={handleTableChange}

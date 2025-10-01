@@ -7,15 +7,15 @@ interface StatsDisplayProps {
   data: any[];
   response?: any;
   loading?: boolean;
-  metadata?: any; // ✅ Add metadata prop
+  metadata?: any;
 }
 
-const StatsDisplay: React.FC<StatsDisplayProps> = ({
-  statsConfig,
-  response,
-  data,
-  loading,
-  metadata = {}, 
+const StatsDisplay: React.FC<StatsDisplayProps> = ({ 
+  statsConfig, 
+  response, 
+  data, 
+  loading, 
+  metadata = {} 
 }) => {
   if (!statsConfig || statsConfig.length === 0) return null;
 
@@ -31,6 +31,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({
                   value={stat.value(data, metadata)}
                   valueStyle={{ color: stat.color }}
                   prefix={stat.icon}
+                  formatter={(val) => <span>{val}</span>}
                 />
               </Skeleton>
             </Card>

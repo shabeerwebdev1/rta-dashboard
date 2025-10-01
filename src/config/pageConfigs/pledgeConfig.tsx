@@ -16,17 +16,22 @@ export const pledgeConfig: PageConfig = {
     columnFilterKeys: ["pledgeType"],
     dateRangeKey: "pledgeDate",
   },
+
   statsConfig: [
-    { title: "Total Pledges", icon: <AuditOutlined />, value: (data) => data.length },
+    {
+      title: "Total Pledges",
+      icon: <AuditOutlined />,
+      value: (data, metadata) => `${data.length} / ${metadata?.totalCount || 0}`,
+    },
     {
       title: "Corporate Pledges",
       icon: <SnippetsOutlined />,
-      value: (data) => data.filter((item) => item.pledgeType === 9001).length,
+      value: (data, metadata) => `${data.filter((d) => d.pledgeType === 9001).length} / ${metadata?.corporate || 0}`,
     },
     {
       title: "Individual Pledges",
       icon: <SnippetsOutlined />,
-      value: (data) => data.filter((item) => item.pledgeType === 9002).length,
+      value: (data, metadata) => `${data.filter((d) => d.pledgeType === 9002).length} / ${metadata?.individual || 0}`,
     },
   ],
   tableConfig: {

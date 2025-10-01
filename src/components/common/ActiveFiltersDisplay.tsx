@@ -26,6 +26,10 @@ interface ActiveFiltersDisplayProps {
   lookupOptions?: any[];
   getLabelFromValue?: (value: number, options: any[], i18n: any) => string;
   statusLabels?: Record<number, string>;
+  // ✅ NEW: Zone and Area options
+  zoneOptions?: any[];
+  areaOptions?: any[];
+  areaIdToNameMap?: Map<number, string>;
 }
 
 const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
@@ -36,12 +40,15 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
   lookupOptions = [],
   getLabelFromValue,
   statusLabels,
+  // ✅ NEW: Zone and Area props
+  zoneOptions = [],
+  areaOptions = [],
+  areaIdToNameMap,
 }) => {
   const { t, i18n } = useTranslation();
-  const { token } = theme.useToken(); // 🎨 Grab theme colors
+  const { token } = theme.useToken();
   const filterGroups: React.ReactNode[] = [];
 
-  // Use the theme's primary color for tags
   const tagColor = token.colorPrimary;
 
   // Helper function to get lookup options for a specific column
@@ -66,12 +73,34 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     return lookupOptions.filter((option) => option.categoryId === categoryId);
   };
 
-  // Helper to get display label for a filter value
+  // ✅ UPDATED: Enhanced getFilterLabel function with zone and area support
   const getFilterLabel = (columnKey: string, value: string | number) => {
+    // 1. Handle Zone filter
+    if (columnKey === "zone") {
+      const zone = zoneOptions.find(z => z.value?.toString() === value.toString());
+      return zone ? zone.label : String(value);
+    }
+
+    // 2. Handle Area filter - Try areaOptions first
+    if (columnKey === "area") {
+      const area = areaOptions.find(a => a.value?.toString() === value.toString());
+      if (area) return area.label;
+      
+      // Fallback to areaIdToNameMap
+      if (areaIdToNameMap) {
+        const areaName = areaIdToNameMap.get(Number(value));
+        if (areaName) return areaName;
+      }
+      
+      return String(value);
+    }
+
+    // 3. Handle status labels
     if ((columnKey === "status" || columnKey === "dispute_Status" || columnKey === "reviewStatus") && statusLabels) {
       return statusLabels[Number(value)] || String(value);
     }
 
+    // 4. Handle lookup-based filters
     if (getLabelFromValue) {
       const optionsForColumn = getLookupOptionsForColumn(columnKey);
       if (optionsForColumn.length > 0) {
@@ -79,6 +108,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
       }
     }
 
+    // 5. Fallback
     return String(value);
   };
 

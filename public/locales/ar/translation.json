@@ -71,7 +71,9 @@
       "towing": "إدارة سحب المركبات",
       "CarPlateInspections": "تفتيشات لوحات السيارات",
       "tradeLicenseInspections": "تفتيشات الرخص التجارية",
-      "parkonicLocation": "الموقع باركونيك"
+      "parkonicLocation": "الموقع باركونيك",
+      "vehicleInspections": "تفتيشات المركبات",
+      "parkingsInspections": "تفتيشات مواقف السيارات"
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",

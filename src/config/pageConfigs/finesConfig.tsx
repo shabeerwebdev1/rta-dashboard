@@ -155,7 +155,7 @@ export const PLATE_COLOR: Record<number, string> = {
 
 export const finesConfig: PageConfig = {
   key: "fines",
-  title: "page.title.CarPlateInspections",
+  title: "page.title.vehicleInspections",
   name: { singular: "Fine", plural: "Fines" },
   api: {
     get: "/api/Inspection",

@@ -118,6 +118,13 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         },
       ],
     },
+
+    {
+      key: FULL_PATHS.FINES_INSPECTIONS,
+      icon: <DollarOutlined />,
+      labelText: t("sidebar.fines"),
+      permission: "Dispute",
+    },
     {
       key: FULL_PATHS.DISPUTE,
       icon: <ExclamationCircleOutlined />,

@@ -398,9 +398,29 @@ const PledgesPage: React.FC = () => {
     setViewRecord(null);
   };
 
+
+  const platesData = useMemo(() => {
+    if (!data) return [];
+    return Array.isArray(data) ? data : data.data || [];
+  }, [data]);
+
+  const totalCount = useMemo(() => {
+    if (!data) return 0;
+    return Array.isArray(data) ? data.length : data.totalCount || 0;
+  }, [data]);
+
+  const metadata = useMemo(() => {
+    if (!data || Array.isArray(data)) return {};
+    return {
+      totalCount: data.totalCount,
+      corporate: data.corporate,
+      individual: data.individual,
+    };
+  }, [data]);
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <StatsDisplay statsConfig={config.statsConfig} data={data?.data || []} loading={isLoading} />
+      <StatsDisplay statsConfig={config.statsConfig} data={platesData} metadata={metadata} loading={isLoading} />
       <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
         <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
           <Col>
@@ -450,8 +470,8 @@ const PledgesPage: React.FC = () => {
 
       <DataTableWrapper
         pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
-        data={data?.data || []}
-        total={data?.total || 0}
+        data={platesData} // Use the extracted array
+        total={totalCount}
         isLoading={isLoading || isFetching || isDeleting}
         apiParams={apiParams}
         handleTableChange={handleTableChange}

@@ -1,10 +1,9 @@
 import { CheckCircleOutlined, CloseCircleOutlined, FileSearchOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
-import TradeLicenseCard from "../../components/TradeLicenseCard";
 
 export const tradeLicenseConfig: PageConfig = {
   key: "tradeLicenseInspections",
-  title: "page.title.tradeLicenseInspections",
+  title: "page.title.parkingsInspections",
   name: { singular: "Trade License Inspection", plural: "Trade License Inspections" },
 
   api: {

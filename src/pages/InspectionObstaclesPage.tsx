@@ -111,7 +111,7 @@ const InspectionObstaclesPage: React.FC = () => {
     triggerGetZones({});
   }, [i18n.language]);
 
-  // Create a memoized map of area IDs to area names for quick lookup
+  // ✅ UPDATED: Create a memoized map of area IDs to area names for quick lookup
   const areaIdToNameMap = useMemo(() => {
     const map = new Map();
     if (allAreasData) {
@@ -122,7 +122,7 @@ const InspectionObstaclesPage: React.FC = () => {
     return map;
   }, [allAreasData]);
 
-  // Transform all areas data into options format
+  // ✅ UPDATED: Transform all areas data into options format
   useEffect(() => {
     if (allAreasData) {
       const transformedAreas = allAreasData.map((area: any) => ({
@@ -148,7 +148,7 @@ const InspectionObstaclesPage: React.FC = () => {
     }
   };
 
-  // Zone options from zones API
+  // ✅ UPDATED: Zone options from zones API
   const zoneOptions = useMemo(() => {
     if (!zonesData) return [];
 
@@ -390,6 +390,7 @@ const InspectionObstaclesPage: React.FC = () => {
     </Select>
   );
 
+  // ✅ UPDATED: Filter area options based on selected zone
   useEffect(() => {
     const selectedZoneId = state.columnFilters.zone?.[0];
     if (selectedZoneId && allAreasData) {
@@ -424,26 +425,43 @@ const InspectionObstaclesPage: React.FC = () => {
     handleTableChange({ current: 1, pageSize: apiParams.PageSize }, newFilters, sorter);
   };
 
+  // ✅ UPDATED: Enhanced custom label function for zones and areas
   const getCustomLabelFromValue = (value: number | string, options: any[], i18nInstance: any) => {
-    const zone = zoneOptions.find((z) => z.value === value);
+    // Handle Zone
+    const zone = zoneOptions.find((z) => z.value?.toString() === value.toString());
     if (zone) return zone.label;
 
-    const area = areaOptions.find((a) => a.value === value);
+    // Handle Area
+    const area = areaOptions.find((a) => a.value?.toString() === value.toString());
     if (area) return area.label;
 
-    return getLabelFromValue(value, options, i18nInstance); // Fallback to original
+    // Handle Area from map
+    const areaName = areaIdToNameMap.get(Number(value));
+    if (areaName) return areaName;
+
+    // Fallback to original lookup
+    return getLabelFromValue(value, options, i18nInstance);
   };
 
-  const metadata = useMemo(() => {
-    if (!data) return {};
+  const platesData = useMemo(() => {
+    if (!data) return [];
+    return Array.isArray(data) ? data : data.data || [];
+  }, [data]);
 
+  const totalCount = useMemo(() => {
+    if (!data) return 0;
+    return Array.isArray(data) ? data.length : data.totalCount || 0;
+  }, [data]);
+
+  const metadata = useMemo(() => {
+    if (!data || Array.isArray(data)) return {};
     return {
-      totalCount: data.total,
+      totalRecords: data.totalRecords,
     };
   }, [data]);
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <StatsDisplay statsConfig={config.statsConfig} data={data?.data || []} metadata={metadata} loading={isLoading} />
+      <StatsDisplay statsConfig={config.statsConfig} data={platesData} metadata={metadata} loading={isLoading} />
       <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
         <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
           <Col>
@@ -480,17 +498,14 @@ const InspectionObstaclesPage: React.FC = () => {
                 {t("common.downloadCsv")}
               </Button>
 
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={handleModalOpen}
-                disabled={!canCreate(menuName)} // ✅ disable if user cannot create
-              >
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleModalOpen} disabled={!canCreate(menuName)}>
                 {t("common.addNew")}
               </Button>
             </Space>
           </Col>
         </Row>
+
+        {/* ✅ UPDATED: ActiveFiltersDisplay with zone and area options */}
         <ActiveFiltersDisplay
           state={state}
           onClearFilter={clearFilter}
@@ -499,13 +514,17 @@ const InspectionObstaclesPage: React.FC = () => {
           lookupOptions={lookupOptions}
           getLabelFromValue={getCustomLabelFromValue}
           statusLabels={statusLabels}
+          // ✅ PASS ZONE AND AREA OPTIONS
+          zoneOptions={zoneOptions}
+          areaOptions={areaOptions}
+          areaIdToNameMap={areaIdToNameMap}
         />
       </Card>
 
       <DataTableWrapper
         pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
-        data={data?.data || []}
-        total={data?.total || 0}
+        data={platesData} // Use the extracted array
+        total={totalCount}
         isLoading={isLoading || isFetching || isLoadingAllAreas}
         apiParams={apiParams}
         handleTableChange={handleTableChange}
@@ -579,8 +598,8 @@ const InspectionObstaclesPage: React.FC = () => {
                 <Form.Item name="SourceOfObstacle" label={t("form.sourceOfObstacle")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.sourceOfObstacle")}
-                    showSearch // enables the search input
-                    optionFilterProp="label" // filter based on the label
+                    showSearch
+                    optionFilterProp="label"
                     filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
                     options={sourceOptions.map((option) => ({
                       label: option.label,
@@ -658,9 +677,7 @@ const InspectionObstaclesPage: React.FC = () => {
           onShare={handleShare}
           onStatusChange={() => {
             // This will trigger a refetch of the data
-            // You might need to add a refetch function to your query hook
           }}
-          // Pass the necessary data for mapping
           zoneOptions={zoneOptions}
           sourceOptions={sourceOptions}
           areaIdToNameMap={areaIdToNameMap}

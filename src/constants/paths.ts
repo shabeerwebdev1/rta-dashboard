@@ -34,6 +34,7 @@ export const PATHS = {
   ROLE_MANAGEMENT: "role-management",
   LEAVE_MANAGEMENT: "leave-management",
   PARKONIC_LOCATION: "parkonic-location",
+  FINES_INSPECTIONS: "fines-inspections"
 };
 
 export const FULL_PATHS = {
@@ -55,6 +56,7 @@ export const FULL_PATHS = {
   PARKONIC: "/parkonic",
   FINES: "/fines",
   DISPUTE: "/dispute",
+  FINES_INSPECTIONS: "/fines-inspections",
   TRADE_LICENSE_INSPECTIONS: "/trade-license-inspections", // ✅ renamed
 
 

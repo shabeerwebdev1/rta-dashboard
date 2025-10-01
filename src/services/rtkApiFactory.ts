@@ -71,7 +71,7 @@ export const dynamicApi = createApi({
     // Whitelist Plates
     getPlates: builder.query({
       query: (params) => ({ url: "/api/WhitelistPlate", params }),
-      transformResponse: transformListResponse,
+      // transformResponse: transformListResponse,
       providesTags: ["WhitelistPlate"],
     }),
     getPlateById: builder.query({
@@ -115,7 +115,7 @@ export const dynamicApi = createApi({
     // Pledges
     getPledges: builder.query({
       query: (params) => ({ url: "/api/Pledge", params }),
-      transformResponse: transformListResponse,
+      // transformResponse: transformListResponse,
       providesTags: ["Pledge"],
     }),
     getPledgeById: builder.query({
@@ -137,7 +137,7 @@ export const dynamicApi = createApi({
     // Inspection Obstacles
     getInspectionObstacles: builder.query({
       query: (params) => ({ url: "/api/InspectionObstacle", params }),
-      transformResponse: transformListResponse,
+      // transformResponse: transformListResponse,
       providesTags: ["InspectionObstacle"],
     }),
     getInspectionObstacleById: builder.query({
@@ -365,7 +365,7 @@ export const dynamicApi = createApi({
     // Leave Management
     getLeaveDetails: builder.query({
       query: (params) => ({ url: "/api/Leave", params }),
-      transformResponse: transformListResponse,
+      // transformResponse: transformListResponse,
       providesTags: ["LeaveDetails"], // <-- changed from invalidatesTags
     }),
 

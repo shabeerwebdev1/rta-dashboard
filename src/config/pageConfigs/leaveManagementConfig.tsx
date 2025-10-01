@@ -28,29 +28,34 @@ export const leaveManagementPageConfig: PageConfig = {
   name: { singular: "Leave Management", plural: "Leave Managements" },
   api: { get: "/api/LeaveManagement", post: "", put: "", delete: "" },
   searchConfig: {
-    globalSearchKeys: [ "userName"],
+    globalSearchKeys: ["userName"],
     columnFilterKeys: ["leaveType", "status"],
     dateRangeKey: "LeaveFromDate",
   },
   statsConfig: [
-    { title: "Total Leaves", icon: <IdcardOutlined />, value: (data) => data.length },
+    {
+      title: "Total Leaves",
+      icon: <IdcardOutlined />,
+      value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
+    },
+
     {
       title: "Approved",
       icon: <CheckCircleOutlined />,
-      value: (data) => data.filter((d) => d.status === LeaveStatus.Approved).length,
-      color: "#52c41a",
+      value: (data, metadata) =>
+        `${data.filter((d) => d.status === LeaveStatus.Approved).length} / ${metadata?.approvedRecords || 0}`,
     },
     {
       title: "Rejected",
       icon: <CloseCircleOutlined />,
-      value: (data) => data.filter((d) => d.status === LeaveStatus.Rejected).length,
-      color: "#ff4d4f",
+      value: (data, metadata) =>
+        `${data.filter((d) => d.status === LeaveStatus.Rejected).length} / ${metadata?.rejectedRecords || 0}`,
     },
     {
       title: "Pending",
       icon: <ClockCircleOutlined />,
-      value: (data) => data.filter((d) => d.status === LeaveStatus.Pending).length,
-      color: "#1890ff",
+      value: (data, metadata) =>
+        `${data.filter((d) => d.status === LeaveStatus.Pending).length} / ${metadata?.pendingRecords || 0}`,
     },
   ],
   tableConfig: {

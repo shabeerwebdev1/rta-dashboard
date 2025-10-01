@@ -1,5 +1,5 @@
 import type { PageConfig } from "../../types/config";
-import { SearchOutlined, CheckSquareOutlined } from "@ant-design/icons";
+import { SearchOutlined } from "@ant-design/icons";
 
 export const inspectionObstacleConfig: PageConfig = {
   key: "inspection-obstacles",
@@ -21,7 +21,7 @@ export const inspectionObstacleConfig: PageConfig = {
     {
       title: "Total Obstacles",
       icon: <SearchOutlined />,
-      value: (data, metadata) => metadata?.totalCount || data.length,
+      value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
     },
   ],
 

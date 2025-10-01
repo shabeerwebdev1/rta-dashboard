@@ -169,20 +169,34 @@ export const whitelistPlateConfig: PageConfig = {
     dateRangeKey: "FromDate",
   },
   statsConfig: [
-    { title: "Total Plates", icon: <IdcardOutlined />, value: (data, metadata) => metadata?.totalCount || data.length },
+    {
+      title: "Total Plates",
+      icon: <IdcardOutlined />,
+      value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
+    },
     {
       title: "Active Plates",
       icon: <CheckCircleOutlined />,
-      value: (data, metadata) => metadata?.activeRecords || data.filter((d) => d.plateStatus_Id === 5001).length,
+      value: (data, metadata) =>
+        `${data.filter((d) => d.plateStatus_Id === 5001).length} / ${metadata?.activeRecords || 0}`,
       color: "#52c41a",
     },
     {
       title: "Inactive Plates",
       icon: <CloseCircleOutlined />,
-      value: (data) => data.filter((d) => d.plateStatus_Id === 5002).length,
+      value: (data, metadata) =>
+        `${data.filter((d) => d.plateStatus_Id === 5002).length} / ${metadata?.inactiveRecords || 0}`,
       color: "#ff4d4f",
     },
+    {
+      title: "Expired Plates",
+      icon: <CloseCircleOutlined />,
+      value: (data, metadata) =>
+        `${data.filter((d) => d.plateStatus_Id === 5003).length} / ${metadata?.expiredRecords || 0}`,
+      color: "#faad14",
+    },
   ],
+
   tableConfig: {
     columns: [
       {

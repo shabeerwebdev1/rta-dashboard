@@ -70,7 +70,9 @@
       "towing": "Towing Management",
       "CarPlateInspections": "Vehicle Inspections",
       "tradeLicenseInspections": "Parking Inspections",
-      "parkonicLocation": "Parkonic Location"
+      "parkonicLocation": "Parkonic Location",
+      "vehicleInspections": "Vehicle Inspections",
+      "parkingsInspections": "Parking Inspections"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",
