@@ -64,6 +64,8 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
       {record ? (
         <>
           <Descriptions bordered column={1} size="small">
+                       
+            <Descriptions.Item label={t("form.employeeName")}>{record.userName}</Descriptions.Item>
             <Descriptions.Item label={t("form.fromDate")}>
               {dayjs(record.fromDate).format("DD MMM YYYY, hh:mm A")}
             </Descriptions.Item>

@@ -1,17 +1,36 @@
-// components/FinesViewDrawer.tsx
+// components/FinesViewModal.tsx
 import React, { useState, useEffect } from "react";
-import { Drawer, Descriptions, Tag, Empty, Spin, Image, Space, Button, Input, Typography, Form, message } from "antd";
+import {
+  Modal,
+  Card,
+  Row,
+  Col,
+  Typography,
+  Divider,
+  Button,
+  Input,
+  Empty,
+  Spin,
+  Tag,
+  Form,
+  Space,
+  Image,
+  Descriptions,
+} from "antd";
+import { CloseOutlined, ShareAltOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import UAEPlate from "../UAEPlate";
 import { useLazyGetLookupsQuery } from "../../services/rtkApiFactory";
-import { ShareAltOutlined } from "@ant-design/icons";
-import TradeLicenseCard from "../TradeLicenseCard";
 import { useUpdateFineCancelStatusMutation } from "../../services/rtkApiFactory";
 import { useAppNotification } from "../../utils/notificationManager";
 import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../common/ArcGISMap";
 import { PLATE_COLOR, PLATE_TYPE_SHORT } from "../../config/pageConfigs/finesConfig";
+import TradeLicenseCard from "../TradeLicenseCard";
+
+const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 const plateSources: Record<number, string> = {
   1: "Dubai",
@@ -25,9 +44,6 @@ const plateSources: Record<number, string> = {
   9: "Other",
 };
 
-const { Title, Text } = Typography;
-const { TextArea } = Input;
-
 interface FinesViewDrawerProps {
   open: boolean;
   onClose: () => void;
@@ -36,8 +52,6 @@ interface FinesViewDrawerProps {
   lookupOptions?: any[];
   getLabelFromValue?: (value: number, options: any[], i18n: any) => string;
   onShare?: () => void;
-  onApprove?: (comment: string) => void;
-  onReject?: (comment: string) => void;
 }
 
 const getLabelFromValue = (value: number, options: any[], i18n: any) => {
@@ -223,189 +237,287 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
   };
 
   return (
-    <Drawer
-      open={open}
-      onClose={onClose}
-      width={500}
-      title={t("form.finedetails")}
-      bodyStyle={{ overflowY: "auto", height: "calc(100vh - 64px)" }}
-      extra={
+    <Modal
+  open={open}
+  onCancel={onClose}
+  width={1000}
+  footer={null}
+  title={null}
+  closable={false}
+>
+  <Spin spinning={isLoading || isLoadingLookups || isProcessing}>
+    {/* Custom Header */}
+    <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
+      <Col>
+        <Space size="middle" align="center">
+          <Title level={4} style={{ margin: 0 }}>
+            {t("form.finedetails")} <Text type="danger">#{mappedFine?.entityNo || "---"}</Text>
+          </Title>
+          
+        </Space>
+      </Col>
+
+      <Col>
         <Space>
           {onShare && (
             <Button icon={<ShareAltOutlined />} onClick={onShare}>
               {t("common.share")}
             </Button>
           )}
+          <Button type="text" icon={<CloseOutlined />} onClick={onClose} style={{ fontSize: 16 }} />
         </Space>
-      }
-    >
-      <Spin spinning={isLoading || isLoadingLookups || isProcessing}>
-        {!mappedFine ? (
-          <Empty description="No Data" />
-        ) : (
-          <>
-            {/* Fine details */}
-            <Descriptions bordered column={1} size="small">
-              <Descriptions.Item label={t("form.fineType")}>{mappedFine.inspectionCategoryLabel}</Descriptions.Item>
-              <Descriptions.Item label={t("form.fineNumber")}>{mappedFine.entityNo}</Descriptions.Item>
-              <Descriptions.Item label={t("form.inspectionType")}>{mappedFine.inspectionTypeLabel}</Descriptions.Item>
-              <Descriptions.Item label={t("form.inspectionDate")}>
-                {mappedFine.inspectionDateFormatted}
-              </Descriptions.Item>
-              <Descriptions.Item label={t("form.amount")}>{mappedFine.fineAmountFormatted}</Descriptions.Item>
-              <Descriptions.Item label={t("form.paymentType")}>{mappedFine.paymentTypeLabel}</Descriptions.Item>
-              <Descriptions.Item label={t("form.inspectionStatus")}>
-                <Tag color={mappedFine.statusColor}>{mappedFine.inspectionStatusLabel}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label={t("form.blackPoints")}>{mappedFine.blackPointsFormatted}</Descriptions.Item>
-            </Descriptions>
+      </Col>
+    </Row>
 
-            {/* Plate / Trade License */}
-            {(mappedFine?.plateNumber || mappedFine?.tradeLicenseNumber) && (
-              <>
-                <h4 style={{ marginTop: 16 }}>
-                  {mappedFine?.plateNumber ? t("form.plateDetails") : t("form.tradeLicenseDetails")}
-                </h4>
-                <div style={{ display: "flex", gap: 16, marginBottom: 16 }}>
-                  {mappedFine?.plateNumber ? (
-                    <UAEPlate
-                      code={PLATE_TYPE_SHORT[mappedFine?.plateCategoryValue] ?? "---"}
-                      number={mappedFine?.plateNumber ?? "---"}
-                      emirateEn={plateSources[mappedFine?.plateSourceValue] ?? "Unknown"}
-                      emirateAr={PLATE_COLOR[mappedFine?.plateCodeValue] ?? "---"}
-                    />
-                  ) : (
-                    <TradeLicenseCard
-                      code={mappedFine?.tradeLicenseNumber ?? ""}
-                      number={mappedFine?.tradeLicenseNameEn || mappedFine?.tradeLicenseNameAr || "---"}
-                      emirateAr={mappedFine?.tradeLicenseNameAr ?? ""}
-                    />
-                  )}
-                </div>
-              </>
-            )}
+    {!mappedFine ? (
+      <Empty description="No Data" />
+    ) : (
+      <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+        {/* Plate / Trade License Section at the top */}
+        {(mappedFine?.plateNumber || mappedFine?.tradeLicenseNumber) && (
+          <Card
+            title={mappedFine?.plateNumber ? t("form.plateDetails") : t("form.tradeLicenseDetails")}
+            size="small"
+            style={{ marginBottom: 16, borderRadius: 12 }}
+            headStyle={{ background: "#fafafa", fontWeight: 600 }}
+          >
+            <div style={{ display: "flex", gap: 16, justifyContent: "center", padding: 16 }}>
+              {mappedFine?.plateNumber ? (
+                <UAEPlate
+                  code={PLATE_TYPE_SHORT[mappedFine?.plateCategoryValue] ?? "---"}
+                  number={mappedFine?.plateNumber ?? "---"}
+                  emirateEn={plateSources[mappedFine?.plateSourceValue] ?? "Unknown"}
+                  emirateAr={PLATE_COLOR[mappedFine?.plateCodeValue] ?? "---"}
+                />
+              ) : (
+                <TradeLicenseCard
+                  code={mappedFine?.tradeLicenseNumber ?? ""}
+                  number={mappedFine?.tradeLicenseNameEn || mappedFine?.tradeLicenseNameAr || "---"}
+                  emirateAr={mappedFine?.tradeLicenseNameAr ?? ""}
+                />
+              )}
+            </div>
+          </Card>
+        )}
 
-            {/* Approval actions */}
-            {isStatus15003 && (
-              <>
-                <h4 style={{ marginTop: 16 }}>{t("form.approvalActions")}</h4>
-                <Form form={form} onFinish={handleFormSubmit} layout="vertical" disabled={isProcessing}>
-                  <Form.Item
-                    name="comment"
-                    rules={[
-                      {
-                        required: true,
-                        message: "Please enter comments before approving or rejecting",
-                      },
-                    ]}
-                  >
-                    <TextArea rows={3} placeholder={t("placeholders.comments")} style={{ marginBottom: 10 }} />
-                  </Form.Item>
-                  <Space>
-                    <Button
-                      type="primary"
-                      onClick={handleApproveClick}
-                      disabled={isProcessing}
-                      loading={isProcessing && lastAction === "approve"}
-                    >
-                      {t("form.approve")}
-                    </Button>
-                    <Button
-                      danger
-                      onClick={handleRejectClick}
-                      disabled={isProcessing}
-                      loading={isProcessing && lastAction === "reject"}
-                    >
-                      {t("form.reject")}
-                    </Button>
-                  </Space>
-                </Form>
-              </>
-            )}
+        <Row gutter={16}>
+          {/* Fine Details */}
+          <Col span={mappedFine?.plateNumber ? 12 : 24}>
+            <Card
+              title={t("form.finedetails")}
+              size="small"
+              headStyle={{ background: "#fafafa", fontWeight: 600 }}
+              style={{ marginBottom: 16, borderRadius: 12 }}
+            >
+              <Row gutter={[0, 12]}>
+                <Col span={10}>
+                  <Text strong>{t("form.fineType")}:</Text>
+                </Col>
+                <Col span={14}>{mappedFine.inspectionCategoryLabel}</Col>
 
-            {/* Vehicle details */}
-            {mappedFine?.plateNumber && (
-              <>
-                <h4 style={{ marginTop: 16 }}>{t("form.vehicleDetails")}</h4>
-                <Descriptions bordered column={1} size="small">
-                  <Descriptions.Item label={t("form.vehicleColor")}>
-                    {mappedFine.vehicleColor || "No Data"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label={t("form.vehicleType")}>
-                    {mappedFine.vehicleType || "No Data"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label={t("form.vehicleBrand")}>
-                    {mappedFine.vehicleBrand || "No Data"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label={t("form.manufacturerYear")}>
-                    {mappedFine.manufacturerYear || "No Data"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label={t("form.vehicleOwnerName")}>
-                    {mappedFine.vehicleOwnerName || "No Data"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label={t("form.vehicleOwnerEmail")}>
-                    {mappedFine.vehicleOwnerEmail || "No Data"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label={t("form.vehicleOwnerMobile")}>
-                    {mappedFine.vehicleOwnerMobile || "No Data"}
-                  </Descriptions.Item>
-                </Descriptions>
-              </>
-            )}
+                <Col span={10}>
+                  <Text strong>{t("form.fineNumber")}:</Text>
+                </Col>
+                <Col span={14}>{mappedFine.entityNo}</Col>
 
-            {/* Fine Location */}
-            <h4 style={{ marginTop: 16 }}>{t("form.FineLocation")}</h4>
-            {mappedFine.latitude && mappedFine.longitude ? (
-              <ArcGISMap
-                inspectors={[
+                <Col span={10}>
+                  <Text strong>{t("form.inspectionType")}:</Text>
+                </Col>
+                <Col span={14}>{mappedFine.inspectionTypeLabel}</Col>
+
+                <Col span={10}>
+                  <Text strong>{t("form.inspectionDate")}:</Text>
+                </Col>
+                <Col span={14}>{mappedFine.inspectionDateFormatted}</Col>
+
+                <Col span={10}>
+                  <Text strong>{t("form.amount")}:</Text>
+                </Col>
+                <Col span={14}>{mappedFine.fineAmountFormatted}</Col>
+
+                <Col span={10}>
+                  <Text strong>{t("form.paymentType")}:</Text>
+                </Col>
+                <Col span={14}>{mappedFine.paymentTypeLabel}</Col>
+
+                <Col span={10}>
+                  <Text strong>{t("form.inspectionStatus")}:</Text>
+                </Col>
+                <Col span={14}>
+                  <Tag color={mappedFine.statusColor}>{mappedFine.inspectionStatusLabel}</Tag>
+                </Col>
+
+                <Col span={10}>
+                  <Text strong>{t("form.blackPoints")}:</Text>
+                </Col>
+                <Col span={14}>{mappedFine.blackPointsFormatted}</Col>
+              </Row>
+            </Card>
+          </Col>
+
+          {/* Vehicle Details - Only show if plate number exists */}
+          {mappedFine?.plateNumber && (
+            <Col span={12}>
+              <Card
+                title={t("form.vehicleDetails")}
+                size="small"
+                headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                style={{ marginBottom: 16, borderRadius: 12 }}
+              >
+                <Row gutter={[0, 12]}>
+                  <Col span={10}>
+                    <Text strong>{t("form.vehicleColor")}:</Text>
+                  </Col>
+                  <Col span={14}>{mappedFine.vehicleColor || "No Data"}</Col>
+
+                  <Col span={10}>
+                    <Text strong>{t("form.vehicleType")}:</Text>
+                  </Col>
+                  <Col span={14}>{mappedFine.vehicleType || "No Data"}</Col>
+
+                  <Col span={10}>
+                    <Text strong>{t("form.vehicleBrand")}:</Text>
+                  </Col>
+                  <Col span={14}>{mappedFine.vehicleBrand || "No Data"}</Col>
+
+                  <Col span={10}>
+                    <Text strong>{t("form.manufacturerYear")}:</Text>
+                  </Col>
+                  <Col span={14}>{mappedFine.manufacturerYear || "No Data"}</Col>
+
+                  <Col span={10}>
+                    <Text strong>{t("form.vehicleOwnerName")}:</Text>
+                  </Col>
+                  <Col span={14}>{mappedFine.vehicleOwnerName || "No Data"}</Col>
+
+                  <Col span={10}>
+                    <Text strong>{t("form.vehicleOwnerEmail")}:</Text>
+                  </Col>
+                  <Col span={14}>{mappedFine.vehicleOwnerEmail || "No Data"}</Col>
+
+                  <Col span={10}>
+                    <Text strong>{t("form.vehicleOwnerMobile")}:</Text>
+                  </Col>
+                  <Col span={14}>{mappedFine.vehicleOwnerMobile || "No Data"}</Col>
+                </Row>
+              </Card>
+            </Col>
+          )}
+        </Row>
+
+        {/* Approval Actions */}
+        {isStatus15003 && (
+          <Card
+            title={t("form.approvalActions")}
+            size="small"
+            style={{ marginBottom: 16, borderRadius: 12 }}
+            headStyle={{ background: "#fafafa", fontWeight: 600 }}
+          >
+            <Form form={form} onFinish={handleFormSubmit} layout="vertical" disabled={isProcessing}>
+              <Form.Item
+                name="comment"
+                rules={[
                   {
-                    id: 1,
-                    name: "Fine Location",
-                    nameAr: "Fine Location",
-                    lat: mappedFine.latitude,
-                    lng: mappedFine.longitude,
-                    status: "Fine",
-                    statusAr: "Fine",
-                    details: { zone: "", lastCheckIn: "" },
-                    markerType: "google-pin",
+                    required: true,
+                    message: "Please enter comments before approving or rejecting",
                   },
                 ]}
-                center={[mappedFine.longitude, mappedFine.latitude]}
-                zoom={16}
-                height="300px"
-              />
-            ) : (
-              <Empty description="No Location Data Available" />
-            )}
-
-            {/* Attached Photos */}
-            <Title level={5} style={{ marginTop: 16, marginBottom: 12 }}>
-              {t("form.AttachedPhotos")}
-            </Title>
-            <Spin spinning={isLoadingAttachments}>
-              {attachments.length > 0 ? (
-                <Image.PreviewGroup>
-                  <Space wrap>
-                    {attachments.map((file) => (
-                      <Image
-                        key={file.attachmentGUID}
-                        width={100}
-                        height={100}
-                        src={getMobileFileUrl(file.filePath)}
-                        alt={file.fileName}
-                        style={{ objectFit: "cover", borderRadius: 8 }}
-                      />
-                    ))}
-                  </Space>
-                </Image.PreviewGroup>
-              ) : (
-                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
-              )}
-            </Spin>
-          </>
+              >
+                <TextArea rows={3} placeholder={t("placeholders.comments")} style={{ marginBottom: 16 }} />
+              </Form.Item>
+              <Space>
+                <Button
+                  type="primary"
+                  onClick={handleApproveClick}
+                  disabled={isProcessing}
+                  loading={isProcessing && lastAction === "approve"}
+                >
+                  {t("form.approve")}
+                </Button>
+                <Button
+                  danger
+                  onClick={handleRejectClick}
+                  disabled={isProcessing}
+                  loading={isProcessing && lastAction === "reject"}
+                >
+                  {t("form.reject")}
+                </Button>
+              </Space>
+            </Form>
+          </Card>
         )}
-      </Spin>
-    </Drawer>
+
+        <Row gutter={16}>
+         
+          <Col span={12}>
+            <Card
+              title={t("form.FineLocation")}
+              size="small"
+              style={{ borderRadius: 12, marginBottom: 16 }}
+              headStyle={{ background: "#fafafa", fontWeight: 600 }}
+            >
+              {mappedFine.latitude && mappedFine.longitude ? (
+                <ArcGISMap
+                  inspectors={[
+                    {
+                      id: 1,
+                      name: "Fine Location",
+                      nameAr: "موقع المخالفة",
+                      lat: mappedFine.latitude,
+                      lng: mappedFine.longitude,
+                      status: "Fine",
+                      statusAr: "مخالفة",
+                      details: { zone: "", lastCheckIn: "" },
+                      markerType: "google-pin",
+                    },
+                  ]}
+                  center={[mappedFine.longitude, mappedFine.latitude]}
+                  zoom={16}
+                  height="180px"
+                 
+                  disablePopup={true}
+                />
+              ) : (
+                <Empty description="No Location Data Available" />
+              )}
+            </Card>
+          </Col>
+
+          {/* Attached Photos */}
+          <Col span={12}>
+            <Card
+              title={t("form.AttachedPhotos")}
+              size="small"
+              style={{ borderRadius: 12, marginBottom: 16 }}
+              headStyle={{ background: "#fafafa", fontWeight: 600 }}
+            >
+              <Spin spinning={isLoadingAttachments}>
+                {attachments.length > 0 ? (
+                  <Image.PreviewGroup>
+                    <Space wrap>
+                      {attachments.map((file) => (
+                        <Image
+                          key={file.attachmentGUID}
+                          width={100}
+                          height={100}
+                          src={getMobileFileUrl(file.filePath)}
+                          alt={file.fileName}
+                          style={{ objectFit: "cover", borderRadius: 8 }}
+                        />
+                      ))}
+                    </Space>
+                  </Image.PreviewGroup>
+                ) : (
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
+                )}
+              </Spin>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+    )}
+  </Spin>
+</Modal>
   );
 };
 

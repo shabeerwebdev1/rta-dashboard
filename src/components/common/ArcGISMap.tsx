@@ -18,7 +18,6 @@ type Inspector = {
   statusAr: string;
   details?: { zone: string; lastCheckIn: string };
   markerType?: "default" | "google-pin"; 
-
 };
 
 interface ArcGISMapProps {
@@ -40,13 +39,6 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   const viewRef = useRef<__esri.MapView | null>(null);
   const [basemap, setBasemap] = useState("streets-navigation-vector");
 
-  // Tooltip state
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; inspector: Inspector | null }>({
-    x: 0,
-    y: 0,
-    inspector: null,
-  });
-
   useEffect(() => {
     if (mapRef.current) {
       const map = new Map({ basemap });
@@ -59,7 +51,6 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
 
       viewRef.current = view;
 
-      // Add inspector markers
       // Add inspector markers
       inspectors.forEach((inspector) => {
         const point = new Point({
@@ -88,25 +79,6 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         });
 
         view.graphics.add(graphic);
-      });
-
-      // Hover event for tooltip
-      view.on("pointer-move", (event) => {
-        view.hitTest(event).then((response) => {
-          if (response.results.length > 0) {
-            const graphic = response.results[0].graphic;
-            const inspector = graphic.attributes?.inspector;
-            if (inspector) {
-              setTooltip({
-                x: event.x,
-                y: event.y,
-                inspector,
-              });
-            }
-          } else {
-            setTooltip({ x: 0, y: 0, inspector: null });
-          }
-        });
       });
 
       // Click event for inspector
@@ -145,29 +117,6 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   return (
     <div style={{ position: "relative" }}>
       <div ref={mapRef} style={{ width: "100%", height }} />
-
-      {/* Tooltip */}
-      {tooltip.inspector && (
-        <div
-          style={{
-            position: "absolute",
-            top: tooltip.y + 10,
-            left: tooltip.x + 10,
-            background: "#fff",
-            border: "1px solid #ddd",
-            padding: "6px 10px",
-            borderRadius: 6,
-            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-            pointerEvents: "none",
-            whiteSpace: "nowrap",
-            zIndex: 999,
-          }}
-        >
-          <strong>{tooltip.inspector.name}</strong> <br />
-          {tooltip.inspector.details?.zone || "N/A"} <br />
-          Status: {tooltip.inspector.status}
-        </div>
-      )}
 
       {/* Basemap Switcher */}
       <Dropdown overlay={menu} trigger={["click"]}>

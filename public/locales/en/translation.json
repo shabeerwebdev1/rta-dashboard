@@ -282,7 +282,8 @@
     "reject": "Reject",
     "review": "Review",
     "approve": "Approve",
-    "selectUser": "Select User"
+    "selectUser": "Select User",
+    "getDetails": "Get Details"
   },
   "entity": {
     "plate": "Plate",

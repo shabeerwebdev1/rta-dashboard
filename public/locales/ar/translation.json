@@ -280,7 +280,8 @@
     "reject": "رفض",
     "review": "مراجعة",
     "approve": "موافقة",
-    "selectUser": "اختر المستخدم"
+    "selectUser": "اختر المستخدم",
+    "getDetails": "الحصول على التفاصيل"
 
   },
   "entity": {

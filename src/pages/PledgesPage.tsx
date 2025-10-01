@@ -14,6 +14,7 @@ import {
   useDeletePledgeMutation,
   useLazyGetLookupsQuery,
   useLazyGetPledgeByIdQuery,
+  useLazyGetTradeLicenseDetailsQuery
 } from "../services/rtkApiFactory";
 import { getFileUrl, useUploadFilesMutation } from "../services/fileApi";
 import StatsDisplay from "../components/common/StatsDisplay";
@@ -75,6 +76,10 @@ const PledgesPage: React.FC = () => {
   const [viewRecord, setViewRecord] = useState<any>(null);
   const [tableSize, setTableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+    const [tlData, setTlData] = useState<any | null>(null);
+    const [companyEmail, setCompanyEmail] = useState("");
+
+  
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
@@ -89,6 +94,8 @@ const PledgesPage: React.FC = () => {
   const [uploadFiles, { isLoading: isUploading }] = useUploadFilesMutation();
   const [triggerGetPledge, { data: singleRecordData, isSuccess: isSingleRecordSuccess, isLoading: isPledgeLoading }] =
     useLazyGetPledgeByIdQuery();
+      const [triggerGetTradeLicenseDetails, { isFetching: isFetchingTL }] = useLazyGetTradeLicenseDetailsQuery();
+    
 
   const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -133,6 +140,9 @@ const PledgesPage: React.FC = () => {
       setIsLoadingLookups(false);
     }
   };
+
+  
+
 
   // Get pledge type options with proper labels based on current language
   const pledgeTypeOptions = useMemo(
@@ -497,16 +507,85 @@ const PledgesPage: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-              <Col span={12}>
-                <Form.Item name="tradeLicenseNumber" label={t("form.tradeLicenseNumber")} rules={[{ required: true }]}>
-                  <Input placeholder={t("placeholders.tradeLicenseNumber")} />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item name="businessName" label={t("form.businessName")} rules={[{ required: true }]}>
-                  <Input placeholder={t("placeholders.businessName")} />
-                </Form.Item>
-              </Col>
+       <Col span={12}>
+  <Form.Item
+    name="tradeLicenseNumber"
+    label={t("form.tradeLicenseNumber")}
+    rules={[{ required: true }]}
+  >
+    <Input.Group compact>
+      {/* Bigger input */}
+      <Form.Item name="tradeLicenseNumber" noStyle rules={[{ required: true }]}>
+        <Input
+          style={{ width: "calc(100% - 90px)" }}   // ⬅️ more width
+          placeholder={t("placeholders.tradeLicenseNumber")}
+        />
+      </Form.Item>
+
+      {/* Smaller button */}
+      <Button
+        type="primary"
+        size="large"       
+        style={{ width: 90 }} 
+        loading={isFetchingTL}
+        onClick={async () => {
+          try {
+            const licenseNo = form.getFieldValue("tradeLicenseNumber");
+            if (!licenseNo) {
+              notification.error(
+                { data: { en_Msg: "Please enter Trade License Number first" } },
+                "Missing Input"
+              );
+              return;
+            }
+
+            const result = await triggerGetTradeLicenseDetails(
+              JSON.stringify(licenseNo.toString())
+            ).unwrap();
+
+            setTlData(result?.data || result);
+
+            // ✅ bind companyName to form
+            form.setFieldsValue({
+              businessName: result?.data?.companyName || "",
+            });
+
+            // ✅ just show companyEmail
+            setCompanyEmail(result?.data?.companyEmail || "");
+
+            notification.success(result, t("messages.tradeLicenseFetched"));
+          } catch (error: any) {
+            console.error("Trade License fetch failed:", error);
+            notification.error(error, t("messages.failedToFetchTradeLicense"));
+            setTlData(null);
+            setCompanyEmail("");
+          }
+        }}
+      >
+        {t("common.getDetails")}
+      </Button>
+    </Input.Group>
+  </Form.Item>
+</Col>
+
+
+<Col span={12}>
+  <Form.Item
+    name="businessName"
+    label={t("form.businessName")}
+    rules={[{ required: true }]}
+  >
+    <Input disabled placeholder={t("placeholders.businessName")} />
+  </Form.Item>
+</Col>
+
+{/* ✅ No "name" here → won't be posted */}
+<Col span={12}>
+  <Form.Item label={t("form.companyEmail")}>
+    <Input value={companyEmail} disabled placeholder={t("placeholders.companyEmail")} />
+  </Form.Item>
+</Col>
+
 
               <Col span={12}>
                 <Form.Item name="dateRange" label={t("form.Validity")} rules={[{ required: true }]}>
