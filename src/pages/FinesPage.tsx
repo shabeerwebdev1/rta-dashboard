@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tag } from "antd";
-import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
+import { EyeOutlined, DownloadOutlined, EnvironmentOutlined, PaperClipOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -14,6 +14,8 @@ import { finesConfig } from "../config/pageConfigs/finesConfig";
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import FinesViewDrawer from "../components/fines/FinesViewDrawer";
+import MapModal from "../components/fines/FinesViewDrawer";
+import AttachmentsModal from "../components/fines/FinesViewDrawer";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -53,7 +55,9 @@ const FinesPage: React.FC = () => {
   const [selectedFineData, setSelectedFineData] = useState<any>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
-
+const [mapModalVisible, setMapModalVisible] = useState(false);
+const [attachmentsModalVisible, setAttachmentsModalVisible] = useState(false);
+const [selectedFineForModal, setSelectedFineForModal] = useState<any>(null);
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
@@ -126,6 +130,16 @@ const FinesPage: React.FC = () => {
     setDrawerVisible(true);
   };
 
+  const handleViewLocation = (record: any) => {
+  setSelectedFineForModal(record);
+  setMapModalVisible(true);
+};
+
+const handleViewAttachments = (record: any) => {
+  setSelectedFineForModal(record);
+  setAttachmentsModalVisible(true);
+};
+
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
@@ -156,13 +170,25 @@ const FinesPage: React.FC = () => {
   );
 
   const actionMenuItems = (record: any) => [
-    {
-      key: "view",
-      label: t("common.view"),
-      icon: <EyeOutlined />,
-      onClick: () => handleView(record),
-    },
-  ];
+  {
+    key: "view",
+    label: t("common.view"),
+    icon: <EyeOutlined />,
+    onClick: () => handleView(record),
+  },
+  {
+    key: "location",
+    label: t("common.viewLocation"),
+    icon: <EnvironmentOutlined />,
+    onClick: () => handleViewLocation(record),
+  },
+  {
+    key: "attachments",
+    label: t("common.viewAttachments"),
+    icon: <PaperClipOutlined />,
+    onClick: () => handleViewAttachments(record),
+  },
+];
 
   const handleSearchKeyChange = (newKey: string) => {
     setSearchValue("");
@@ -315,6 +341,21 @@ const FinesPage: React.FC = () => {
         lookupOptions={lookupOptions}
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
       />
+
+      <MapModal 
+    open={mapModalVisible} 
+    onClose={() => setMapModalVisible(false)} 
+    fine={selectedFineForModal} 
+  />
+
+   <AttachmentsModal 
+    open={attachmentsModalVisible} 
+    onClose={() => setAttachmentsModalVisible(false)} 
+    fine={selectedFineForModal}
+    attachments={[]} // You'll need to fetch attachments for the specific fine
+    isLoadingAttachments={false} // Set based on your attachment loading state
+  />
+
     </Space>
   );
 };

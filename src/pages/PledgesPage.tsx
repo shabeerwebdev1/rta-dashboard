@@ -565,13 +565,13 @@ const PledgesPage: React.FC = () => {
 
             setTlData(result?.data || result);
 
-            // ✅ bind companyName to form
+            
             form.setFieldsValue({
               businessName: result?.data?.companyName || "",
             });
 
-            // ✅ just show companyEmail
-            setCompanyEmail(result?.data?.companyEmail || "");
+           
+            // setCompanyEmail(result?.data?.companyEmail || "");
 
             notification.success(result, t("messages.tradeLicenseFetched"));
           } catch (error: any) {
@@ -599,12 +599,11 @@ const PledgesPage: React.FC = () => {
   </Form.Item>
 </Col>
 
-{/* ✅ No "name" here → won't be posted */}
-<Col span={12}>
+{/* <Col span={12}>
   <Form.Item label={t("form.companyEmail")}>
     <Input value={companyEmail} disabled placeholder={t("placeholders.companyEmail")} />
   </Form.Item>
-</Col>
+</Col> */}
 
 
               <Col span={12}>

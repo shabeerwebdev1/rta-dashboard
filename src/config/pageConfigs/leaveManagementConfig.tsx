@@ -16,9 +16,9 @@ export enum LeaveStatus {
 }
 
 const statusMap: Record<LeaveStatus, { text: string; color: string }> = {
-  [LeaveStatus.Pending]: { text: "Pending", color: "blue" },
+  [LeaveStatus.Pending]: { text: "Pending", color: "orange" },
   [LeaveStatus.Approved]: { text: "Approved", color: "green" },
-  [LeaveStatus.Cancelled]: { text: "Cancelled", color: "orange" },
+  [LeaveStatus.Cancelled]: { text: "Cancelled", color: "default" },
   [LeaveStatus.Rejected]: { text: "Rejected", color: "red" },
 };
 
@@ -40,23 +40,28 @@ export const leaveManagementPageConfig: PageConfig = {
     },
 
     {
+      title: "Pending",
+      icon: <ClockCircleOutlined />,
+      value: (data, metadata) =>
+        `${data.filter((d) => d.status === LeaveStatus.Pending).length} / ${metadata?.pendingRecords || 0}`,
+      color: "orange",
+    },
+
+    {
       title: "Approved",
       icon: <CheckCircleOutlined />,
       value: (data, metadata) =>
         `${data.filter((d) => d.status === LeaveStatus.Approved).length} / ${metadata?.approvedRecords || 0}`,
+      color: "#52c41a",
     },
     {
       title: "Rejected",
       icon: <CloseCircleOutlined />,
       value: (data, metadata) =>
         `${data.filter((d) => d.status === LeaveStatus.Rejected).length} / ${metadata?.rejectedRecords || 0}`,
+      color: "red",
     },
-    {
-      title: "Pending",
-      icon: <ClockCircleOutlined />,
-      value: (data, metadata) =>
-        `${data.filter((d) => d.status === LeaveStatus.Pending).length} / ${metadata?.pendingRecords || 0}`,
-    },
+    
   ],
   tableConfig: {
     rowKey: "leaveId",

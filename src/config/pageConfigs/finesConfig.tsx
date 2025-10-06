@@ -171,10 +171,11 @@ export const finesConfig: PageConfig = {
 
   statsConfig: [
     {
-      title: "Total Fines",
-      icon: <DollarCircleOutlined />,
-      value: (data) => data.length,
-    },
+  title: "Total Fines",
+  icon: <span style={{  fontSize: 24 }}>AED</span>,
+  value: (data) => data.length,
+}
+    ,
     {
       title: "Paid Fines",
       icon: <CheckCircleOutlined />,
