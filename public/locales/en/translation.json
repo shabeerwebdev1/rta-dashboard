@@ -188,6 +188,8 @@
     "reject": "Reject",
     "InspectorName": "Inspector Name",
     "Zone": "Zone",
+    "disputereason": "Dispute Reason",
+    "disputesubreason": "Dispute Sub Reason",
     "Shift": "Shift",
     "AssignmentType": "Assignment Type",
     "WeekOffs": "Week Offs",
@@ -246,7 +248,8 @@
     "longitude": "longitude",
     "street": "street",
     "assignedTo": "Assigned To",
-    "Validity": "Validity"
+    "Validity": "Validity",
+    "violationDetails": "Violation Details"
   },
   "common": {
     "action": "Action",
@@ -285,7 +288,9 @@
     "review": "Review",
     "approve": "Approve",
     "selectUser": "Select User",
-    "getDetails": "Get Details"
+    "getDetails": "Get Details",
+    "viewLocation": "View Location",
+    "viewAttachments": "View Attachments"
   },
   "entity": {
     "plate": "Plate",
@@ -341,6 +346,7 @@
     "phoneNumber": "Enter your phone number",
     "address": "Enter your address",
     "SourceUser": "Enter source user",
+    "subreason": "Enter the dispute sub-reason",
 
     "plateCategory": "Select plate category",
     "plateCode": "Select plate code",

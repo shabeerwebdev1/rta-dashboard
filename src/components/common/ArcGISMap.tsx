@@ -5,7 +5,7 @@ import Graphic from "@arcgis/core/Graphic";
 import Point from "@arcgis/core/geometry/Point";
 import PictureMarkerSymbol from "@arcgis/core/symbols/PictureMarkerSymbol";
 import "@arcgis/core/assets/esri/themes/light/main.css";
-import { Dropdown, Menu } from "antd";
+import { Dropdown, Menu, theme } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 
 type Inspector = {
@@ -116,7 +116,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
 
   return (
     <div style={{ position: "relative" }}>
-      <div ref={mapRef} style={{ width: "100%", height }} />
+      <div ref={mapRef} style={{ width: "100%", height , }} />
 
       {/* Basemap Switcher */}
       <Dropdown overlay={menu} trigger={["click"]}>

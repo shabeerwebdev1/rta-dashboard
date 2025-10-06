@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { serializeParams } from "../hooks/useTableParams";
 
-const RTA_API_TARGET = `http://devparkingapi.kandaprojects.live`;
+const RTA_API_TARGET = `https://devparkingapi.kandaprojects.live`;
 
 const baseQuery = fetchBaseQuery({
   baseUrl: RTA_API_TARGET,

@@ -163,8 +163,8 @@
     "feature": "الميزة",
     "Deactivate": "تعطيل",
     "trafficFileNo": "رقم ملف المرور",
-
-
+    "disputereason": "سبب النزاع",
+    "disputesubreason": "سبب النزاع الفرعي",
     "inspectionType": "نوع التفتيش",
     "inspectionStatus": "حالة التفتيش",
     "finedDate": "تاريخ الغرامة",
@@ -246,7 +246,8 @@
     "longitude": "أدخل خط الطول",
     "street": "أدخل الشارع",
     "assignedTo": "مُعين إلى",
-    "Validity": "الصلاحية"
+    "Validity": "الصلاحية",
+    "violationDetails": "تفاصيل الانتهاك"
 
 
   },
@@ -283,7 +284,9 @@
     "review": "مراجعة",
     "approve": "موافقة",
     "selectUser": "اختر المستخدم",
-    "getDetails": "الحصول على التفاصيل"
+    "getDetails": "الحصول على التفاصيل",
+    "viewLocation": "عرض الموقع",
+    "viewAttachments": "عرض المرفقات"
 
   },
   "entity": {
@@ -349,7 +352,8 @@
     "enterComments": "أدخل التعليقات",
      "latitude": "أدخل خط العرض",
     "longitude": "أدخل خط الطول",
-    "street": "أدخل الشارع"
+    "street": "أدخل الشارع",
+    "subreason": "أدخل سبب النزاع الفرعي"
   },
   "dashboard": {
     "totalInspectors": "إجمالي المفتشين",

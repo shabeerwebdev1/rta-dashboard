@@ -14,8 +14,8 @@ import { finesConfig } from "../config/pageConfigs/finesConfig";
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import FinesViewDrawer from "../components/fines/FinesViewDrawer";
-import MapModal from "../components/fines/FinesViewDrawer";
-import AttachmentsModal from "../components/fines/FinesViewDrawer";
+import MapModal from "../components/fines/MapModal";
+import AttachmentsModal from "../components/fines/AttachmentsModal";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -60,6 +60,7 @@ const [attachmentsModalVisible, setAttachmentsModalVisible] = useState(false);
 const [selectedFineForModal, setSelectedFineForModal] = useState<any>(null);
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
+  
 
   const { data, isLoading, isFetching } = useSearchFinesQuery(apiParams, {
     refetchOnMountOrArgChange: true,
@@ -130,15 +131,15 @@ const [selectedFineForModal, setSelectedFineForModal] = useState<any>(null);
     setDrawerVisible(true);
   };
 
-  const handleViewLocation = (record: any) => {
-  setSelectedFineForModal(record);
-  setMapModalVisible(true);
-};
+const handleViewLocation = (record: any) => {
+    setSelectedFineForModal(record);
+    setMapModalVisible(true);
+  };
 
-const handleViewAttachments = (record: any) => {
-  setSelectedFineForModal(record);
-  setAttachmentsModalVisible(true);
-};
+  const handleViewAttachments = (record: any) => {
+    setSelectedFineForModal(record);
+    setAttachmentsModalVisible(true);
+  };
 
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
@@ -169,26 +170,26 @@ const handleViewAttachments = (record: any) => {
     [t, config, i18n.language],
   );
 
-  const actionMenuItems = (record: any) => [
-  {
-    key: "view",
-    label: t("common.view"),
-    icon: <EyeOutlined />,
-    onClick: () => handleView(record),
-  },
-  {
-    key: "location",
-    label: t("common.viewLocation"),
-    icon: <EnvironmentOutlined />,
-    onClick: () => handleViewLocation(record),
-  },
-  {
-    key: "attachments",
-    label: t("common.viewAttachments"),
-    icon: <PaperClipOutlined />,
-    onClick: () => handleViewAttachments(record),
-  },
-];
+const actionMenuItems = (record: any) => [
+    {
+      key: "view",
+      label: t("common.view"),
+      icon: <EyeOutlined />,
+      onClick: () => handleView(record),
+    },
+    {
+      key: "location",
+      label: t("common.viewLocation"),
+      icon: <EnvironmentOutlined />,
+      onClick: () => handleViewLocation(record),
+    },
+    {
+      key: "attachments",
+      label: t("common.viewAttachments"),
+      icon: <PaperClipOutlined />,
+      onClick: () => handleViewAttachments(record),
+    },
+  ];
 
   const handleSearchKeyChange = (newKey: string) => {
     setSearchValue("");
@@ -330,7 +331,7 @@ const handleViewAttachments = (record: any) => {
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
       />
 
-      <FinesViewDrawer
+     <FinesViewDrawer
         open={drawerVisible}
         onClose={() => {
           setDrawerVisible(false);
@@ -342,19 +343,17 @@ const handleViewAttachments = (record: any) => {
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
       />
 
-      <MapModal 
-    open={mapModalVisible} 
-    onClose={() => setMapModalVisible(false)} 
-    fine={selectedFineForModal} 
-  />
+     <MapModal 
+        open={mapModalVisible} 
+        onClose={() => setMapModalVisible(false)} 
+        fine={selectedFineForModal} 
+      />
 
-   <AttachmentsModal 
-    open={attachmentsModalVisible} 
-    onClose={() => setAttachmentsModalVisible(false)} 
-    fine={selectedFineForModal}
-    attachments={[]} // You'll need to fetch attachments for the specific fine
-    isLoadingAttachments={false} // Set based on your attachment loading state
-  />
+      <AttachmentsModal 
+        open={attachmentsModalVisible} 
+        onClose={() => setAttachmentsModalVisible(false)} 
+        fine={selectedFineForModal}
+      />
 
     </Space>
   );

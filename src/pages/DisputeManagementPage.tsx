@@ -33,6 +33,8 @@ const columnToCategoryMap: Record<string, number> = {
   department: 1000,
   payment_Type: 1100,
   dispute_Status: 1002,
+  dispute_Reason: 1600, // Add dispute reason
+  dispute_SubReason: 1600, // Add dispute sub-reason
 };
 
 const DisputeManagementPage: React.FC = () => {
@@ -93,7 +95,8 @@ const DisputeManagementPage: React.FC = () => {
     setIsLoadingLookups(true);
     try {
       const categoryIds = Object.values(columnToCategoryMap);
-      const result = await triggerGetLookups(categoryIds).unwrap();
+      // Make sure 1600 is included
+      const result = await triggerGetLookups([...categoryIds, 1600]).unwrap();
       setLookupOptions(result);
     } catch (error) {
       console.error("Failed to fetch lookup data:", error);
@@ -116,6 +119,15 @@ const DisputeManagementPage: React.FC = () => {
   const paymentTypeOptions = useMemo(
     () =>
       filterOptionsByCategory(lookupOptions, 1100).map((option) => ({
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      })),
+    [lookupOptions, i18n.language],
+  );
+
+  const disputeReasonOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 1600).map((option) => ({
         ...option,
         label: i18n.language === "ar" ? option.labelAr : option.labelEn,
       })),
@@ -171,6 +183,7 @@ const DisputeManagementPage: React.FC = () => {
             department: result.data.department,
             payment_Type: result.data.payment_Type,
             dispute_Reason: result.data.dispute_Reason,
+            dispute_SubReason: result.data.dispute_SubReason,
             crM_Ref: result.data.crM_Ref,
             email: result.data.email,
             phone: result.data.phone,
@@ -204,6 +217,7 @@ const DisputeManagementPage: React.FC = () => {
         department: values.department,
         payment_Type: values.payment_Type,
         dispute_Reason: values.dispute_Reason,
+        dispute_SubReason: values.dispute_SubReason, // Add sub-reason
         crM_Ref: values.crM_Ref,
         email: values.email,
         phone: values.phone,
@@ -306,6 +320,15 @@ const DisputeManagementPage: React.FC = () => {
           };
         }
 
+        // Handle dispute reason and sub-reason with lookup
+        if (column.key === "dispute_Reason" || column.key === "dispute_SubReason") {
+          const options = filterOptionsByCategory(lookupOptions, 1600);
+          return {
+            ...column,
+            render: (value: any) => getLabelFromValue(value, options, i18n),
+          };
+        }
+
         const categoryId = columnToCategoryMap[column.key];
         if (categoryId) {
           const options = filterOptionsByCategory(lookupOptions, categoryId);
@@ -337,8 +360,6 @@ const DisputeManagementPage: React.FC = () => {
     },
   ];
 
-  // Handle search key change - preserve current search as filter and clear input
-
   const handleSearchKeyChange = (newKey: string) => {
     const currentValue = searchValue;
     setTimeout(() => {
@@ -350,8 +371,6 @@ const DisputeManagementPage: React.FC = () => {
 
     setGlobalSearch(newKey, "");
   };
-
-  // Update the effect
 
   const searchAddon = (
     <Select value={state.searchKey} onChange={handleSearchKeyChange} style={{ width: 150 }}>
@@ -467,7 +486,6 @@ const DisputeManagementPage: React.FC = () => {
         <Spin spinning={isLoadingLookups}>
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
             <Row gutter={24}>
-              {/* Change fine_Number to fineId to match API payload */}
               <Col span={12}>
                 <Form.Item name="fineId" label={t("form.fineNumber")} rules={[{ required: true }]}>
                   <Input placeholder={t("placeholders.fineNumber")} type="text" />
@@ -482,6 +500,38 @@ const DisputeManagementPage: React.FC = () => {
                     optionFilterProp="label"
                     filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
                     options={departmentOptions.map((option) => ({
+                      label: option.label,
+                      value: option.value,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col span={12}>
+                <Form.Item name="dispute_Reason" label={t("form.disputereason")} rules={[{ required: true }]}>
+                  <Select
+                    placeholder={t("placeholders.reason")}
+                    loading={isLoadingLookups}
+                    showSearch
+                    optionFilterProp="label"
+                    filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
+                    options={disputeReasonOptions.map((option) => ({
+                      label: option.label,
+                      value: option.value,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col span={12}>
+                <Form.Item name="dispute_SubReason" label={t("form.disputesubreason")} rules={[{ required: true }]}>
+                  <Select
+                    placeholder={t("placeholders.subreason")}
+                    loading={isLoadingLookups}
+                    showSearch
+                    optionFilterProp="label"
+                    filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
+                    options={disputeReasonOptions.map((option) => ({
                       label: option.label,
                       value: option.value,
                     }))}
@@ -504,15 +554,11 @@ const DisputeManagementPage: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="dispute_Reason" label={t("form.reason")} rules={[{ required: true }]}>
-                  <Input placeholder={t("placeholders.reason")} />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
                 <Form.Item name="crM_Ref" label={t("form.crmReference")} rules={[{ required: true }]}>
                   <Input placeholder={t("placeholders.crmReference")} />
                 </Form.Item>
               </Col>
+
               <Col span={12}>
                 <Form.Item name="email" label={t("form.email")} rules={[{ required: true }, { type: "email" }]}>
                   <Input placeholder={t("placeholders.email")} />
