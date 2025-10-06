@@ -24,10 +24,11 @@ const LeaveManagementPage = lazy(() => import("./pages/LeaveManagementPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 const TradeLicenseInspectionPage = lazy(() => import("./pages/TradeLicenseInspectionPage"));
 const TowingPage = lazy(() => import("./pages/TowingPage"));
-const ParkonicLocationPage = lazy(() => import("./pages/ParkonicLocationPage"))
-const AnalyticsInsightsPage = lazy(() => import("./pages/AnalyticsInsightsPage"))
-const FineInspectionsPage = lazy(() => import("./pages/FineInspectionsPage"))
-
+const ParkonicLocationPage = lazy(() => import("./pages/ParkonicLocationPage"));
+const AnalyticsInsightsPage = lazy(() => import("./pages/AnalyticsInsightsPage"));
+const FineInspectionsPage = lazy(() => import("./pages/FineInspectionsPage"));
+const VehicleInspectionsPage = lazy(() => import("./pages/VehicleInspectionsPage"));
+const ParkingsInspectionsPage = lazy(() => import("./pages/ParkingsInspectionsPage"));
 
 const AppRoutes = () => (
   <Routes>
@@ -121,13 +122,16 @@ const AppRoutes = () => (
           }
         />
         <Route
-          path={PATHS.FINES_INSPECTIONS}
+          path={PATHS.FINES}
           element={
             <ProtectedRoute>
-              <FineInspectionsPage/>
+              <Outlet />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route path={PATHS.FINES_VEHICLES} element={<VehicleInspectionsPage />} />
+          <Route path={PATHS.FINES_PARKINGS} element={<ParkingsInspectionsPage />} />
+        </Route>
 
         <Route
           path={PATHS.PLEDGES}
@@ -194,7 +198,7 @@ const AppRoutes = () => (
           }
         />
 
-         <Route
+        <Route
           path={PATHS.PARKONIC_LOCATION}
           element={
             <ProtectedRoute>

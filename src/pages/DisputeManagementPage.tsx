@@ -33,8 +33,8 @@ const columnToCategoryMap: Record<string, number> = {
   department: 1000,
   payment_Type: 1100,
   dispute_Status: 1002,
-  dispute_Reason: 1600, // Add dispute reason
-  dispute_SubReason: 1600, // Add dispute sub-reason
+  dispute_Reason: 1600, 
+  dispute_SubReason: 1600, 
 };
 
 const DisputeManagementPage: React.FC = () => {

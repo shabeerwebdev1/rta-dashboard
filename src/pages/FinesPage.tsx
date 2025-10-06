@@ -55,13 +55,12 @@ const FinesPage: React.FC = () => {
   const [selectedFineData, setSelectedFineData] = useState<any>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
-const [mapModalVisible, setMapModalVisible] = useState(false);
-const [attachmentsModalVisible, setAttachmentsModalVisible] = useState(false);
-const [selectedFineForModal, setSelectedFineForModal] = useState<any>(null);
+  const [mapModalVisible, setMapModalVisible] = useState(false);
+  const [attachmentsModalVisible, setAttachmentsModalVisible] = useState(false);
+  const [selectedFineForModal, setSelectedFineForModal] = useState<any>(null);
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
   
-
   const { data, isLoading, isFetching } = useSearchFinesQuery(apiParams, {
     refetchOnMountOrArgChange: true,
   });
@@ -82,7 +81,8 @@ const [selectedFineForModal, setSelectedFineForModal] = useState<any>(null);
 
   const fetchLookupData = async () => {
     try {
-      const result = await triggerGetLookups([1300, 1400, 1500]).unwrap();
+      // ✅ Fetch both 1400 (for rendering) and 1700 (for filters)
+      const result = await triggerGetLookups([1300, 1400, 1500, 1700]).unwrap();
       setLookupOptions(result);
     } catch (error) {
       console.error("Failed to fetch lookup data:", error);
@@ -90,6 +90,7 @@ const [selectedFineForModal, setSelectedFineForModal] = useState<any>(null);
     }
   };
 
+  // ✅ Use 1400 for rendering inspectionType (as before)
   const inspectionTypeOptions = useMemo(
     () =>
       filterOptionsByCategory(lookupOptions, 1400).map((option) => ({
@@ -131,7 +132,7 @@ const [selectedFineForModal, setSelectedFineForModal] = useState<any>(null);
     setDrawerVisible(true);
   };
 
-const handleViewLocation = (record: any) => {
+  const handleViewLocation = (record: any) => {
     setSelectedFineForModal(record);
     setMapModalVisible(true);
   };
@@ -170,7 +171,7 @@ const handleViewLocation = (record: any) => {
     [t, config, i18n.language],
   );
 
-const actionMenuItems = (record: any) => [
+  const actionMenuItems = (record: any) => [
     {
       key: "view",
       label: t("common.view"),
@@ -329,6 +330,7 @@ const actionMenuItems = (record: any) => [
         state={state}
         lookupOptions={lookupOptions}
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
+        columnLookupMap={{ inspectionType: 1700 }} 
       />
 
      <FinesViewDrawer

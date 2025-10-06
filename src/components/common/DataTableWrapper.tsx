@@ -28,6 +28,7 @@ interface DataTableWrapperProps {
   getLabelFromValue?: (value: number, options: any[], i18n: any) => string;
   filterOptions?: Record<string, Array<{ text: string; value: string | number }>>;
   showPagination?: boolean;
+  columnLookupMap?: Record<string, number>;
 }
 
 const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
@@ -46,20 +47,18 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
   lookupOptions = [],
   getLabelFromValue,
   filterOptions = {},
-  showPagination = true, // New prop to control pagination visibility
+  showPagination = true,
+  columnLookupMap,
 }) => {
   const { t, i18n } = useTranslation();
   const { token } = theme.useToken();
 
-  // ✅ Enhanced rowKey function with fallbacks
   const getRowKey = React.useCallback(
     (record: any, index: number) => {
-      // Try the specified rowKey first
       if (rowKey && record[rowKey] !== undefined && record[rowKey] !== null) {
         return record[rowKey];
       }
 
-      // Fallback to other common unique identifiers
       const commonKeys = ["id", "key", "ID", "Key", "uuid", "UUID"];
       for (const key of commonKeys) {
         if (record[key] !== undefined && record[key] !== null) {
@@ -67,14 +66,20 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
         }
       }
 
-      // Final fallback: use index (not ideal but prevents errors)
       return `row-${index}`;
     },
     [rowKey],
   );
 
-  // Helper to get lookup options for a specific column
-  const getLookupOptionsForColumn = (columnKey: string) => {
+  // Helper to get lookup options for a specific column with usage context
+  const getLookupOptionsForColumn = (columnKey: string, useFor: "display" | "filter" = "display") => {
+    //  For filters, first check columnLookupMap if provided
+    if (useFor === "filter" && columnLookupMap && columnLookupMap[columnKey]) {
+      const categoryId = columnLookupMap[columnKey];
+      return lookupOptions.filter((option) => option.categoryId === categoryId);
+    }
+
+    //  For display or fallback, use the default mapping
     const columnToCategoryMap: Record<string, number> = {
       plateSource_Id: 200,
       plateType_Id: 300,
@@ -87,6 +92,8 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
       inspectionCategory: 1300,
       inspectionStatus: 1500,
       payment_Type: 1100,
+      ParkingInspectionType: 1800,
+      CarInspectionType: 1700,
     };
 
     const categoryId = columnToCategoryMap[columnKey];
@@ -101,8 +108,8 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
       return filterOptions[columnKey];
     }
 
-    // Fallback to lookup options
-    const lookupOptionsForColumn = getLookupOptionsForColumn(columnKey);
+    // Use the modified function that checks columnLookupMap for filters
+    const lookupOptionsForColumn = getLookupOptionsForColumn(columnKey, "filter");
     if (lookupOptionsForColumn.length > 0) {
       return lookupOptionsForColumn.map((option) => ({
         text: i18n.language === "ar" ? option.labelAr || option.label : option.labelEn || option.label,
@@ -135,19 +142,15 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
       }
 
       if (col.filterable) {
-        // Use the enhanced filter function
         antdCol.filters = getFilterOptionsWithLabels(col.key);
         antdCol.filterMode = "tree";
         antdCol.filterSearch = true;
 
-        // Add onFilter function for custom filtering
         if (!col.onFilter) {
           antdCol.onFilter = (value: any, record: any) => {
-            // Handle numeric values (like status)
             if (typeof record[col.key] === "number" || typeof value === "number") {
               return record[col.key] === Number(value);
             }
-            // Handle string values
             return String(record[col.key]) === String(value);
           };
         } else {
@@ -162,7 +165,8 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
           if (text === null || text === undefined || text === "") return t("common.noData");
 
           if (getLabelFromValue && lookupOptions.length > 0) {
-            const lookupOptionsForColumn = getLookupOptionsForColumn(col.key);
+            // ✅ For display, use the default mapping (not columnLookupMap)
+            const lookupOptionsForColumn = getLookupOptionsForColumn(col.key, "display");
             if (lookupOptionsForColumn.length > 0) {
               const label = getLabelFromValue(text, lookupOptionsForColumn, i18n);
               text = label;
@@ -236,6 +240,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
     getLabelFromValue,
     i18n,
     filterOptions,
+    columnLookupMap, // ✅ Added to dependencies
   ]);
 
   return (

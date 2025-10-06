@@ -68,7 +68,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
 
   const fetchLookupData = async () => {
     try {
-      const result = await triggerGetLookups([1300, 1400, 1500]).unwrap();
+      const result = await triggerGetLookups([1300, 1400, 1500, 1800]).unwrap();
       setLookupOptions(result);
     } catch (error) {
       console.error("Failed to fetch lookup data:", error);
@@ -299,6 +299,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
         state={state}
         lookupOptions={lookupOptions}
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
+        columnLookupMap={{ inspectionType: 1800 }}
       />
 
       <FinesViewDrawer

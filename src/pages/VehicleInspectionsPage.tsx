@@ -60,7 +60,7 @@ const VehicleInspectionsPage: React.FC = () => {
   const enhancedApiParams = useMemo(() => {
     return {
       ...apiParams,
-      inspectionCategory: 13001 // Vehicle inspections filter
+      inspectionCategory: 13001, // Vehicle inspections filter
     };
   }, [apiParams]);
 
@@ -84,7 +84,7 @@ const VehicleInspectionsPage: React.FC = () => {
 
   const fetchLookupData = async () => {
     try {
-      const result = await triggerGetLookups([1300, 1400, 1500]).unwrap();
+      const result = await triggerGetLookups([1300, 1400, 1500, 1700]).unwrap();
       setLookupOptions(result);
     } catch (error) {
       console.error("Failed to fetch lookup data:", error);
@@ -309,6 +309,7 @@ const VehicleInspectionsPage: React.FC = () => {
         state={state}
         lookupOptions={lookupOptions}
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
+        columnLookupMap={{ inspectionType: 1700 }}
       />
 
       <FinesViewDrawer

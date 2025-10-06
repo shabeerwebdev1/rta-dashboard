@@ -18,7 +18,7 @@ function FineInspectionsPage() {
   // Function to handle tab change
   const handleTabChange = (key: string) => {
     setActiveTab(key);
-    
+
     // Set page title based on active tab
     if (key === "1") {
       setPageTitle(t(vehicleInspectionsConfig.title));
@@ -39,12 +39,7 @@ function FineInspectionsPage() {
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <Card bordered={false}>
-        <Tabs 
-          type="card" 
-          defaultActiveKey="1" 
-          activeKey={activeTab}
-          onChange={handleTabChange}
-        >
+        <Tabs type="card" defaultActiveKey="1" activeKey={activeTab} onChange={handleTabChange}>
           <TabPane tab={t("sidebar.Vehicle")} key="1">
             <VehicleInspectionsPage />
           </TabPane>
