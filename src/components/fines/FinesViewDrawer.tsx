@@ -1,37 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Form, Space, Image } from "antd";
-import {
-  CloseOutlined,
-  ShareAltOutlined,
-  EnvironmentOutlined,
-  PaperClipOutlined,
-} from "@ant-design/icons";
+import { CloseOutlined, ShareAltOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 
 import { useLazyGetLookupsQuery } from "../../services/rtkApiFactory";
 import { useUpdateFineCancelStatusMutation } from "../../services/rtkApiFactory";
-import { useAppNotification } from "../../utils/notificationManager"
+import { useAppNotification } from "../../utils/notificationManager";
 import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
 import { skipToken } from "@reduxjs/toolkit/query";
-import ArcGISMap from "../../components/common/ArcGISMap"
-import { PLATE_COLOR, PLATE_TYPE_SHORT } from "../../config/pageConfigs/finesConfig";
-import TradeLicenseCard from "../TradeLicenseCard";
+import ArcGISMap from "../../components/common/ArcGISMap";
+import { plateSources, PLATE_COLOR } from "../../config/pageConfigs/finesConfig";
 import UAEPlate from "../UAEPlate";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
-
-const plateSources: Record<number, string> = {
-  1: "Dubai",
-  2: "Abu Dhabi",
-  3: "Ajman",
-  4: "Sharjah",
-  5: "Umm Al Quwain",
-  6: "Fujairah",
-  7: "Ras Al Khaimah",
-  8: "Al Ain",
-  9: "Other",
-};
 
 interface FinesViewDrawerProps {
   open: boolean;
@@ -278,48 +260,60 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                   headStyle={{ background: "#fafafa", fontWeight: 600 }}
                   style={{ marginBottom: 16, borderRadius: 12 }}
                 >
-                  {/* Trade License at the top of Fine Details */}
-                  {mappedFine?.tradeLicenseNumber && (
-                    <div style={{ display: "flex", justifyContent: "left", marginBottom: 16 }}>
-                      <TradeLicenseCard
-                        code={mappedFine?.tradeLicenseNumber ?? ""}
-                        number={mappedFine?.tradeLicenseNameEn || mappedFine?.tradeLicenseNameAr || "---"}
-                        emirateAr={mappedFine?.tradeLicenseNameAr ?? ""}
-                      />
-                    </div>
-                  )}
-
                   <Row gutter={[0, 12]}>
+                    {/* Trade License Number */}
+                    {mappedFine?.tradeLicenseNumber && (
+                      <>
+                        <Col span={10}>
+                          <Text strong>{t("form.tradeLicenseNumber")}:</Text>
+                        </Col>
+                        <Col span={14}>{mappedFine.tradeLicenseNumber || "---"}</Col>
+
+                        <Col span={10}>
+                          <Text strong>{t("form.tradeLicenseName")}:</Text>
+                        </Col>
+                        <Col span={14}>{mappedFine.tradeLicenseNameEn || mappedFine.tradeLicenseNameAr || "---"}</Col>
+                      </>
+                    )}
+
+                    {/* Fine Details */}
                     <Col span={10}>
                       <Text strong>{t("form.fineType")}:</Text>
                     </Col>
                     <Col span={14}>{mappedFine.inspectionCategoryLabel}</Col>
+
                     <Col span={10}>
                       <Text strong>{t("form.fineNumber")}:</Text>
                     </Col>
                     <Col span={14}>{mappedFine.entityNo}</Col>
+
                     <Col span={10}>
                       <Text strong>{t("form.inspectionType")}:</Text>
                     </Col>
                     <Col span={14}>{mappedFine.inspectionTypeLabel}</Col>
+
                     <Col span={10}>
                       <Text strong>{t("form.inspectionDate")}:</Text>
                     </Col>
                     <Col span={14}>{mappedFine.inspectionDateFormatted}</Col>
+
                     <Col span={10}>
                       <Text strong>{t("form.amount")}:</Text>
                     </Col>
                     <Col span={14}>{mappedFine.fineAmountFormatted}</Col>
+
                     <Col span={10}>
                       <Text strong>{t("form.paymentType")}:</Text>
                     </Col>
                     <Col span={14}>{mappedFine.paymentTypeLabel}</Col>
+
                     <Col span={10}>
                       <Text strong>{t("form.inspectionStatus")}:</Text>
                     </Col>
                     <Col span={14}>
                       <Tag color={mappedFine.statusColor}>{mappedFine.inspectionStatusLabel}</Tag>
                     </Col>
+
                     <Col span={10}>
                       <Text strong>{t("form.blackPoints")}:</Text>
                     </Col>
@@ -340,10 +334,10 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                     {/* Vehicle Plate at the top of Vehicle Details */}
                     <div style={{ display: "flex", justifyContent: "left", marginBottom: 16 }}>
                       <UAEPlate
-                        code={PLATE_TYPE_SHORT[mappedFine?.plateCategoryValue] ?? "---"}
+                        code={PLATE_COLOR[mappedFine?.plateCodeValue] ?? "---"}
                         number={mappedFine?.plateNumber ?? "---"}
-                        emirateEn={plateSources[mappedFine?.plateSourceValue] ?? "Unknown"}
-                        emirateAr={PLATE_COLOR[mappedFine?.plateCodeValue] ?? "---"}
+                        emirateEn={plateSources[mappedFine?.plateSourceValue]?.en || ""}
+                        emirateAr={plateSources[mappedFine?.plateSourceValue]?.ar || ""}
                       />
                     </div>
 
@@ -440,7 +434,6 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                   size="small"
                   style={{ borderRadius: 12, marginBottom: 16 }}
                   headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                  
                 >
                   {mappedFine.latitude && mappedFine.longitude ? (
                     <ArcGISMap
@@ -474,7 +467,6 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                   size="small"
                   style={{ borderRadius: 12, marginBottom: 16 }}
                   headStyle={{ background: "#fafafa", fontWeight: 600 }}
-                 
                 >
                   <Spin spinning={isLoadingAttachments}>
                     {attachments.length > 0 ? (

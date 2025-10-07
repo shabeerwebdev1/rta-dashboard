@@ -47,9 +47,9 @@
     "carPlate": "Car Plate",
     "tradeLicense": "Trade License"
   },
-  "info":{
-     "basicDetails": "Basic Details",
-     "allFines": "All Fines"
+  "info": {
+    "basicDetails": "Basic Details",
+    "allFines": "All Fines"
   },
   "page": {
     "title": {
@@ -72,7 +72,9 @@
       "tradeLicenseInspections": "Parking Inspections",
       "parkonicLocation": "Parkonic Location",
       "vehicleInspections": "Vehicle Inspections",
-      "parkingsInspections": "Parking Inspections"
+      "parkingsInspections": "Parking Inspections",
+      "vehiclefines": "Vehicle Fines",
+      "parkingsfines": "Parking Fines"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",
@@ -221,7 +223,8 @@
     "disputereview": "Dispute Review",
     "disputedetails": "Dispute Details",
     "reviewtimeline": "Review Timeline",
-
+    "tradeLicenseName": "Trade License Name",
+    "pledgeDate": "Pledge Date",
     "licenseNo": "License No",
     "companyName": "Company Name",
     "companyEmail": "Company Email",

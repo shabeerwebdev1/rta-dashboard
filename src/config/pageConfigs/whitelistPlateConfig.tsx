@@ -201,7 +201,7 @@ export const whitelistPlateConfig: PageConfig = {
     columns: [
       {
         key: "plateNumber",
-        title: "Plate Number",
+        title: "form.Number",
         type: "ReactNode",
         width: "160px",
         align: "center",

@@ -103,8 +103,9 @@ const GeneralSearchPage: React.FC = () => {
   );
 
   useEffect(() => {
-    setPageTitle("General Search");
-  }, [setPageTitle]);
+    setPageTitle(t("sidebar.general"));
+  }, [setPageTitle, i18n.language]); // 👈 Add i18n.language
+  
 
   const handleCarSearch = async (values: any) => {
     const { plateNumber, plateSource, plateCategory, plateCode } = values;
@@ -176,68 +177,67 @@ const GeneralSearchPage: React.FC = () => {
                     </Form.Item>
                   </Col>
                   <Col span={6}>
-  <Form.Item
-    name="plateSource"
-    label={t("form.plateSource")}
-    rules={[{ required: true, message: t("placeholders.plateSource") }]}
-  >
-    <Select
-      showSearch
-      placeholder={t("placeholders.plateSource")}
-      optionFilterProp="label"
-      filterOption={(input, option) =>
-        (option?.label as string).toLowerCase().includes(input.toLowerCase())
-      }
-      options={plateSourceOptions.map((option) => ({
-        label: option.label,
-        value: option.value,
-      }))}
-    />
-  </Form.Item>
-</Col>
+                    <Form.Item
+                      name="plateSource"
+                      label={t("form.plateSource")}
+                      rules={[{ required: true, message: t("placeholders.plateSource") }]}
+                    >
+                      <Select
+                        showSearch
+                        placeholder={t("placeholders.plateSource")}
+                        optionFilterProp="label"
+                        filterOption={(input, option) =>
+                          (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                        }
+                        options={plateSourceOptions.map((option) => ({
+                          label: option.label,
+                          value: option.value,
+                        }))}
+                      />
+                    </Form.Item>
+                  </Col>
 
-<Col span={6}>
-  <Form.Item
-    name="plateCategory" // 👈 this is "Type"
-    label={t("form.plateCategory")}
-    rules={[{ required: true, message: t("placeholders.plateCategory") }]}
-  >
-    <Select
-      showSearch
-      placeholder={t("placeholders.plateCategory")}
-      optionFilterProp="label"
-      filterOption={(input, option) =>
-        (option?.label as string).toLowerCase().includes(input.toLowerCase())
-      }
-      options={plateCategoryOptions.map((option) => ({
-        label: option.label,
-        value: option.value,
-      }))}
-    />
-  </Form.Item>
-</Col>
+                  <Col span={6}>
+                    <Form.Item
+                      name="plateCategory" // 👈 this is "Type"
+                      label={t("form.plateCategory")}
+                      rules={[{ required: true, message: t("placeholders.plateCategory") }]}
+                    >
+                      <Select
+                        showSearch
+                        placeholder={t("placeholders.plateCategory")}
+                        optionFilterProp="label"
+                        filterOption={(input, option) =>
+                          (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                        }
+                        options={plateCategoryOptions.map((option) => ({
+                          label: option.label,
+                          value: option.value,
+                        }))}
+                      />
+                    </Form.Item>
+                  </Col>
 
-<Col span={6}>
-  <Form.Item
-    name="plateCode" // 👈 this is "Color"
-    label={t("form.plateCode")}
-    rules={[{ required: true, message: t("placeholders.plateCode") }]}
-  >
-    <Select
-      showSearch
-      placeholder={t("placeholders.plateCode")}
-      optionFilterProp="label"
-      filterOption={(input, option) =>
-        (option?.label as string).toLowerCase().includes(input.toLowerCase())
-      }
-      options={plateCodeOptions.map((option) => ({
-        label: option.label,
-        value: option.value,
-      }))}
-    />
-  </Form.Item>
-</Col>
-
+                  <Col span={6}>
+                    <Form.Item
+                      name="plateCode" // 👈 this is "Color"
+                      label={t("form.plateCode")}
+                      rules={[{ required: true, message: t("placeholders.plateCode") }]}
+                    >
+                      <Select
+                        showSearch
+                        placeholder={t("placeholders.plateCode")}
+                        optionFilterProp="label"
+                        filterOption={(input, option) =>
+                          (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                        }
+                        options={plateCodeOptions.map((option) => ({
+                          label: option.label,
+                          value: option.value,
+                        }))}
+                      />
+                    </Form.Item>
+                  </Col>
                 </Row>
                 <Row>
                   <Col span={24} style={{ textAlign: "right" }}>

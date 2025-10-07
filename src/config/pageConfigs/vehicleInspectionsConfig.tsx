@@ -153,7 +153,7 @@ export const PLATE_COLOR: Record<number, string> = {
 
 export const vehicleInspectionsConfig: PageConfig = {
   key: "vehicleInspections",
-  title: "page.title.vehicleInspections",
+  title: "page.title.vehiclefines",
   name: { singular: "Vehicle Inspection", plural: "Vehicle Inspections" },
 
   api: {

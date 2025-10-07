@@ -4,7 +4,6 @@ import {
   CarOutlined,
   FileTextOutlined,
   TeamOutlined,
-  DollarOutlined,
   ExclamationCircleOutlined,
   SearchOutlined,
   BarChartOutlined,
@@ -15,6 +14,9 @@ import {
   SettingOutlined,
   LinkOutlined,
   EnvironmentOutlined,
+  CarFilled,
+  WarningOutlined,
+  IdcardOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -106,13 +108,13 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         },
         {
           key: FULL_PATHS.FINES,
-          icon: <DollarOutlined />,
+          icon: <CarFilled />,
           labelText: t("sidebar.Vehicle"),
           permission: "Inspection",
         },
         {
           key: FULL_PATHS.TRADE_LICENSE_INSPECTIONS,
-          icon: <FileTextOutlined />,
+          icon: <IdcardOutlined />,
           labelText: t("sidebar.Parkings"),
           permission: "Inspection",
         },
@@ -121,24 +123,23 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
 
     {
       key: FULL_PATHS.FINES,
-      icon: <DollarOutlined />,
+      icon: <WarningOutlined />,
       labelText: t("sidebar.fines"),
       children: [
         {
           key: FULL_PATHS.FINES_VEHICLES,
-          icon: <PushpinOutlined />,
+          icon: <CarFilled />,
           labelText: t("sidebar.Vehicle"),
           permission: "Dispute",
         },
         {
           key: FULL_PATHS.FINES_PARKINGS,
-          icon: <DollarOutlined />,
+          icon: <IdcardOutlined />,
           labelText: t("sidebar.Parkings"),
           permission: "Dispute",
         },
       ],
     },
-    
 
     {
       key: FULL_PATHS.DISPUTE,

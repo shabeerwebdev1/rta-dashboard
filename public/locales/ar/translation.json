@@ -73,7 +73,9 @@
       "tradeLicenseInspections": "تفتيشات الرخص التجارية",
       "parkonicLocation": "الموقع باركونيك",
       "vehicleInspections": "تفتيشات المركبات",
-      "parkingsInspections": "تفتيشات مواقف السيارات"
+      "parkingsInspections": "تفتيشات مواقف السيارات",
+      "vehiclefines": "غرامات المركبات",
+      "parkingsfines": "غرامات مواقف السيارات"
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",
@@ -242,14 +244,14 @@
     "ticketNumber": "رقم التذكرة",
     "finestatus": "حالة الغرامة",
     "assign": "تعيين",
-     "latitude": "أدخل خط العرض",
+    "latitude": "أدخل خط العرض",
     "longitude": "أدخل خط الطول",
     "street": "أدخل الشارع",
     "assignedTo": "مُعين إلى",
     "Validity": "الصلاحية",
-    "parkingName": "اسم مواقف السيارات",
-    "parkingNameArabic": "اسم مواقف السيارات (بالعربية)",
-    "pickLocation": "اختر الموقع"
+    "violationDetails": "تفاصيل الانتهاك",
+    "tradeLicenseName": "اسم الرخصة التجارية",
+    "pledgeDate": "تاريخ التعهد"
 
   },
   "common": {
@@ -288,7 +290,6 @@
     "getDetails": "الحصول على التفاصيل",
     "viewLocation": "عرض الموقع",
     "viewAttachments": "عرض المرفقات"
-
   },
   "entity": {
     "plate": "لوحة",
@@ -351,7 +352,7 @@
     "selectAssignmentTypes": "اختر نوع التكليف (التكليفات)",
     "selectRole": "اختر الدور",
     "enterComments": "أدخل التعليقات",
- "latitude": "أدخل خط العرض",
+    "latitude": "أدخل خط العرض",
     "longitude": "أدخل خط الطول",
     "subreason": "أدخل سبب النزاع الفرعي",
     "zones" : "أدخل اسم المنطقة",
@@ -386,4 +387,5 @@
     "Saturday": "السبت",
     "Sunday": "الأحد"
   }
+  
 }

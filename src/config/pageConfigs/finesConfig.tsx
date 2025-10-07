@@ -1,17 +1,17 @@
-import { CheckCircleOutlined, CloseCircleOutlined, DollarCircleOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
 import UAEPlate from "../../components/UAEPlate";
 
-const plateSources: Record<number, string> = {
-  1: "Dubai",
-  2: "Abu Dhabi",
-  3: "Ajman",
-  4: "Sharjah",
-  5: "Umm Al Quwain",
-  6: "Fujairah",
-  7: "Ras Al Khaimah",
-  8: "Al Ain",
-  9: "Other",
+export const plateSources: Record<number, { en: string; ar: string }> = {
+  1: { en: "Dubai", ar: "دبي" },
+  2: { en: "Abu Dhabi", ar: "أبو ظبي" },
+  3: { en: "Ajman", ar: "عجمان" },
+  4: { en: "Sharjah", ar: "الشارقة" },
+  5: { en: "Umm Al Quwain", ar: "أم القيوين" },
+  6: { en: "Fujairah", ar: "الفجيرة" },
+  7: { en: "Ras Al Khaimah", ar: "رأس الخيمة" },
+  8: { en: "Al Ain", ar: "العين" },
+  9: { en: "Other", ar: "أخرى" },
 };
 
 export const PLATE_TYPE_SHORT: Record<number, string> = {
@@ -171,11 +171,10 @@ export const finesConfig: PageConfig = {
 
   statsConfig: [
     {
-  title: "Total Fines",
-  icon: <span style={{  fontSize: 24 }}>AED</span>,
-  value: (data) => data.length,
-}
-    ,
+      title: "Total Fines",
+      icon: <span style={{ fontSize: 24 }}>AED</span>,
+      value: (data) => data.length,
+    },
     {
       title: "Paid Fines",
       icon: <CheckCircleOutlined />,
@@ -200,10 +199,10 @@ export const finesConfig: PageConfig = {
         type: "custom",
         render: (_, record) => (
           <UAEPlate
-            code={PLATE_TYPE_SHORT[record?.plateCategoryValue]}
+            code={PLATE_COLOR[record?.plateCodeValue] || ""}
             number={record?.plateNumber}
-            emirateEn={plateSources[record?.plateSourceValue]}
-            emirateAr={PLATE_COLOR[record?.plateCodeValue]}
+            emirateEn={plateSources[record?.plateSourceValue]?.en || ""}
+            emirateAr={plateSources[record?.plateSourceValue]?.ar || ""}
           />
         ),
       },

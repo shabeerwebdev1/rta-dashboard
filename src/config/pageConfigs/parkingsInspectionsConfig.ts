@@ -2,7 +2,7 @@ import type { PageConfig } from "../../types/config";
 
 export const parkingsInspectionsConfig: PageConfig = {
   key: "parkingsInspections",
-  title: "page.title.parkingsInspections",
+  title: "page.title.parkingsfines",
   name: { singular: "Parking Inspection", plural: "Parking Inspections" },
 
   api: {

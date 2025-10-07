@@ -8,12 +8,12 @@ export const PATHS = {
   WHITELIST: "whitelist",
   PLATES: "plates",
   TRADELICENSES: "tradelicenses",
-  INSPECTIONS_OBSTACLES: "inspections-obstacles", // ✅ nested under whitelist
+  INSPECTIONS_OBSTACLES: "inspections-obstacles", 
 
   PLEDGES: "pledges",
   INSPECTIONS: "inspections",
   FINES: "fines",
-  TRADE_LICENSE_INSPECTIONS: "trade-license-inspections", // ✅ renamed
+  TRADE_LICENSE_INSPECTIONS: "trade-license-inspections", 
 
   
   PARKONIC: "parkonic",
@@ -28,7 +28,6 @@ export const PATHS = {
   TOWING: "towing",
   ADHOCSHIFTPLAN:"adhocshiftplan",
   SHIFT_MANAGEMENT: "shift-management",
-  FINES: "fines",
   FINES_VEHICLES: "vehicles",
   FINES_PARKINGS: "parkings",
 
@@ -73,7 +72,6 @@ export const FULL_PATHS = {
   TEAM_TRAINING: "/team-assessment/training",
   SHIFT_MANAGEMENT: "/shift-management",
 
-  FINES: "/fines",
   FINES_VEHICLES: "/fines/vehicles",
   FINES_PARKINGS: "/fines/parkings",
 
