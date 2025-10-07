@@ -237,15 +237,13 @@ const SupervisorViewPage: React.FC = () => {
         <Col span={16}>
           <Card bodyStyle={{ padding: 0, height: "100%", position: "relative" }}>
             <ArcGISMap
-              inspectors={inspectorAvatars}
-              center={[55.2743, 25.1972]}
-              zoom={12}
-              height="495px"
-              onInspectorClick={(inspector) => {
-                setSelectedInspector(inspector);
-                setDrawerVisible(true);
-              }}
-            />
+      inspectors={inspectorAvatars}
+      center={[55.2743, 25.1972]}
+      zoom={12}
+      height="495px"
+      clickable={false} // This disables all click functionality
+      onInspectorClick={undefined} // Not needed since clickable is false
+    />
           </Card>
         </Col>
 

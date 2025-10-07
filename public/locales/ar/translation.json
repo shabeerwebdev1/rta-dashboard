@@ -247,8 +247,9 @@
     "street": "أدخل الشارع",
     "assignedTo": "مُعين إلى",
     "Validity": "الصلاحية",
-    "violationDetails": "تفاصيل الانتهاك"
-
+    "parkingName": "اسم مواقف السيارات",
+    "parkingNameArabic": "اسم مواقف السيارات (بالعربية)",
+    "pickLocation": "اختر الموقع"
 
   },
   "common": {
@@ -350,10 +351,13 @@
     "selectAssignmentTypes": "اختر نوع التكليف (التكليفات)",
     "selectRole": "اختر الدور",
     "enterComments": "أدخل التعليقات",
-     "latitude": "أدخل خط العرض",
+ "latitude": "أدخل خط العرض",
     "longitude": "أدخل خط الطول",
-    "street": "أدخل الشارع",
-    "subreason": "أدخل سبب النزاع الفرعي"
+    "subreason": "أدخل سبب النزاع الفرعي",
+    "zones" : "أدخل اسم المنطقة",
+    "areas" : "أدخل اسم المنطقة",
+    "parkingName" : "أدخل اسم مواقف السيارات",
+    "parkingNameArabic" : "أدخل اسم مواقف السيارات باللغة العربية"
   },
   "dashboard": {
     "totalInspectors": "إجمالي المفتشين",

@@ -5,7 +5,7 @@ import Graphic from "@arcgis/core/Graphic";
 import Point from "@arcgis/core/geometry/Point";
 import PictureMarkerSymbol from "@arcgis/core/symbols/PictureMarkerSymbol";
 import "@arcgis/core/assets/esri/themes/light/main.css";
-import { Dropdown, Menu, theme } from "antd";
+import { Dropdown, Menu } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 
 type Inspector = {
@@ -26,6 +26,7 @@ interface ArcGISMapProps {
   zoom?: number;
   height?: string;
   onInspectorClick?: (inspector: Inspector) => void;
+  clickable?: boolean; // Add this new prop
 }
 
 const ArcGISMap: React.FC<ArcGISMapProps> = ({
@@ -34,65 +35,115 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   zoom = 15,
   height = "500px",
   onInspectorClick,
+  clickable = true, // Default to true for backward compatibility
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<__esri.MapView | null>(null);
   const [basemap, setBasemap] = useState("streets-navigation-vector");
+  const [selectedPoint, setSelectedPoint] = useState<Point | null>(null);
 
   useEffect(() => {
-    if (mapRef.current) {
-      const map = new Map({ basemap });
-      const view = new MapView({
-        container: mapRef.current,
-        map,
-        center,
-        zoom,
+    if (!mapRef.current) return;
+
+    const map = new Map({
+      basemap: basemap
+    });
+
+    const view = new MapView({
+      container: mapRef.current,
+      map: map,
+      center: center,
+      zoom: zoom
+    });
+
+    viewRef.current = view;
+
+    // Clear existing graphics
+    view.graphics.removeAll();
+
+    // Add inspector markers
+    inspectors.forEach((inspector) => {
+      const point = new Point({
+        longitude: inspector.lng,
+        latitude: inspector.lat,
       });
 
-      viewRef.current = view;
+      const symbol = inspector.markerType === "google-pin"
+        ? new PictureMarkerSymbol({
+            url: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png",
+            width: "32px",
+            height: "32px",
+          })
+        : new PictureMarkerSymbol({
+            url: "/images/Inspector.png",
+            width: "40px",
+            height: "40px",
+          });
 
-      // Add inspector markers
-      inspectors.forEach((inspector) => {
+      const graphic = new Graphic({
+        geometry: point,
+        symbol: symbol,
+        attributes: { inspector },
+      });
+
+      view.graphics.add(graphic);
+    });
+
+    // Only add click event if clickable is true
+    if (clickable) {
+      const clickHandler = view.on("click", (event) => {
         const point = new Point({
-          longitude: inspector.lng,
-          latitude: inspector.lat,
+          longitude: event.mapPoint.longitude,
+          latitude: event.mapPoint.latitude
         });
 
-        // Choose marker type
-        const symbol =
-          inspector.markerType === "google-pin"
-            ? new PictureMarkerSymbol({
-                url: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png", // Google pin
-                width: "32px",
-                height: "32px",
-              })
-            : new PictureMarkerSymbol({
-                url: "/images/Inspector.png", // Default inspector icon
-                width: "40px",
-                height: "40px",
-              });
+        setSelectedPoint(point);
 
-        const graphic = new Graphic({
-          geometry: point,
-          symbol,
-          attributes: { inspector },
-        });
-
-        view.graphics.add(graphic);
-      });
-
-      // Click event for inspector
-      view.on("click", (event) => {
-        view.hitTest(event).then((response) => {
-          if (response.results.length > 0) {
-            const inspector = response.results[0].graphic.attributes?.inspector;
-            if (inspector && onInspectorClick) {
-              onInspectorClick(inspector);
+        if (inspectors.length > 0) {
+          view.hitTest(event).then((response) => {
+            if (response.results.length > 0) {
+              const graphic = response.results[0].graphic;
+              const inspector = graphic.attributes?.inspector;
+              if (inspector && onInspectorClick) {
+                onInspectorClick(inspector);
+              }
+            } else {
+              if (onInspectorClick) {
+                onInspectorClick({
+                  id: 0,
+                  name: "Selected Location",
+                  nameAr: "الموقع المحدد",
+                  lat: event.mapPoint.latitude,
+                  lng: event.mapPoint.longitude,
+                  status: "selected",
+                  statusAr: "محدد"
+                });
+              }
             }
+          });
+        } else {
+          if (onInspectorClick) {
+            onInspectorClick({
+              id: 0,
+              name: "Selected Location",
+              nameAr: "الموقع المحدد",
+              lat: event.mapPoint.latitude,
+              lng: event.mapPoint.longitude,
+              status: "selected",
+              statusAr: "محدد"
+            });
           }
-        });
+        }
       });
 
+      return () => {
+        if (clickHandler) clickHandler.remove();
+        if (viewRef.current) {
+          viewRef.current.destroy();
+          viewRef.current = null;
+        }
+      };
+    } else {
       return () => {
         if (viewRef.current) {
           viewRef.current.destroy();
@@ -100,7 +151,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         }
       };
     }
-  }, [inspectors, basemap]);
+  }, [inspectors, basemap, selectedPoint, center, zoom, clickable]);
 
   // Menu for basemap switching
   const menu = (
@@ -110,14 +161,23 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         { key: "streets-navigation-vector", label: "Streets (Day)" },
         { key: "streets-night-vector", label: "Streets (Night)" },
         { key: "satellite", label: "Satellite" },
+        { key: "osm", label: "OpenStreetMap" },
+        { key: "topo-vector", label: "Topographic" },
       ]}
     />
   );
 
   return (
     <div style={{ position: "relative" }}>
-      <div ref={mapRef} style={{ width: "100%", height , }} />
-
+      <div 
+        ref={mapRef} 
+        style={{ 
+          width: "100%", 
+          height: height,
+          minHeight: "400px" 
+        }} 
+      />
+      
       {/* Basemap Switcher */}
       <Dropdown overlay={menu} trigger={["click"]}>
         <MoreOutlined
@@ -127,13 +187,16 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
             right: 12,
             fontSize: 22,
             background: "#fff",
-            borderRadius: "50%",
-            padding: 6,
+            borderRadius: "4px",
+            padding: 8,
             cursor: "pointer",
             boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
           }}
         />
       </Dropdown>
+
+      {/* Instructions */}
+     
     </div>
   );
 };

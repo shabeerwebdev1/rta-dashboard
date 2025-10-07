@@ -249,7 +249,10 @@
     "street": "street",
     "assignedTo": "Assigned To",
     "Validity": "Validity",
-    "violationDetails": "Violation Details"
+    "violationDetails": "Violation Details",
+    "parkingName": "Parking Name",
+    "parkingNameArabic": "Parking Name in (Arabic)",
+    "pickLocation": "Pick Location"
   },
   "common": {
     "action": "Action",
@@ -355,9 +358,12 @@
     "selectAssignmentTypes": "Select Assignment Type(s)",
     "selectRole": "Select Role",
     "enterComments": "Enter comments",
-    "latitude": "Enter latitude",
-    "longitude": "Enter longitude",
-    "street": "Enter street"
+    "latitude": "Pick latitude From Map",
+    "longitude": "Pick longitude From Map",
+    "zones" : "Enter Zone Name",
+    "areas" : "Enter Area Name",
+    "parkingName" : "Enter Parking Name",
+    "parkingNameArabic" : "Enter Parking Name in (Arabic)"
   },
 
   "dashboard": {

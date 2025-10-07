@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Spin, Tag, Pagination, DatePicker } from "antd";
-import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined, CalendarOutlined } from "@ant-design/icons";
+import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined, CalendarOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import dayjs  from "dayjs";
@@ -25,6 +25,7 @@ import { parkonicLocationPageConfig } from "../config/pageConfigs/parkonicLocati
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import ParkonicLocationViewDrawer from "../components/ParkonicLocation/ParkonicLocationViewDrawer";
 import { usePermission } from "../hooks/usePermission";
+import ArcGISMap from "../components/common/ArcGISMap";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -54,6 +55,10 @@ const ParkonicLocationPage: React.FC = () => {
   const [viewRecord, setViewRecord] = useState<any>(null);
   const [tableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  
+  // Map modal state
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   // Client-side filter states
   const [searchValue, setSearchValue] = useState<string>("");
@@ -78,20 +83,17 @@ const ParkonicLocationPage: React.FC = () => {
   const [triggerGetLocation, { data: singleRecordData, isSuccess: isSingleRecordSuccess }] =
     useLazyGetParkonicsLocationByIdQuery();
 
-  // Client-side filtering logic
   // Client-side filtering logic with formatted dates
-const filteredData = useMemo(() => {
-  if (!data?.data) return [];
+  const filteredData = useMemo(() => {
+    if (!data?.data) return [];
 
-  // 🔑 Format dates before doing any filtering
-  let formatted = data.data.map((item: any) => ({
-    ...item,
-    created_At: item.created_At ? dayjs(item.created_At).format("DD-MM-YYYY") : "-",
-  }));
+    // 🔑 Format dates before doing any filtering
+    let formatted = data.data.map((item: any) => ({
+      ...item,
+      created_At: item.created_At ? dayjs(item.created_At).format("DD-MM-YYYY") : "-",
+    }));
 
-  let filtered = [...formatted];
-
-
+    let filtered = [...formatted];
 
     // Apply search filter
     if (debouncedSearchValue && searchKey) {
@@ -218,6 +220,25 @@ const filteredData = useMemo(() => {
     form.resetFields();
   };
 
+  // Handle map location selection
+  const handleMapLocationSelect = (location: { lat: number; lng: number }) => {
+    setSelectedLocation(location);
+    // Update the form fields with the selected coordinates
+    form.setFieldsValue({
+      latitude: location.lat.toString(),
+      longitude: location.lng.toString()
+    });
+    setIsMapModalOpen(false);
+  };
+
+  const handleInspectorClick = (inspector: any) => {
+    
+    handleMapLocationSelect({
+      lat: inspector.lat,
+      lng: inspector.lng
+    });
+  };
+
   // Updated pagination handler to match UserZoneLinking pattern
   const handlePageChange = (page: number, size?: number) => {
     setCurrentPage(page);
@@ -248,16 +269,16 @@ const filteredData = useMemo(() => {
   const handleFormSubmit = async (values: any) => {
     try {
       const payload = {
-      ...values,
-      latitude: parseFloat(values.latitude),
-      longitude: parseFloat(values.longitude),
-    };
+        ...values,
+        latitude: parseFloat(values.latitude),
+        longitude: parseFloat(values.longitude),
+      };
       let response;
       if (modalMode === "add") {
-        response = await addLocation(values).unwrap();
+        response = await addLocation(payload).unwrap();
         notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
       } else {
-        response = await updateLocation({ ...values, id: selectedRecord.id }).unwrap();
+        response = await updateLocation({ ...payload, id: selectedRecord.id }).unwrap();
         notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
       }
       handleModalClose();
@@ -362,7 +383,6 @@ const filteredData = useMemo(() => {
               <RangePicker
                 value={dateRange}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
-               
                 format="DD-MM-YYYY"
                 allowClear
                 suffixIcon={<CalendarOutlined />}
@@ -372,7 +392,7 @@ const filteredData = useMemo(() => {
           <Col>
             <Space>
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
-                {t("common.downloadCsv")} ({selectedRowKeys.length})
+                {t("common.downloadCsv")} 
               </Button>
               <Button
                 type="primary"
@@ -426,7 +446,7 @@ const filteredData = useMemo(() => {
             pageSize={pageSize}
             total={filteredData.length}
             onChange={handlePageChange}
-             showSizeChanger={{ showSearch: false }}
+            showSizeChanger={{ showSearch: false }}
             pageSizeOptions={[ "10", "20", "50"]}
             showQuickJumper={false}
             showTotal={(total, range) => (
@@ -463,32 +483,97 @@ const filteredData = useMemo(() => {
         <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
           <Row gutter={24}>
             <Col span={12}>
+              <Form.Item name="parkingName" label={t("form.parkingName")} rules={[{ required: true }]}>
+                <Input  placeholder={t("placeholders.parkingName")} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="parkingNameArabic" label={t("form.parkingNameArabic")} rules={[{ required: true }]}>
+                <Input placeholder={t("placeholders.parkingNameArabic")} dir="rtl" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
               <Form.Item name="zone" label={t("form.zone")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.zone")} />
+                <Input placeholder={t("placeholders.zones")} />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="area" label={t("form.area")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.area")} />
+                <Input placeholder={t("placeholders.areas")} />
               </Form.Item>
+            
             </Col>
-            <Col span={12}>
-              <Form.Item name="street" label={t("form.street")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.street")} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="latitude" label={t("form.latitude")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.latitude")} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="longitude" label={t("form.longitude")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.longitude")} />
-              </Form.Item>
-            </Col>
+            
+            <Col span={24}>
+        <Form.Item label={t("form.pickLocation")} required>
+  <Input.Group compact style={{ display: "flex" }}>
+    <Form.Item
+      name="latitude"
+      noStyle
+      rules={[{ required: true }]}
+      style={{ width: "50%" }}
+    >
+      <Input placeholder={t("placeholders.latitude")} />
+    </Form.Item>
+    <Form.Item
+      name="longitude"
+      noStyle
+      rules={[{ required: true }]}
+      style={{ width: "50%" }}
+    >
+      <Input placeholder={t("placeholders.longitude")} />
+    </Form.Item>
+    <Button
+    type="primary" 
+      icon={<EnvironmentOutlined />}
+      onClick={() => setIsMapModalOpen(true)}
+      style={{ width: "20%" }}
+    >
+      Pick
+    </Button>
+  </Input.Group>
+</Form.Item>
+</Col>
+
           </Row>
         </Form>
+      </Modal>
+
+      
+      <Modal
+        open={isMapModalOpen}
+        title="Select Location on Map"
+        onCancel={() => setIsMapModalOpen(false)}
+        width="80%"
+        style={{ maxWidth: '1000px' }}
+        footer={[
+          <Button key="cancel" onClick={() => setIsMapModalOpen(false)}>
+            Cancel
+          </Button>,
+          <Button 
+            key="confirm" 
+            type="primary" 
+            disabled={!selectedLocation}
+            onClick={() => {
+              if (selectedLocation) {
+                handleMapLocationSelect(selectedLocation);
+              }
+            }}
+          >
+            Confirm Location
+          </Button>,
+        ]}
+      >
+        <div style={{ height: '400px' }}>
+          <ArcGISMap
+            inspectors={[]} 
+            center={[55.2743, 25.1972]}
+            zoom={12}
+            height="100%"
+            onInspectorClick={handleInspectorClick}
+          />
+        </div>
+       
       </Modal>
 
       {viewRecord && (
