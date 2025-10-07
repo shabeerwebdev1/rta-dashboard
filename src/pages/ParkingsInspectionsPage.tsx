@@ -55,8 +55,23 @@ const TradeLicenseInspectionPage: React.FC = () => {
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
+  const enhancedApiParams = useMemo(() => {
+    const params = { ...apiParams };
 
-  const { data, isLoading, isFetching } = useSearchTradeQuery(apiParams, {
+    // Ensure orFilters exists
+    if (!params.orFilters) {
+      params.orFilters = {};
+    }
+
+    // Always add inspectionCategory filter
+    params.orFilters = {
+      ...params.orFilters,
+      inspectionCategory: 13001, // Permanent filter - always applied
+    };
+
+    return params;
+  }, [apiParams]);
+  const { data, isLoading, isFetching } = useSearchTradeQuery(enhancedApiParams, {
     refetchOnMountOrArgChange: true,
   });
 

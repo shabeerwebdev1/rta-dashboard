@@ -9,10 +9,11 @@ import { useAppNotification } from "../utils/notificationManager";
 import { useSearchFinesQuery, useLazyGetLookupsQuery } from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
-import { vehicleInspectionsConfig } from "../config/pageConfigs/vehicleInspectionsConfig";
+
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import FinesViewDrawer from "../components/fines/FinesViewDrawer";
+import { vehicleInspectionsConfig } from "../config/pageConfigs/vehicleInspectionsConfig";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -56,12 +57,22 @@ const VehicleInspectionsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
-  // Filter by inspectionCategory = 13001
+  // Merge permanent filter with user filters
   const enhancedApiParams = useMemo(() => {
-    return {
-      ...apiParams,
-      inspectionCategory: 13001, // Vehicle inspections filter
+    const params = { ...apiParams };
+
+    // Ensure orFilters exists
+    if (!params.orFilters) {
+      params.orFilters = {};
+    }
+
+    // Always add inspectionCategory filter
+    params.orFilters = {
+      ...params.orFilters,
+      inspectionCategory: 13001, // Permanent filter - always applied
     };
+
+    return params;
   }, [apiParams]);
 
   const { data, isLoading, isFetching } = useSearchFinesQuery(enhancedApiParams, {
@@ -257,8 +268,6 @@ const VehicleInspectionsPage: React.FC = () => {
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      {/* No StatsDisplay component - stats are hidden */}
-
       <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
         <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
           <Col>
