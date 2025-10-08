@@ -26,7 +26,11 @@ import {
 } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import DashboardViewDrawer from "../components/dashboard/DashboardViewDrawer";
-import { useGetSupervisorDashboardQuery, useGetActiveShiftsQuery,useLazyGetShiftsQuery } from "../services/rtkApiFactory";
+import {
+  useGetSupervisorDashboardQuery,
+  useGetActiveShiftsQuery,
+  useLazyGetShiftsQuery,
+} from "../services/rtkApiFactory";
 import { useTranslation } from "react-i18next";
 import ArcGISMap from "../components/common/ArcGISMap"; // ✅ our new reusable map
 
@@ -40,13 +44,13 @@ const SupervisorViewPage: React.FC = () => {
   const [selectedInspector, setSelectedInspector] = useState<any>(null);
   const [selectedSupervisor, setSelectedSupervisor] = useState<string | null>(null);
   const [selectedInspectorDropdown, setSelectedInspectorDropdown] = useState<string | null>(null);
-   const [shifts, setShifts] = useState<any[]>([]);
+  const [shifts, setShifts] = useState<any[]>([]);
   const [selectedShift, setSelectedShift] = useState<string | null>(null);
 
   const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery({});
-   const [triggerGetShifts, { isLoading: isLoadingShiftsDropdown }] = useLazyGetShiftsQuery();
+  const [triggerGetShifts, { isLoading: isLoadingShiftsDropdown }] = useLazyGetShiftsQuery();
 
-   useEffect(() => {
+  useEffect(() => {
     // Fetch shifts when page loads
     const fetchShifts = async () => {
       try {
@@ -58,7 +62,6 @@ const SupervisorViewPage: React.FC = () => {
     };
     fetchShifts();
   }, [triggerGetShifts, t]);
-
 
   const {
     data: dashboardData,
@@ -188,7 +191,7 @@ const SupervisorViewPage: React.FC = () => {
             </Select>
           </Col>
           <Col span={6}>
-             <Select
+            <Select
               placeholder={t("common.selectInspector", "Select Inspector")}
               style={{ width: "100%" }}
               value={selectedInspectorDropdown}
@@ -204,7 +207,7 @@ const SupervisorViewPage: React.FC = () => {
             </Select>
           </Col>
           <Col span={6}>
-<Select
+            <Select
               placeholder={t("common.selectShift", "Select Shift")}
               style={{ width: "100%" }}
               value={selectedShift}
@@ -214,20 +217,15 @@ const SupervisorViewPage: React.FC = () => {
             >
               {shifts.map((shift) => (
                 <Select.Option key={shift.shiftTypeGUID} value={shift.shiftTypeGUID}>
-                  {`${shift.shiftTypeCode} - ${
-                    i18n.language === "ar" ? shift.shiftTypeNameAr : shift.shiftTypeNameEn
-                  }`}
+                  {`${shift.shiftTypeCode} - ${i18n.language === "ar" ? shift.shiftTypeNameAr : shift.shiftTypeNameEn}`}
                 </Select.Option>
               ))}
             </Select>
-              
           </Col>
           <Col span={6}>
-           
-             <DatePicker.RangePicker format={"DD-MM-YYYY"} />
+            <DatePicker.RangePicker format={"DD-MM-YYYY"} />
           </Col>
         </Row>
-       
       </Card>
 
       {(isLoading || isLoadingShifts) && <Spin size="large" style={{ display: "block", margin: "50px auto" }} />}
@@ -237,13 +235,13 @@ const SupervisorViewPage: React.FC = () => {
         <Col span={16}>
           <Card bodyStyle={{ padding: 0, height: "100%", position: "relative" }}>
             <ArcGISMap
-      inspectors={inspectorAvatars}
-      center={[55.2743, 25.1972]}
-      zoom={12}
-      height="495px"
-      clickable={false} // This disables all click functionality
-      onInspectorClick={undefined} // Not needed since clickable is false
-    />
+              inspectors={inspectorAvatars}
+              center={[55.2743, 25.1972]}
+              zoom={12}
+              height="495px"
+              clickable={false} // This disables all click functionality
+              onInspectorClick={undefined} // Not needed since clickable is false
+            />
           </Card>
         </Col>
 
@@ -391,7 +389,6 @@ const SupervisorViewPage: React.FC = () => {
             >
               {t("dashboard.leaveRequests", "Leave Requests")}
             </Button>
-            
           </>
         }
       >
