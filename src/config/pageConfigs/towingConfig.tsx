@@ -51,24 +51,24 @@ export const towingConfig: PageConfig = {
 
   statsConfig: [
     { 
-      title: "Total Towings", 
+      title: "stats.TotalTowings", 
       icon: <IdcardOutlined />, 
       value: (data) => data.length 
     },
     {
-      title: "Approved",
+      title: "status.approved",
       icon: <CheckCircleOutlined />,
       value: (data) => data.filter((d) => d.towing_Status === "Approved").length,
       color: "#52c41a",
     },
     {
-      title: "Rejected",
+      title: "status.rejected",
       icon: <CloseCircleOutlined />,
       value: (data) => data.filter((d) => d.towing_Status === "Rejected").length,
       color: "#ff4d4f",
     },
     {
-      title: "Pending",
+      title: "status.pending",
       icon: <ClockCircleOutlined />,
       value: (data) => data.filter((d) => d.towing_Status === "pending").length,
       color: "#1890ff",

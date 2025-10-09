@@ -252,7 +252,6 @@
     "violationDetails": "تفاصيل الانتهاك",
     "tradeLicenseName": "اسم الرخصة التجارية",
     "pledgeDate": "تاريخ التعهد"
-
   },
   "common": {
     "action": "إجراء",
@@ -355,10 +354,10 @@
     "latitude": "أدخل خط العرض",
     "longitude": "أدخل خط الطول",
     "subreason": "أدخل سبب النزاع الفرعي",
-    "zones" : "أدخل اسم المنطقة",
-    "areas" : "أدخل اسم المنطقة",
-    "parkingName" : "أدخل اسم مواقف السيارات",
-    "parkingNameArabic" : "أدخل اسم مواقف السيارات باللغة العربية"
+    "zones": "أدخل اسم المنطقة",
+    "areas": "أدخل اسم المنطقة",
+    "parkingName": "أدخل اسم مواقف السيارات",
+    "parkingNameArabic": "أدخل اسم مواقف السيارات باللغة العربية"
   },
   "dashboard": {
     "totalInspectors": "إجمالي المفتشين",
@@ -386,6 +385,24 @@
     "Friday": "الجمعة",
     "Saturday": "السبت",
     "Sunday": "الأحد"
+  },
+  "stats": {
+    "totalFines": "إجمالي الغرامات",
+    "paidFines": "الغرامات المدفوعة",
+    "unpaidFines": "الغرامات غير المدفوعة",
+    "TotalInspections": "إجمالي التفتيشات",
+    "TotalRecords": "إجمالي السجلات",
+    "TotalDisputes": "إجمالي النزاعات",
+    "TotalPlates": "إجمالي اللوحات",
+    "ActivePlates": "اللوحات النشطة",
+    "InactivePlates": "اللوحات غير النشطة",
+    "ExpiredPlates": "اللوحات منتهية الصلاحية",
+    "TotalObstacles": "إجمالي المعوقات",
+    "TotalPledges": "إجمالي التعهدات",
+    "CorporatePledges": "تعهدات الشركات",
+    "IndividualPledges": "تعهدات الأفراد",
+    "TotalLeaves": "إجمالي الإجازات",
+    "TotalTowings": "إجمالي السحوبات"
+
   }
-  
 }

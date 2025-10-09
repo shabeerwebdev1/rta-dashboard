@@ -13,15 +13,15 @@ export const parkonicPageConfig: PageConfig = {
     dateRangeKey: "Entry_DateTime",
   },
   statsConfig: [
-    { title: "Total Records", icon: <IdcardOutlined />, value: (data) => data.length },
+    { title: "stats.TotalRecords", icon: <IdcardOutlined />, value: (data) => data.length },
     {
-      title: "Approved",
+      title: "status.approved",
       icon: <CheckCircleOutlined />,
       value: (data) => data.filter((d) => d.reviewStatus === 1).length,
       color: "#52c41a",
     },
     {
-      title: "Rejected",
+      title: "status.rejected",
       icon: <CloseCircleOutlined />,
       value: (data) => data.filter((d) => d.reviewStatus === 0).length,
       color: "#ff4d4f",

@@ -1,4 +1,3 @@
-import { TableColumnsType } from "antd";
 import type { Rule } from "antd/es/form";
 import { ColumnsType, ColumnType } from "antd/es/table";
 import type { ReactNode } from "react";

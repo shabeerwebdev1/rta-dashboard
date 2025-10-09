@@ -170,26 +170,26 @@ export const whitelistPlateConfig: PageConfig = {
   },
   statsConfig: [
     {
-      title: "Total Plates",
+      title: "stats.TotalPlates",
       icon: <IdcardOutlined />,
       value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
     },
     {
-      title: "Active Plates",
+      title: "stats.ActivePlates",
       icon: <CheckCircleOutlined />,
       value: (data, metadata) =>
         `${data.filter((d) => d.plateStatus_Id === 5001).length} / ${metadata?.activeRecords || 0}`,
       color: "#52c41a",
     },
     {
-      title: "Inactive Plates",
+      title: "stats.InactivePlates",
       icon: <CloseCircleOutlined />,
       value: (data, metadata) =>
         `${data.filter((d) => d.plateStatus_Id === 5002).length} / ${metadata?.inactiveRecords || 0}`,
       color: "#ff4d4f",
     },
     // {
-    //   title: "Expired Plates",
+    //   title: "stats.ExpiredPlates",
     //   icon: <CloseCircleOutlined />,
     //   value: (data, metadata) =>
     //     `${data.filter((d) => d.plateStatus_Id === 5003).length} / ${metadata?.expiredRecords || 0}`,

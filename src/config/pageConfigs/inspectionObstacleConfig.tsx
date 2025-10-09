@@ -19,7 +19,7 @@ export const inspectionObstacleConfig: PageConfig = {
   },
   statsConfig: [
     {
-      title: "Total Obstacles",
+      title: "stats.TotalObstacles",
       icon: <SearchOutlined />,
       value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
     },

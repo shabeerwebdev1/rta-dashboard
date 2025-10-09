@@ -363,10 +363,10 @@
     "enterComments": "Enter comments",
     "latitude": "Pick latitude From Map",
     "longitude": "Pick longitude From Map",
-    "zones" : "Enter Zone Name",
-    "areas" : "Enter Area Name",
-    "parkingName" : "Enter Parking Name",
-    "parkingNameArabic" : "Enter Parking Name in (Arabic)"
+    "zones": "Enter Zone Name",
+    "areas": "Enter Area Name",
+    "parkingName": "Enter Parking Name",
+    "parkingNameArabic": "Enter Parking Name in (Arabic)"
   },
 
   "dashboard": {
@@ -396,5 +396,24 @@
     "Friday": "Friday",
     "Saturday": "Saturday",
     "Sunday": "Sunday"
+  },
+  "stats": {
+    "totalFines": "Total Fines",
+    "paidFines": "Paid Fines",
+    "unpaidFines": "Unpaid Fines",
+    "TotalInspections": "Total Inspections",
+    "TotalDisputes": "Total Disputes",
+    "TotalRecords": "Total Records",
+    "TotalPlates": "Total Plates",
+    "ActivePlates": "Active Plates",
+    "InactivePlates": "Inactive Plates",
+    "ExpiredPlates": "Expired Plates",
+    "TotalObstacles": "Total Obstacles",
+    "TotalPledges": "Total Pledges",
+    "CorporatePledges": "Corporate Pledges",
+    "IndividualPledges": "Individual Pledges",
+    "TotalLeaves": "Total Leaves",
+    "TotalTowings": "Total Towings"
+
   }
 }

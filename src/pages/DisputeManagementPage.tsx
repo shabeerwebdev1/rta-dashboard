@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, DatePicker, Tooltip, Spin, Tag } from "antd";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, DatePicker, Spin, Tag } from "antd";
 import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
@@ -33,8 +33,8 @@ const columnToCategoryMap: Record<string, number> = {
   department: 1000,
   payment_Type: 1100,
   dispute_Status: 1002,
-  dispute_Reason: 1600, 
-  dispute_SubReason: 1600, 
+  dispute_Reason: 1600,
+  dispute_SubReason: 1600,
 };
 
 const DisputeManagementPage: React.FC = () => {
@@ -188,7 +188,7 @@ const DisputeManagementPage: React.FC = () => {
             email: result.data.email,
             phone: result.data.phone,
             address: result.data.address,
-            sourceUser: result.data.source_user || "", // default to empty string if null
+            sourceUser: result.data.source_user || "",
             actualDisputeDate: result.data.actualDisputeDate
               ? dayjs(result.data.actualDisputeDate, "YYYY-MM-DD")
               : null,
@@ -216,8 +216,8 @@ const DisputeManagementPage: React.FC = () => {
         fineId: String(values.fineId),
         department: values.department,
         payment_Type: values.payment_Type,
-        dispute_Reason: values.dispute_Reason,
-        dispute_SubReason: values.dispute_SubReason, // Add sub-reason
+        dispute_Reason: String(values.dispute_Reason ?? ""),
+        dispute_SubReason: String(values.dispute_SubReason ?? ""),
         crM_Ref: values.crM_Ref,
         email: values.email,
         phone: values.phone,
@@ -356,7 +356,7 @@ const DisputeManagementPage: React.FC = () => {
       icon: <EditOutlined />,
       onClick: () => handleModalOpen("edit", record),
       // Disable if user doesn't have permission OR dispute_Status is 2
-      disabled: !canEdit(menuName) || record.dispute_Status === 2,
+      disabled: !canEdit(menuName) || record.dispute_Status === 2 || record.dispute_Status === 3,
     },
   ];
 

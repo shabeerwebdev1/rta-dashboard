@@ -19,7 +19,7 @@ export const disputeManagementConfig: PageConfig = {
   },
   statsConfig: [
     {
-      title: "Total Disputes",
+      title: "stats.TotalDisputes",
       icon: React.createElement(SearchOutlined),
       value: (data) => data.length,
     },

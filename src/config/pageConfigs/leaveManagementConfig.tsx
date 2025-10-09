@@ -34,13 +34,13 @@ export const leaveManagementPageConfig: PageConfig = {
   },
   statsConfig: [
     {
-      title: "Total Leaves",
+      title: "stats.TotalLeaves",
       icon: <IdcardOutlined />,
       value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
     },
 
     {
-      title: "Pending",
+      title: "status.pending",
       icon: <ClockCircleOutlined />,
       value: (data, metadata) =>
         `${data.filter((d) => d.status === LeaveStatus.Pending).length} / ${metadata?.pendingRecords || 0}`,
@@ -48,14 +48,14 @@ export const leaveManagementPageConfig: PageConfig = {
     },
 
     {
-      title: "Approved",
+      title: "status.approved",
       icon: <CheckCircleOutlined />,
       value: (data, metadata) =>
         `${data.filter((d) => d.status === LeaveStatus.Approved).length} / ${metadata?.approvedRecords || 0}`,
       color: "#52c41a",
     },
     {
-      title: "Rejected",
+      title: "status.rejected",
       icon: <CloseCircleOutlined />,
       value: (data, metadata) =>
         `${data.filter((d) => d.status === LeaveStatus.Rejected).length} / ${metadata?.rejectedRecords || 0}`,

@@ -21,18 +21,18 @@ export const tradeLicenseConfig: PageConfig = {
 
   statsConfig: [
     {
-      title: "Total Inspections",
+      title: "stats.TotalInspections",
       icon: <FileSearchOutlined />,
       value: (data) => data.length,
     },
     {
-      title: "Approved",
+      title: "status.approved",
       icon: <CheckCircleOutlined />,
       value: (data) => data.filter((d) => d.inspectionStatus === "Approved").length,
       color: "#52c41a",
     },
     {
-      title: "Rejected",
+      title: "status.rejected",
       icon: <CloseCircleOutlined />,
       value: (data) => data.filter((d) => d.inspectionStatus === "Rejected").length,
       color: "#ff4d4f",

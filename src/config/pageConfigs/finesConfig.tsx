@@ -171,18 +171,18 @@ export const finesConfig: PageConfig = {
 
   statsConfig: [
     {
-      title: "Total Fines",
+      title: "stats.totalFines", 
       icon: <span style={{ fontSize: 24 }}>AED</span>,
       value: (data) => data.length,
     },
     {
-      title: "Paid Fines",
+      title: "stats.paidFines", // This should match your translation key
       icon: <CheckCircleOutlined />,
       value: (data) => data.filter((d) => d.isPaid).length,
       color: "#52c41a",
     },
     {
-      title: "Unpaid Fines",
+      title: "stats.unpaidFines", // This should match your translation key
       icon: <CloseCircleOutlined />,
       value: (data) => data.filter((d) => !d.isPaid).length,
       color: "#ff4d4f",

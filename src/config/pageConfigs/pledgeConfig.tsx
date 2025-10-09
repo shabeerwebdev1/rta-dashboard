@@ -19,17 +19,17 @@ export const pledgeConfig: PageConfig = {
 
   statsConfig: [
     {
-      title: "Total Pledges",
+      title: "stats.TotalPledges",
       icon: <AuditOutlined />,
       value: (data, metadata) => `${data.length} / ${metadata?.totalCount || 0}`,
     },
     {
-      title: "Corporate Pledges",
+      title: "stats.CorporatePledges",
       icon: <SnippetsOutlined />,
       value: (data, metadata) => `${data.filter((d) => d.pledgeType === 9001).length} / ${metadata?.corporate || 0}`,
     },
     {
-      title: "Individual Pledges",
+      title: "stats.IndividualPledges",
       icon: <SnippetsOutlined />,
       value: (data, metadata) => `${data.filter((d) => d.pledgeType === 9002).length} / ${metadata?.individual || 0}`,
     },
