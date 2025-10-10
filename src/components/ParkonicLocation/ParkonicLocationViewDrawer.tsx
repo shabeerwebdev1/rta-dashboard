@@ -43,9 +43,6 @@ const ParkonicLocationViewDrawer: React.FC<ParkonicLocationViewDrawerProps> = ({
           <Descriptions.Item label={t("form.area")}>
             {record.area}
           </Descriptions.Item>
-          <Descriptions.Item label={t("form.street")}>
-            {record.street}
-          </Descriptions.Item>
           <Descriptions.Item label={t("form.lat")}>
             {record.latitude}
           </Descriptions.Item>

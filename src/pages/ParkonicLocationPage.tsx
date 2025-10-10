@@ -210,8 +210,15 @@ const ParkonicLocationPage: React.FC = () => {
     setSelectedRecord(record || null);
     setIsModalOpen(true);
     if (mode === "edit" && record) {
-      form.setFieldsValue({ ...record });
-    }
+  form.setFieldsValue({
+    parkingName: record.parking_Name_En,
+    parkingNameArabic: record.parking_Name_Ar,
+    zone: record.zone,
+    area: record.area,
+    latitude: record.latitude,
+    longitude: record.longitude,
+  });
+}
   };
 
   const handleModalClose = () => {

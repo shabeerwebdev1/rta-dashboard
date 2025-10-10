@@ -47,7 +47,7 @@ export const parkonicLocationPageConfig: PageConfig = {
     columns: [
       { key: "zone", title: "form.zone", dataIndex: "zone", type: "string", sortable: true },
       { key: "area", title: "form.area", dataIndex: "area", type: "string", sortable: true },
-      { key: "street", title: "form.street", dataIndex: "street", type: "string", sortable: true },
+      
 
       { key: "created_At", title: "form.addedOn", dataIndex: "long", type: "string", sortable: true },
     ],
