@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, DatePicker, Spin, Tag } from "antd";
-import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined } from "@ant-design/icons";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, DatePicker, Spin, Tag, Upload } from "antd";
+import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined, UploadOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -67,6 +67,8 @@ const DisputeManagementPage: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
+  const [disputeSubReasonOptions, setDisputeSubReasonOptions] = useState<any[]>([]);
+  const [fileList, setFileList] = useState<any[]>([]);
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
@@ -86,6 +88,45 @@ const DisputeManagementPage: React.FC = () => {
     return i18n.language === "ar" ? option.labelAr : option.labelEn;
   };
 
+  // Function to get dispute reason by code
+  const getDisputeReasonByCode = React.useCallback(
+    (value: number) => {
+      if (!lookupOptions) return null;
+
+      const option = lookupOptions.find((opt) => opt.value === value);
+      if (option) {
+        return {
+          categoryName: option.categoryName,
+          englishText: option.labelEn,
+          arabicText: option.labelAr,
+          fullData: option,
+        };
+      }
+      return null;
+    },
+    [lookupOptions],
+  );
+
+  // Function to handle dispute reason change and populate sub-reasons
+  const handleDisputeReasonChange = (categoryId: number) => {
+    console.log("Selected category ID:", categoryId);
+
+    // Get ALL items from the selected category
+    const subReasons = filterOptionsByCategory(lookupOptions, categoryId);
+
+    console.log("All items for category", categoryId, ":", subReasons);
+
+    const subOptions = subReasons.map((sub: any) => ({
+      label: i18n.language === "ar" ? sub.labelAr : sub.labelEn,
+      value: sub.value,
+    }));
+
+    setDisputeSubReasonOptions(subOptions);
+
+    // Clear sub-reason value when reason changes
+    form.setFieldsValue({ DisputeSubReason: undefined });
+  };
+
   // Fetch lookup data when modal opens or language changes
   useEffect(() => {
     fetchLookupData();
@@ -95,8 +136,9 @@ const DisputeManagementPage: React.FC = () => {
     setIsLoadingLookups(true);
     try {
       const categoryIds = Object.values(columnToCategoryMap);
-      // Make sure 1600 is included
-      const result = await triggerGetLookups([...categoryIds, 1600]).unwrap();
+      // Fetch all dispute reason categories
+      const result = await triggerGetLookups([...categoryIds, 16001, 16002]).unwrap();
+      console.log("Lookup data fetched:", result);
       setLookupOptions(result);
     } catch (error) {
       console.error("Failed to fetch lookup data:", error);
@@ -107,32 +149,39 @@ const DisputeManagementPage: React.FC = () => {
   };
 
   // Get options for each category
-  const departmentOptions = useMemo(
-    () =>
-      filterOptionsByCategory(lookupOptions, 1000).map((option) => ({
-        ...option,
-        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
-      })),
-    [lookupOptions, i18n.language],
-  );
+  const departmentOptions = useMemo(() => {
+    const filtered = filterOptionsByCategory(lookupOptions, 1000);
+    return filtered.map((option) => ({
+      label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      value: option.value,
+    }));
+  }, [lookupOptions, i18n.language]);
 
-  const paymentTypeOptions = useMemo(
-    () =>
-      filterOptionsByCategory(lookupOptions, 1100).map((option) => ({
-        ...option,
-        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
-      })),
-    [lookupOptions, i18n.language],
-  );
+  const paymentTypeOptions = useMemo(() => {
+    const filtered = filterOptionsByCategory(lookupOptions, 1100);
+    return filtered.map((option) => ({
+      label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      value: option.value,
+    }));
+  }, [lookupOptions, i18n.language]);
 
-  const disputeReasonOptions = useMemo(
-    () =>
-      filterOptionsByCategory(lookupOptions, 1600).map((option) => ({
-        ...option,
-        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
-      })),
-    [lookupOptions, i18n.language],
-  );
+  // Filter dispute reason main options - use category names as main reasons
+  const disputeReasonOptions = useMemo(() => {
+    const categories = new Map();
+
+    lookupOptions.forEach((option) => {
+      if ((option.categoryId === 16001 || option.categoryId === 16002) && !categories.has(option.categoryId)) {
+        categories.set(option.categoryId, {
+          label: option.categoryName,
+          value: option.categoryId,
+        });
+      }
+    });
+
+    const mainReasons = Array.from(categories.values());
+    console.log("Dispute reason main options:", mainReasons);
+    return mainReasons;
+  }, [lookupOptions]);
 
   const disputeStatusEnum = useMemo(
     () => [
@@ -173,26 +222,45 @@ const DisputeManagementPage: React.FC = () => {
     setModalMode(mode);
     setSelectedRecord(record || null);
     setIsModalOpen(true);
+    setFileList([]); // Reset file list when modal opens
 
     if (mode === "edit" && record) {
       try {
         const result = await triggerGetDisputeById(record.dispute_Id).unwrap();
         if (result.data) {
+          // Set form values with correct field names matching your handleFormSubmit
           form.setFieldsValue({
-            fineId: result.data.fine_Number,
-            department: result.data.department,
-            payment_Type: result.data.payment_Type,
-            dispute_Reason: result.data.dispute_Reason,
-            dispute_SubReason: result.data.dispute_SubReason,
-            crM_Ref: result.data.crM_Ref,
-            email: result.data.email,
-            phone: result.data.phone,
-            address: result.data.address,
-            sourceUser: result.data.source_user || "",
-            actualDisputeDate: result.data.actualDisputeDate
+            FineId: result.data.fineId || result.data.fine_Number,
+            Name: result.data.name,
+            Department: result.data.department,
+            Payment_Type: result.data.payment_Type,
+            Comments: result.data.comments,
+            crm_Ref: result.data.crm_Ref,
+            Email: result.data.email,
+            Phone: result.data.phone,
+            Address: result.data.address,
+            SourceUser: result.data.sourceUser || result.data.source_user,
+            Source: result.data.source || "sTafteesh_parking",
+            DisputeMainReason: result.data.disputeMainReason || result.data.dispute_Reason,
+            DisputeSubReason: result.data.disputeSubReason || result.data.dispute_SubReason,
+            ActualDisputeDate: result.data.actualDisputeDate
               ? dayjs(result.data.actualDisputeDate, "YYYY-MM-DD")
               : null,
           });
+
+          // If there's a dispute reason, populate sub-reasons
+          if (result.data.disputeMainReason || result.data.dispute_Reason) {
+            const mainReasonId = result.data.disputeMainReason || result.data.dispute_Reason;
+
+            handleDisputeReasonChange(mainReasonId);
+
+            // 🕒 Wait a tick to let subreason options populate
+            setTimeout(() => {
+              form.setFieldsValue({
+                DisputeSubReason: result.data.disputeSubReason || result.data.dispute_SubReason,
+              });
+            }, 100);
+          }
         }
       } catch (error) {
         console.error("Failed to fetch dispute details:", error);
@@ -204,42 +272,60 @@ const DisputeManagementPage: React.FC = () => {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedRecord(null);
+    setDisputeSubReasonOptions([]);
+    setFileList([]);
     form.resetFields();
   };
 
   const handleFormSubmit = async (values: any) => {
     try {
+      const formData = new FormData();
+
+      // ✅ Always send empty or default values - matching your field names
+      formData.append("FineId", values.FineId || "");
+      formData.append("Department", values.Department || "0");
+      formData.append("Payment_Type", values.Payment_Type || "0");
+      formData.append("Comments", values.Comments || "");
+      formData.append("crm_Ref", values.crm_Ref || "");
+      formData.append("Name", values.Name || "");
+      formData.append("Email", values.Email || "");
+      formData.append("Phone", values.Phone || "");
+      formData.append("Address", values.Address || "");
+
+      // Evidence handling — send empty if no file
+      if (fileList && fileList.length > 0) {
+        fileList.forEach((file: any) => {
+          if (file.originFileObj) {
+            formData.append("Evidence", file.originFileObj);
+          }
+        });
+      } else {
+        formData.append("Evidence", new Blob([]), "empty.txt"); // 👈 send empty file
+      }
+
+      formData.append("SourceUser", values.SourceUser || "");
+
+      // ✅ Default Source value
+      formData.append("Source", values.Source || "sTafteesh_parking");
+
+      formData.append("ActualDisputeDate", values.ActualDisputeDate ? values.ActualDisputeDate.toISOString() : "");
+
+      formData.append("DisputeMainReason", values.DisputeMainReason || "0");
+      formData.append("DisputeSubReason", values.DisputeSubReason || "0");
+
+      // 🚀 Submit logic
       let response;
-
-      // Prepare the payload according to API structure
-      const payload = {
-        fineId: String(values.fineId),
-        department: values.department,
-        payment_Type: values.payment_Type,
-        dispute_Reason: String(values.dispute_Reason ?? ""),
-        dispute_SubReason: String(values.dispute_SubReason ?? ""),
-        crM_Ref: values.crM_Ref,
-        email: values.email,
-        phone: values.phone,
-        address: values.address,
-        sourceUser: values.sourceUser,
-        actualDisputeDate: values.actualDisputeDate ? values.actualDisputeDate.toISOString() : null,
-      };
-
       if (modalMode === "add") {
-        response = await addDispute(payload).unwrap();
+        response = await addDispute(formData).unwrap();
         notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
       } else {
-        // For update, include dispute_Id in the payload
-        response = await updateDispute({
-          ...payload,
-          dispute_Id: selectedRecord.dispute_Id,
-        }).unwrap();
+        formData.append("dispute_Id", selectedRecord.dispute_Id);
+        response = await updateDispute(formData).unwrap();
         notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
       }
 
       handleModalClose();
-      refetch(); // Refresh the table data
+      refetch();
     } catch (err: any) {
       notification.error(err, "Operation Failed");
     }
@@ -322,10 +408,15 @@ const DisputeManagementPage: React.FC = () => {
 
         // Handle dispute reason and sub-reason with lookup
         if (column.key === "dispute_Reason" || column.key === "dispute_SubReason") {
-          const options = filterOptionsByCategory(lookupOptions, 1600);
           return {
             ...column,
-            render: (value: any) => getLabelFromValue(value, options, i18n),
+            render: (value: any) => {
+              const reason = getDisputeReasonByCode(value);
+              if (reason) {
+                return i18n.language === "ar" ? reason.arabicText : reason.englishText;
+              }
+              return value; // Fallback to original value
+            },
           };
         }
 
@@ -340,7 +431,7 @@ const DisputeManagementPage: React.FC = () => {
         return column;
       }),
     }),
-    [config.tableConfig, lookupOptions, i18n, disputeStatusEnum],
+    [config.tableConfig, lookupOptions, i18n, disputeStatusEnum, getDisputeReasonByCode],
   );
 
   const actionMenuItems = (record: any) => [
@@ -487,86 +578,85 @@ const DisputeManagementPage: React.FC = () => {
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
             <Row gutter={24}>
               <Col span={12}>
-                <Form.Item name="fineId" label={t("form.fineNumber")} rules={[{ required: true }]}>
+                <Form.Item name="FineId" label={t("form.fineNumber")} rules={[{ required: true }]}>
                   <Input placeholder={t("placeholders.fineNumber")} type="text" />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="department" label={t("form.department")} rules={[{ required: true }]}>
+                <Form.Item name="Name" label={t("form.name")} rules={[{ required: true }]}>
+                  <Input placeholder={t("placeholders.name")} />
+                </Form.Item>
+              </Col>
+
+              <Col span={12}>
+                <Form.Item name="Department" label={t("form.department")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.department")}
                     loading={isLoadingLookups}
                     showSearch
                     optionFilterProp="label"
                     filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
-                    options={departmentOptions.map((option) => ({
-                      label: option.label,
-                      value: option.value,
-                    }))}
+                    options={departmentOptions}
                   />
                 </Form.Item>
               </Col>
 
               <Col span={12}>
-                <Form.Item name="dispute_Reason" label={t("form.disputereason")} rules={[{ required: true }]}>
+                <Form.Item name="DisputeMainReason" label={t("form.disputereason")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.reason")}
                     loading={isLoadingLookups}
                     showSearch
                     optionFilterProp="label"
+                    onChange={handleDisputeReasonChange}
                     filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
-                    options={disputeReasonOptions.map((option) => ({
-                      label: option.label,
-                      value: option.value,
-                    }))}
+                    options={disputeReasonOptions}
                   />
                 </Form.Item>
               </Col>
 
               <Col span={12}>
-                <Form.Item name="dispute_SubReason" label={t("form.disputesubreason")} rules={[{ required: true }]}>
+                <Form.Item name="DisputeSubReason" label={t("form.disputesubreason")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.subreason")}
                     loading={isLoadingLookups}
                     showSearch
                     optionFilterProp="label"
+                    disabled={disputeSubReasonOptions.length === 0}
                     filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
-                    options={disputeReasonOptions.map((option) => ({
-                      label: option.label,
-                      value: option.value,
-                    }))}
+                    options={disputeSubReasonOptions}
                   />
                 </Form.Item>
               </Col>
+
               <Col span={12}>
-                <Form.Item name="payment_Type" label={t("form.paymentType")} rules={[{ required: true }]}>
+                <Form.Item name="Payment_Type" label={t("form.paymentType")} rules={[{ required: true }]}>
                   <Select
                     placeholder={t("placeholders.paymentType")}
                     loading={isLoadingLookups}
                     showSearch
                     optionFilterProp="label"
                     filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
-                    options={paymentTypeOptions.map((option) => ({
-                      label: option.label,
-                      value: option.value,
-                    }))}
+                    options={paymentTypeOptions}
                   />
                 </Form.Item>
               </Col>
+
               <Col span={12}>
-                <Form.Item name="crM_Ref" label={t("form.crmReference")} rules={[{ required: true }]}>
+                <Form.Item name="crm_Ref" label={t("form.crmReference")} rules={[{ required: true }]}>
                   <Input placeholder={t("placeholders.crmReference")} />
                 </Form.Item>
               </Col>
 
               <Col span={12}>
-                <Form.Item name="email" label={t("form.email")} rules={[{ required: true }, { type: "email" }]}>
+                <Form.Item name="Email" label={t("form.email")} rules={[{ required: true }, { type: "email" }]}>
                   <Input placeholder={t("placeholders.email")} />
                 </Form.Item>
               </Col>
+
               <Col span={12}>
                 <Form.Item
-                  name="phone"
+                  name="Phone"
                   label={t("form.phoneNumber")}
                   rules={[{ required: true }, { pattern: /^[0-9]+$/ }]}
                 >
@@ -575,13 +665,31 @@ const DisputeManagementPage: React.FC = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item name="sourceUser" label={t("form.sourceUser")} rules={[{ required: true }]}>
+                <Form.Item name="SourceUser" label={t("form.sourceUser")} rules={[{ required: true }]}>
                   <Input placeholder={t("placeholders.SourceUser")} />
                 </Form.Item>
               </Col>
 
+              {/* <Col span={12}>
+                <Form.Item name="Source" label={t("form.source")}>
+                  <Input placeholder={t("placeholders.source")} defaultValue="sTafteesh_parking" />
+                </Form.Item>
+              </Col> */}
+
               <Col span={12}>
-                <Form.Item name="actualDisputeDate" label={t("form.actualDisputeDate")} rules={[{ required: true }]}>
+                <Form.Item name="Address" label={t("form.address")} rules={[{ required: true }]}>
+                  <Input.TextArea placeholder={t("placeholders.address")} rows={2} />
+                </Form.Item>
+              </Col>
+
+              <Col span={12}>
+                <Form.Item name="Comments" label={t("form.comments")}>
+                  <Input.TextArea placeholder={t("placeholders.comments")} rows={2} />
+                </Form.Item>
+              </Col>
+
+              <Col span={12}>
+                <Form.Item name="ActualDisputeDate" label={t("form.actualDisputeDate")} rules={[{ required: true }]}>
                   <DatePicker
                     style={{ width: "100%" }}
                     format="DD-MM-YYYY"
@@ -590,11 +698,13 @@ const DisputeManagementPage: React.FC = () => {
                 </Form.Item>
               </Col>
 
-              <Col span={24}>
-                <Form.Item name="address" label={t("form.address")} rules={[{ required: true }]}>
-                  <Input.TextArea placeholder={t("placeholders.address")} rows={3} />
+              {/* <Col span={12}>
+                <Form.Item name="Evidence" label={t("form.evidence")}>
+                  <Upload {...uploadProps}>
+                    <Button icon={<UploadOutlined />}>{t("common.upload")}</Button>
+                  </Upload>
                 </Form.Item>
-              </Col>
+              </Col> */}
             </Row>
           </Form>
         </Spin>

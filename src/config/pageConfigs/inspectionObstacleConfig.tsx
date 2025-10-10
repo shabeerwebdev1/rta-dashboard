@@ -4,7 +4,7 @@ import { SearchOutlined } from "@ant-design/icons";
 export const inspectionObstacleConfig: PageConfig = {
   key: "inspection-obstacles",
   title: "page.title.inspection-obstacles",
-  name: { singular: "Inspection Obstacle", plural: "Inspection Obstacles" },
+  name: { singular: "entity.inspectionObstacle", plural: "Inspection Obstacles" },
   api: {
     get: "/api/InspectionObstacle",
     post: "/api/InspectionObstacle",

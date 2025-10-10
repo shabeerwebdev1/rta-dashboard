@@ -251,7 +251,11 @@
     "Validity": "الصلاحية",
     "violationDetails": "تفاصيل الانتهاك",
     "tradeLicenseName": "اسم الرخصة التجارية",
-    "pledgeDate": "تاريخ التعهد"
+    "pledgeDate": "تاريخ التعهد",
+    "name": "الاسم",
+    "subreason": "سبب النزاع الفرعي",
+    "email": "البريد الإلكتروني"
+
   },
   "common": {
     "action": "إجراء",
@@ -294,7 +298,11 @@
     "plate": "لوحة",
     "tradeLicense": "رخصة تجارية",
     "pledge": "تعهد",
-    "inspectionObstacle": "عائق تفتيش"
+    "inspectionObstacle": "عائق تفتيش",
+    "Pledges": "تعهدات",
+    "dispute": "نزاع"
+
+
   },
   "status": {
     "active": "نشط",
@@ -357,7 +365,8 @@
     "zones": "أدخل اسم المنطقة",
     "areas": "أدخل اسم المنطقة",
     "parkingName": "أدخل اسم مواقف السيارات",
-    "parkingNameArabic": "أدخل اسم مواقف السيارات باللغة العربية"
+    "parkingNameArabic": "أدخل اسم مواقف السيارات باللغة العربية",
+    "name": "أدخل الاسم"
   },
   "dashboard": {
     "totalInspectors": "إجمالي المفتشين",
@@ -403,6 +412,5 @@
     "IndividualPledges": "تعهدات الأفراد",
     "TotalLeaves": "إجمالي الإجازات",
     "TotalTowings": "إجمالي السحوبات"
-
   }
 }

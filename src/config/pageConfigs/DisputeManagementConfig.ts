@@ -5,7 +5,7 @@ import React from "react";
 export const disputeManagementConfig: PageConfig = {
   key: "dispute-management",
   title: "page.title.dispute-management",
-  name: { singular: "Dispute", plural: "Disputes" },
+  name: { singular: "entity.dispute", plural: "Disputes" },
   api: {
     get: "/api/Dispute/GetAll",
     post: "/api/Dispute/Create",
@@ -44,7 +44,7 @@ export const disputeManagementConfig: PageConfig = {
         ],
       },
       { key: "phone", title: "form.phoneNumber", type: "string" },
-      { key: "crM_Ref", title: "form.crmReference", type: "string", sortable: true },
+      { key: "crm_Ref", title: "form.crmReference", type: "string", sortable: true },
       { key: "email", title: "form.email", type: "string" },
       { key: "dispute_Status", title: "form.disputestatus", type: "string" },
     ],

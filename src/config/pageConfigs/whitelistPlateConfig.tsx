@@ -156,7 +156,7 @@ export const PLATE_COLOR: Record<number, string> = {
 export const whitelistPlateConfig: PageConfig = {
   key: "whitelist-plates",
   title: "page.title.whitelist-plates",
-  name: { singular: "Plate", plural: "Plates" },
+  name: { singular: "entity.plate", plural: "Plates" },
   api: {
     get: "/api/WhitelistPlate",
     post: "/api/WhitelistPlate",

@@ -4,7 +4,7 @@ import { AuditOutlined, SnippetsOutlined } from "@ant-design/icons";
 export const pledgeConfig: PageConfig = {
   key: "pledges",
   title: "page.title.pledges",
-  name: { singular: "Pledge", plural: "Pledges" },
+  name: { singular: "entity.pledge", plural: "entity.Pledges" },
   api: {
     get: "/api/Pledge",
     post: "/api/Pledge",

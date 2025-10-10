@@ -80,6 +80,7 @@
     "editTitle": "Edit {{entity}}",
     "viewTitle": "{{entity}} Details"
   },
+
   "messages": {
     "addSuccess": "{{entity}} added successfully!",
     "updateSuccess": "{{entity}} updated successfully!",
@@ -255,7 +256,9 @@
     "violationDetails": "Violation Details",
     "parkingName": "Parking Name",
     "parkingNameArabic": "Parking Name in (Arabic)",
-    "pickLocation": "Pick Location"
+    "pickLocation": "Pick Location",
+    "name": "Name",
+    "subreason": "Subreason"
   },
   "common": {
     "action": "Action",
@@ -302,7 +305,9 @@
     "plate": "Plate",
     "tradeLicense": "Trade License",
     "pledge": "Pledge",
-    "inspectionObstacle": "Inspection Obstacle"
+    "inspectionObstacle": "Inspection Obstacle",
+    "Pledges": "Pledges",
+    "dispute":"Dispute"
   },
   "status": {
     "active": "Active",
@@ -366,7 +371,8 @@
     "zones": "Enter Zone Name",
     "areas": "Enter Area Name",
     "parkingName": "Enter Parking Name",
-    "parkingNameArabic": "Enter Parking Name in (Arabic)"
+    "parkingNameArabic": "Enter Parking Name in (Arabic)",
+    "name": "Enter Name"
   },
 
   "dashboard": {
@@ -414,6 +420,5 @@
     "IndividualPledges": "Individual Pledges",
     "TotalLeaves": "Total Leaves",
     "TotalTowings": "Total Towings"
-
   }
 }

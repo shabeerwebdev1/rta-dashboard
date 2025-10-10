@@ -72,7 +72,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
     user?.roleGUID === "9e8331a6-3828-421b-9c5d-835f7b6f8710" ||
     user?.roleGUID === "137db453-07cc-4218-9ef8-3aa236d9e951" ||
     user?.roleGUID === "6d20d858-1128-4cd2-af7e-e8eb3c4bf887" ||
-    user?.roleGUID === "33fa8623-20f8-417a-b655-18da372f18bd"; 
+    user?.roleGUID === "33fa8623-20f8-417a-b655-18da372f18bd";
 
   // Special role ID that should ALWAYS see comment, dropdown, assign BUT NOT approve/reject
   const isSpecialRoleId = user?.roleGUID === "efb6ef6a-128b-4dd9-9641-2b04205c8cf8";
@@ -162,8 +162,9 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   const fetchLookupData = async () => {
     setIsLoadingLookups(true);
     try {
-      // Category IDs for department (1000) and payment type (1100)
-      const categoryIds = [1000, 1100, 1002, 1500]; // Added dispute status category
+      // Category IDs for department (1000), payment type (1100), dispute status (1002), fine status (1500)
+      // AND dispute reasons (16001, 16002) and sub-reasons (1600)
+      const categoryIds = [1000, 1100, 1002, 1500, 16001, 16002, 1600];
       const result = await triggerGetLookups(categoryIds).unwrap();
       setLookupOptions(result);
     } catch (error) {
@@ -196,6 +197,40 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
     const option = lookupOptions.find((opt) => opt.value === value && opt.categoryId === categoryId);
     if (!option) return value;
     return i18n.language === "ar" ? option.labelAr : option.labelEn;
+  };
+
+  // NEW: Function to get dispute reason label (for main reasons which are category IDs)
+  const getDisputeReasonLabel = (reasonId: number) => {
+    if (!reasonId) return t("common.noData");
+
+    // For main reasons (16001, 16002), we need to find the category name
+    const categoryOption = lookupOptions.find(
+      (opt) => (opt.categoryId === 16001 || opt.categoryId === 16002) && opt.value === reasonId,
+    );
+
+    if (categoryOption) {
+      return i18n.language === "ar" ? categoryOption.categoryNameAr : categoryOption.categoryName;
+    }
+
+    // If not found as category, try to find as regular option
+    const option = lookupOptions.find((opt) => opt.value === reasonId);
+    if (option) {
+      return i18n.language === "ar" ? option.labelAr : option.labelEn;
+    }
+
+    return reasonId; // Fallback to original value
+  };
+
+  // NEW: Function to get dispute sub-reason label
+  const getDisputeSubReasonLabel = (subReasonId: number) => {
+    if (!subReasonId) return t("common.noData");
+
+    const option = lookupOptions.find((opt) => opt.value === subReasonId);
+    if (option) {
+      return i18n.language === "ar" ? option.labelAr : option.labelEn;
+    }
+
+    return subReasonId; // Fallback to original value
   };
 
   const handleStatusUpdate = async (action: number) => {
@@ -292,7 +327,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
           <Col>
             <Space size="middle" align="center">
               <Title level={4} style={{ margin: 0 }}>
-                {t("form.disputereview")} <Text type="danger">#{dispute?.fine_Number || storedDisputeId}</Text>
+                {t("form.disputereview")} <Text type="danger">#{dispute?.fineId || storedDisputeId}</Text>
               </Title>
 
               {dispute?.dispute_Status !== undefined &&
@@ -335,7 +370,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                       <Col span={10}>
                         <Text strong>{t("form.fineNumber")}:</Text>
                       </Col>
-                      <Col span={14}>{dispute.fine_Number || t("common.noData")}</Col>
+                      <Col span={14}>{dispute.fineId || t("common.noData")}</Col>
 
                       <Col span={10}>
                         <Text strong>{t("form.department")}:</Text>
@@ -351,10 +386,19 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                         {dispute.payment_Type ? getLabelFromValue(dispute.payment_Type, 1100) : t("common.noData")}
                       </Col>
 
+                      {/* FIXED: Display dispute reason with label instead of value */}
                       <Col span={10}>
                         <Text strong>{t("form.reason")}:</Text>
                       </Col>
-                      <Col span={14}>{dispute.dispute_Reason || t("common.noData")}</Col>
+                      <Col span={14}>{getDisputeReasonLabel(dispute.disputeMainReason || dispute.dispute_Reason)}</Col>
+
+                      {/* FIXED: Display dispute sub-reason with label instead of value */}
+                      <Col span={10}>
+                        <Text strong>{t("form.subreason")}:</Text>
+                      </Col>
+                      <Col span={14}>
+                        {getDisputeSubReasonLabel(dispute.disputeSubReason || dispute.dispute_SubReason)}
+                      </Col>
 
                       <Col span={10}>
                         <Text strong>{t("form.email")}:</Text>
@@ -369,7 +413,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                       <Col span={10}>
                         <Text strong>{t("form.crmReference")}:</Text>
                       </Col>
-                      <Col span={14}>{dispute.crM_Ref || t("common.noData")}</Col>
+                      <Col span={14}>{dispute.crm_Ref || t("common.noData")}</Col>
 
                       <Col span={10}>
                         <Text strong>{t("form.address")}:</Text>
