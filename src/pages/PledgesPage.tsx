@@ -489,7 +489,7 @@ const PledgesPage: React.FC = () => {
 
       <Modal
         open={isModalOpen}
-        title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: "Pledge" })}
+        title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
         onCancel={handleModalClose}
         width="720px"
         footer={[

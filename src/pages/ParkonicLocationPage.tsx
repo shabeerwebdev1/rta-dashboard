@@ -267,25 +267,29 @@ const ParkonicLocationPage: React.FC = () => {
   };
 
   const handleFormSubmit = async (values: any) => {
-    try {
-      const payload = {
-        ...values,
-        latitude: parseFloat(values.latitude),
-        longitude: parseFloat(values.longitude),
-      };
-      let response;
-      if (modalMode === "add") {
-        response = await addLocation(payload).unwrap();
-        notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
-      } else {
-        response = await updateLocation({ ...payload, id: selectedRecord.id }).unwrap();
-        notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
-      }
-      handleModalClose();
-    } catch (err) {
-      notification.error(err as any, "Operation Failed");
+  try {
+    const payload = {
+      parking_Name_En: values.parkingName,
+      parking_Name_Ar: values.parkingNameArabic,
+      zone: values.zone,
+      area: values.area,
+      latitude: values.latitude, 
+      longitude: values.longitude, 
+    };
+    
+    let response;
+    if (modalMode === "add") {
+      response = await addLocation(payload).unwrap();
+      notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
+    } else {
+      response = await updateLocation({ ...payload, id: selectedRecord.id }).unwrap();
+      notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
     }
-  };
+    handleModalClose();
+  } catch (err) {
+    notification.error(err as any, "Operation Failed");
+  }
+};
 
   const handleView = (record: any) => {
     setViewRecord(record);

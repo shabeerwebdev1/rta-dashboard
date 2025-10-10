@@ -6,7 +6,7 @@ import Point from "@arcgis/core/geometry/Point";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import PictureMarkerSymbol from "@arcgis/core/symbols/PictureMarkerSymbol";
 import "@arcgis/core/assets/esri/themes/light/main.css";
-import { Dropdown, Menu, theme } from "antd";
+import { Dropdown, Menu } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 
 type Inspector = {
@@ -39,139 +39,150 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<__esri.MapView | null>(null);
   const [basemap, setBasemap] = useState("streets-navigation-vector");
+  const [selectedPoint, setSelectedPoint] = useState<Point | null>(null);
 
   useEffect(() => {
-    if (mapRef.current) {
-      const map = new Map({ basemap });
-      const view = new MapView({
-        container: mapRef.current,
-        map,
-        center,
-        zoom,
+    if (!mapRef.current) return;
+
+    // Create map and view
+    const map = new Map({ basemap });
+    const view = new MapView({
+      container: mapRef.current,
+      map,
+      center,
+      zoom,
+    });
+    viewRef.current = view;
+
+    // ✅ Add FeatureLayer (Feature Service)
+    const featureLayer = new FeatureLayer({
+      url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Landscape_Trees/FeatureServer/0",
+    });
+
+    featureLayer
+      .load()
+      .then(() => {
+        console.log("✅ Feature layer loaded successfully");
+        console.log("📍 Layer extent:", featureLayer.fullExtent);
+        return featureLayer.queryFeatureCount();
+      })
+      .then((count) => {
+        console.log("🌳 Total features in layer:", count);
+      })
+      .catch((error) => {
+        console.error("❌ Feature layer error:", error);
       });
 
-      viewRef.current = view;
+    map.add(featureLayer);
 
-      // ========================================
-      // 🔧 CHANGED: Added debugging and zoom to extent
-      // ========================================
-      const featureLayer = new FeatureLayer({
-        url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Landscape_Trees/FeatureServer/0",
-      });
-
-      // ✅ NEW: Added error handling and debugging
-      featureLayer
-        .load()
-        .then(() => {
-          console.log("✅ Feature layer loaded successfully");
-          console.log("📍 Layer extent:", featureLayer.fullExtent);
-          console.log("🌍 Center coordinates:", {
-            latitude: featureLayer.fullExtent?.center?.latitude,
-            longitude: featureLayer.fullExtent?.center?.longitude,
-          });
-          return featureLayer.queryFeatureCount();
-        })
-        .then((count) => {
-          console.log("🌳 Total features in layer:", count);
-        })
-        .catch((error) => {
-          console.error("❌ Feature layer error:", error);
-        });
-
-      // 📍 PREVIOUSLY: map.add(featureLayer) was here (at line 73 in your code)
-      // 🔧 MOVED: Now adding layer before inspectors to ensure proper layering
-      map.add(featureLayer);
-
-      // ✅ NEW: Auto-zoom to feature layer extent when it loads
-      // This will zoom the map to where the trees are located (North Carolina, USA)
-      view.when(() => {
-        featureLayer.when(() => {
+    // Optional: Zoom to layer extent after loading
+    view.when(() => {
+      featureLayer.when(() => {
+        if (featureLayer.fullExtent) {
           view
             .goTo(featureLayer.fullExtent)
-            .then(() => {
-              console.log("✅ Zoomed to feature layer extent");
-            })
-            .catch((err) => {
-              console.error("❌ Zoom error:", err);
-            });
-        });
-
-        // ✅ NEW: Check layer visibility status
-        view.whenLayerView(featureLayer).then((layerView) => {
-          console.log("✅ LayerView created");
-
-          layerView.watch("updating", (updating) => {
-            if (!updating) {
-              console.log("✅ LayerView finished updating");
-              console.log("👁️ Layer visible:", layerView.visible);
-              console.log("🔍 Visible at current scale:", layerView.visibleAtCurrentScale);
-            }
-          });
-        });
-      });
-      // ========================================
-      // END OF CHANGES
-      // ========================================
-
-      // 📍 UNCHANGED: Inspector markers code remains the same
-      // Add inspector markers
-      inspectors.forEach((inspector) => {
-        const point = new Point({
-          longitude: inspector.lng,
-          latitude: inspector.lat,
-        });
-
-        // Choose marker type
-        const symbol =
-          inspector.markerType === "google-pin"
-            ? new PictureMarkerSymbol({
-                url: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png",
-                width: "32px",
-                height: "32px",
-              })
-            : new PictureMarkerSymbol({
-                url: "/images/Inspector.png",
-                width: "40px",
-                height: "40px",
-              });
-
-        const graphic = new Graphic({
-          geometry: point,
-          symbol,
-          attributes: { inspector },
-        });
-
-        view.graphics.add(graphic);
+            .then(() => console.log("✅ Zoomed to feature layer extent"))
+            .catch((err) => console.error("❌ Zoom error:", err));
+        }
       });
 
-      // 📍 UNCHANGED: Click event handler
-      // Click event for inspector
-      view.on("click", (event) => {
-        view.hitTest(event).then((response) => {
-          if (response.results.length > 0) {
-            const inspector = response.results[0].graphic.attributes?.inspector;
-            if (inspector && onInspectorClick) {
-              onInspectorClick(inspector);
-            }
+      view.whenLayerView(featureLayer).then((layerView) => {
+        console.log("✅ LayerView created");
+        layerView.watch("updating", (updating) => {
+          if (!updating) {
+            console.log("✅ LayerView finished updating");
           }
         });
       });
+    });
 
-      // 📍 PREVIOUSLY: map.add(featureLayer) was here
-      // 🔧 REMOVED: Moved this to line 83 (before inspector markers)
-      // ❌ COMMENTED OUT: map.add(featureLayer);
+    // ✅ Clear graphics before adding
+    view.graphics.removeAll();
 
-      // 📍 UNCHANGED: Cleanup function
-      return () => {
-        if (viewRef.current) {
-          viewRef.current.destroy();
-          viewRef.current = null;
-        }
-      };
+    // ✅ Add inspector markers
+    inspectors.forEach((inspector) => {
+      const point = new Point({
+        longitude: inspector.lng,
+        latitude: inspector.lat,
+      });
+
+      const symbol =
+        inspector.markerType === "google-pin"
+          ? new PictureMarkerSymbol({
+              url: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png",
+              width: "32px",
+              height: "32px",
+            })
+          : new PictureMarkerSymbol({
+              url: "/images/Inspector.png",
+              width: "40px",
+              height: "40px",
+            });
+
+      const graphic = new Graphic({
+        geometry: point,
+        symbol,
+        attributes: { inspector },
+      });
+
+      view.graphics.add(graphic);
+    });
+
+    // ✅ Add selected point marker if it exists
+    if (selectedPoint) {
+      const selectedSymbol = new PictureMarkerSymbol({
+        url: "https://cdn-icons-png.flaticon.com/512/684/684908.png", // Green pin
+        width: "32px",
+        height: "32px",
+      });
+
+      const selectedGraphic = new Graphic({
+        geometry: selectedPoint,
+        symbol: selectedSymbol,
+      });
+
+      view.graphics.add(selectedGraphic);
     }
-  }, [inspectors, basemap]);
 
-  // 📍 UNCHANGED: Basemap switcher menu
+    // ✅ Click event for selecting point / inspector
+    const clickHandler = view.on("click", (event) => {
+      const point = new Point({
+        longitude: event.mapPoint.longitude,
+        latitude: event.mapPoint.latitude,
+      });
+
+      setSelectedPoint(point);
+
+      // Check if clicked on inspector
+      view.hitTest(event).then((response) => {
+        if (response.results.length > 0) {
+          const graphic = response.results[0].graphic;
+          const inspector = graphic.attributes?.inspector;
+          if (inspector && onInspectorClick) {
+            onInspectorClick(inspector);
+          }
+        } else if (onInspectorClick) {
+          // No inspector, return coordinates
+          onInspectorClick({
+            lat: event.mapPoint.latitude,
+            lng: event.mapPoint.longitude,
+          
+          });
+        }
+      });
+    });
+
+    // ✅ Cleanup
+    return () => {
+      if (clickHandler) clickHandler.remove();
+      if (viewRef.current) {
+        viewRef.current.destroy();
+        viewRef.current = null;
+      }
+    };
+  }, [inspectors, basemap, selectedPoint, center, zoom]);
+
+  // ✅ Basemap Switcher Menu
   const menu = (
     <Menu
       onClick={(e) => setBasemap(e.key)}
@@ -179,15 +190,25 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         { key: "streets-navigation-vector", label: "Streets (Day)" },
         { key: "streets-night-vector", label: "Streets (Night)" },
         { key: "satellite", label: "Satellite" },
+        { key: "osm", label: "OpenStreetMap" },
+        { key: "topo-vector", label: "Topographic" },
       ]}
     />
   );
 
+  // ✅ JSX
   return (
     <div style={{ position: "relative" }}>
-      <div ref={mapRef} style={{ width: "100%", height }} />
+      <div
+        ref={mapRef}
+        style={{
+          width: "100%",
+          height: height,
+          minHeight: "400px",
+        }}
+      />
 
-      {/* 📍 UNCHANGED: Basemap Switcher */}
+      {/* Basemap Switcher */}
       <Dropdown overlay={menu} trigger={["click"]}>
         <MoreOutlined
           style={{
@@ -196,13 +217,29 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
             right: 12,
             fontSize: 22,
             background: "#fff",
-            borderRadius: "50%",
-            padding: 6,
+            borderRadius: "4px",
+            padding: 8,
             cursor: "pointer",
             boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
           }}
         />
       </Dropdown>
+
+      {/* Instructions */}
+      <div
+        style={{
+          position: "absolute",
+          top: 12,
+          left: 12,
+          background: "rgba(255,255,255,0.9)",
+          padding: "8px 12px",
+          borderRadius: "4px",
+          fontSize: "12px",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+        }}
+      >
+        Click anywhere on the map to select a location
+      </div>
     </div>
   );
 };

@@ -34,6 +34,8 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../common/ArcGISMap";
 import { useAuth } from "../../contexts/AuthContext";
 import dayjs from "dayjs";
+import { PLATE_COLOR, PLATE_TYPE_SHORT } from "../../config/pageConfigs/finesConfig";
+import { EMIRATES } from "../../config/pageConfigs/whitelistPlateConfig";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -172,6 +174,13 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
     } finally {
       setIsLoadingLookups(false);
     }
+  };
+
+  const getVehicleLabel = (type: "color" | "plateType" | "source", value: number) => {
+    if (type === "color") return PLATE_COLOR[value] || value;
+    if (type === "plateType") return PLATE_TYPE_SHORT[value] || value;
+    if (type === "source") return EMIRATES[value]?.en || value;
+    return value;
   };
 
   // Fetch dispute data when modal opens
@@ -449,17 +458,23 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                         <Col span={10}>
                           <Text strong>{t("form.Color")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.vehicle.plateColor || t("common.noData")}</Col>
+                        <Col span={14}>
+                          {getVehicleLabel("color", dispute.vehicle.plateColor) || t("common.noData")}
+                        </Col>
 
                         <Col span={10}>
                           <Text strong>{t("form.Type")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.vehicle.plateType || t("common.noData")}</Col>
+                        <Col span={14}>
+                          {getVehicleLabel("plateType", dispute.vehicle.plateType) || t("common.noData")}
+                        </Col>
 
                         <Col span={10}>
                           <Text strong>{t("form.Source")}:</Text>
                         </Col>
-                        <Col span={14}>{dispute.vehicle.plateSource || t("common.noData")}</Col>
+                        <Col span={14}>
+                          {getVehicleLabel("source", dispute.vehicle.plateSource) || t("common.noData")}
+                        </Col>
 
                         <Col span={10}>
                           <Text strong>{t("form.vehicleBrand")}:</Text>
