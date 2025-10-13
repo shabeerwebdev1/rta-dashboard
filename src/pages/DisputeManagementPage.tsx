@@ -1,6 +1,22 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, DatePicker, Spin, Tag, Upload } from "antd";
-import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined, UploadOutlined } from "@ant-design/icons";
+import {
+  Space,
+  Card,
+  Input,
+  Button,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Select,
+  App,
+  DatePicker,
+  Spin,
+  Tag,
+  Upload,
+  Image,
+} from "antd";
+import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -13,6 +29,7 @@ import {
   useLazyGetLookupsQuery,
   useLazyGetDisputeByIdQuery,
 } from "../services/rtkApiFactory";
+import { getFileUrl, useUploadFilesMutation } from "../services/fileApi"; // Add this import
 import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
@@ -68,7 +85,11 @@ const DisputeManagementPage: React.FC = () => {
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
   const [disputeSubReasonOptions, setDisputeSubReasonOptions] = useState<any[]>([]);
-  const [fileList, setFileList] = useState<any[]>([]);
+
+  // Image upload states - ADD THESE
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
@@ -80,7 +101,27 @@ const DisputeManagementPage: React.FC = () => {
   const [updateDispute, { isLoading: isUpdating }] = useUpdateDisputeMutation();
   const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [triggerGetDisputeById] = useLazyGetDisputeByIdQuery();
+
+  // ADD this mutation hook
+  const [uploadFiles, { isLoading: isUploadingFiles }] = useUploadFilesMutation();
+
   const searchInputRef = useRef<any>(null);
+
+  // ADD this function for image preview
+  const getBase64 = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+
+  // Function to get source user name from localStorage
+  const getSourceUserName = () => {
+    return i18n.language === "ar"
+      ? localStorage.getItem("displayNameAr") || ""
+      : localStorage.getItem("displayNameEn") || "";
+  };
 
   const getLabelFromValue = (value: number, options: any[], i18n: any) => {
     const option = options.find((opt) => opt.value === value);
@@ -109,21 +150,12 @@ const DisputeManagementPage: React.FC = () => {
 
   // Function to handle dispute reason change and populate sub-reasons
   const handleDisputeReasonChange = (categoryId: number) => {
-    console.log("Selected category ID:", categoryId);
-
-    // Get ALL items from the selected category
     const subReasons = filterOptionsByCategory(lookupOptions, categoryId);
-
-    console.log("All items for category", categoryId, ":", subReasons);
-
     const subOptions = subReasons.map((sub: any) => ({
       label: i18n.language === "ar" ? sub.labelAr : sub.labelEn,
       value: sub.value,
     }));
-
     setDisputeSubReasonOptions(subOptions);
-
-    // Clear sub-reason value when reason changes
     form.setFieldsValue({ DisputeSubReason: undefined });
   };
 
@@ -136,12 +168,9 @@ const DisputeManagementPage: React.FC = () => {
     setIsLoadingLookups(true);
     try {
       const categoryIds = Object.values(columnToCategoryMap);
-      // Fetch all dispute reason categories
       const result = await triggerGetLookups([...categoryIds, 16001, 16002]).unwrap();
-      console.log("Lookup data fetched:", result);
       setLookupOptions(result);
     } catch (error) {
-      console.error("Failed to fetch lookup data:", error);
       notification.error({ data: { en_Msg: "Failed to load dropdown options" } }, "Load Failed");
     } finally {
       setIsLoadingLookups(false);
@@ -168,7 +197,6 @@ const DisputeManagementPage: React.FC = () => {
   // Filter dispute reason main options - use category names as main reasons
   const disputeReasonOptions = useMemo(() => {
     const categories = new Map();
-
     lookupOptions.forEach((option) => {
       if ((option.categoryId === 16001 || option.categoryId === 16002) && !categories.has(option.categoryId)) {
         categories.set(option.categoryId, {
@@ -177,9 +205,7 @@ const DisputeManagementPage: React.FC = () => {
         });
       }
     });
-
     const mainReasons = Array.from(categories.values());
-    console.log("Dispute reason main options:", mainReasons);
     return mainReasons;
   }, [lookupOptions]);
 
@@ -222,13 +248,28 @@ const DisputeManagementPage: React.FC = () => {
     setModalMode(mode);
     setSelectedRecord(record || null);
     setIsModalOpen(true);
-    setFileList([]); // Reset file list when modal opens
+
+    // Set SourceUser from localStorage when modal opens
+    const sourceUserName = getSourceUserName();
+    form.setFieldValue("SourceUser", sourceUserName);
 
     if (mode === "edit" && record) {
       try {
         const result = await triggerGetDisputeById(record.dispute_Id).unwrap();
         if (result.data) {
-          // Set form values with correct field names matching your handleFormSubmit
+          // Handle file list for evidence - ADD THIS SECTION
+          let fileList: any[] = [];
+          if (result.data.evidencePath) {
+            const files = result.data.evidencePath.split(";");
+            fileList = files.map((file: string, index: number) => ({
+              uid: String(index),
+              name: file.split("/").pop() || `file-${index}`,
+              status: "done",
+              url: getFileUrl(file),
+            }));
+          }
+
+          // Set form values with correct field names
           form.setFieldsValue({
             FineId: result.data.fineId || result.data.fine_Number,
             Name: result.data.name,
@@ -239,22 +280,20 @@ const DisputeManagementPage: React.FC = () => {
             Email: result.data.email,
             Phone: result.data.phone,
             Address: result.data.address,
-            SourceUser: result.data.sourceUser || result.data.source_user,
+            SourceUser: sourceUserName, // Use the name from localStorage
             Source: result.data.source || "sTafteesh_parking",
             DisputeMainReason: result.data.disputeMainReason || result.data.dispute_Reason,
             DisputeSubReason: result.data.disputeSubReason || result.data.dispute_SubReason,
             ActualDisputeDate: result.data.actualDisputeDate
               ? dayjs(result.data.actualDisputeDate, "YYYY-MM-DD")
               : null,
+            Evidence: fileList, // ADD THIS
           });
 
           // If there's a dispute reason, populate sub-reasons
           if (result.data.disputeMainReason || result.data.dispute_Reason) {
             const mainReasonId = result.data.disputeMainReason || result.data.dispute_Reason;
-
             handleDisputeReasonChange(mainReasonId);
-
-            // 🕒 Wait a tick to let subreason options populate
             setTimeout(() => {
               form.setFieldsValue({
                 DisputeSubReason: result.data.disputeSubReason || result.data.dispute_SubReason,
@@ -263,7 +302,6 @@ const DisputeManagementPage: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error("Failed to fetch dispute details:", error);
         notification.error({ data: { en_Msg: "Failed to load dispute details" } }, "Load Failed");
       }
     }
@@ -273,7 +311,6 @@ const DisputeManagementPage: React.FC = () => {
     setIsModalOpen(false);
     setSelectedRecord(null);
     setDisputeSubReasonOptions([]);
-    setFileList([]);
     form.resetFields();
   };
 
@@ -281,7 +318,7 @@ const DisputeManagementPage: React.FC = () => {
     try {
       const formData = new FormData();
 
-      // ✅ Always send empty or default values - matching your field names
+      // Append simple text fields (use defaults if missing)
       formData.append("FineId", values.FineId || "");
       formData.append("Department", values.Department || "0");
       formData.append("Payment_Type", values.Payment_Type || "0");
@@ -291,29 +328,48 @@ const DisputeManagementPage: React.FC = () => {
       formData.append("Email", values.Email || "");
       formData.append("Phone", values.Phone || "");
       formData.append("Address", values.Address || "");
-
-      // Evidence handling — send empty if no file
-      if (fileList && fileList.length > 0) {
-        fileList.forEach((file: any) => {
-          if (file.originFileObj) {
-            formData.append("Evidence", file.originFileObj);
-          }
-        });
-      } else {
-        formData.append("Evidence", new Blob([]), "empty.txt"); // 👈 send empty file
-      }
-
-      formData.append("SourceUser", values.SourceUser || "");
-
-      // ✅ Default Source value
-      formData.append("Source", values.Source || "sTafteesh_parking");
-
       formData.append("ActualDisputeDate", values.ActualDisputeDate ? values.ActualDisputeDate.toISOString() : "");
-
       formData.append("DisputeMainReason", values.DisputeMainReason || "0");
       formData.append("DisputeSubReason", values.DisputeSubReason || "0");
 
-      // 🚀 Submit logic
+      // Source user from localStorage
+      const displayName =
+        i18n.language === "ar"
+          ? localStorage.getItem("displayNameAr") || ""
+          : localStorage.getItem("displayNameEn") || "";
+      formData.append("SourceUser", displayName);
+      formData.append("Source", values.Source || "sTafteesh_parking");
+
+      // ✅ Function to prepare files (new + existing)
+      const prepareFilesForUpload = async (fileList: any[]) => {
+        const files: File[] = [];
+        for (const file of fileList) {
+          if (file.originFileObj) {
+            // New file
+            files.push(file.originFileObj);
+          } else if (file.url) {
+            // Existing file from backend, fetch and convert to File
+            const response = await fetch(file.url);
+            const blob = await response.blob();
+            const fileName = file.name || "file";
+            files.push(new File([blob], fileName, { type: blob.type }));
+          }
+        }
+        return files;
+      };
+
+      // Append Evidence files
+      if (values.Evidence && values.Evidence.length > 0) {
+        const files = await prepareFilesForUpload(values.Evidence);
+        files.forEach((file) => {
+          formData.append("Evidence", file, file.name);
+        });
+      } else {
+        // Optional: send empty placeholder if required
+        formData.append("Evidence", new Blob([]), "empty.txt");
+      }
+
+      // 🚀 Submit form
       let response;
       if (modalMode === "add") {
         response = await addDispute(formData).unwrap();
@@ -446,7 +502,6 @@ const DisputeManagementPage: React.FC = () => {
       label: t("common.edit"),
       icon: <EditOutlined />,
       onClick: () => handleModalOpen("edit", record),
-      // Disable if user doesn't have permission OR dispute_Status is 2
       disabled: !canEdit(menuName) || record.dispute_Status === 2 || record.dispute_Status === 3,
     },
   ];
@@ -459,7 +514,6 @@ const DisputeManagementPage: React.FC = () => {
     if (currentValue.trim()) {
       setGlobalSearch(state.searchKey, currentValue);
     }
-
     setGlobalSearch(newKey, "");
   };
 
@@ -567,7 +621,7 @@ const DisputeManagementPage: React.FC = () => {
           <Button
             key="submit"
             type="primary"
-            loading={isAdding || isUpdating || isLoadingLookups}
+            loading={isAdding || isUpdating || isLoadingLookups || isUploading}
             onClick={() => form.submit()}
           >
             {t(modalMode === "add" ? "common.submit" : "common.update")}
@@ -664,17 +718,26 @@ const DisputeManagementPage: React.FC = () => {
                 </Form.Item>
               </Col>
 
-              <Col span={12}>
-                <Form.Item name="SourceUser" label={t("form.sourceUser")} rules={[{ required: true }]}>
-                  <Input placeholder={t("placeholders.SourceUser")} />
-                </Form.Item>
-              </Col>
-
+              {/* SourceUser field - populated from localStorage */}
               {/* <Col span={12}>
-                <Form.Item name="Source" label={t("form.source")}>
-                  <Input placeholder={t("placeholders.source")} defaultValue="sTafteesh_parking" />
+                <Form.Item name="SourceUser" label={t("form.sourceUser")}>
+                  <Input 
+                    placeholder={t("placeholders.SourceUser")} 
+                    value={getSourceUserName()}
+                    disabled
+                  />
                 </Form.Item>
               </Col> */}
+
+              <Col span={12}>
+                <Form.Item name="ActualDisputeDate" label={t("form.actualDisputeDate")} rules={[{ required: true }]}>
+                  <DatePicker
+                    style={{ width: "100%" }}
+                    format="DD-MM-YYYY"
+                    disabledDate={(current) => current && current > dayjs().endOf("day")}
+                  />
+                </Form.Item>
+              </Col>
 
               <Col span={12}>
                 <Form.Item name="Address" label={t("form.address")} rules={[{ required: true }]}>
@@ -688,23 +751,48 @@ const DisputeManagementPage: React.FC = () => {
                 </Form.Item>
               </Col>
 
-              <Col span={12}>
-                <Form.Item name="ActualDisputeDate" label={t("form.actualDisputeDate")} rules={[{ required: true }]}>
-                  <DatePicker
-                    style={{ width: "100%" }}
-                    format="DD-MM-YYYY"
-                    disabledDate={(current) => current && current > dayjs().endOf("day")}
-                  />
-                </Form.Item>
-              </Col>
-
-              {/* <Col span={12}>
-                <Form.Item name="Evidence" label={t("form.evidence")}>
-                  <Upload {...uploadProps}>
-                    <Button icon={<UploadOutlined />}>{t("common.upload")}</Button>
+              {/* ADD THIS EVIDENCE UPLOAD SECTION */}
+              <Col span={24}>
+                <Form.Item
+                  name="Evidence"
+                  label={t("form.evidence")}
+                  valuePropName="fileList"
+                  getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+                >
+                  <Upload
+                    listType="picture-card"
+                    beforeUpload={() => false}
+                    multiple={true}
+                    accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,image/jpeg,image/png"
+                    onPreview={async (file) => {
+                      let src = file.url;
+                      if (!src && file.originFileObj) {
+                        src = await getBase64(file.originFileObj);
+                      }
+                      setPreviewImage(src || "");
+                      setPreviewOpen(true);
+                    }}
+                  >
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>{t("form.upload")}</div>
+                    </div>
                   </Upload>
                 </Form.Item>
-              </Col> */}
+
+                {previewImage && (
+                  <Image
+                    style={{ display: "none" }}
+                    preview={{
+                      visible: previewOpen,
+                      src: previewImage,
+                      onVisibleChange: (visible) => setPreviewOpen(visible),
+                      afterClose: () => setPreviewImage(""),
+                    }}
+                    src={previewImage}
+                  />
+                )}
+              </Col>
             </Row>
           </Form>
         </Spin>
