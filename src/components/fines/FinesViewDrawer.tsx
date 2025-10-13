@@ -326,20 +326,31 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
               {mappedFine?.plateNumber && (
                 <Col span={12}>
                   <Card
-                    title={t("form.vehicleDetails")}
+                    title={
+                      <span
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        {t("form.vehicleDetails")}
+                        <span style={{ paddingTop: "10px", paddingBottom: "10px" }}>
+                          <UAEPlate
+                            code={PLATE_COLOR[mappedFine?.plateCodeValue] ?? "---"}
+                            number={mappedFine?.plateNumber ?? "---"}
+                            emirateEn={plateSources[mappedFine?.plateSourceValue]?.en || ""}
+                            emirateAr={plateSources[mappedFine?.plateSourceValue]?.ar || ""}
+                          />
+                        </span>
+                      </span>
+                    }
                     size="small"
                     headStyle={{ background: "#fafafa", fontWeight: 600 }}
                     style={{ marginBottom: 16, borderRadius: 12 }}
                   >
                     {/* Vehicle Plate at the top of Vehicle Details */}
-                    <div style={{ display: "flex", justifyContent: "left", marginBottom: 16 }}>
-                      <UAEPlate
-                        code={PLATE_COLOR[mappedFine?.plateCodeValue] ?? "---"}
-                        number={mappedFine?.plateNumber ?? "---"}
-                        emirateEn={plateSources[mappedFine?.plateSourceValue]?.en || ""}
-                        emirateAr={plateSources[mappedFine?.plateSourceValue]?.ar || ""}
-                      />
-                    </div>
+                    <div style={{ display: "flex", justifyContent: "left", marginBottom: 16 }}></div>
 
                     <Row gutter={[0, 12]}>
                       <Col span={10}>
