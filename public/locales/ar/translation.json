@@ -255,7 +255,11 @@
     "name": "الاسم",
     "subreason": "سبب النزاع الفرعي",
     "email": "البريد الإلكتروني",
-    "evidence": "الأدلة"
+    "evidence": "الأدلة",
+    "createdAt": "تم الإنشاء في",
+    "selectSupervisor": "اختر المشرف"
+
+
 
 
   },

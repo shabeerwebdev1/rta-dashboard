@@ -104,7 +104,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           key: FULL_PATHS.PARKONIC,
           icon: <PushpinOutlined />,
           labelText: t("sidebar.parkonic"),
-          permission: "trParkonics",
+          permission: "Parkonic",
         },
         {
           key: FULL_PATHS.FINES,

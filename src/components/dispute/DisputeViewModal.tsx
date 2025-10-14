@@ -246,6 +246,12 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
     try {
       const values = await form.validateFields();
 
+      // For assignment action (action=1), validate that supervisor is selected
+      if (action === 1 && !values.assignedTo) {
+        notification.error("Please select a supervisor to assign this dispute");
+        return;
+      }
+
       const payload = {
         dispute_Id: storedDisputeId,
         review_Action: action,
@@ -702,7 +708,16 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     dispute?.fineDetails?.fineStatus !== 15005 &&
                     dispute?.dispute_Status !== 3)) && (
                   <Col span={6}>
-                    <Form.Item name="assignedTo" label={<Text strong>{t("form.assignedTo")}</Text>}>
+                    <Form.Item
+                      name="assignedTo"
+                      label={<Text strong>{t("form.assignedTo")}</Text>}
+                      rules={[
+                        {
+                          required: true,
+                          message: t("form.selectSupervisor"),
+                        },
+                      ]}
+                    >
                       <Select
                         placeholder={t("common.selectUser")}
                         loading={isLoadingSupervisors}
@@ -727,7 +742,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                       name="review_Comments"
                       label={<Text strong>{t("form.comments")}</Text>}
                       style={{ marginBottom: 0 }}
-                      rules={[{ required: true, message: "Please enter your comments" }]}
+                      rules={[{ required: true, message: t("placeholders.enterComments") }]}
                     >
                       <TextArea placeholder={t("placeholders.enterComments")} rows={2} />
                     </Form.Item>

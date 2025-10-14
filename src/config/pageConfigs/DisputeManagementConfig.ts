@@ -46,6 +46,7 @@ export const disputeManagementConfig: PageConfig = {
       { key: "phone", title: "form.phoneNumber", type: "string" },
       { key: "crm_Ref", title: "form.crmReference", type: "string", sortable: true },
       { key: "email", title: "form.email", type: "string" },
+      { key: "created_At", title: "form.createdAt", type: "date" },
       { key: "dispute_Status", title: "form.disputestatus", type: "string" },
     ],
     viewRecord: true,

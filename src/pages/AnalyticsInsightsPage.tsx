@@ -92,7 +92,7 @@ const ReportHtmlViewer: React.FC = () => {
               style={{ width: "100%" }}
             >
               <Option value="PDF">PDF</Option>
-              <Option value="HTML4.0">HTML4.0</Option>
+              <Option value="excel">Excel</Option>
             </Select>
           </div>
         </div>

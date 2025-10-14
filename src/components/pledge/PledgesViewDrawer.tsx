@@ -90,9 +90,7 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({
     const mapped = {
       ...recordData,
       pledgeTypeLabel: getLabelFromValue(recordData.pledgeType as number, pledgeTypeOptions, i18n.language),
-      pledgeDateFormatted: recordData.pledgeDate
-        ? dayjs(recordData.pledgeDate as string).format("YYYY-MM-DD")
-        : "",
+      pledgeDateFormatted: recordData.pledgeDate ? dayjs(recordData.pledgeDate as string).format("YYYY-MM-DD") : "",
       pledgeEndDateFormatted: recordData.pledgeEndDate
         ? dayjs(recordData.pledgeEndDate as string).format("YYYY-MM-DD")
         : "",
@@ -107,7 +105,7 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({
     { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "text" },
     { key: "businessName", title: "form.businessName", type: "text" },
     { key: "remarks", title: "form.remarks", type: "text" },
-    { key: "pledgeDateFormatted", title: "form.pledgeDate", type: "date" },
+    { key: "pledgeDateFormatted", title: "form.pledgestartDate", type: "date" },
     { key: "pledgeEndDateFormatted", title: "form.pledgeEndDate", type: "date" },
   ];
 

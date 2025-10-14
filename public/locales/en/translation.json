@@ -259,7 +259,9 @@
     "pickLocation": "Pick Location",
     "name": "Name",
     "subreason": "Subreason",
-    "evidence": "Evidence"
+    "evidence": "Evidence",
+    "createdAt": "Created At",
+    "selectSupervisor": " please Select User"
   },
   "common": {
     "action": "Action",
