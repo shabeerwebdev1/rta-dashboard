@@ -49,9 +49,9 @@ const AppHeader = () => {
       <Space size="middle" align="center">
         <ThemeSwitcher />
         <LanguageSwitcher />
-        <Badge dot>
+        {/* <Badge dot>
           <Button type="text" icon={<BellOutlined />} />
-        </Badge>
+        </Badge> */}
         <Dropdown menu={{ items: userMenuItems, onClick: handleMenuClick }} placement="bottomRight">
           <Space style={{ cursor: "pointer" }}>
             <Avatar src={userImage} icon={<UserOutlined />} />

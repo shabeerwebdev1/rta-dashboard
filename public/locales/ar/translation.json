@@ -257,9 +257,12 @@
     "email": "البريد الإلكتروني",
     "evidence": "الأدلة",
     "createdAt": "تم الإنشاء في",
-    "selectSupervisor": "اختر المشرف"
-
-
+    "selectSupervisor": "اختر المشرف",
+    "source": "المصدر",
+    "selectReviewStatus": "اختر حالة المراجعة",
+    "selectViolation": "اختر الانتهاك",
+    "reviewedBy": "تمت المراجعة بواسطة",
+    "action": "الإجراء"
 
 
   },

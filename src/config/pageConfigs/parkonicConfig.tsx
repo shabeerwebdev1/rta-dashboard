@@ -30,7 +30,7 @@ export const parkonicPageConfig: PageConfig = {
   tableConfig: {
     rowKey: "fineId",
     columns: [
-      { key: "fineId", title: "form.fineNumber", type: "string", sortable: true },
+      { key: "entityNo", title: "form.fineNumber", type: "string", sortable: true },
       { key: "plateNumber", title: "form.vehicleNumber", type: "string", sortable: true },
       {
         key: "reviewStatus",

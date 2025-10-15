@@ -261,7 +261,12 @@
     "subreason": "Subreason",
     "evidence": "Evidence",
     "createdAt": "Created At",
-    "selectSupervisor": " please Select User"
+    "selectSupervisor": " please Select User",
+    "source": "Source",
+    "selectReviewStatus": "Select Review Status",
+    "selectViolation": "Select Violation",
+    "reviewedBy": "Reviewed By",
+    "action": "Action"
   },
   "common": {
     "action": "Action",

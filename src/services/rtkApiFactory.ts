@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { serializeParams } from "../hooks/useTableParams";
 
-const RTA_API_TARGET = `https://devparkingapi.kandaprojects.live`;  
+const RTA_API_TARGET = `https://devparkingapi.kandaprojects.live`;
 
 // const RTA_API_TARGET = `http://10.0.1.85:9010`;
 
@@ -240,7 +240,7 @@ export const dynamicApi = createApi({
 
     // Parkonics
     getParkonics: builder.query({
-      query: (params) => ({ url: "/api/trParkonics", params }),
+      query: (params) => ({ url: "/api/Parkonic", params }),
       providesTags: ["ParkonicSearch"],
       transformResponse: transformListResponse,
     }),
