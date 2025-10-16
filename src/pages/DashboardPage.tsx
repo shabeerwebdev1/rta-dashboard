@@ -228,7 +228,7 @@ const SupervisorViewPage: React.FC = () => {
             </Select>
           </Col>
           <Col span={6}>
-            <DatePicker.RangePicker format={"DD-MM-YYYY"} placeholder={[t("placeholders.startDate") , t("placeholders.endDate")]} />
+            <DatePicker.RangePicker format={"DD-MM-YYYY"} />
           </Col>
         </Row>
       </Card>
@@ -256,7 +256,7 @@ const SupervisorViewPage: React.FC = () => {
             {/* Total Inspectors Card */}
             <Col span={24}>
               <Card style={{ borderColor: "#1890ff" }}>
-                <Row align="bottom" justify="space-between" wrap={false} gutter={8}>
+                <Row align="bottom" justify="space-between" wrap={true} gutter={8}>
                   <Col>
                     <Statistic
                       title={t("dashboard.totalInspectors", "Total Inspectors")}
@@ -289,7 +289,7 @@ const SupervisorViewPage: React.FC = () => {
             {/* Total Approvals Card */}
             <Col span={24}>
               <Card style={{ borderColor: "#52c41a" }}>
-                <Row align="bottom" justify="space-between" wrap={false} gutter={8}>
+                <Row align="bottom" justify="space-between" wrap={true} gutter={8}>
                   <Col>
                     <Statistic
                       title={t("dashboard.totalApprovals", "Total Approvals")}
@@ -319,7 +319,7 @@ const SupervisorViewPage: React.FC = () => {
             {/* Total Inspections Card */}
             <Col span={24}>
               <Card style={{ borderColor: "#faad14" }}>
-                <Row align="bottom" justify="space-between" wrap={false} gutter={8}>
+                <Row align="bottom" justify="space-between" wrap={true} gutter={8}>
                   <Col>
                     <Statistic
                       title={t("dashboard.totalInspections", "Total Inspections")}
@@ -350,7 +350,7 @@ const SupervisorViewPage: React.FC = () => {
             {/* Total Obstacles Card */}
             <Col span={24}>
               <Card style={{ borderColor: "#ff4d4f", cursor: "pointer" }}>
-                <Row align="bottom" justify="space-between" wrap={false} gutter={8}>
+                <Row align="bottom" justify="space-between" wrap={true} gutter={8}>
                   <Col>
                     <Statistic
                       title={t("dashboard.totalObstacles", "Total Obstacles")}
