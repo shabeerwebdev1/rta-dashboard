@@ -488,6 +488,7 @@ const InspectionObstaclesPage: React.FC = () => {
               <DatePicker.RangePicker
                 value={state.dateRange}
                 format={"DD-MM-YYYY"}
+                placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
             </Space>

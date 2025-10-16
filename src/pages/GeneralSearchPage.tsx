@@ -105,7 +105,6 @@ const GeneralSearchPage: React.FC = () => {
   useEffect(() => {
     setPageTitle(t("sidebar.general"));
   }, [setPageTitle, i18n.language]); // 👈 Add i18n.language
-  
 
   const handleCarSearch = async (values: any) => {
     const { plateNumber, plateSource, plateCategory, plateCode } = values;
@@ -127,7 +126,7 @@ const GeneralSearchPage: React.FC = () => {
       notification.success(result, t("messages.vehicleDetailsFetched"));
     } catch (error: any) {
       console.error("Car plate details fetch failed:", error);
-      notification.error(error, t("messages.vehicleDetailsFetched"));
+      notification.error(error, t("messages.failedvehicleDetailsFetched"));
       setVehicleDetails(null);
     }
   };

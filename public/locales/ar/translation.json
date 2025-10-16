@@ -94,7 +94,11 @@
     "fileUploadSuccess": "تم رفع الملف بنجاح: {fileName}",
     "fileUploadError": "فشل رفع الملف: {fileName}",
     "errorLoading": "خطأ في تحميل بيانات لوحة التحكم",
-    "enterRejectionReason": "يرجى إدخال سبب الرفض"
+    "enterRejectionReason": "يرجى إدخال سبب الرفض",
+     "failedToFetchTradeLicense": "فشل في جلب تفاصيل الرخصة التجارية",
+    "tradeLicenseFetched ": "تم جلب تفاصيل الرخصة التجارية بنجاح",
+    "vehicleDetailsFetched": "تم جلب تفاصيل المركبة بنجاح",
+    "failedvehicleDetailsFetched": "فشل في جلب تفاصيل المركبة"
   },
   "form": {
     "Number": "الرقم",
@@ -268,7 +272,11 @@
     "time": "الوقت",
     "assignment": "التكليف",
     "inspectorName": "اسم المفتش",
-    "checkInId": "معرف تسجيل الدخول  "
+    "checkInId": "معرف تسجيل الدخول  ",
+    "pick": "اختيار",
+    "parkingName": "اسم مواقف السيارات",
+    "parkingNameArabic": "اسم مواقف السيارات (عربي)",
+    "pickLocation": "اختر الموقع"
   },
   "common": {
     "action": "إجراء",

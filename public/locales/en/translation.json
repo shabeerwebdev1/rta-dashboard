@@ -94,7 +94,11 @@
     "fileUploadSuccess": "File uploaded successfully: {fileName}",
     "fileUploadError": "File upload failed for: {fileName}",
     "errorLoading": "Error loading dashboard data",
-    "enterRejectionReason": "Please enter a reason for rejection"
+    "enterRejectionReason": "Please enter a reason for rejection",
+    "failedToFetchTradeLicense": "Failed to fetch trade license details",
+    "tradeLicenseFetched ": "Trade license details fetched successfully",
+    "vehicleDetailsFetched": "Vehicle details fetched successfully",
+    "failedvehicleDetailsFetched": "Failed to fetch vehicle details"
   },
   "form": {
     "Number": "Number",
@@ -270,7 +274,8 @@
     "time": "Time",
     "assignment": "Assignment",
     "inspectorName": "Inspector Name",
-    "checkInId": "Check-In ID"
+    "checkInId": "Check-In ID",
+    "pick": "Pick"
   },
   "common": {
     "action": "Action",

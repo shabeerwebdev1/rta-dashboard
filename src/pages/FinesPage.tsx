@@ -60,7 +60,7 @@ const FinesPage: React.FC = () => {
   const [selectedFineForModal, setSelectedFineForModal] = useState<any>(null);
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
-  
+
   const { data, isLoading, isFetching } = useSearchFinesQuery(apiParams, {
     refetchOnMountOrArgChange: true,
   });
@@ -295,6 +295,7 @@ const FinesPage: React.FC = () => {
               <RangePicker
                 value={state.dateRange}
                 format={"DD-MM-YYYY"}
+                placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
             </Space>
@@ -330,10 +331,10 @@ const FinesPage: React.FC = () => {
         state={state}
         lookupOptions={lookupOptions}
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
-        columnLookupMap={{ inspectionType: 1700 }} 
+        columnLookupMap={{ inspectionType: 1700 }}
       />
 
-     <FinesViewDrawer
+      <FinesViewDrawer
         open={drawerVisible}
         onClose={() => {
           setDrawerVisible(false);
@@ -345,18 +346,13 @@ const FinesPage: React.FC = () => {
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
       />
 
-     <MapModal 
-        open={mapModalVisible} 
-        onClose={() => setMapModalVisible(false)} 
-        fine={selectedFineForModal} 
-      />
+      <MapModal open={mapModalVisible} onClose={() => setMapModalVisible(false)} fine={selectedFineForModal} />
 
-      <AttachmentsModal 
-        open={attachmentsModalVisible} 
-        onClose={() => setAttachmentsModalVisible(false)} 
+      <AttachmentsModal
+        open={attachmentsModalVisible}
+        onClose={() => setAttachmentsModalVisible(false)}
         fine={selectedFineForModal}
       />
-
     </Space>
   );
 };

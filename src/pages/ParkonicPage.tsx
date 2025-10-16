@@ -46,7 +46,6 @@ const ParkonicPage: React.FC = () => {
   const { data, isLoading, isFetching } = useGetParkonicsQuery(apiParams, {
     refetchOnMountOrArgChange: true,
   });
-  
 
   const statusLabels = useMemo(() => {
     const statusMap: Record<number, string> = {
@@ -151,6 +150,7 @@ const ParkonicPage: React.FC = () => {
               <DatePicker.RangePicker
                 value={state.dateRange}
                 format={"DD-MM-YYYY"}
+                placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
             </Space>

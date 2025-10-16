@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Card, Space, Button, Input, DatePicker, Row, Col, Select,  App, Tag } from "antd";
-import { EyeOutlined, DownloadOutlined} from "@ant-design/icons";
+import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App, Tag } from "antd";
+import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { useTableParams } from "../hooks/useTableParams";
@@ -154,6 +154,7 @@ const TowingPage: React.FC = () => {
                 <DatePicker.RangePicker
                   value={state.dateRange}
                   format={"DD-MM-YYYY"}
+                  placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                   onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
                 />
               </Space>

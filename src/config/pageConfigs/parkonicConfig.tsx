@@ -8,7 +8,7 @@ export const parkonicPageConfig: PageConfig = {
   name: { singular: "Parkonic Record", plural: "Parkonic Records" },
   api: { get: "/api/Parkonic", post: "", put: "/api/Parkonic/Review", delete: "" },
   searchConfig: {
-    globalSearchKeys: ["fineId", "plateNumber"],
+    globalSearchKeys: ["entityNo", "plateNumber"],
     columnFilterKeys: ["reviewStatus"],
     dateRangeKey: "Entry_DateTime",
   },

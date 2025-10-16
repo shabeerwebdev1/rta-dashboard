@@ -123,36 +123,23 @@ const LeaveManagementPage: React.FC = () => {
     },
   ];
 
-const handleShare = () => {
-  if (!selectedRecord || !selectedRecord.id) {
-    notification.error(
-      { data: { en_Msg: "No record selected" } },
-      "No Record"
+  const handleShare = () => {
+    if (!selectedRecord || !selectedRecord.id) {
+      notification.error({ data: { en_Msg: "No record selected" } }, "No Record");
+      return;
+    }
+
+    // Preserve current search params (like PageNumber, PageSize)
+    const params = new URLSearchParams(window.location.search);
+    params.set("viewRecord", selectedRecord.id); // ✅ use correct ID field
+
+    const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+
+    navigator.clipboard.writeText(shareUrl).then(
+      () => notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!"),
+      () => notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed"),
     );
-    return;
-  }
-
-  // Preserve current search params (like PageNumber, PageSize)
-  const params = new URLSearchParams(window.location.search);
-  params.set("viewRecord", selectedRecord.id); // ✅ use correct ID field
-
-  const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-
-  navigator.clipboard.writeText(shareUrl).then(
-    () =>
-      notification.success(
-        { data: { en_Msg: "Share link copied to clipboard!" } },
-        "Link Copied!"
-      ),
-    () =>
-      notification.error(
-        { data: { en_Msg: "Failed to copy link." } },
-        "Copy Failed"
-      )
-  );
-};
-
-
+  };
 
   const handleSearchKeyChange = (newKey: string) => {
     const currentValue = searchValue;
@@ -213,7 +200,7 @@ const handleShare = () => {
                 <DatePicker.RangePicker
                   value={state.dateRange}
                   format={"DD-MM-YYYY"}
-
+                  placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                   onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
                 />
               </Space>
@@ -240,7 +227,7 @@ const handleShare = () => {
         <DataTableWrapper
           pageConfig={config}
           data={platesData} // Use the extracted array
-        total={totalCount}
+          total={totalCount}
           isLoading={isFetching}
           apiParams={apiParams}
           handleTableChange={handleTableChange}
@@ -265,7 +252,12 @@ const handleShare = () => {
       </Space>
 
       {/* Drawer for viewing leave details */}
-      <LeaveViewDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} record={selectedRecord} onShare={handleShare} />
+      <LeaveViewDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        record={selectedRecord}
+        onShare={handleShare}
+      />
     </>
   );
 };

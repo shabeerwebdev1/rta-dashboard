@@ -1,9 +1,31 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Spin, Tag, Pagination, DatePicker } from "antd";
-import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined, CalendarOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import {
+  Space,
+  Card,
+  Input,
+  Button,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Select,
+  App,
+  Spin,
+  Tag,
+  Pagination,
+  DatePicker,
+} from "antd";
+import {
+  PlusOutlined,
+  EyeOutlined,
+  EditOutlined,
+  DownloadOutlined,
+  CalendarOutlined,
+  EnvironmentOutlined,
+} from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
-import dayjs  from "dayjs";
+import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 
 // Enable the isBetween plugin
@@ -55,7 +77,7 @@ const ParkonicLocationPage: React.FC = () => {
   const [viewRecord, setViewRecord] = useState<any>(null);
   const [tableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  
+
   // Map modal state
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -67,7 +89,6 @@ const ParkonicLocationPage: React.FC = () => {
   const [columnFilters, setColumnFilters] = useState<Record<string, (string | number)[] | null>>({});
   const [sortBy, setSortBy] = useState<string | undefined>();
   const [sortOrder, setSortOrder] = useState<"ascend" | "descend" | undefined>();
-  
 
   // Pagination states - matching UserZoneLinking pattern
   const [currentPage, setCurrentPage] = useState(1);
@@ -109,7 +130,7 @@ const ParkonicLocationPage: React.FC = () => {
       filtered = filtered.filter((item) => {
         if (!item.created_At) return false;
         const itemDate = dayjs(item.created_At);
-        return itemDate.isBetween(startDate, endDate, 'day', '[]');
+        return itemDate.isBetween(startDate, endDate, "day", "[]");
       });
     }
 
@@ -127,9 +148,9 @@ const ParkonicLocationPage: React.FC = () => {
       filtered.sort((a, b) => {
         const aVal = a[sortBy];
         const bVal = b[sortBy];
-        
+
         if (aVal === bVal) return 0;
-        
+
         const comparison = aVal < bVal ? -1 : 1;
         return sortOrder === "ascend" ? comparison : -comparison;
       });
@@ -155,7 +176,7 @@ const ParkonicLocationPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const recordId = searchParams.get('viewRecord');
+    const recordId = searchParams.get("viewRecord");
     if (recordId && !isDrawerOpen) {
       triggerGetLocation(recordId);
     }
@@ -180,14 +201,14 @@ const ParkonicLocationPage: React.FC = () => {
     } else if (type === "column" && key) {
       if (value !== undefined) {
         // Remove specific value from column filter
-        setColumnFilters(prev => {
+        setColumnFilters((prev) => {
           const current = prev[key] || [];
-          const updated = current.filter(v => v !== value);
+          const updated = current.filter((v) => v !== value);
           return { ...prev, [key]: updated.length > 0 ? updated : null };
         });
       } else {
         // Remove entire column filter
-        setColumnFilters(prev => ({ ...prev, [key]: null }));
+        setColumnFilters((prev) => ({ ...prev, [key]: null }));
       }
     } else if (type === "sorter") {
       setSortBy(undefined);
@@ -210,15 +231,15 @@ const ParkonicLocationPage: React.FC = () => {
     setSelectedRecord(record || null);
     setIsModalOpen(true);
     if (mode === "edit" && record) {
-  form.setFieldsValue({
-    parkingName: record.parking_Name_En,
-    parkingNameArabic: record.parking_Name_Ar,
-    zone: record.zone,
-    area: record.area,
-    latitude: record.latitude,
-    longitude: record.longitude,
-  });
-}
+      form.setFieldsValue({
+        parkingName: record.parking_Name_En,
+        parkingNameArabic: record.parking_Name_Ar,
+        zone: record.zone,
+        area: record.area,
+        latitude: record.latitude,
+        longitude: record.longitude,
+      });
+    }
   };
 
   const handleModalClose = () => {
@@ -233,16 +254,15 @@ const ParkonicLocationPage: React.FC = () => {
     // Update the form fields with the selected coordinates
     form.setFieldsValue({
       latitude: location.lat.toString(),
-      longitude: location.lng.toString()
+      longitude: location.lng.toString(),
     });
     setIsMapModalOpen(false);
   };
 
   const handleInspectorClick = (inspector: any) => {
-    
     handleMapLocationSelect({
       lat: inspector.lat,
-      lng: inspector.lng
+      lng: inspector.lng,
     });
   };
 
@@ -274,29 +294,29 @@ const ParkonicLocationPage: React.FC = () => {
   };
 
   const handleFormSubmit = async (values: any) => {
-  try {
-    const payload = {
-      parking_Name_En: values.parkingName,
-      parking_Name_Ar: values.parkingNameArabic,
-      zone: values.zone,
-      area: values.area,
-      latitude: values.latitude, 
-      longitude: values.longitude, 
-    };
-    
-    let response;
-    if (modalMode === "add") {
-      response = await addLocation(payload).unwrap();
-      notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
-    } else {
-      response = await updateLocation({ ...payload, id: selectedRecord.id }).unwrap();
-      notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
+    try {
+      const payload = {
+        parking_Name_En: values.parkingName,
+        parking_Name_Ar: values.parkingNameArabic,
+        zone: values.zone,
+        area: values.area,
+        latitude: values.latitude,
+        longitude: values.longitude,
+      };
+
+      let response;
+      if (modalMode === "add") {
+        response = await addLocation(payload).unwrap();
+        notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
+      } else {
+        response = await updateLocation({ ...payload, id: selectedRecord.id }).unwrap();
+        notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
+      }
+      handleModalClose();
+    } catch (err) {
+      notification.error(err as any, "Operation Failed");
     }
-    handleModalClose();
-  } catch (err) {
-    notification.error(err as any, "Operation Failed");
-  }
-};
+  };
 
   const handleView = (record: any) => {
     setViewRecord(record);
@@ -364,11 +384,7 @@ const ParkonicLocationPage: React.FC = () => {
   ];
 
   const searchAddon = (
-    <Select 
-      value={searchKey} 
-      onChange={(key) => setSearchKey(key)} 
-      style={{ width: 150 }}
-    >
+    <Select value={searchKey} onChange={(key) => setSearchKey(key)} style={{ width: 150 }}>
       {config.searchConfig?.globalSearchKeys.map((key) => (
         <Option key={key} value={key}>
           {columnLabels[key]}
@@ -395,6 +411,7 @@ const ParkonicLocationPage: React.FC = () => {
                 value={dateRange}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
                 format="DD-MM-YYYY"
+                placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 allowClear
                 suffixIcon={<CalendarOutlined />}
               />
@@ -403,7 +420,7 @@ const ParkonicLocationPage: React.FC = () => {
           <Col>
             <Space>
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
-                {t("common.downloadCsv")} 
+                {t("common.downloadCsv")}
               </Button>
               <Button
                 type="primary"
@@ -416,7 +433,7 @@ const ParkonicLocationPage: React.FC = () => {
             </Space>
           </Col>
         </Row>
-        
+
         <ActiveFiltersDisplay
           state={filterState}
           onClearFilter={handleClearFilter}
@@ -424,7 +441,7 @@ const ParkonicLocationPage: React.FC = () => {
           columnLabels={columnLabels}
         />
       </Card>
-      
+
       <Spin spinning={isLoading || isFetching || isAdding || isUpdating}>
         <DataTableWrapper
           pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
@@ -441,15 +458,13 @@ const ParkonicLocationPage: React.FC = () => {
           showPagination={false}
         />
 
-       
-        <div 
-          style={{ 
-            marginTop: 1, 
+        <div
+          style={{
+            marginTop: 1,
             textAlign: "right",
             padding: "12px 16px",
             backgroundColor: "#fafafa",
             border: "1px solid #f0f0f0",
-            
           }}
         >
           <Pagination
@@ -458,17 +473,15 @@ const ParkonicLocationPage: React.FC = () => {
             total={filteredData.length}
             onChange={handlePageChange}
             showSizeChanger={{ showSearch: false }}
-            pageSizeOptions={[ "10", "20", "50"]}
+            pageSizeOptions={["10", "20", "50"]}
             showQuickJumper={false}
             showTotal={(total, range) => (
-              <span style={{ marginRight: 16, color: "#666" }}>
-                {`${range[0]}-${range[1]} of ${total} items`}
-              </span>
+              <span style={{ marginRight: 16, color: "#666" }}>{`${range[0]}-${range[1]} of ${total} items`}</span>
             )}
-            style={{ 
-              display: "flex", 
-              justifyContent: "space-between", 
-              alignItems: "center" 
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           />
         </div>
@@ -495,7 +508,7 @@ const ParkonicLocationPage: React.FC = () => {
           <Row gutter={24}>
             <Col span={12}>
               <Form.Item name="parkingName" label={t("form.parkingName")} rules={[{ required: true }]}>
-                <Input  placeholder={t("placeholders.parkingName")} />
+                <Input placeholder={t("placeholders.parkingName")} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -512,58 +525,45 @@ const ParkonicLocationPage: React.FC = () => {
               <Form.Item name="area" label={t("form.area")} rules={[{ required: true }]}>
                 <Input placeholder={t("placeholders.areas")} />
               </Form.Item>
-            
             </Col>
-            
-            <Col span={24}>
-        <Form.Item label={t("form.pickLocation")} required>
-  <Input.Group compact style={{ display: "flex" }}>
-    <Form.Item
-      name="latitude"
-      noStyle
-      rules={[{ required: true }]}
-      style={{ width: "50%" }}
-    >
-      <Input placeholder={t("placeholders.latitude")} />
-    </Form.Item>
-    <Form.Item
-      name="longitude"
-      noStyle
-      rules={[{ required: true }]}
-      style={{ width: "50%" }}
-    >
-      <Input placeholder={t("placeholders.longitude")} />
-    </Form.Item>
-    <Button
-    type="primary" 
-      icon={<EnvironmentOutlined />}
-      onClick={() => setIsMapModalOpen(true)}
-      style={{ width: "20%" }}
-    >
-      Pick
-    </Button>
-  </Input.Group>
-</Form.Item>
-</Col>
 
+            <Col span={24}>
+              <Form.Item label={t("form.pickLocation")} required>
+                <Input.Group compact style={{ display: "flex" }}>
+                  <Form.Item name="latitude" noStyle rules={[{ required: true }]} style={{ width: "50%" }}>
+                    <Input placeholder={t("placeholders.latitude")} />
+                  </Form.Item>
+                  <Form.Item name="longitude" noStyle rules={[{ required: true }]} style={{ width: "50%" }}>
+                    <Input placeholder={t("placeholders.longitude")} />
+                  </Form.Item>
+                  <Button
+                    type="primary"
+                    icon={<EnvironmentOutlined />}
+                    onClick={() => setIsMapModalOpen(true)}
+                    style={{ width: "20%" }}
+                  >
+                    {t("form.pick")}
+                  </Button>
+                </Input.Group>
+              </Form.Item>
+            </Col>
           </Row>
         </Form>
       </Modal>
 
-      
       <Modal
         open={isMapModalOpen}
         title="Select Location on Map"
         onCancel={() => setIsMapModalOpen(false)}
         width="80%"
-        style={{ maxWidth: '1000px' }}
+        style={{ maxWidth: "1000px" }}
         footer={[
           <Button key="cancel" onClick={() => setIsMapModalOpen(false)}>
             Cancel
           </Button>,
-          <Button 
-            key="confirm" 
-            type="primary" 
+          <Button
+            key="confirm"
+            type="primary"
             disabled={!selectedLocation}
             onClick={() => {
               if (selectedLocation) {
@@ -575,16 +575,15 @@ const ParkonicLocationPage: React.FC = () => {
           </Button>,
         ]}
       >
-        <div style={{ height: '400px' }}>
+        <div style={{ height: "400px" }}>
           <ArcGISMap
-            inspectors={[]} 
+            inspectors={[]}
             center={[55.2743, 25.1972]}
             zoom={12}
             height="100%"
             onInspectorClick={handleInspectorClick}
           />
         </div>
-       
       </Modal>
 
       {viewRecord && (
