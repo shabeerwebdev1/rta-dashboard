@@ -43,6 +43,8 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
   const [mappedRecord, setMappedRecord] = useState<any>(null);
 
+  const isRtl = i18n.dir() === "rtl";
+
   const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [triggerGetPledge, { data: singleRecordData, isSuccess: isSingleRecordSuccess, isLoading: isPledgeLoading }] =
     useLazyGetPledgeByIdQuery();
@@ -125,6 +127,7 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({
           </Button>
         </Space>
       }
+      placement={isRtl ? "left" : "right"}
     >
       <Spin spinning={isLoadingLookups || isPledgeLoading || isLoading}>
         {mappedRecord ? (

@@ -31,7 +31,7 @@ interface PageConfig {
 export const parkonicLocationPageConfig: PageConfig = {
   key: "parkonic-location",
   title: "page.title.parkonicLocation",
-  name: { singular: "Location", plural: "Locations" },
+  name: { singular: "entity.location", plural: "Locations" },
   api: {
     get: "/api/ParkonicLocation",
     post: "/api/ParkonicLocation",
@@ -47,7 +47,6 @@ export const parkonicLocationPageConfig: PageConfig = {
     columns: [
       { key: "zone", title: "form.zone", dataIndex: "zone", type: "string", sortable: true },
       { key: "area", title: "form.area", dataIndex: "area", type: "string", sortable: true },
-      
 
       { key: "created_At", title: "form.addedOn", dataIndex: "long", type: "string", sortable: true },
     ],

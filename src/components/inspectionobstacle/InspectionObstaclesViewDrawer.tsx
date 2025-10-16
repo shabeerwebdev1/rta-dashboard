@@ -34,11 +34,12 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
   areaIdToNameMap,
   statusLabels,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const notification = useAppNotification();
   const [updateObstacle] = useUpdateInspectionObstacleMutation();
   const [modal, contextHolder] = Modal.useModal();
 
+  const isRtl = i18n.dir() === "rtl";
   // ✅ Always call hook; skip with skipToken if record is null
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
     record ? { inspectionGUID: record.inspectionGUID, entityCode: "parking-Obstacle" } : skipToken,
@@ -99,6 +100,7 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
             {t("common.share")}
           </Button>
         }
+        placement={isRtl ? "left" : "right"}
       >
         <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
           {displayFields.map((field) => {

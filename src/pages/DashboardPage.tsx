@@ -13,6 +13,7 @@ import {
   Spin,
   message,
   DatePicker,
+  Grid,
 } from "antd";
 import {
   UserOutlined,
@@ -50,6 +51,10 @@ const SupervisorViewPage: React.FC = () => {
   const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery({});
   const [triggerGetShifts, { isLoading: isLoadingShiftsDropdown }] = useLazyGetShiftsQuery();
 
+  const { useBreakpoint } = Grid;
+  const screens = useBreakpoint();
+  const isMobile = screens.xs && !screens.md;
+  const isTablet = screens.md && !screens.lg;
   useEffect(() => {
     // Fetch shifts when page loads
     const fetchShifts = async () => {
@@ -232,7 +237,7 @@ const SupervisorViewPage: React.FC = () => {
 
       <Row gutter={16} style={{ marginBottom: 20 }}>
         {/* ✅ ArcGIS Map (Reusable Component) */}
-        <Col span={16}>
+        <Col span={14}>
           <Card bodyStyle={{ padding: 0, height: "100%", position: "relative" }}>
             <ArcGISMap
               inspectors={inspectorAvatars}
@@ -246,28 +251,31 @@ const SupervisorViewPage: React.FC = () => {
         </Col>
 
         {/* Stats Section */}
-        <Col span={8}>
+        <Col span={10}>
           <Row gutter={[16, 16]}>
+            {/* Total Inspectors Card */}
             <Col span={24}>
               <Card style={{ borderColor: "#1890ff" }}>
-                <Row wrap={false} align="middle" justify="space-between">
-                  <Col flex="none">
+                <Row align="bottom" justify="space-between" wrap={false} gutter={8}>
+                  <Col>
                     <Statistic
                       title={t("dashboard.totalInspectors", "Total Inspectors")}
                       value={dashboardData?.data?.totalInspectors || 0}
                     />
                   </Col>
-                  <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
-                    <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-                      <Statistic
-                        title={t("dashboard.checkedIn", "Checked In")}
-                        value={dashboardData?.data?.checkedIn || 0}
-                      />
-                      <Statistic title={t("dashboard.missing", "Missing")} value={dashboardData?.data?.missing || 0} />
-                      <Statistic title={t("dashboard.onLeave", "On Leave")} value={dashboardData?.data?.onLeave || 0} />
-                    </div>
+                  <Col>
+                    <Statistic
+                      title={t("dashboard.checkedIn", "Checked In")}
+                      value={dashboardData?.data?.checkedIn || 0}
+                    />
                   </Col>
-                  <Col flex="none">
+                  <Col>
+                    <Statistic title={t("dashboard.missing", "Missing")} value={dashboardData?.data?.missing || 0} />
+                  </Col>
+                  <Col>
+                    <Statistic title={t("dashboard.onLeave", "On Leave")} value={dashboardData?.data?.onLeave || 0} />
+                  </Col>
+                  <Col>
                     <Avatar
                       size={56}
                       icon={<UserOutlined />}
@@ -277,28 +285,27 @@ const SupervisorViewPage: React.FC = () => {
                 </Row>
               </Card>
             </Col>
+
+            {/* Total Approvals Card */}
             <Col span={24}>
               <Card style={{ borderColor: "#52c41a" }}>
-                <Row wrap={false} align="middle" justify="space-between">
-                  <Col flex="none">
+                <Row align="bottom" justify="space-between" wrap={false} gutter={8}>
+                  <Col>
                     <Statistic
                       title={t("dashboard.totalApprovals", "Total Approvals")}
                       value={dashboardData?.data?.totalApprovals || 0}
                     />
                   </Col>
-                  <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
-                    <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-                      <Statistic
-                        title={t("dashboard.leave", "Leave")}
-                        value={dashboardData?.data?.leaveRequests || 0}
-                      />
-                      <Statistic
-                        title={t("dashboard.towing", "Towing")}
-                        value={dashboardData?.data?.towingRequests || 0}
-                      />
-                    </div>
+                  <Col>
+                    <Statistic title={t("dashboard.leave", "Leave")} value={dashboardData?.data?.leaveRequests || 0} />
                   </Col>
-                  <Col flex="none">
+                  <Col>
+                    <Statistic
+                      title={t("dashboard.towing", "Towing")}
+                      value={dashboardData?.data?.towingRequests || 0}
+                    />
+                  </Col>
+                  <Col>
                     <Avatar
                       size={56}
                       icon={<CheckCircleOutlined />}
@@ -308,26 +315,28 @@ const SupervisorViewPage: React.FC = () => {
                 </Row>
               </Card>
             </Col>
+
+            {/* Total Inspections Card */}
             <Col span={24}>
               <Card style={{ borderColor: "#faad14" }}>
-                <Row wrap={false} align="middle" justify="space-between">
-                  <Col flex="none">
+                <Row align="bottom" justify="space-between" wrap={false} gutter={8}>
+                  <Col>
                     <Statistic
                       title={t("dashboard.totalInspections", "Total Inspections")}
                       value={dashboardData?.data?.totalInspections || 0}
                     />
                   </Col>
-                  <Col flex="auto" style={{ display: "flex", justifyContent: "center" }}>
-                    <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-                      <Statistic title={t("dashboard.fines", "Fines")} value={dashboardData?.data?.totalFines || 0} />
-                      <Statistic
-                        title={t("dashboard.amount", "Amount")}
-                        value={dashboardData?.data?.fineAmount || 0}
-                        suffix="AED"
-                      />
-                    </div>
+                  <Col>
+                    <Statistic title={t("dashboard.fines", "Fines")} value={dashboardData?.data?.totalFines || 0} />
                   </Col>
-                  <Col flex="none">
+                  <Col>
+                    <Statistic
+                      title={t("dashboard.amount", "Amount")}
+                      value={dashboardData?.data?.fineAmount || 0}
+                      suffix="AED"
+                    />
+                  </Col>
+                  <Col>
                     <Avatar
                       size={56}
                       icon={<SafetyCertificateOutlined />}
@@ -337,16 +346,18 @@ const SupervisorViewPage: React.FC = () => {
                 </Row>
               </Card>
             </Col>
+
+            {/* Total Obstacles Card */}
             <Col span={24}>
               <Card style={{ borderColor: "#ff4d4f", cursor: "pointer" }}>
-                <Row wrap={false} align="middle" justify="space-between">
-                  <Col flex="none">
+                <Row align="bottom" justify="space-between" wrap={false} gutter={8}>
+                  <Col>
                     <Statistic
                       title={t("dashboard.totalObstacles", "Total Obstacles")}
                       value={dashboardData?.data?.totalObstacles || 0}
                     />
                   </Col>
-                  <Col flex="none">
+                  <Col>
                     <Avatar
                       size={56}
                       icon={<WarningOutlined />}

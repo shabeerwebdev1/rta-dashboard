@@ -676,16 +676,16 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                             }}
                           >
                             {/* Tag */}
-                            <div style={{ marginBottom: 6 }}>
+                            {/* <div style={{ marginBottom: 6 }}>
                               <Tag color={tagColor}>{actionLabel}</Tag>
-                            </div>
+                            </div> */}
 
                             {/* Action Field */}
                             <div style={{ fontSize: "12px", marginBottom: 4 }}>
                               <Text strong style={{ color: "#000" }}>
                                 {t("form.action")}:{" "}
                               </Text>
-                              <Text style={{ color: "#6b7280" }}>{actionLabel}</Text>
+                              <Tag color={tagColor}>{actionLabel}</Tag>
                             </div>
 
                             {/* Assigned To or Approved/Rejected By */}

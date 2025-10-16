@@ -3,6 +3,7 @@ import { Drawer, Descriptions, Tag, Button, Space } from "antd";
 import { LeaveStatus } from "../../config/pageConfigs/leaveManagementConfig";
 import { useUpdateLeaveStatusMutation } from "../../services/rtkApiFactory";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 import { t } from "i18next";
 import { useAppNotification } from "../../utils/notificationManager";
 import { ShareAltOutlined } from "@ant-design/icons";
@@ -17,8 +18,10 @@ interface ParkonicLocationViewDrawerProps {
 const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record, onShare }) => {
   const notification = useAppNotification();
   const [updateLeaveStatus, { isLoading }] = useUpdateLeaveStatusMutation();
-
+  const { i18n } = useTranslation();
   const [status, setStatus] = useState<number>(record?.status ?? LeaveStatus.Pending);
+
+  const isRtl = i18n.dir() === "rtl";
 
   useEffect(() => {
     if (record) {
@@ -59,6 +62,7 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
           {t("common.share")}
         </Button>
       }
+      placement={isRtl ? "left" : "right"}
       bodyStyle={{ overflowY: "auto", height: "calc(100vh - 64px)" }}
     >
       {record ? (

@@ -41,6 +41,7 @@ const WhitelistPlatesViewDrawer: React.FC<WhitelistPlatesViewDrawerProps> = ({
   const [mappedRecord, setMappedRecord] = useState<any>(null);
   const [triggerGetLookups] = useLazyGetLookupsQuery();
 
+  const isRtl = i18n.dir() === "rtl";
   // Fetch lookup data when drawer opens
   useEffect(() => {
     fetchLookupData();
@@ -110,6 +111,7 @@ const WhitelistPlatesViewDrawer: React.FC<WhitelistPlatesViewDrawerProps> = ({
           {t("common.share")}
         </Button>
       }
+      placement={isRtl ? "left" : "right"}
     >
       <Spin spinning={isLoadingLookups}>
         {mappedRecord && (

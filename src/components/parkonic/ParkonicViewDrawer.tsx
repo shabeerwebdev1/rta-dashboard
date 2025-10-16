@@ -197,17 +197,17 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                     </Col>
                     <Col span={14}>{mappedRecord.plateNumber || "---"}</Col>
                     <Col span={10}>
-                      <Text strong>Plate Source:</Text>
+                      <Text strong>{t("form.plateSource")}</Text>
                     </Col>
                     <Col span={14}>{record?.plateSource || "---"}</Col>
 
                     <Col span={10}>
-                      <Text strong>Plate Category:</Text>
+                      <Text strong>{t("form.plateCategory")}</Text>
                     </Col>
                     <Col span={14}>{record?.plateCategory || "---"}</Col>
 
                     <Col span={10}>
-                      <Text strong>Plate Code:</Text>
+                      <Text strong>{t("form.plateCode")}</Text>
                     </Col>
                     <Col span={14}>{record?.plateCode || "---"}</Col>
                   </Row>

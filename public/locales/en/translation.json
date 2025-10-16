@@ -266,7 +266,11 @@
     "selectReviewStatus": "Select Review Status",
     "selectViolation": "Select Violation",
     "reviewedBy": "Reviewed By",
-    "action": "Action"
+    "action": "Action",
+    "time": "Time",
+    "assignment": "Assignment",
+    "inspectorName": "Inspector Name",
+    "checkInId": "Check-In ID"
   },
   "common": {
     "action": "Action",
@@ -307,7 +311,9 @@
     "selectUser": "Select User",
     "getDetails": "Get Details",
     "viewLocation": "View Location",
-    "viewAttachments": "View Attachments"
+    "viewAttachments": "View Attachments",
+    "selectInspector": " Select Inspector",
+    "selectShift": "Select Shift"
   },
   "entity": {
     "plate": "Plate",
@@ -315,7 +321,8 @@
     "pledge": "Pledge",
     "inspectionObstacle": "Inspection Obstacle",
     "Pledges": "Pledges",
-    "dispute":"Dispute"
+    "dispute": "Dispute",
+    "location": "Location"
   },
   "status": {
     "active": "Active",

@@ -108,6 +108,8 @@
     "fromDate": "تاريخ البدء",
     "toDate": "تاريخ الانتهاء",
     "dateRange": "الفترة الزمنية",
+    "address": "العنوان",
+    "reason": "السبب",
     "status": "الحالة",
     "plateStatus": "الحالة",
     "exemptionReason": "سبب الإعفاء",
@@ -262,9 +264,11 @@
     "selectReviewStatus": "اختر حالة المراجعة",
     "selectViolation": "اختر الانتهاك",
     "reviewedBy": "تمت المراجعة بواسطة",
-    "action": "الإجراء"
-
-
+    "action": "الإجراء",
+    "time": "الوقت",
+    "assignment": "التكليف",
+    "inspectorName": "اسم المفتش",
+    "checkInId": "معرف تسجيل الدخول  "
   },
   "common": {
     "action": "إجراء",
@@ -301,7 +305,9 @@
     "selectUser": "اختر المستخدم",
     "getDetails": "الحصول على التفاصيل",
     "viewLocation": "عرض الموقع",
-    "viewAttachments": "عرض المرفقات"
+    "viewAttachments": "عرض المرفقات",
+    "selectInspector": "اختر المفتش",
+    "selectShift": "اختر الوردية  "
   },
   "entity": {
     "plate": "لوحة",
@@ -309,9 +315,8 @@
     "pledge": "تعهد",
     "inspectionObstacle": "عائق تفتيش",
     "Pledges": "تعهدات",
-    "dispute": "نزاع"
-
-
+    "dispute": "نزاع",
+    "location": "موقع"
   },
   "status": {
     "active": "نشط",
