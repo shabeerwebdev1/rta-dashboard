@@ -734,7 +734,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     })}
                   </Timeline>
                 ) : (
-                  <Empty description="No Review History" />
+                  <Empty description={t("form.NoReviewHistory")} />
                 )}
               </Card>
             </Col>

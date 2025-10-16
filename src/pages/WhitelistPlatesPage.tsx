@@ -104,8 +104,6 @@ const WhitelistPlatesPage: React.FC = () => {
       const result = await triggerGetLookups([100, 200, 300, 400, 500]).unwrap();
       setLookupOptions(result);
     } catch (error) {
-      console.error("Failed to fetch lookup data:", error);
-
       // Try to read backend error message
       const backendError = error?.data?.en_Msg || "Failed to load dropdown options";
 
@@ -247,8 +245,26 @@ const WhitelistPlatesPage: React.FC = () => {
     params.set("viewRecord", viewRecord.id);
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     navigator.clipboard.writeText(shareUrl).then(
-      () => notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!"),
-      () => notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed"),
+      () =>
+        notification.success(
+          {
+            data: {
+              en_Msg: t("messages.shareSuccessEn"),
+              ar_Msg: t("messages.shareSuccessAr"),
+            },
+          },
+          t("messages.shareSuccessTitle"),
+        ),
+      () =>
+        notification.error(
+          {
+            data: {
+              en_Msg: t("messages.shareErrorEn"),
+              ar_Msg: t("messages.shareErrorAr"),
+            },
+          },
+          t("messages.shareErrorTitle"),
+        ),
     );
   };
 
@@ -351,7 +367,6 @@ const WhitelistPlatesPage: React.FC = () => {
       plateStatusOptions,
       exemptionReasons,
       i18n,
-      t,
     ],
   );
 
@@ -483,13 +498,21 @@ const WhitelistPlatesPage: React.FC = () => {
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
             <Row gutter={24}>
               <Col span={12}>
-                <Form.Item name="plateNumber" label={t("form.Number")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="plateNumber"
+                  label={t("form.Number")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.Number") }) }]}
+                >
                   <Input placeholder={t("placeholders.plateNumber")} />
                 </Form.Item>
               </Col>
 
               <Col span={12}>
-                <Form.Item name="plateSource_Id" label={t("form.Source")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="plateSource_Id"
+                  label={t("form.Source")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.Source") }) }]}
+                >
                   <Select
                     showSearch
                     placeholder={t("placeholders.plateSource")}
@@ -506,7 +529,11 @@ const WhitelistPlatesPage: React.FC = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item name="plateType_Id" label={t("form.Type")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="plateType_Id"
+                  label={t("form.Type")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.Type") }) }]}
+                >
                   <Select
                     showSearch
                     placeholder={t("placeholders.plateType")}
@@ -523,7 +550,11 @@ const WhitelistPlatesPage: React.FC = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item name="plateColor_Id" label={t("form.Color")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="plateColor_Id"
+                  label={t("form.Color")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.Color") }) }]}
+                >
                   <Select
                     showSearch
                     placeholder={t("placeholders.plateColor")}
@@ -540,7 +571,11 @@ const WhitelistPlatesPage: React.FC = () => {
               </Col>
 
               <Col span={24}>
-                <Form.Item name="dateRange" label={t("form.dateRange")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="dateRange"
+                  label={t("form.dateRange")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.dateRange") }) }]}
+                >
                   <DatePicker.RangePicker
                     style={{ width: "100%" }}
                     format={"DD-MM-YYYY"}
@@ -551,7 +586,11 @@ const WhitelistPlatesPage: React.FC = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item name="exemptionReason_ID" label={t("form.exemptionReason")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="exemptionReason_ID"
+                  label={t("form.exemptionReason")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.exemptionReason") }) }]}
+                >
                   <Select
                     showSearch
                     placeholder={t("placeholders.exemptionReason")}
@@ -569,7 +608,11 @@ const WhitelistPlatesPage: React.FC = () => {
 
               {modalMode === "edit" && (
                 <Col span={12}>
-                  <Form.Item name="plateStatus_Id" label={t("form.status")} rules={[{ required: true }]}>
+                  <Form.Item
+                    name="plateStatus_Id"
+                    label={t("form.status")}
+                    rules={[{ required: true, message: t("validation.required", { field: t("form.status") }) }]}
+                  >
                     <Select
                       showSearch
                       placeholder={t("placeholders.status")}
@@ -587,7 +630,11 @@ const WhitelistPlatesPage: React.FC = () => {
               )}
 
               <Col span={12}>
-                <Form.Item name="isByLaw" label={t("form.isByLaw")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="isByLaw"
+                  label={t("form.isByLaw")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.isByLaw") }) }]}
+                >
                   <Select
                     showSearch
                     placeholder={t("placeholders.isByLaw")}

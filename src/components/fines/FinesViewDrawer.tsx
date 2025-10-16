@@ -398,7 +398,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
               style={{ marginBottom: 16, borderRadius: 12 }}
               headStyle={{ background: "#fafafa", fontWeight: 600 }}
             >
-              <Empty description="No violation details available" />
+              <Empty description={t("form.Noviolationdetailsavailable")} />
             </Card>
 
             {/* Approval Actions */}

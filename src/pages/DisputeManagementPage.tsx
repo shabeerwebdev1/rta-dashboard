@@ -29,7 +29,7 @@ import {
   useLazyGetLookupsQuery,
   useLazyGetDisputeByIdQuery,
 } from "../services/rtkApiFactory";
-import { getFileUrl, useUploadFilesMutation } from "../services/fileApi"; // Add this import
+import { getFileUrl, useUploadFilesMutation } from "../services/fileApi"; 
 import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
@@ -633,18 +633,30 @@ const DisputeManagementPage: React.FC = () => {
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
             <Row gutter={24}>
               <Col span={12}>
-                <Form.Item name="FineId" label={t("form.fineNumber")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="FineId"
+                  label={t("form.fineNumber")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.fineNumber") }) }]}
+                >
                   <Input placeholder={t("placeholders.fineNumber")} type="text" />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="Name" label={t("form.name")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="Name"
+                  label={t("form.name")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.name") }) }]}
+                >
                   <Input placeholder={t("placeholders.name")} />
                 </Form.Item>
               </Col>
 
               <Col span={12}>
-                <Form.Item name="Department" label={t("form.department")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="Department"
+                  label={t("form.department")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.department") }) }]}
+                >
                   <Select
                     placeholder={t("placeholders.department")}
                     loading={isLoadingLookups}
@@ -657,7 +669,11 @@ const DisputeManagementPage: React.FC = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item name="DisputeMainReason" label={t("form.disputereason")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="DisputeMainReason"
+                  label={t("form.disputereason")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.disputereason") }) }]}
+                >
                   <Select
                     placeholder={t("placeholders.reason")}
                     loading={isLoadingLookups}
@@ -671,7 +687,11 @@ const DisputeManagementPage: React.FC = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item name="DisputeSubReason" label={t("form.disputesubreason")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="DisputeSubReason"
+                  label={t("form.disputesubreason")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.disputesubreason") }) }]}
+                >
                   <Select
                     placeholder={t("placeholders.subreason")}
                     loading={isLoadingLookups}
@@ -685,7 +705,11 @@ const DisputeManagementPage: React.FC = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item name="Payment_Type" label={t("form.paymentType")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="Payment_Type"
+                  label={t("form.paymentType")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.paymentType") }) }]}
+                >
                   <Select
                     placeholder={t("placeholders.paymentType")}
                     loading={isLoadingLookups}
@@ -698,13 +722,30 @@ const DisputeManagementPage: React.FC = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item name="crm_Ref" label={t("form.crmReference")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="crm_Ref"
+                  label={t("form.crmReference")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.crmReference") }) }]}
+                >
                   <Input placeholder={t("placeholders.crmReference")} />
                 </Form.Item>
               </Col>
 
               <Col span={12}>
-                <Form.Item name="Email" label={t("form.email")} rules={[{ required: true }, { type: "email" }]}>
+                <Form.Item
+                  name="Email"
+                  label={t("form.email")}
+                  rules={[
+                    {
+                      required: true,
+                      message: t("validation.required", { field: t("form.email") }),
+                    },
+                    {
+                      type: "email",
+                      message: t("validation.invalidEmail"),
+                    },
+                  ]}
+                >
                   <Input placeholder={t("placeholders.email")} />
                 </Form.Item>
               </Col>
@@ -713,7 +754,16 @@ const DisputeManagementPage: React.FC = () => {
                 <Form.Item
                   name="Phone"
                   label={t("form.phoneNumber")}
-                  rules={[{ required: true }, { pattern: /^[0-9]+$/ }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: t("validation.required", { field: t("form.phoneNumber") }),
+                    },
+                    {
+                      pattern: /^[0-9]+$/,
+                      message: t("validation.onlyNumbers"),
+                    },
+                  ]}
                 >
                   <Input placeholder={t("placeholders.phoneNumber")} maxLength={10} />
                 </Form.Item>
@@ -731,7 +781,13 @@ const DisputeManagementPage: React.FC = () => {
               </Col> */}
 
               <Col span={12}>
-                <Form.Item name="ActualDisputeDate" label={t("form.actualDisputeDate")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="ActualDisputeDate"
+                  label={t("form.actualDisputeDate")}
+                  rules={[
+                    { required: true, message: t("validation.required", { field: t("form.actualDisputeDate") }) },
+                  ]}
+                >
                   <DatePicker
                     style={{ width: "100%" }}
                     format="DD-MM-YYYY"
@@ -741,13 +797,21 @@ const DisputeManagementPage: React.FC = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item name="Address" label={t("form.address")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="Address"
+                  label={t("form.address")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.address") }) }]}
+                >
                   <Input.TextArea placeholder={t("placeholders.address")} rows={2} />
                 </Form.Item>
               </Col>
 
               <Col span={12}>
-                <Form.Item name="Comments" label={t("form.comments")}>
+                <Form.Item
+                  name="Comments"
+                  label={t("form.comments")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.comments") }) }]}
+                >
                   <Input.TextArea placeholder={t("placeholders.comments")} rows={2} />
                 </Form.Item>
               </Col>

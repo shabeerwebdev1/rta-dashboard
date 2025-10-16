@@ -315,8 +315,26 @@ const PledgesPage: React.FC = () => {
     const shareUrl = url.toString();
 
     navigator.clipboard.writeText(shareUrl).then(
-      () => notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!"),
-      () => notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed"),
+      () =>
+        notification.success(
+          {
+            data: {
+              en_Msg: t("messages.shareSuccessEn"),
+              ar_Msg: t("messages.shareSuccessAr"),
+            },
+          },
+          t("messages.shareSuccessTitle"),
+        ),
+      () =>
+        notification.error(
+          {
+            data: {
+              en_Msg: t("messages.shareErrorEn"),
+              ar_Msg: t("messages.shareErrorAr"),
+            },
+          },
+          t("messages.shareErrorTitle"),
+        ),
     );
   };
 
@@ -507,7 +525,11 @@ const PledgesPage: React.FC = () => {
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
             <Row gutter={24}>
               <Col span={12}>
-                <Form.Item name="pledgeType" label={t("form.pledgeType")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="pledgeType"
+                  label={t("form.pledgeType")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.pledgeType") }) }]}
+                >
                   <Select
                     placeholder={t("placeholders.pledgeType")}
                     loading={isLoadingLookups}
@@ -522,15 +544,16 @@ const PledgesPage: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="tradeLicenseNumber" label={t("form.tradeLicenseNumber")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="tradeLicenseNumber"
+                  label={t("form.tradeLicenseNumber")}
+                  rules={[
+                    { required: true, message: t("validation.required", { field: t("form.tradeLicenseNumber") }) },
+                  ]}
+                >
                   <Input.Group compact>
                     {/* Bigger input */}
-                    <Form.Item name="tradeLicenseNumber" noStyle rules={[{ required: true }]}>
-                      <Input
-                        style={{ width: "calc(100% - 90px)" }} // ⬅️ more width
-                        placeholder={t("placeholders.tradeLicenseNumber")}
-                      />
-                    </Form.Item>
+                    <Input style={{ width: "calc(100% - 90px)" }} placeholder={t("placeholders.tradeLicenseNumber")} />
 
                     {/* Smaller button */}
                     <Button
@@ -543,8 +566,8 @@ const PledgesPage: React.FC = () => {
                           const licenseNo = form.getFieldValue("tradeLicenseNumber");
                           if (!licenseNo) {
                             notification.error(
-                              { data: { en_Msg: "Please enter Trade License Number first" } },
-                              "Missing Input",
+                              { data: { en_Msg: t("validation.required", { field: t("form.tradeLicenseNumber") }) } },
+                              t("messages.validationError"),
                             );
                             return;
                           }
@@ -558,8 +581,6 @@ const PledgesPage: React.FC = () => {
                           form.setFieldsValue({
                             businessName: result?.data?.companyName || "",
                           });
-
-                          // setCompanyEmail(result?.data?.companyEmail || "");
 
                           notification.success(result, t("messages.tradeLicenseFetched"));
                         } catch (error: any) {
@@ -577,7 +598,11 @@ const PledgesPage: React.FC = () => {
               </Col>
 
               <Col span={12}>
-                <Form.Item name="businessName" label={t("form.businessName")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="businessName"
+                  label={t("form.businessName")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.businessName") }) }]}
+                >
                   <Input disabled placeholder={t("placeholders.businessName")} />
                 </Form.Item>
               </Col>
@@ -589,7 +614,11 @@ const PledgesPage: React.FC = () => {
 </Col> */}
 
               <Col span={12}>
-                <Form.Item name="dateRange" label={t("form.Validity")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="dateRange"
+                  label={t("form.Validity")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.Validity") }) }]}
+                >
                   <DatePicker.RangePicker
                     style={{ width: "100%" }}
                     format={"DD-MM-YYYY"}
@@ -603,7 +632,12 @@ const PledgesPage: React.FC = () => {
                 <Form.Item
                   name="document"
                   label={t("form.photo")}
-                  rules={[{ required: modalMode === "add" }]}
+                  rules={[
+                    {
+                      required: modalMode === "add",
+                      message: t("validation.required", { field: t("form.photo") }),
+                    },
+                  ]}
                   valuePropName="fileList"
                   getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
                 >

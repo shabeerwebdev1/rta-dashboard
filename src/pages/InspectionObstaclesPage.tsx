@@ -261,12 +261,20 @@ const InspectionObstaclesPage: React.FC = () => {
       }
 
       notification.success({
-        data: { en_Msg: "Inspection Obstacle created successfully" },
+        data: {
+          en_Msg: t("messages.obstacleSuccessEn"),
+          ar_Msg: t("messages.obstacleSuccessAr"),
+        },
       });
       handleModalClose();
     } catch (err) {
       console.error("Failed to save inspection obstacle:", err);
-      notification.error(err as any, "Failed to save inspection obstacle");
+      notification.error({
+        data: {
+          en_Msg: t("messages.obstacleErrorEn"),
+          ar_Msg: t("messages.obstacleErrorAr"),
+        },
+      });
     }
   };
 
@@ -286,8 +294,26 @@ const InspectionObstaclesPage: React.FC = () => {
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href).then(
-      () => notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!"),
-      () => notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed"),
+      () =>
+        notification.success(
+          {
+            data: {
+              en_Msg: t("messages.shareSuccessEn"),
+              ar_Msg: t("messages.shareSuccessAr"),
+            },
+          },
+          t("messages.shareSuccessTitle"),
+        ),
+      () =>
+        notification.error(
+          {
+            data: {
+              en_Msg: t("messages.shareErrorEn"),
+              ar_Msg: t("messages.shareErrorAr"),
+            },
+          },
+          t("messages.shareErrorTitle"),
+        ),
     );
   };
 
@@ -570,7 +596,11 @@ const InspectionObstaclesPage: React.FC = () => {
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
             <Row gutter={24}>
               <Col span={12}>
-                <Form.Item name="Zone" label={t("form.zone")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="Zone"
+                  label={t("form.zone")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.zone") }) }]}
+                >
                   <Select
                     placeholder={t("placeholders.zone")}
                     loading={isLoadingZones}
@@ -585,7 +615,11 @@ const InspectionObstaclesPage: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="Area" label={t("form.area")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="Area"
+                  label={t("form.area")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.area") }) }]}
+                >
                   <Select
                     placeholder={t("placeholders.area")}
                     loading={isLoadingAllAreas}
@@ -596,7 +630,11 @@ const InspectionObstaclesPage: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="SourceOfObstacle" label={t("form.sourceOfObstacle")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="SourceOfObstacle"
+                  label={t("form.sourceOfObstacle")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.sourceOfObstacle") }) }]}
+                >
                   <Select
                     placeholder={t("placeholders.sourceOfObstacle")}
                     showSearch
@@ -610,7 +648,11 @@ const InspectionObstaclesPage: React.FC = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name="ClosestPaymentDevice" label={t("form.closestPD")} rules={[{ required: true }]}>
+                <Form.Item
+                  name="ClosestPaymentDevice"
+                  label={t("form.closestPD")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.closestPD") }) }]}
+                >
                   <Input placeholder={t("placeholders.closestPaymentDevice")} />
                 </Form.Item>
               </Col>
@@ -618,7 +660,7 @@ const InspectionObstaclesPage: React.FC = () => {
                 <Form.Item
                   name="Photo"
                   label={t("form.photo")}
-                  rules={[{ required: true }]}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.closestPD") }) }]}
                   valuePropName="fileList"
                   getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
                 >

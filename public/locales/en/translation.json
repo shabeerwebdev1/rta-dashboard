@@ -98,7 +98,13 @@
     "failedToFetchTradeLicense": "Failed to fetch trade license details",
     "tradeLicenseFetched ": "Trade license details fetched successfully",
     "vehicleDetailsFetched": "Vehicle details fetched successfully",
-    "failedvehicleDetailsFetched": "Failed to fetch vehicle details"
+    "failedvehicleDetailsFetched": "Failed to fetch vehicle details",
+    "obstacleSuccessEn": "Inspection obstacle created successfully",
+    "obstacleErrorEn": "Failed to save inspection obstacle",
+    "shareSuccessEn": "Share link copied to clipboard!",
+    "shareErrorEn": "Failed to copy link.",
+    "shareSuccessTitle": "Link Copied!",
+    "shareErrorTitle": "Copy Failed"
   },
   "form": {
     "Number": "Number",
@@ -275,7 +281,9 @@
     "assignment": "Assignment",
     "inspectorName": "Inspector Name",
     "checkInId": "Check-In ID",
-    "pick": "Pick"
+    "pick": "Pick",
+    "Noviolationdetailsavailable": "No violation details available",
+    "NoReviewHistory": "No Review History"
   },
   "common": {
     "action": "Action",
@@ -440,5 +448,10 @@
     "IndividualPledges": "Individual Pledges",
     "TotalLeaves": "Total Leaves",
     "TotalTowings": "Total Towings"
+  },
+  "validation": {
+    "required": " Please enter {{field}} ",
+    "invalidEmail": " Please enter a valid email address ",
+    "onlyNumbers": " Only numbers are allowed "
   }
 }

@@ -1,20 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Space,
-  Card,
-  Input,
-  Button,
-  Modal,
-  Form,
-  Row,
-  Col,
-  Select,
-  App,
-  Spin,
-  Tag,
-  Pagination,
-  DatePicker,
-} from "antd";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Spin, Pagination, DatePicker } from "antd";
 import {
   PlusOutlined,
   EyeOutlined,
@@ -31,7 +16,6 @@ import isBetween from "dayjs/plugin/isBetween";
 // Enable the isBetween plugin
 dayjs.extend(isBetween);
 import { usePage } from "../contexts/PageContext";
-import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
 import {
@@ -328,8 +312,26 @@ const ParkonicLocationPage: React.FC = () => {
     params.set("viewRecord", viewRecord.id);
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
     navigator.clipboard.writeText(shareUrl).then(
-      () => notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!"),
-      () => notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed"),
+      () =>
+        notification.success(
+          {
+            data: {
+              en_Msg: t("messages.shareSuccessEn"),
+              ar_Msg: t("messages.shareSuccessAr"),
+            },
+          },
+          t("messages.shareSuccessTitle"),
+        ),
+      () =>
+        notification.error(
+          {
+            data: {
+              en_Msg: t("messages.shareErrorEn"),
+              ar_Msg: t("messages.shareErrorAr"),
+            },
+          },
+          t("messages.shareErrorTitle"),
+        ),
     );
   };
 
@@ -507,22 +509,38 @@ const ParkonicLocationPage: React.FC = () => {
         <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
           <Row gutter={24}>
             <Col span={12}>
-              <Form.Item name="parkingName" label={t("form.parkingName")} rules={[{ required: true }]}>
+              <Form.Item
+                name="parkingName"
+                label={t("form.parkingName")}
+                rules={[{ required: true, message: t("validation.required", { field: t("form.parkingName") }) }]}
+              >
                 <Input placeholder={t("placeholders.parkingName")} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="parkingNameArabic" label={t("form.parkingNameArabic")} rules={[{ required: true }]}>
+              <Form.Item
+                name="parkingNameArabic"
+                label={t("form.parkingNameArabic")}
+                rules={[{ required: true, message: t("validation.required", { field: t("form.parkingNameArabic") }) }]}
+              >
                 <Input placeholder={t("placeholders.parkingNameArabic")} dir="rtl" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="zone" label={t("form.zone")} rules={[{ required: true }]}>
+              <Form.Item
+                name="zone"
+                label={t("form.zone")}
+                rules={[{ required: true, message: t("validation.required", { field: t("form.zone") }) }]}
+              >
                 <Input placeholder={t("placeholders.zones")} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="area" label={t("form.area")} rules={[{ required: true }]}>
+              <Form.Item
+                name="area"
+                label={t("form.area")}
+                rules={[{ required: true, message: t("validation.required", { field: t("form.area") }) }]}
+              >
                 <Input placeholder={t("placeholders.areas")} />
               </Form.Item>
             </Col>
@@ -530,12 +548,24 @@ const ParkonicLocationPage: React.FC = () => {
             <Col span={24}>
               <Form.Item label={t("form.pickLocation")} required>
                 <Input.Group compact style={{ display: "flex" }}>
-                  <Form.Item name="latitude" noStyle rules={[{ required: true }]} style={{ width: "50%" }}>
+                  <Form.Item
+                    name="latitude"
+                    noStyle
+                    rules={[{ required: true, message: t("validation.required", { field: t("form.latitude") }) }]}
+                    style={{ width: "50%" }}
+                  >
                     <Input placeholder={t("placeholders.latitude")} />
                   </Form.Item>
-                  <Form.Item name="longitude" noStyle rules={[{ required: true }]} style={{ width: "50%" }}>
+
+                  <Form.Item
+                    name="longitude"
+                    noStyle
+                    rules={[{ required: true, message: t("validation.required", { field: t("form.longitude") }) }]}
+                    style={{ width: "50%" }}
+                  >
                     <Input placeholder={t("placeholders.longitude")} />
                   </Form.Item>
+
                   <Button
                     type="primary"
                     icon={<EnvironmentOutlined />}

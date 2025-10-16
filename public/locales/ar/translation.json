@@ -95,10 +95,16 @@
     "fileUploadError": "فشل رفع الملف: {fileName}",
     "errorLoading": "خطأ في تحميل بيانات لوحة التحكم",
     "enterRejectionReason": "يرجى إدخال سبب الرفض",
-     "failedToFetchTradeLicense": "فشل في جلب تفاصيل الرخصة التجارية",
+    "failedToFetchTradeLicense": "فشل في جلب تفاصيل الرخصة التجارية",
     "tradeLicenseFetched ": "تم جلب تفاصيل الرخصة التجارية بنجاح",
     "vehicleDetailsFetched": "تم جلب تفاصيل المركبة بنجاح",
-    "failedvehicleDetailsFetched": "فشل في جلب تفاصيل المركبة"
+    "failedvehicleDetailsFetched": "فشل في جلب تفاصيل المركبة",
+    "obstacleSuccessAr": "تم إنشاء العائق بنجاح",
+    "obstacleErrorAr": "فشل في حفظ بيانات العائق",
+    "shareSuccessAr": "تم نسخ رابط المشاركة إلى الحافظة!",
+    "shareErrorAr": "فشل في نسخ الرابط.",
+    "shareSuccessTitle": "تم النسخ",
+    "shareErrorTitle": "فشل النسخ"
   },
   "form": {
     "Number": "الرقم",
@@ -276,7 +282,9 @@
     "pick": "اختيار",
     "parkingName": "اسم مواقف السيارات",
     "parkingNameArabic": "اسم مواقف السيارات (عربي)",
-    "pickLocation": "اختر الموقع"
+    "pickLocation": "اختر الموقع",
+    "Noviolationdetailsavailable": "لا توجد تفاصيل انتهاك متاحة",
+    "NoReviewHistory": "لا يوجد سجل مراجعة"
   },
   "common": {
     "action": "إجراء",
@@ -434,5 +442,10 @@
     "IndividualPledges": "تعهدات الأفراد",
     "TotalLeaves": "إجمالي الإجازات",
     "TotalTowings": "إجمالي السحوبات"
+  },
+  "validation": {
+    "required": "يرجى إدخال {{field}}",
+    "invalidEmail": "يرجى إدخال بريد إلكتروني صالح",
+    "onlyNumbers": "يرجى إدخال أرقام فقط"
   }
 }
