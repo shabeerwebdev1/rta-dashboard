@@ -1,9 +1,11 @@
 import { Button, Dropdown, type MenuProps } from "antd";
 import { BgColorsOutlined, MoonOutlined } from "@ant-design/icons";
 import { useTheme, type ThemeName } from "../contexts/ThemeContext";
+import { useTranslation } from "react-i18next";
 
 const ThemeSwitcher = () => {
   const { themeName, setThemeName } = useTheme();
+  const { t } = useTranslation();
 
   const handleThemeChange = (name: ThemeName) => {
     setThemeName(name);
@@ -12,13 +14,13 @@ const ThemeSwitcher = () => {
   const items: MenuProps["items"] = [
     {
       key: "corporateIndigo",
-      label: "Indigo",
+      label: t("form.Indigo"),
       icon: <BgColorsOutlined style={{ color: "#171B7D" }} />,
       onClick: () => handleThemeChange("corporateIndigo"),
     },
     {
       key: "corporateRed",
-      label: "Red",
+      label: t("form.Red"),
       icon: <BgColorsOutlined style={{ color: "#ee3a41" }} />,
       onClick: () => handleThemeChange("corporateRed"),
     },
@@ -27,7 +29,7 @@ const ThemeSwitcher = () => {
     },
     {
       key: "dark",
-      label: "Dark Mode",
+      label: t("form.DarkMode"),
       icon: <MoonOutlined />,
       onClick: () => handleThemeChange("dark"),
     },

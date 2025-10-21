@@ -284,7 +284,14 @@
     "parkingNameArabic": "اسم مواقف السيارات (عربي)",
     "pickLocation": "اختر الموقع",
     "Noviolationdetailsavailable": "لا توجد تفاصيل انتهاك متاحة",
-    "NoReviewHistory": "لا يوجد سجل مراجعة"
+    "NoReviewHistory": "لا يوجد سجل مراجعة",
+    "Indigo": "إنديغو",
+    "Red": "أحمر",
+    "DarkMode": "الوضع الداكن",
+    "Logout": "تسجيل الخروج",
+    "NoLocationDataAvailable": "لا تتوفر بيانات الموقع"
+
+
   },
   "common": {
     "action": "إجراء",

@@ -283,7 +283,12 @@
     "checkInId": "Check-In ID",
     "pick": "Pick",
     "Noviolationdetailsavailable": "No violation details available",
-    "NoReviewHistory": "No Review History"
+    "NoReviewHistory": "No Review History",
+    "Indigo": "Indigo",
+    "Red": "Red",
+    "DarkMode": "Dark Mode",
+    "Logout": "Logout",
+    "NoLocationDataAvailable": "No Location Data Available"
   },
   "common": {
     "action": "Action",

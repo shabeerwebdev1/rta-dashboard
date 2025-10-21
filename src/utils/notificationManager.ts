@@ -23,13 +23,15 @@ export const useAppNotification = () => {
     return i18n.language === "ar" && arMsg ? arMsg : enMsg;
   };
 
+  const getPlacement = () => (i18n.language === "ar" ? "topLeft" : "topRight");
+
   const success = (response: any, defaultMessage: string) => {
-   const enMsg = response?.en_Msg ?? response?.data?.en_Msg;
-  const arMsg = response?.ar_Msg ?? response?.data?.ar_Msg;
-   const title = getLangMsg(enMsg, arMsg) || defaultMessage;
+    const enMsg = response?.en_Msg ?? response?.data?.en_Msg;
+    const arMsg = response?.ar_Msg ?? response?.data?.ar_Msg;
+    const title = getLangMsg(enMsg, arMsg) || defaultMessage;
     notification.success({
       message: title,
-      placement: "topRight",
+      placement: getPlacement(),
     });
   };
 
@@ -55,7 +57,7 @@ export const useAppNotification = () => {
     notification.error({
       message: title,
       description: description,
-      placement: "topRight",
+      placement: getPlacement(),
     });
   };
 

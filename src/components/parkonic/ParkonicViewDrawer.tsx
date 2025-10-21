@@ -222,7 +222,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
               style={{ marginBottom: 16, borderRadius: 12 }}
               headStyle={{ background: "#fafafa", fontWeight: 600 }}
             >
-              <Empty description="No Location Data Available" />
+              <Empty description={t("form.NoLocationDataAvailable")} />
             </Card>
 
             {/* Attached Photos - Same format as FinesViewDrawer */}

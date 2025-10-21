@@ -26,7 +26,7 @@ const AppHeader = () => {
     }
   };
 
-  const userMenuItems: MenuProps["items"] = [{ key: "2", icon: <LogoutOutlined />, label: t("Logout"), danger: true }];
+  const userMenuItems: MenuProps["items"] = [{ key: "2", icon: <LogoutOutlined />, label: t("form.Logout"), danger: true }];
 
   return (
     <Header
