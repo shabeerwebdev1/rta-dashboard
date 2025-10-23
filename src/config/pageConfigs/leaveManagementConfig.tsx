@@ -67,7 +67,13 @@ export const leaveManagementPageConfig: PageConfig = {
     rowKey: "leaveId",
     columns: [
       { key: "userName", title: "form.employeeName", type: "string", sortable: false },
-      { key: "leaveType", title: "form.leaveType", type: "string", sortable: false, filterable: false },
+      { 
+        key: "leaveTypeName", // Changed from "leaveType" to "leaveTypeName"
+        title: "form.leaveType", 
+        type: "string", 
+        sortable: false, 
+        filterable: false 
+      },
       { key: "fromDate", title: "form.fromDate", type: "date", sortable: false },
       { key: "toDate", title: "form.toDate", type: "date", sortable: false },
       {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App, Tag } from "antd";
+import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App } from "antd";
 import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
@@ -13,12 +13,12 @@ import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import { leaveManagementPageConfig } from "../config/pageConfigs/leaveManagementConfig";
 import LeaveViewDrawer from "../components/Leaves/LeaveViewDrawer";
-import { useGetLeaveDetailsQuery } from "../services/rtkApiFactory";
+import { useGetLeaveDetailsQuery, useLazyGetLookupsQuery } from "../services/rtkApiFactory";
 
 const { Option } = Select;
 
 const LeaveManagementPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
@@ -44,9 +44,78 @@ const LeaveManagementPage: React.FC = () => {
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
   const { data, isFetching } = useGetLeaveDetailsQuery(apiParams);
+  const [getLookups, { data: lookupData }] = useLazyGetLookupsQuery();
 
+  // Fetch leave type lookup (ensure we request category 1900)
+  useEffect(() => {
+    getLookups([1900]);
+  }, [getLookups]);
+
+  const leaveTypeMap = useMemo(() => {
+    const map = new Map<number, { en: string; ar: string }>();
+    
+    if (!lookupData?.data) {
+      return map;
+    }
+
+    const categories = lookupData.data;
+    
+    categories.forEach((category: any) => {
+      if (category.ddiCatgId === 1900 && category.ddItems && Array.isArray(category.ddItems)) {
+        category.ddItems.forEach((item: any) => {
+          const code = Number(item.ddiCode);
+          if (!isNaN(code)) {
+            map.set(code, {
+              en: item.ddiDispText_En || `Leave Type ${code}`,
+              ar: item.ddiDispText_Ar || `Leave Type ${code}`
+            });
+          }
+        });
+      }
+    });
+    
+    return map;
+  }, [lookupData]);
+
+  // Return localized label for a leaveType code
+  const getLeaveTypeName = (code: number | string | undefined) => {
+    if (code === undefined || code === null) {
+      return "N/A";
+    }
+    
+    const numericCode = typeof code === 'string' ? parseInt(code, 10) : code;
+    
+    if (isNaN(numericCode as number)) {
+      return String(code);
+    }
+    
+    const entry = leaveTypeMap.get(numericCode as number);
+    
+    if (!entry) {
+      return `Leave Type ${numericCode}`;
+    }
+    
+    return i18n.language.startsWith('ar') ? entry.ar : entry.en;
+  };
+
+  // API response data array
   const apiData = data?.data || [];
-  const total = data?.total || 0;
+
+  // derive totals and pagination from response shape
+  const totalCount = data?.totalCount ?? data?.totalRecords ?? data?.total ?? (Array.isArray(apiData) ? apiData.length : 0);
+  const pageNumber = data?.pageNumber ?? 1;
+  const pageSize = data?.pageSize ?? apiParams.pageSize ?? 10;
+
+  const metadata = useMemo(() => {
+    return {
+      totalRecords: data?.totalRecords ?? data?.totalCount ?? totalCount,
+      approvedRecords: data?.approvedRecords ?? 0,
+      rejectedRecords: data?.rejectedRecords ?? 0,
+      pendingRecords: data?.pendingRecords ?? 0,
+      pageNumber,
+      pageSize,
+    };
+  }, [data, totalCount, pageNumber, pageSize]);
 
   const filterOptions = {
     status: [
@@ -98,7 +167,7 @@ const LeaveManagementPage: React.FC = () => {
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = apiData.filter((item: any) => selectedRowKeys.includes(item.leaveId)) || [];
+        const selectedData = apiData.filter((item: any) => selectedRowKeys.includes(item.id)) || [];
         exportToCsv(selectedData, `leave_management_export.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
@@ -129,9 +198,8 @@ const LeaveManagementPage: React.FC = () => {
       return;
     }
 
-    // Preserve current search params (like PageNumber, PageSize)
     const params = new URLSearchParams(window.location.search);
-    params.set("viewRecord", selectedRecord.id); // ✅ use correct ID field
+    params.set("viewRecord", selectedRecord.id);
 
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 
@@ -158,31 +226,23 @@ const LeaveManagementPage: React.FC = () => {
     </Select>
   );
 
-  const platesData = useMemo(() => {
-    if (!data) return [];
-    return Array.isArray(data) ? data : data.data || [];
-  }, [data]);
-
-  const totalCount = useMemo(() => {
-    if (!data) return 0;
-    return Array.isArray(data) ? data.length : data.totalCount || 0;
-  }, [data]);
-
-  const metadata = useMemo(() => {
-    if (!data || Array.isArray(data)) return {};
-    return {
-      totalRecords: data.totalRecords,
-      approvedRecords: data.approvedRecords,
-      rejectedRecords: data.rejectedRecords,
-      pendingRecords: data.pendingRecords,
-    };
-  }, [data]);
+  // Map leaveType code to label using lookup
+  const tableData = useMemo(() => {
+    if (!apiData) return [];
+    
+    const mappedData = (apiData || []).map((item: any) => ({
+      ...item,
+      leaveTypeName: getLeaveTypeName(item.leaveType),
+    }));
+    
+    return mappedData;
+  }, [apiData, leaveTypeMap, i18n.language]);
 
   return (
     <>
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         {/* Stats */}
-        <StatsDisplay statsConfig={config.statsConfig} data={platesData} metadata={metadata} loading={isFetching} />
+        <StatsDisplay statsConfig={config.statsConfig} data={tableData} metadata={metadata} loading={isFetching} />
 
         {/* Filters + Search */}
         <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
@@ -226,7 +286,7 @@ const LeaveManagementPage: React.FC = () => {
         {/* Table */}
         <DataTableWrapper
           pageConfig={config}
-          data={platesData} // Use the extracted array
+          data={tableData}
           total={totalCount}
           isLoading={isFetching}
           apiParams={apiParams}
@@ -240,14 +300,7 @@ const LeaveManagementPage: React.FC = () => {
           tableSize={tableSize}
           rowKey={config.tableConfig.rowKey}
           state={state}
-          filterOptions={{
-            status: [
-              { text: t("status.approved"), value: 1 },
-              { text: t("status.rejected"), value: 3 },
-              { text: t("status.pending"), value: 0 },
-              { text: t("status.cancelled"), value: 2 },
-            ],
-          }}
+          filterOptions={filterOptions}
         />
       </Space>
 
