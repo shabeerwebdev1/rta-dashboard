@@ -4,8 +4,11 @@ import { useTranslation } from "react-i18next";
 import { DeleteOutlined, ShareAltOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
 import { useAppNotification } from "../../utils/notificationManager";
-import { useUpdateInspectionObstacleMutation } from "../../services/rtkApiFactory";
-import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
+import {
+  useUpdateInspectionObstacleMutation,
+  useGetInspectionAttachmentsQuery,
+  getMobileFileUrl,
+} from "../../services/rtkApiFactory";
 import { skipToken } from "@reduxjs/toolkit/query";
 
 interface InspectionObstaclesViewDrawerProps {

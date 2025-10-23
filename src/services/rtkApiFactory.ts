@@ -1,9 +1,21 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { serializeParams } from "../hooks/useTableParams";
 
-const RTA_API_TARGET = `https://devparkingapi.kandaprojects.live`;
+const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
 
-// const RTA_API_TARGET = `http://10.0.1.85:9010`;
+const MOBILE_FILES_BASE_URL = "https://kandaprojects.live/documents";
+
+// const RTA_API_TARGET = `http://10.14.64.104:9010`;
+
+// Helper to build a download URL for preview
+export const getMobileFileUrl = (filePath: string) => {
+  if (!filePath) return "";
+  let normalizedPath = filePath.replace(/\\/g, "/");
+  normalizedPath = normalizedPath.replace(/\/+/g, "/");
+  normalizedPath = normalizedPath.replace(/^\/+/, "");
+
+  return `${MOBILE_FILES_BASE_URL}/${normalizedPath}`;
+};
 
 const baseQuery = fetchBaseQuery({
   baseUrl: RTA_API_TARGET,
@@ -44,6 +56,7 @@ export const dynamicApi = createApi({
     "CallIntegration",
     "Towing",
     "ParkonicsLocation",
+    "InspectionAttachments",
   ],
 
   endpoints: (builder) => ({
@@ -51,7 +64,7 @@ export const dynamicApi = createApi({
       query: (ids: number[]) => ({
         url: "/api/VLookups",
         method: "POST",
-        body: ids, // 👈 must be an array like [100] or [100,200,300]
+        body: ids,
       }),
       transformResponse: (response: any) => {
         if (!response?.data) return [];
@@ -70,10 +83,28 @@ export const dynamicApi = createApi({
       providesTags: ["VLookups"],
     }),
 
+    // File Upload and Management for Inspections
+    uploadInspectionFiles: builder.mutation<unknown, FormData>({
+      query: (formData) => ({
+        url: "/api/TBLattachment/upload",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["InspectionAttachments"],
+    }),
+
+    getInspectionAttachments: builder.query<any[], { inspectionGUID: string; entityCode: string }>({
+      query: ({ inspectionGUID, entityCode }) => ({
+        url: `/api/TBLattachment/${inspectionGUID}/${entityCode}`,
+        method: "GET",
+      }),
+      transformResponse: (response: any) => response?.data || [],
+      providesTags: ["InspectionAttachments"],
+    }),
+
     // Whitelist Plates
     getPlates: builder.query({
       query: (params) => ({ url: "/api/WhitelistPlate", params }),
-      // transformResponse: transformListResponse,
       providesTags: ["WhitelistPlate"],
     }),
     getPlateById: builder.query({
@@ -117,7 +148,6 @@ export const dynamicApi = createApi({
     // Pledges
     getPledges: builder.query({
       query: (params) => ({ url: "/api/Pledge", params }),
-      // transformResponse: transformListResponse,
       providesTags: ["Pledge"],
     }),
     getPledgeById: builder.query({
@@ -139,7 +169,6 @@ export const dynamicApi = createApi({
     // Inspection Obstacles
     getInspectionObstacles: builder.query({
       query: (params) => ({ url: "/api/InspectionObstacle", params }),
-      // transformResponse: transformListResponse,
       providesTags: ["InspectionObstacle"],
     }),
     getInspectionObstacleById: builder.query({
@@ -190,7 +219,6 @@ export const dynamicApi = createApi({
       transformResponse: (response: any) => ({ data: response.data || [], total: response.data?.length || 0 }),
     }),
 
-    // FIXED: searchFines query to handle the correct response structure
     searchFines: builder.query({
       query: (params) => ({ url: "/api/Inspection/CarInspections", params }),
       providesTags: ["FineSearch"],
@@ -209,7 +237,6 @@ export const dynamicApi = createApi({
       },
     }),
 
-    // FIXED: searchTrade query to handle the correct response structure
     searchTrade: builder.query({
       query: (params) => ({ url: "/api/Inspection/TLInspections", params }),
       providesTags: ["FineSearch"],
@@ -235,7 +262,7 @@ export const dynamicApi = createApi({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["FineSearch"], // refresh fines listing
+      invalidatesTags: ["FineSearch"],
     }),
 
     // Parkonics
@@ -245,13 +272,11 @@ export const dynamicApi = createApi({
       transformResponse: transformListResponse,
     }),
 
-    // Parkonic update
     updateParkonic: builder.mutation({
       query: (body) => ({ url: "api/trParkonics/UpdateStatus", method: "PUT", body }),
       invalidatesTags: ["ParkonicSearch"],
     }),
 
-    // parkonic voilations
     getParkonicVoilations: builder.query({
       query: (params) => ({ url: "/api/trParkonics/ParkonincsVoilations", params }),
       transformResponse: transformListResponse,
@@ -259,11 +284,11 @@ export const dynamicApi = createApi({
     }),
 
     // Web Dashboard
-
     getSupervisorDashboard: builder.query({
       query: (supervisorId: string) => `/api/WebDashboard/dashboard?supervisorId=${supervisorId}`,
       providesTags: ["WebDashboard"],
     }),
+
     // User code validation
     validatecode: builder.query({
       query: (code: string) => ({
@@ -273,8 +298,6 @@ export const dynamicApi = createApi({
       }),
     }),
 
-    //Shift Management
-
     // Zones
     getZones: builder.query({
       query: () => "/api/VLookups/Zones",
@@ -283,6 +306,7 @@ export const dynamicApi = createApi({
         return response?.data || response || [];
       },
     }),
+
     // Areas by ZoneId
     getAreas: builder.query({
       query: (zoneId: string) => `/api/VLookups/Areas/${zoneId}`,
@@ -292,23 +316,19 @@ export const dynamicApi = createApi({
       },
     }),
 
-    // All Areas (no zone filter)
-    // In dynamicApi endpoints
+    // All Areas
     getAllAreas: builder.query({
       query: () => "/api/VLookups/Areas",
       providesTags: ["Zones"],
       transformResponse: (response: any) => {
-        // Handle both response structures
         if (response?.data) {
-          return response.data; // Return the array directly
+          return response.data;
         }
         return response || [];
       },
     }),
 
-    // Shift
-
-    // In dynamicApi endpoints
+    // Shifts
     getShifts: builder.query({
       query: () => "/api/VLookups/Shifts",
       providesTags: ["Shifts"],
@@ -317,7 +337,6 @@ export const dynamicApi = createApi({
       },
     }),
 
-    //ShiftData
     getActiveShifts: builder.query({
       query: () => "/api/ShiftManagement/active",
       providesTags: ["ShiftManagement"],
@@ -326,7 +345,6 @@ export const dynamicApi = createApi({
       },
     }),
 
-    //update Shift
     updateShiftManagement: builder.mutation({
       query: (body) => ({
         url: "/api/ShiftManagement",
@@ -336,9 +354,7 @@ export const dynamicApi = createApi({
       invalidatesTags: ["ShiftManagement"],
     }),
 
-    //Role Management
-
-    //Role Dropdown
+    // Role Management
     getRoles: builder.query({
       query: () => "/api/RolePermission/allrole",
       providesTags: ["Roles"],
@@ -347,13 +363,11 @@ export const dynamicApi = createApi({
       },
     }),
 
-    //Rolebased menu table
     getRoleById: builder.query({
       query: (roleId) => `/api/RolePermission/role/${roleId}`,
       providesTags: ["Roles"],
     }),
 
-    //Update Roles
     updateRolePermissions: builder.mutation({
       query: (body) => ({
         url: "/api/RolePermission",
@@ -363,25 +377,22 @@ export const dynamicApi = createApi({
       invalidatesTags: ["Roles"],
     }),
 
-    //leave get details
     // Leave Management
     getLeaveDetails: builder.query({
       query: (params) => ({ url: "/api/Leave", params }),
-      // transformResponse: transformListResponse,
-      providesTags: ["LeaveDetails"], // <-- changed from invalidatesTags
+      providesTags: ["LeaveDetails"],
     }),
 
     updateLeaveStatus: builder.mutation({
       query: (body) => ({
         url: "/api/Leave",
         method: "PUT",
-        body, // expects { id, status }
+        body,
       }),
-      invalidatesTags: ["LeaveDetails"], // refreshes leave list after update
+      invalidatesTags: ["LeaveDetails"],
     }),
 
-    //General Search
-
+    // General Search
     getCarPlateDetails: builder.query({
       query: (body) => ({
         url: "/api/CallIntegration/ReadCarPlate",
@@ -396,12 +407,12 @@ export const dynamicApi = createApi({
         url: "/api/CallIntegration/ReadTL",
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body, // body should already be a string (e.g., "\"1234\"")
+        body,
       }),
       providesTags: ["CallIntegration"],
     }),
 
-    //Towing Approvals
+    // Towing Approvals
     getTowingDetails: builder.query({
       query: (params) => ({ url: "/api/Towing", params }),
       transformResponse: transformListResponse,
@@ -412,12 +423,12 @@ export const dynamicApi = createApi({
       query: (body) => ({
         url: "/api/Towing/approval",
         method: "PUT",
-        body, // expects { inspectionGUID, statusCode, lastReviewComments }
+        body,
       }),
       invalidatesTags: ["Towing"],
     }),
 
-    //Parkonic Location
+    // Parkonic Location
     getParkonicsLocation: builder.query({
       query: (params) => ({ url: "/api/ParkonicsLocation", params }),
       transformResponse: transformListResponse,
@@ -444,7 +455,6 @@ export const dynamicApi = createApi({
         url: "/api/Report",
         method: "POST",
         body,
-        // Important: tell fetchBaseQuery we want a blob
         responseHandler: async (response) => {
           const contentType = response.headers.get("content-type");
           if (contentType && contentType.includes("application/pdf")) {
@@ -458,78 +468,95 @@ export const dynamicApi = createApi({
 });
 
 export const {
+  // File Upload and Management
+  useUploadInspectionFilesMutation,
+  useGetInspectionAttachmentsQuery,
+
   // Whitelist Plates
   useGetPlatesQuery,
   useLazyGetPlateByIdQuery,
   useAddPlateMutation,
   useUpdatePlateMutation,
   useDeletePlateMutation,
+
   // Whitelist Trade Licenses
   useGetTradeLicensesQuery,
   useLazyGetTradeLicenseByIdQuery,
   useAddTradeLicenseMutation,
   useUpdateTradeLicenseMutation,
   useDeleteTradeLicenseMutation,
+
   // Pledges
   useGetPledgesQuery,
   useLazyGetPledgeByIdQuery,
   useAddPledgeMutation,
   useUpdatePledgeMutation,
   useDeletePledgeMutation,
+
   // Inspection Obstacles
   useGetInspectionObstaclesQuery,
   useLazyGetInspectionObstacleByIdQuery,
   useAddInspectionObstacleMutation,
   useUpdateInspectionObstacleMutation,
-  // File Upload for Inspection Obstacles
 
-  // permit
+  // Search
   useSearchPermitsQuery,
-  //Fines (inspections Management)
   useSearchFinesQuery,
   useUpdateFineCancelStatusMutation,
+  useSearchTradeQuery,
+
   // Parkonics
   useGetParkonicsQuery,
   useUpdateParkonicMutation,
   useLazyGetLookupsQuery,
   useGetParkonicVoilationsQuery,
+
   // Disputes
   useGetDisputesQuery,
   useLazyGetDisputeByIdQuery,
   useAddDisputeMutation,
   useUpdateDisputeMutation,
   useUpdateDisputeStatusMutation,
+
   // Web Dashboard
   useGetSupervisorDashboardQuery,
-  // Shift Management
+
+  // Zones and Areas
   useLazyGetZonesQuery,
-  // Areas by ZoneId
   useLazyGetAreasQuery,
   useGetAllAreasQuery,
+
+  // Shifts
   useLazyGetShiftsQuery,
+  useGetActiveShiftsQuery,
+  useUpdateShiftManagementMutation,
+
   // User code validation
   useValidatecodeQuery,
+
   // Role Management
   useGetRolesQuery,
   useLazyGetRoleByIdQuery,
   useUpdateRolePermissionsMutation,
-  useGetActiveShiftsQuery,
-  useUpdateShiftManagementMutation,
+
   // Leave Management
   useGetLeaveDetailsQuery,
   useUpdateLeaveStatusMutation,
 
-  useSearchTradeQuery,
-  //General Search
+  // General Search
   useLazyGetCarPlateDetailsQuery,
   useLazyGetTradeLicenseDetailsQuery,
-  //Towing Aprovals
+
+  // Towing Approvals
   useGetTowingDetailsQuery,
   useUpdateTowingStatusMutation,
-  //Parkonic Location
+
+  // Parkonic Location
   useGetParkonicsLocationQuery,
   useLazyGetParkonicsLocationByIdQuery,
   useAddParkonicsLocationMutation,
   useUpdateParkonicsLocationMutation,
+
+  // Reports
   useGetHtmlReportMutation,
 } = dynamicApi;

@@ -331,7 +331,9 @@
     "viewLocation": "View Location",
     "viewAttachments": "View Attachments",
     "selectInspector": " Select Inspector",
-    "selectShift": "Select Shift"
+    "selectShift": "Select Shift",
+    "showMyApprovals": "Show My Approvals",
+    "showingyourApprovals": "Showing your Approvals"
   },
   "entity": {
     "plate": "Plate",
@@ -452,7 +454,8 @@
     "CorporatePledges": "Corporate Pledges",
     "IndividualPledges": "Individual Pledges",
     "TotalLeaves": "Total Leaves",
-    "TotalTowings": "Total Towings"
+    "TotalTowings": "Total Towings",
+    "IsByLaw": "Is By-Law"
   },
   "validation": {
     "required": " Please enter {{field}} ",

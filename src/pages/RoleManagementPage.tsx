@@ -128,6 +128,7 @@ const RoleManagementPage: React.FC = () => {
         notification.error({
           data: {
             en_Msg: t("Please modify at least one permission before updating."),
+            ar_Msg: t("يرجى تعديل إذن واحد على الأقل قبل التحديث."),
           },
         });
         return;
@@ -138,6 +139,7 @@ const RoleManagementPage: React.FC = () => {
       notification.success({
         data: {
           en_Msg: t("Role permissions have been updated."),
+          ar_Msg: t("تم تحديث أذونات الدور بنجاح."),
         },
       });
 
@@ -150,7 +152,9 @@ const RoleManagementPage: React.FC = () => {
       notification.error({
         data: {
           en_Msg: t("Update failed"),
+          ar_Msg: t("فشل التحديث"),
           en_Desc: error?.data?.message || error?.message || t("Please select at least one role before updating."),
+          ar_Desc: error?.data?.message || error?.message || t("يرجى تحديد دور واحد على الأقل قبل التحديث."),
         },
       });
       console.error("Update error:", error);

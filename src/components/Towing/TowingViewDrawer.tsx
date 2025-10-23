@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Drawer, Descriptions, Tag, Button, Space, App, Input, Typography, Image, Empty, Spin } from "antd";
-import { useUpdateTowingStatusMutation } from "../../services/rtkApiFactory";
+import {
+  useUpdateTowingStatusMutation,
+  useGetInspectionAttachmentsQuery,
+  getMobileFileUrl,
+} from "../../services/rtkApiFactory";
 import { useTranslation } from "react-i18next";
-import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../common/ArcGISMap"; // ✅ map import
 import { useAppNotification } from "../../utils/notificationManager";

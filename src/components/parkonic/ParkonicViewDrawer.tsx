@@ -3,8 +3,12 @@ import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Spa
 import { CloseOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 
-import { useUpdateParkonicMutation, useGetParkonicVoilationsQuery } from "../../services/rtkApiFactory";
-import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
+import {
+  useUpdateParkonicMutation,
+  useGetParkonicVoilationsQuery,
+  useGetInspectionAttachmentsQuery,
+  getMobileFileUrl,
+} from "../../services/rtkApiFactory";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useAppNotification } from "../../utils/notificationManager";
 import dayjs from "dayjs";

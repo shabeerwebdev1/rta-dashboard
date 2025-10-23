@@ -29,6 +29,7 @@ interface DataTableWrapperProps {
   filterOptions?: Record<string, Array<{ text: string; value: string | number }>>;
   showPagination?: boolean;
   columnLookupMap?: Record<string, number>;
+  rowClassName?: (record: any, index: number) => string; // ADD THIS LINE
 }
 
 const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
@@ -49,6 +50,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
   filterOptions = {},
   showPagination = true,
   columnLookupMap,
+  rowClassName, // ADD THIS LINE
 }) => {
   const { t, i18n } = useTranslation();
   const { token } = theme.useToken();
@@ -240,7 +242,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
     getLabelFromValue,
     i18n,
     filterOptions,
-    columnLookupMap, // ✅ Added to dependencies
+    columnLookupMap,
   ]);
 
   return (
@@ -257,6 +259,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
         rowSelection={rowSelection}
         size={tableSize}
         sortDirections={["ascend", "descend"]}
+        rowClassName={rowClassName} // ADD THIS LINE
         {...(state.sortBy && {
           sortOrder: state.sortOrder,
           sortColumn: state.sortBy,

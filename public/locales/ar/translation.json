@@ -330,7 +330,11 @@
     "viewLocation": "عرض الموقع",
     "viewAttachments": "عرض المرفقات",
     "selectInspector": "اختر المفتش",
-    "selectShift": "اختر الوردية  "
+    "selectShift": "اختر الوردية  ",
+    "showMyApprovals": "إظهار موافقتي",
+    "showingyourApprovals": "إظهار موافقتك"
+
+
   },
   "entity": {
     "plate": "لوحة",
@@ -448,7 +452,9 @@
     "CorporatePledges": "تعهدات الشركات",
     "IndividualPledges": "تعهدات الأفراد",
     "TotalLeaves": "إجمالي الإجازات",
-    "TotalTowings": "إجمالي السحوبات"
+    "TotalTowings": "إجمالي السحوبات",
+    "IsByLaw": "قانوني"
+
   },
   "validation": {
     "required": "يرجى إدخال {{field}}",

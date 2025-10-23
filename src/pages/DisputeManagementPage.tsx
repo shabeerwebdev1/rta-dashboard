@@ -16,7 +16,7 @@ import {
   Upload,
   Image,
 } from "antd";
-import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined } from "@ant-design/icons";
+import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined, UserOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -29,7 +29,7 @@ import {
   useLazyGetLookupsQuery,
   useLazyGetDisputeByIdQuery,
 } from "../services/rtkApiFactory";
-import { getFileUrl, useUploadFilesMutation } from "../services/fileApi"; 
+import { getFileUrl, useUploadFilesMutation } from "../services/fileApi";
 import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
@@ -38,6 +38,7 @@ import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import DisputeViewModal from "../components/dispute/DisputeViewModal";
 import { usePermission } from "../hooks/usePermission";
+import { useAuth } from "../contexts/AuthContext";
 
 const { Option } = Select;
 const pageKey = "dispute-management";
@@ -62,6 +63,7 @@ const DisputeManagementPage: React.FC = () => {
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const config = pageConfigs[pageKey];
+  const { user } = useAuth();
 
   const {
     apiParams,
@@ -72,6 +74,7 @@ const DisputeManagementPage: React.FC = () => {
     clearFilter,
     clearAll,
     state,
+    setColumnFilter,
   } = useTableParams(config.searchConfig!);
   const [form] = Form.useForm();
 
@@ -86,7 +89,6 @@ const DisputeManagementPage: React.FC = () => {
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
   const [disputeSubReasonOptions, setDisputeSubReasonOptions] = useState<any[]>([]);
 
-  // Image upload states - ADD THESE
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -94,20 +96,74 @@ const DisputeManagementPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
-  const { data, isLoading, isFetching, refetch } = useGetDisputesQuery(apiParams, {
-    refetchOnMountOrArgChange: true,
-  });
+  // NEW: State for My Approvals filter
+  const [showMyApprovals, setShowMyApprovals] = useState(false);
+
+  // Modified API call to include assignedTo filter
+  const { data, isLoading, isFetching, refetch } = useGetDisputesQuery(
+    {
+      ...apiParams,
+      // Add assignedTo filter to API params when showMyApprovals is true
+      ...(showMyApprovals && user?.userGUID && { assignedTo: user.userGUID }),
+    },
+    {
+      refetchOnMountOrArgChange: true,
+    },
+  );
+
   const [addDispute, { isLoading: isAdding }] = useAddDisputeMutation();
   const [updateDispute, { isLoading: isUpdating }] = useUpdateDisputeMutation();
   const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [triggerGetDisputeById] = useLazyGetDisputeByIdQuery();
 
-  // ADD this mutation hook
   const [uploadFiles, { isLoading: isUploadingFiles }] = useUploadFilesMutation();
 
   const searchInputRef = useRef<any>(null);
 
-  // ADD this function for image preview
+  const handleShowMyApprovals = () => {
+    if (!user?.userGUID) {
+      notification.error({ data: { en_Msg: "User information not available" } }, "Error");
+      return;
+    }
+
+    if (showMyApprovals) {
+      // Clear the filter
+      setShowMyApprovals(false);
+      // Also clear any column filter for assignedTo
+      clearFilter("column", "assignedTo");
+    } else {
+      // Apply the filter
+      setShowMyApprovals(true);
+    }
+  };
+
+  // NEW: Function to check if row is assigned to current user
+  const isRowAssignedToUser = (record: any) => {
+    if (!user?.userGUID) return false;
+    return record.assignedTo === user.userGUID;
+  };
+
+  // NEW: Custom row class name function
+  const getRowClassName = (record: any, index: number) => {
+    return isRowAssignedToUser(record) ? "assigned-to-user-row" : "";
+  };
+
+  // NEW: Filter data locally as a fallback (in case API doesn't support assignedTo filter)
+  const filteredData = useMemo(() => {
+    if (showMyApprovals && user?.userGUID && data?.data) {
+      return data.data.filter((record: any) => record.assignedTo === user.userGUID);
+    }
+    return data?.data || [];
+  }, [data?.data, showMyApprovals, user?.userGUID]);
+
+  // NEW: Get total count for pagination
+  const totalCount = useMemo(() => {
+    if (showMyApprovals && user?.userGUID) {
+      return filteredData.length;
+    }
+    return data?.total || 0;
+  }, [data?.total, filteredData.length, showMyApprovals, user?.userGUID]);
+
   const getBase64 = (file: File) =>
     new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -116,7 +172,6 @@ const DisputeManagementPage: React.FC = () => {
       reader.onerror = (error) => reject(error);
     });
 
-  // Function to get source user name from localStorage
   const getSourceUserName = () => {
     return i18n.language === "ar"
       ? localStorage.getItem("displayNameAr") || ""
@@ -129,7 +184,6 @@ const DisputeManagementPage: React.FC = () => {
     return i18n.language === "ar" ? option.labelAr : option.labelEn;
   };
 
-  // Function to get dispute reason by code
   const getDisputeReasonByCode = React.useCallback(
     (value: number) => {
       if (!lookupOptions) return null;
@@ -148,7 +202,6 @@ const DisputeManagementPage: React.FC = () => {
     [lookupOptions],
   );
 
-  // Function to handle dispute reason change and populate sub-reasons
   const handleDisputeReasonChange = (categoryId: number) => {
     const subReasons = filterOptionsByCategory(lookupOptions, categoryId);
     const subOptions = subReasons.map((sub: any) => ({
@@ -159,7 +212,6 @@ const DisputeManagementPage: React.FC = () => {
     form.setFieldsValue({ DisputeSubReason: undefined });
   };
 
-  // Fetch lookup data when modal opens or language changes
   useEffect(() => {
     fetchLookupData();
   }, [i18n.language]);
@@ -177,7 +229,6 @@ const DisputeManagementPage: React.FC = () => {
     }
   };
 
-  // Get options for each category
   const departmentOptions = useMemo(() => {
     const filtered = filterOptionsByCategory(lookupOptions, 1000);
     return filtered.map((option) => ({
@@ -194,7 +245,6 @@ const DisputeManagementPage: React.FC = () => {
     }));
   }, [lookupOptions, i18n.language]);
 
-  // Filter dispute reason main options - use category names as main reasons
   const disputeReasonOptions = useMemo(() => {
     const categories = new Map();
     lookupOptions.forEach((option) => {
@@ -227,7 +277,6 @@ const DisputeManagementPage: React.FC = () => {
     setGlobalSearch(state.searchKey, debouncedSearchValue);
   }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
 
-  // Sync local search value with state
   useEffect(() => {
     setSearchValue(state.searchValue);
   }, [state.searchValue]);
@@ -236,11 +285,16 @@ const DisputeManagementPage: React.FC = () => {
     if (type === "search") {
       setSearchValue("");
     }
+    if (type === "column" && key === "assignedTo") {
+      setShowMyApprovals(false);
+    }
+
     clearFilter(type, key, value);
   };
 
   const handleClearAll = () => {
     setSearchValue("");
+    setShowMyApprovals(false);
     clearAll();
   };
 
@@ -249,7 +303,6 @@ const DisputeManagementPage: React.FC = () => {
     setSelectedRecord(record || null);
     setIsModalOpen(true);
 
-    // Set SourceUser from localStorage when modal opens
     const sourceUserName = getSourceUserName();
     form.setFieldValue("SourceUser", sourceUserName);
 
@@ -257,7 +310,6 @@ const DisputeManagementPage: React.FC = () => {
       try {
         const result = await triggerGetDisputeById(record.dispute_Id).unwrap();
         if (result.data) {
-          // Handle file list for evidence - ADD THIS SECTION
           let fileList: any[] = [];
           if (result.data.evidencePath) {
             const files = result.data.evidencePath.split(";");
@@ -269,7 +321,6 @@ const DisputeManagementPage: React.FC = () => {
             }));
           }
 
-          // Set form values with correct field names
           form.setFieldsValue({
             FineId: result.data.fineId || result.data.fine_Number,
             Name: result.data.name,
@@ -280,17 +331,16 @@ const DisputeManagementPage: React.FC = () => {
             Email: result.data.email,
             Phone: result.data.phone,
             Address: result.data.address,
-            SourceUser: sourceUserName, // Use the name from localStorage
+            SourceUser: sourceUserName,
             Source: result.data.source || "sTafteesh_parking",
             DisputeMainReason: result.data.disputeMainReason || result.data.dispute_Reason,
             DisputeSubReason: result.data.disputeSubReason || result.data.dispute_SubReason,
             ActualDisputeDate: result.data.actualDisputeDate
               ? dayjs(result.data.actualDisputeDate, "YYYY-MM-DD")
               : null,
-            Evidence: fileList, // ADD THIS
+            Evidence: fileList,
           });
 
-          // If there's a dispute reason, populate sub-reasons
           if (result.data.disputeMainReason || result.data.dispute_Reason) {
             const mainReasonId = result.data.disputeMainReason || result.data.dispute_Reason;
             handleDisputeReasonChange(mainReasonId);
@@ -318,7 +368,6 @@ const DisputeManagementPage: React.FC = () => {
     try {
       const formData = new FormData();
 
-      // Append simple text fields (use defaults if missing)
       formData.append("FineId", values.FineId || "");
       formData.append("Department", values.Department || "0");
       formData.append("Payment_Type", values.Payment_Type || "0");
@@ -332,7 +381,6 @@ const DisputeManagementPage: React.FC = () => {
       formData.append("DisputeMainReason", values.DisputeMainReason || "0");
       formData.append("DisputeSubReason", values.DisputeSubReason || "0");
 
-      // Source user from localStorage
       const displayName =
         i18n.language === "ar"
           ? localStorage.getItem("displayNameAr") || ""
@@ -340,15 +388,12 @@ const DisputeManagementPage: React.FC = () => {
       formData.append("SourceUser", displayName);
       formData.append("Source", values.Source || "sTafteesh_parking");
 
-      // ✅ Function to prepare files (new + existing)
       const prepareFilesForUpload = async (fileList: any[]) => {
         const files: File[] = [];
         for (const file of fileList) {
           if (file.originFileObj) {
-            // New file
             files.push(file.originFileObj);
           } else if (file.url) {
-            // Existing file from backend, fetch and convert to File
             const response = await fetch(file.url);
             const blob = await response.blob();
             const fileName = file.name || "file";
@@ -358,18 +403,15 @@ const DisputeManagementPage: React.FC = () => {
         return files;
       };
 
-      // Append Evidence files
       if (values.Evidence && values.Evidence.length > 0) {
         const files = await prepareFilesForUpload(values.Evidence);
         files.forEach((file) => {
           formData.append("Evidence", file, file.name);
         });
       } else {
-        // Optional: send empty placeholder if required
         formData.append("Evidence", new Blob([]), "empty.txt");
       }
 
-      // 🚀 Submit form
       let response;
       if (modalMode === "add") {
         response = await addDispute(formData).unwrap();
@@ -392,24 +434,26 @@ const DisputeManagementPage: React.FC = () => {
     setIsDrawerOpen(true);
   };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href).then(
-      () => notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!"),
-      () => notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed"),
-    );
-  };
-
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
       return;
     }
+
+    // Use filtered data for CSV export when My Approvals is active
+    const dataToExport = showMyApprovals ? filteredData : data?.data || [];
+    const selectedData = dataToExport.filter((item: any) => selectedRowKeys.includes(item.dispute_Id));
+
+    if (selectedData.length === 0) {
+      notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
+      return;
+    }
+
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = data?.data?.filter((item: any) => selectedRowKeys.includes(item.dispute_Id)) || [];
-        exportToCsv(selectedData, `disputes_export.csv`);
+        exportToCsv(selectedData, `disputes_export${showMyApprovals ? "_my_approvals" : ""}.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
       },
@@ -426,7 +470,6 @@ const DisputeManagementPage: React.FC = () => {
     [t, config, i18n.language],
   );
 
-  // Enhanced table config with render functions for dropdown values
   const enhancedTableConfig = useMemo(
     () => ({
       ...config.tableConfig,
@@ -442,13 +485,13 @@ const DisputeManagementPage: React.FC = () => {
                   : disputeStatusEnum.find((s) => s.value === value)?.labelEn;
 
               switch (value) {
-                case 1: // Pending
+                case 1:
                   return <Tag color="orange">{label}</Tag>;
-                case 2: // Approved
+                case 2:
                   return <Tag color="green">{label}</Tag>;
-                case 3: // Rejected
+                case 3:
                   return <Tag color="red">{label}</Tag>;
-                case 4: // Recalled
+                case 4:
                   return <Tag color="blue">{label}</Tag>;
                 default:
                   return <Tag>{label || "-"}</Tag>;
@@ -462,7 +505,6 @@ const DisputeManagementPage: React.FC = () => {
           };
         }
 
-        // Handle dispute reason and sub-reason with lookup
         if (column.key === "dispute_Reason" || column.key === "dispute_SubReason") {
           return {
             ...column,
@@ -471,7 +513,7 @@ const DisputeManagementPage: React.FC = () => {
               if (reason) {
                 return i18n.language === "ar" ? reason.arabicText : reason.englishText;
               }
-              return value; // Fallback to original value
+              return value;
             },
           };
         }
@@ -532,349 +574,362 @@ const DisputeManagementPage: React.FC = () => {
   );
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <StatsDisplay statsConfig={config.statsConfig} data={data?.data || []} loading={isLoading} />
-      <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
-        <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
-          <Col>
-            <Space>
-              <Input
-                ref={searchInputRef}
-                addonBefore={searchAddon}
-                placeholder={t("common.searchPlaceholder")}
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                style={{ width: 450 }}
-                allowClear
-              />
+    <>
+      {/* <style>{`
+        .ant-table-tbody > tr.assigned-to-user-row > td {
+          background-color: #e6f7ff !important;
+        }
+       
+      `}</style> */}
 
-              <DatePicker.RangePicker
-                value={state.dateRange}
-                format={"DD-MM-YYYY"}
-                placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
-                onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
-              />
-            </Space>
-          </Col>
-          <Col>
-            <Space>
-              <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
-                {t("common.downloadCsv")}
-              </Button>
+      <Space direction="vertical" size="large" style={{ width: "100%" }}>
+        <StatsDisplay statsConfig={config.statsConfig} data={filteredData} loading={isLoading} />
+        <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
+          <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
+            <Col>
+              <Space>
+                <Input
+                  ref={searchInputRef}
+                  addonBefore={searchAddon}
+                  placeholder={t("common.searchPlaceholder")}
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  style={{ width: 450 }}
+                  allowClear
+                />
 
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => handleModalOpen("add")}
-                disabled={!canCreate(menuName)}
-              >
-                {t("common.addNew")}
-              </Button>
-            </Space>
-          </Col>
-        </Row>
-        <ActiveFiltersDisplay
+                <DatePicker.RangePicker
+                  value={state.dateRange}
+                  format={"DD-MM-YYYY"}
+                  placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
+                  onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
+                />
+                <Button
+                  icon={<UserOutlined />}
+                  onClick={handleShowMyApprovals}
+                  className={showMyApprovals ? "my-approvals-btn active" : "my-approvals-btn"}
+                  type={showMyApprovals ? "primary" : "default"}
+                >
+                  {t("common.showMyApprovals")}
+                </Button>
+              </Space>
+            </Col>
+            <Col>
+              <Space>
+                <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
+                  {t("common.downloadCsv")}
+                </Button>
+
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => handleModalOpen("add")}
+                  disabled={!canCreate(menuName)}
+                >
+                  {t("common.addNew")}
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+          <ActiveFiltersDisplay
+            state={state}
+            onClearFilter={handleClearFilter}
+            onClearAll={handleClearAll}
+            columnLabels={columnLabels}
+            lookupOptions={lookupOptions}
+            getLabelFromValue={getLabelFromValue}
+            statusLabels={statusLabels}
+            showMyApprovals={showMyApprovals}
+            onClearMyApprovals={() => {
+              setShowMyApprovals(false);
+              clearFilter("column", "assignedTo");
+            }}
+          />
+        </Card>
+
+        <DataTableWrapper
+          pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
+          data={filteredData} // Use filtered data
+          total={totalCount} // Use calculated total count
+          isLoading={isLoading || isFetching}
+          apiParams={apiParams}
+          handleTableChange={handleTableChange}
+          handlePaginationChange={handlePaginationChange}
+          rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
+          actionMenuItems={actionMenuItems}
+          tableSize={tableSize}
+          rowKey={config.tableConfig.rowKey}
           state={state}
-          onClearFilter={handleClearFilter}
-          onClearAll={handleClearAll}
-          columnLabels={columnLabels}
           lookupOptions={lookupOptions}
           getLabelFromValue={getLabelFromValue}
-          statusLabels={statusLabels}
-        />
-      </Card>
-
-      <DataTableWrapper
-        pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
-        data={data?.data || []}
-        total={data?.total || 0}
-        isLoading={isLoading || isFetching}
-        apiParams={apiParams}
-        handleTableChange={handleTableChange}
-        handlePaginationChange={handlePaginationChange}
-        rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
-        actionMenuItems={actionMenuItems}
-        tableSize={tableSize}
-        rowKey={config.tableConfig.rowKey}
-        state={state}
-        lookupOptions={lookupOptions}
-        getLabelFromValue={getLabelFromValue}
-        filterOptions={{
-          dispute_Status: disputeStatusEnum.map((status) => ({
-            text: i18n.language === "ar" ? status.labelAr : status.labelEn,
-            value: status.value,
-          })),
-        }}
-      />
-
-      <Modal
-        open={isModalOpen}
-        title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
-        onCancel={handleModalClose}
-        width="720px"
-        footer={[
-          <Button key="reset" onClick={() => form.resetFields()}>
-            {t("common.reset")}
-          </Button>,
-          <Button key="back" onClick={handleModalClose}>
-            {t("common.cancel")}
-          </Button>,
-          <Button
-            key="submit"
-            type="primary"
-            loading={isAdding || isUpdating || isLoadingLookups || isUploading}
-            onClick={() => form.submit()}
-          >
-            {t(modalMode === "add" ? "common.submit" : "common.update")}
-          </Button>,
-        ]}
-      >
-        <Spin spinning={isLoadingLookups}>
-          <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-            <Row gutter={24}>
-              <Col span={12}>
-                <Form.Item
-                  name="FineId"
-                  label={t("form.fineNumber")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.fineNumber") }) }]}
-                >
-                  <Input placeholder={t("placeholders.fineNumber")} type="text" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  name="Name"
-                  label={t("form.name")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.name") }) }]}
-                >
-                  <Input placeholder={t("placeholders.name")} />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item
-                  name="Department"
-                  label={t("form.department")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.department") }) }]}
-                >
-                  <Select
-                    placeholder={t("placeholders.department")}
-                    loading={isLoadingLookups}
-                    showSearch
-                    optionFilterProp="label"
-                    filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
-                    options={departmentOptions}
-                  />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item
-                  name="DisputeMainReason"
-                  label={t("form.disputereason")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.disputereason") }) }]}
-                >
-                  <Select
-                    placeholder={t("placeholders.reason")}
-                    loading={isLoadingLookups}
-                    showSearch
-                    optionFilterProp="label"
-                    onChange={handleDisputeReasonChange}
-                    filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
-                    options={disputeReasonOptions}
-                  />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item
-                  name="DisputeSubReason"
-                  label={t("form.disputesubreason")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.disputesubreason") }) }]}
-                >
-                  <Select
-                    placeholder={t("placeholders.subreason")}
-                    loading={isLoadingLookups}
-                    showSearch
-                    optionFilterProp="label"
-                    disabled={disputeSubReasonOptions.length === 0}
-                    filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
-                    options={disputeSubReasonOptions}
-                  />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item
-                  name="Payment_Type"
-                  label={t("form.paymentType")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.paymentType") }) }]}
-                >
-                  <Select
-                    placeholder={t("placeholders.paymentType")}
-                    loading={isLoadingLookups}
-                    showSearch
-                    optionFilterProp="label"
-                    filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
-                    options={paymentTypeOptions}
-                  />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item
-                  name="crm_Ref"
-                  label={t("form.crmReference")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.crmReference") }) }]}
-                >
-                  <Input placeholder={t("placeholders.crmReference")} />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item
-                  name="Email"
-                  label={t("form.email")}
-                  rules={[
-                    {
-                      required: true,
-                      message: t("validation.required", { field: t("form.email") }),
-                    },
-                    {
-                      type: "email",
-                      message: t("validation.invalidEmail"),
-                    },
-                  ]}
-                >
-                  <Input placeholder={t("placeholders.email")} />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item
-                  name="Phone"
-                  label={t("form.phoneNumber")}
-                  rules={[
-                    {
-                      required: true,
-                      message: t("validation.required", { field: t("form.phoneNumber") }),
-                    },
-                    {
-                      pattern: /^[0-9]+$/,
-                      message: t("validation.onlyNumbers"),
-                    },
-                  ]}
-                >
-                  <Input placeholder={t("placeholders.phoneNumber")} maxLength={10} />
-                </Form.Item>
-              </Col>
-
-              {/* SourceUser field - populated from localStorage */}
-              {/* <Col span={12}>
-                <Form.Item name="SourceUser" label={t("form.sourceUser")}>
-                  <Input 
-                    placeholder={t("placeholders.SourceUser")} 
-                    value={getSourceUserName()}
-                    disabled
-                  />
-                </Form.Item>
-              </Col> */}
-
-              <Col span={12}>
-                <Form.Item
-                  name="ActualDisputeDate"
-                  label={t("form.actualDisputeDate")}
-                  rules={[
-                    { required: true, message: t("validation.required", { field: t("form.actualDisputeDate") }) },
-                  ]}
-                >
-                  <DatePicker
-                    style={{ width: "100%" }}
-                    format="DD-MM-YYYY"
-                    disabledDate={(current) => current && current > dayjs().endOf("day")}
-                  />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item
-                  name="Address"
-                  label={t("form.address")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.address") }) }]}
-                >
-                  <Input.TextArea placeholder={t("placeholders.address")} rows={2} />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item
-                  name="Comments"
-                  label={t("form.comments")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.comments") }) }]}
-                >
-                  <Input.TextArea placeholder={t("placeholders.comments")} rows={2} />
-                </Form.Item>
-              </Col>
-
-              {/* ADD THIS EVIDENCE UPLOAD SECTION */}
-              <Col span={24}>
-                <Form.Item
-                  name="Evidence"
-                  label={t("form.evidence")}
-                  valuePropName="fileList"
-                  getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
-                >
-                  <Upload
-                    listType="picture-card"
-                    beforeUpload={() => false}
-                    multiple={true}
-                    accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,image/jpeg,image/png"
-                    onPreview={async (file) => {
-                      let src = file.url;
-                      if (!src && file.originFileObj) {
-                        src = await getBase64(file.originFileObj);
-                      }
-                      setPreviewImage(src || "");
-                      setPreviewOpen(true);
-                    }}
-                  >
-                    <div>
-                      <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>{t("form.upload")}</div>
-                    </div>
-                  </Upload>
-                </Form.Item>
-
-                {previewImage && (
-                  <Image
-                    style={{ display: "none" }}
-                    preview={{
-                      visible: previewOpen,
-                      src: previewImage,
-                      onVisibleChange: (visible) => setPreviewOpen(visible),
-                      afterClose: () => setPreviewImage(""),
-                    }}
-                    src={previewImage}
-                  />
-                )}
-              </Col>
-            </Row>
-          </Form>
-        </Spin>
-      </Modal>
-
-      {viewRecord && (
-        <DisputeViewModal
-          open={isDrawerOpen}
-          onClose={() => {
-            setIsDrawerOpen(false);
-            setViewRecord(null);
+          filterOptions={{
+            dispute_Status: disputeStatusEnum.map((status) => ({
+              text: i18n.language === "ar" ? status.labelAr : status.labelEn,
+              value: status.value,
+            })),
           }}
-          disputeId={viewRecord.dispute_Id}
-          onStatusUpdate={refetch}
+          rowClassName={getRowClassName}
         />
-      )}
-    </Space>
+
+        <Modal
+          open={isModalOpen}
+          title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
+          onCancel={handleModalClose}
+          width="720px"
+          footer={[
+            <Button key="reset" onClick={() => form.resetFields()}>
+              {t("common.reset")}
+            </Button>,
+            <Button key="back" onClick={handleModalClose}>
+              {t("common.cancel")}
+            </Button>,
+            <Button
+              key="submit"
+              type="primary"
+              loading={isAdding || isUpdating || isLoadingLookups || isUploading}
+              onClick={() => form.submit()}
+            >
+              {t(modalMode === "add" ? "common.submit" : "common.update")}
+            </Button>,
+          ]}
+        >
+          <Spin spinning={isLoadingLookups}>
+            <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
+              <Row gutter={24}>
+                <Col span={12}>
+                  <Form.Item
+                    name="FineId"
+                    label={t("form.fineNumber")}
+                    rules={[{ required: true, message: t("validation.required", { field: t("form.fineNumber") }) }]}
+                  >
+                    <Input placeholder={t("placeholders.fineNumber")} type="text" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="Name"
+                    label={t("form.name")}
+                    rules={[{ required: true, message: t("validation.required", { field: t("form.name") }) }]}
+                  >
+                    <Input placeholder={t("placeholders.name")} />
+                  </Form.Item>
+                </Col>
+
+                <Col span={12}>
+                  <Form.Item
+                    name="Department"
+                    label={t("form.department")}
+                    rules={[{ required: true, message: t("validation.required", { field: t("form.department") }) }]}
+                  >
+                    <Select
+                      placeholder={t("placeholders.department")}
+                      loading={isLoadingLookups}
+                      showSearch
+                      optionFilterProp="label"
+                      filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
+                      options={departmentOptions}
+                    />
+                  </Form.Item>
+                </Col>
+
+                <Col span={12}>
+                  <Form.Item
+                    name="DisputeMainReason"
+                    label={t("form.disputereason")}
+                    rules={[{ required: true, message: t("validation.required", { field: t("form.disputereason") }) }]}
+                  >
+                    <Select
+                      placeholder={t("placeholders.reason")}
+                      loading={isLoadingLookups}
+                      showSearch
+                      optionFilterProp="label"
+                      onChange={handleDisputeReasonChange}
+                      filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
+                      options={disputeReasonOptions}
+                    />
+                  </Form.Item>
+                </Col>
+
+                <Col span={12}>
+                  <Form.Item
+                    name="DisputeSubReason"
+                    label={t("form.disputesubreason")}
+                    rules={[
+                      { required: true, message: t("validation.required", { field: t("form.disputesubreason") }) },
+                    ]}
+                  >
+                    <Select
+                      placeholder={t("placeholders.subreason")}
+                      loading={isLoadingLookups}
+                      showSearch
+                      optionFilterProp="label"
+                      disabled={disputeSubReasonOptions.length === 0}
+                      filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
+                      options={disputeSubReasonOptions}
+                    />
+                  </Form.Item>
+                </Col>
+
+                <Col span={12}>
+                  <Form.Item
+                    name="Payment_Type"
+                    label={t("form.paymentType")}
+                    rules={[{ required: true, message: t("validation.required", { field: t("form.paymentType") }) }]}
+                  >
+                    <Select
+                      placeholder={t("placeholders.paymentType")}
+                      loading={isLoadingLookups}
+                      showSearch
+                      optionFilterProp="label"
+                      filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
+                      options={paymentTypeOptions}
+                    />
+                  </Form.Item>
+                </Col>
+
+                <Col span={12}>
+                  <Form.Item
+                    name="crm_Ref"
+                    label={t("form.crmReference")}
+                    rules={[{ required: true, message: t("validation.required", { field: t("form.crmReference") }) }]}
+                  >
+                    <Input placeholder={t("placeholders.crmReference")} />
+                  </Form.Item>
+                </Col>
+
+                <Col span={12}>
+                  <Form.Item
+                    name="Email"
+                    label={t("form.email")}
+                    rules={[
+                      {
+                        required: true,
+                        message: t("validation.required", { field: t("form.email") }),
+                      },
+                      {
+                        type: "email",
+                        message: t("validation.invalidEmail"),
+                      },
+                    ]}
+                  >
+                    <Input placeholder={t("placeholders.email")} />
+                  </Form.Item>
+                </Col>
+
+                <Col span={12}>
+                  <Form.Item
+                    name="Phone"
+                    label={t("form.phoneNumber")}
+                    rules={[
+                      {
+                        required: true,
+                        message: t("validation.required", { field: t("form.phoneNumber") }),
+                      },
+                      {
+                        pattern: /^[0-9]+$/,
+                        message: t("validation.onlyNumbers"),
+                      },
+                    ]}
+                  >
+                    <Input placeholder={t("placeholders.phoneNumber")} maxLength={10} />
+                  </Form.Item>
+                </Col>
+
+                <Col span={12}>
+                  <Form.Item
+                    name="ActualDisputeDate"
+                    label={t("form.actualDisputeDate")}
+                    rules={[
+                      { required: true, message: t("validation.required", { field: t("form.actualDisputeDate") }) },
+                    ]}
+                  >
+                    <DatePicker
+                      style={{ width: "100%" }}
+                      format="DD-MM-YYYY"
+                      disabledDate={(current) => current && current > dayjs().endOf("day")}
+                    />
+                  </Form.Item>
+                </Col>
+
+                <Col span={12}>
+                  <Form.Item
+                    name="Address"
+                    label={t("form.address")}
+                    rules={[{ required: true, message: t("validation.required", { field: t("form.address") }) }]}
+                  >
+                    <Input.TextArea placeholder={t("placeholders.address")} rows={2} />
+                  </Form.Item>
+                </Col>
+
+                <Col span={12}>
+                  <Form.Item
+                    name="Comments"
+                    label={t("form.comments")}
+                    rules={[{ required: true, message: t("validation.required", { field: t("form.comments") }) }]}
+                  >
+                    <Input.TextArea placeholder={t("placeholders.comments")} rows={2} />
+                  </Form.Item>
+                </Col>
+
+                <Col span={24}>
+                  <Form.Item
+                    name="Evidence"
+                    label={t("form.evidence")}
+                    valuePropName="fileList"
+                    getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+                  >
+                    <Upload
+                      listType="picture-card"
+                      beforeUpload={() => false}
+                      multiple={true}
+                      accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,image/jpeg,image/png"
+                      onPreview={async (file) => {
+                        let src = file.url;
+                        if (!src && file.originFileObj) {
+                          src = await getBase64(file.originFileObj);
+                        }
+                        setPreviewImage(src || "");
+                        setPreviewOpen(true);
+                      }}
+                    >
+                      <div>
+                        <PlusOutlined />
+                        <div style={{ marginTop: 8 }}>{t("form.upload")}</div>
+                      </div>
+                    </Upload>
+                  </Form.Item>
+
+                  {previewImage && (
+                    <Image
+                      style={{ display: "none" }}
+                      preview={{
+                        visible: previewOpen,
+                        src: previewImage,
+                        onVisibleChange: (visible) => setPreviewOpen(visible),
+                        afterClose: () => setPreviewImage(""),
+                      }}
+                      src={previewImage}
+                    />
+                  )}
+                </Col>
+              </Row>
+            </Form>
+          </Spin>
+        </Modal>
+
+        {viewRecord && (
+          <DisputeViewModal
+            open={isDrawerOpen}
+            onClose={() => {
+              setIsDrawerOpen(false);
+              setViewRecord(null);
+            }}
+            disputeId={viewRecord.dispute_Id}
+            onStatusUpdate={refetch}
+          />
+        )}
+      </Space>
+    </>
   );
 };
 

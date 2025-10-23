@@ -4,9 +4,12 @@ import { CloseOutlined, ShareAltOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 
 import { useLazyGetLookupsQuery } from "../../services/rtkApiFactory";
-import { useUpdateFineCancelStatusMutation } from "../../services/rtkApiFactory";
+import {
+  useUpdateFineCancelStatusMutation,
+  useGetInspectionAttachmentsQuery,
+  getMobileFileUrl,
+} from "../../services/rtkApiFactory";
 import { useAppNotification } from "../../utils/notificationManager";
-import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../../components/common/ArcGISMap";
 import { plateSources, PLATE_COLOR } from "../../config/pageConfigs/finesConfig";

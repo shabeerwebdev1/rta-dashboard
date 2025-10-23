@@ -27,9 +27,12 @@ import { useAppNotification } from "../../utils/notificationManager";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import Map from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView";
-import { useGetActiveShiftsQuery } from "../../services/rtkApiFactory";
+import {
+  useGetActiveShiftsQuery,
+  useGetInspectionAttachmentsQuery,
+  getMobileFileUrl,
+} from "../../services/rtkApiFactory";
 import { Image, Space } from "antd";
-import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../common/ArcGISMap";
 import { useAuth } from "../../contexts/AuthContext";

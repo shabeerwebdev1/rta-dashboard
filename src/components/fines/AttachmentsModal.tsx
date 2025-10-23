@@ -2,7 +2,7 @@ import React from "react";
 import { Modal, Row, Col, Typography, Image, Spin, Empty, Space } from "antd";
 import { PaperClipOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
-import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/inspectionFileApi";
+import { useGetInspectionAttachmentsQuery, getMobileFileUrl } from "../../services/rtkApiFactory";
 import { skipToken } from "@reduxjs/toolkit/query";
 
 const { Text } = Typography;

@@ -32,7 +32,7 @@ const StatsDisplay: React.FC<StatsDisplayProps> = ({
             : stat.title;
 
           return (
-            <Col xs={24} sm={12} md={8} lg={6} key={index}>
+            <Col xs={24} sm={12} md={8} lg={4} key={index}>
               <Card size="small" bordered={false}>
                 <Skeleton loading={loading} active paragraph={{ rows: 1 }} title={false}>
                   <Statistic

@@ -29,8 +29,8 @@ import {
   useLazyGetLookupsQuery,
   useLazyGetZonesQuery,
   useGetAllAreasQuery,
+  useUploadInspectionFilesMutation,
 } from "../services/rtkApiFactory";
-import { useUploadInspectionFilesMutation } from "../services/inspectionFileApi";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";

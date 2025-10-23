@@ -552,10 +552,21 @@ const PledgesPage: React.FC = () => {
                   ]}
                 >
                   <Input.Group compact>
-                    {/* Bigger input */}
-                    <Input style={{ width: "calc(100% - 90px)" }} placeholder={t("placeholders.tradeLicenseNumber")} />
+                    {/* Input field */}
+                    <Form.Item
+                      name="tradeLicenseNumber"
+                      noStyle
+                      rules={[
+                        { required: true, message: t("validation.required", { field: t("form.tradeLicenseNumber") }) },
+                      ]}
+                    >
+                      <Input
+                        style={{ width: "calc(100% - 90px)" }}
+                        placeholder={t("placeholders.tradeLicenseNumber")}
+                      />
+                    </Form.Item>
 
-                    {/* Smaller button */}
+                    {/* Button */}
                     <Button
                       type="primary"
                       size="large"
@@ -565,10 +576,8 @@ const PledgesPage: React.FC = () => {
                         try {
                           const licenseNo = form.getFieldValue("tradeLicenseNumber");
                           if (!licenseNo) {
-                            notification.error(
-                              { data: { en_Msg: t("validation.required", { field: t("form.tradeLicenseNumber") }) } },
-                              t("messages.validationError"),
-                            );
+                            // Trigger validation if the field is empty
+                            form.validateFields(["tradeLicenseNumber"]);
                             return;
                           }
 

@@ -188,13 +188,23 @@ export const whitelistPlateConfig: PageConfig = {
         `${data.filter((d) => d.plateStatus_Id === 5002).length} / ${metadata?.inactiveRecords || 0}`,
       color: "#ff4d4f",
     },
-    // {
-    //   title: "stats.ExpiredPlates",
-    //   icon: <CloseCircleOutlined />,
-    //   value: (data, metadata) =>
-    //     `${data.filter((d) => d.plateStatus_Id === 5003).length} / ${metadata?.expiredRecords || 0}`,
-    //   color: "#faad14",
-    // },
+    {
+      title: "stats.ExpiredPlates",
+      icon: <CloseCircleOutlined />,
+      value: (data, metadata) => {
+        const today = new Date();
+        const expiredCount = data.filter((d) => d.toDate && new Date(d.toDate) < today).length;
+        return `${expiredCount} / ${metadata?.expiredRecords || 0}`;
+      },
+      color: "#faad14",
+    },
+    
+    {
+      title: "stats.IsByLaw",
+      icon: <CheckCircleOutlined />,
+      value: (data) => `${data.filter((d) => d.isByLaw === true).length}`,
+      color: "#1890ff",
+    },
   ],
 
   tableConfig: {
