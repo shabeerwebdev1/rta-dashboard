@@ -131,7 +131,6 @@ const PledgesPage: React.FC = () => {
       const result = await triggerGetLookups([900]).unwrap();
       setLookupOptions(result);
     } catch (error) {
-      console.error("Failed to fetch lookup data:", error);
       notification.error({ data: { en_Msg: "Failed to load dropdown options" } }, "Load Failed");
     } finally {
       setIsLoadingLookups(false);
@@ -249,25 +248,45 @@ const PledgesPage: React.FC = () => {
     };
 
     try {
-      // handle file upload only if new files were added
-      if (values.document && values.document.some((f: any) => f.originFileObj)) {
+      // Separate existing and new files
+      const existingFiles: string[] = [];
+      const newFiles: any[] = [];
+
+      if (values.document) {
+        values.document.forEach((file: any) => {
+          if (file.originFileObj) {
+            // New file to upload
+            newFiles.push(file);
+          } else if (file.url) {
+            // Existing file - extract the path from the URL
+            const urlPath = file.url.replace(getFileUrl(""), "");
+            existingFiles.push(urlPath);
+          }
+        });
+      }
+
+      // Build document path array starting with existing files
+      const allDocumentPaths: string[] = [...existingFiles];
+
+      // Upload new files if any
+      if (newFiles.length > 0) {
         const formData = new FormData();
         formData.append("Category", "PledgeDocuments");
 
-        values.document.forEach((file: any) => {
-          if (file.originFileObj) {
-            formData.append("Files", file.originFileObj);
-          }
+        newFiles.forEach((file: any) => {
+          formData.append("Files", file.originFileObj);
         });
 
         const uploadResult = await uploadFiles(formData).unwrap();
         const savedFileNames = (uploadResult as any[]).map((f) => f.savedAs);
 
-        payload.DocumentPath = savedFileNames.join(";");
-        payload.DocumentUploaded = true;
-      } else if (modalMode === "edit" && selectedRecord?.documentPath) {
-        // keep old document if not uploading new
-        payload.DocumentPath = selectedRecord.documentPath;
+        // Add newly uploaded files to the path array
+        allDocumentPaths.push(...savedFileNames);
+      }
+
+      // Set the combined document path
+      if (allDocumentPaths.length > 0) {
+        payload.DocumentPath = allDocumentPaths.join(";");
         payload.DocumentUploaded = true;
       }
 
@@ -338,26 +357,80 @@ const PledgesPage: React.FC = () => {
     );
   };
 
+  // ✅ FIXED: Enhanced function to transform data for CSV export with proper headers
+  const transformDataForCSV = (data: any[]) => {
+    return data.map((item) => {
+      const csvRecord: Record<string, unknown> = {};
+
+      // Only include fields that are visible in the UI table
+      config.tableConfig.columns.forEach((column) => {
+        if (column.key === "pledgeType") {
+          csvRecord[t("form.pledgeType")] = getLabelFromValue(item.pledgeType, pledgeTypeOptions, i18n);
+        } else if (column.key === "tradeLicenseNumber") {
+          csvRecord[t("form.tradeLicenseNumber")] = item.tradeLicenseNumber || "";
+        } else if (column.key === "businessName") {
+          csvRecord[t("form.businessName")] = item.businessName || "";
+        } else if (column.key === "pledgeDate") {
+          csvRecord[t("form.pledgeDate")] = item.pledgeDate ? dayjs(item.pledgeDate).format("DD-MM-YYYY") : "";
+        } else if (column.key === "pledgeEndDate") {
+          csvRecord[t("form.pledgeEndDate")] = item.pledgeEndDate ? dayjs(item.pledgeEndDate).format("DD-MM-YYYY") : "";
+        } else if (column.key === "remarks") {
+          csvRecord[t("form.remarks")] = item.remarks || "";
+        } else if (column.key === "createdDate") {
+          csvRecord[t("form.createdDate")] = item.createdDate ? dayjs(item.createdDate).format("DD-MM-YYYY") : "";
+        }
+        // Skip any other fields that are not in the table config
+      });
+
+      return csvRecord;
+    });
+  };
+
+  // ✅ FIXED: Get CSV filename based on current language
+  const getCsvFilename = () => {
+    if (i18n.language === "ar") {
+      return `التعهدات.csv`;
+    } else {
+      return `pledges.csv`;
+    }
+  };
+
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
       return;
     }
+
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = data?.data.filter((item: any) => selectedRowKeys.includes(item.id));
+        try {
+          // ✅ FIXED: Get the selected data from the current page data
+          const selectedData = platesData.filter((item: any) => selectedRowKeys.includes(item.id));
 
-        // ✅ Map values to labels before exporting
-        const formattedData = selectedData.map((item: any) => ({
-          ...item,
-          pledgeType: getLabelFromValue(item.pledgeType, pledgeTypeOptions, i18n),
-        }));
+          if (selectedData.length === 0) {
+            notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
+            return;
+          }
 
-        exportToCsv(formattedData, `pledges_export.csv`);
-        notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
-        setSelectedRowKeys([]);
+          // ✅ FIXED: Transform the data to match UI display
+          const transformedData = transformDataForCSV(selectedData);
+
+          // ✅ FIXED: Get filename based on current language
+          const filename = getCsvFilename();
+
+          // ✅ FIXED: Export to CSV using your common component
+          exportToCsv(transformedData, filename);
+
+          notification.success(
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            t("messages.exportSuccess"),
+          );
+          setSelectedRowKeys([]);
+        } catch (error) {
+          notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
+        }
       },
     });
   };
@@ -491,6 +564,10 @@ const PledgesPage: React.FC = () => {
         rowSelection={{
           selectedRowKeys,
           onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
+          getCheckboxProps: (record: any) => ({
+            // Use id as the row key since that's the unique identifier in your data
+            name: record.id,
+          }),
         }}
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
@@ -557,12 +634,17 @@ const PledgesPage: React.FC = () => {
                       name="tradeLicenseNumber"
                       noStyle
                       rules={[
-                        { required: true, message: t("validation.required", { field: t("form.tradeLicenseNumber") }) },
+                        // { required: true, message: t("validation.required", { field: t("form.tradeLicenseNumber") }) },
+                        {
+                          pattern: /^[0-9]+$/,
+                          message: t("validation.onlyNumbers", { field: t("form.Number") }),
+                        },
                       ]}
                     >
                       <Input
                         style={{ width: "calc(100% - 90px)" }}
                         placeholder={t("placeholders.tradeLicenseNumber")}
+                        maxLength={20}
                       />
                     </Form.Item>
 
@@ -593,7 +675,6 @@ const PledgesPage: React.FC = () => {
 
                           notification.success(result, t("messages.tradeLicenseFetched"));
                         } catch (error: any) {
-                          console.error("Trade License fetch failed:", error);
                           notification.error(error, t("messages.failedToFetchTradeLicense"));
                           setTlData(null);
                           setCompanyEmail("");
@@ -686,7 +767,7 @@ const PledgesPage: React.FC = () => {
               </Col>
               <Col span={24}>
                 <Form.Item name="remarks" label={t("form.remarks")}>
-                  <Input.TextArea placeholder={t("placeholders.remarks")} />
+                  <Input.TextArea placeholder={t("placeholders.remarks")} maxLength={500} />
                 </Form.Item>
               </Col>
             </Row>

@@ -104,7 +104,10 @@
     "shareSuccessEn": "Share link copied to clipboard!",
     "shareErrorEn": "Failed to copy link.",
     "shareSuccessTitle": "Link Copied!",
-    "shareErrorTitle": "Copy Failed"
+    "shareErrorTitle": "Copy Failed",
+    "reviewFailed": "Failed to submit review",
+    "noDataToExport": "No data available to export",
+    "exportFailed": "Data export failed"
   },
   "form": {
     "Number": "Number",
@@ -333,7 +336,9 @@
     "selectInspector": " Select Inspector",
     "selectShift": "Select Shift",
     "showMyApprovals": "Show My Approvals",
-    "showingyourApprovals": "Showing your Approvals"
+    "showingyourApprovals": "Showing your Approvals",
+    "yes": "Yes",
+    "no": "No"
   },
   "entity": {
     "plate": "Plate",

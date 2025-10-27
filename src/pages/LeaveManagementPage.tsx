@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App } from "antd";
-import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
+import { EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { useTableParams } from "../hooks/useTableParams";
@@ -53,13 +53,13 @@ const LeaveManagementPage: React.FC = () => {
 
   const leaveTypeMap = useMemo(() => {
     const map = new Map<number, { en: string; ar: string }>();
-    
+
     if (!lookupData?.data) {
       return map;
     }
 
     const categories = lookupData.data;
-    
+
     categories.forEach((category: any) => {
       if (category.ddiCatgId === 1900 && category.ddItems && Array.isArray(category.ddItems)) {
         category.ddItems.forEach((item: any) => {
@@ -67,13 +67,13 @@ const LeaveManagementPage: React.FC = () => {
           if (!isNaN(code)) {
             map.set(code, {
               en: item.ddiDispText_En || `Leave Type ${code}`,
-              ar: item.ddiDispText_Ar || `Leave Type ${code}`
+              ar: item.ddiDispText_Ar || `Leave Type ${code}`,
             });
           }
         });
       }
     });
-    
+
     return map;
   }, [lookupData]);
 
@@ -82,27 +82,38 @@ const LeaveManagementPage: React.FC = () => {
     if (code === undefined || code === null) {
       return "N/A";
     }
-    
-    const numericCode = typeof code === 'string' ? parseInt(code, 10) : code;
-    
+
+    const numericCode = typeof code === "string" ? parseInt(code, 10) : code;
+
     if (isNaN(numericCode as number)) {
       return String(code);
     }
-    
+
     const entry = leaveTypeMap.get(numericCode as number);
-    
+
     if (!entry) {
       return `Leave Type ${numericCode}`;
     }
-    
-    return i18n.language.startsWith('ar') ? entry.ar : entry.en;
+
+    return i18n.language.startsWith("ar") ? entry.ar : entry.en;
   };
+
+  // Status labels for CSV export
+  const statusLabels = useMemo(() => {
+    return {
+      0: t("status.pending"),
+      1: t("status.approved"),
+      2: t("status.cancelled"),
+      3: t("status.rejected"),
+    };
+  }, [t]);
 
   // API response data array
   const apiData = data?.data || [];
 
   // derive totals and pagination from response shape
-  const totalCount = data?.totalCount ?? data?.totalRecords ?? data?.total ?? (Array.isArray(apiData) ? apiData.length : 0);
+  const totalCount =
+    data?.totalCount ?? data?.totalRecords ?? data?.total ?? (Array.isArray(apiData) ? apiData.length : 0);
   const pageNumber = data?.pageNumber ?? 1;
   const pageSize = data?.pageSize ?? apiParams.pageSize ?? 10;
 
@@ -126,7 +137,7 @@ const LeaveManagementPage: React.FC = () => {
     ],
   };
 
-  const statusLabels = useMemo(() => {
+  const statusLabelsForTable = useMemo(() => {
     const statusMap: Record<number, React.ReactNode> = {
       0: t("status.pending"),
       1: t("status.approved"),
@@ -158,19 +169,75 @@ const LeaveManagementPage: React.FC = () => {
     clearAll();
   };
 
+  const transformDataForCSV = (data: any[]) => {
+    return data.map((item) => {
+      const csvRecord: Record<string, unknown> = {};
+
+      config.tableConfig.columns.forEach((column) => {
+        const { key, title } = column;
+        const headerName = columnLabels[key] || title;
+
+        let value = item[key];
+
+        // Transform specific fields
+        if (key === "leaveType") value = getLeaveTypeName(value);
+        else if (key === "status") value = statusLabels[value] || value;
+        else if (key.includes("Date") && value) {
+          value = key === "createdDate" ? dayjs(value).format("DD-MM-YYYY") : dayjs(value).format("DD-MM-YYYY");
+        }
+
+        csvRecord[headerName] = value !== null && value !== undefined ? value : "";
+      });
+
+      return csvRecord;
+    });
+  };
+
+  // ✅ FIXED: Get CSV filename based on current language
+  const getCsvFilename = () => {
+    if (i18n.language === "ar") {
+      return `إدارة_الإجازات.csv`;
+    } else {
+      return `Leave_Management.csv`;
+    }
+  };
+
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
       return;
     }
+
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = apiData.filter((item: any) => selectedRowKeys.includes(item.id)) || [];
-        exportToCsv(selectedData, `leave_management_export.csv`);
-        notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
-        setSelectedRowKeys([]);
+        try {
+          // ✅ FIXED: Get the selected data from the current page data
+          const selectedData = tableData.filter((item: any) => selectedRowKeys.includes(item.id));
+
+          if (selectedData.length === 0) {
+            notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
+            return;
+          }
+
+          // ✅ FIXED: Transform the data to match UI display
+          const transformedData = transformDataForCSV(selectedData);
+
+          // ✅ FIXED: Get filename based on current language
+          const filename = getCsvFilename();
+
+          // ✅ FIXED: Export to CSV using your common component
+          exportToCsv(transformedData, filename);
+
+          notification.success(
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            t("messages.exportSuccess"),
+          );
+          setSelectedRowKeys([]);
+        } catch (error) {
+          notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
+        }
       },
     });
   };
@@ -183,7 +250,7 @@ const LeaveManagementPage: React.FC = () => {
   const actionMenuItems = (record: any) => [
     {
       key: "view",
-      icon: <EyeOutlined />,
+      icon: record.status === 0 ? <EditOutlined /> : <EyeOutlined />,
       label: t("common.view"),
       onClick: () => {
         setSelectedRecord(record);
@@ -229,12 +296,12 @@ const LeaveManagementPage: React.FC = () => {
   // Map leaveType code to label using lookup
   const tableData = useMemo(() => {
     if (!apiData) return [];
-    
+
     const mappedData = (apiData || []).map((item: any) => ({
       ...item,
       leaveTypeName: getLeaveTypeName(item.leaveType),
     }));
-    
+
     return mappedData;
   }, [apiData, leaveTypeMap, i18n.language]);
 
@@ -279,7 +346,7 @@ const LeaveManagementPage: React.FC = () => {
             onClearFilter={handleClearFilter}
             onClearAll={handleClearAll}
             columnLabels={columnLabels}
-            statusLabels={statusLabels}
+            statusLabels={statusLabelsForTable}
           />
         </Card>
 
@@ -295,6 +362,10 @@ const LeaveManagementPage: React.FC = () => {
           rowSelection={{
             selectedRowKeys,
             onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
+            getCheckboxProps: (record: any) => ({
+              // Use id as the row key since that's the unique identifier in your data
+              name: record.id,
+            }),
           }}
           actionMenuItems={actionMenuItems}
           tableSize={tableSize}

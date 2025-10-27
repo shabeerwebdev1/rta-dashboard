@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tag } from "antd";
-import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
+import { EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -86,7 +86,6 @@ const TradeLicenseInspectionPage: React.FC = () => {
       const result = await triggerGetLookups([1300, 1400, 1500, 1800]).unwrap();
       setLookupOptions(result);
     } catch (error) {
-      console.error("Failed to fetch lookup data:", error);
       notification.error({ data: { en_Msg: "Failed to load dropdown options" } }, "Load Failed");
     }
   };
@@ -132,6 +131,61 @@ const TradeLicenseInspectionPage: React.FC = () => {
     setDrawerVisible(true);
   };
 
+  // Create a helper function to format data for CSV export
+  const formatDataForExport = (data: any[]) => {
+    return data.map((item: any) => {
+      const formattedRow: any = {};
+
+      enhancedTableConfig.columns.forEach((column: any) => {
+        const key = column.key;
+        let value = item[key];
+
+        // Skip action columns
+        if (key === "actions") return;
+
+        // Apply the same formatting as in the table
+        switch (key) {
+          case "inspectionType":
+            value = getLabelFromValue(value, inspectionTypeOptions, i18n);
+            break;
+          case "inspectionCategory":
+            value = getLabelFromValue(value, inspectionCategoryOptions, i18n);
+            break;
+          case "fineAmount":
+            value = value != null && value !== "" ? `${value} AED` : t("common.noData");
+            break;
+          case "inspectionStatus":
+            value = getLabelFromValue(value, lookupOptions, i18n);
+            break;
+          // ✅ ADDED: Date formatting for common date fields
+          case "inspectionDate":
+          case "createdDate":
+          case "updatedDate":
+          case "violationDate":
+          case "issueDate":
+          case "dueDate":
+          case "paymentDate":
+          case "date":
+            // Format date fields to DD-MM-YYYY
+            value = value ? dayjs(value).format("DD-MM-YYYY") : t("common.noData");
+            break;
+          default:
+            // ✅ ADDED: Auto-detect other date fields
+            if (key.includes("Date") || key.includes("date") || key.includes("Time") || key.includes("time")) {
+              value = value ? dayjs(value).format("DD-MM-YYYY") : t("common.noData");
+            } else {
+              value = value != null ? String(value) : t("common.noData");
+            }
+            break;
+        }
+
+        formattedRow[columnLabels[key] || key] = value;
+      });
+
+      return formattedRow;
+    });
+  };
+
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
@@ -143,14 +197,15 @@ const TradeLicenseInspectionPage: React.FC = () => {
       content: t("messages.csvConfirmContent"),
       onOk: () => {
         const selectedData = tableData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID)) || [];
-        const mappedData = selectedData.map((item: any) => ({
-          ...item,
-          inspectionType: getLabelFromValue(item.inspectionType, inspectionTypeOptions, i18n),
-          inspectionCategory: getLabelFromValue(item.inspectionCategory, inspectionCategoryOptions, i18n),
-        }));
+        const formattedData = formatDataForExport(selectedData);
 
-        exportToCsv(mappedData, `trade_license_inspections_export_${i18n.language}.csv`);
-        notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
+        const filename = i18n.language === "ar" ? `مخالفات_التراخيص_التجارية.csv` : `Parkings_Fines.csv`;
+
+        exportToCsv(formattedData, filename);
+        notification.success(
+          { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+          t("messages.exportSuccess"),
+        );
         setSelectedRowKeys([]);
       },
     });
@@ -165,7 +220,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
     {
       key: "view",
       label: t("common.view"),
-      icon: <EyeOutlined />,
+      icon: record.inspectionStatus === 15003 ? <EditOutlined /> : <EyeOutlined />,
       onClick: () => handleView(record),
     },
   ];

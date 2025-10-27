@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App } from "antd";
-import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
+import { EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { useGetParkonicsQuery } from "../services/rtkApiFactory";
@@ -108,7 +108,7 @@ const ParkonicPage: React.FC = () => {
   );
 
   const actionMenuItems = (record: any) => [
-    { key: "view", icon: <EyeOutlined />, label: t("common.view"), onClick: () => showDrawer(record) },
+    { key: "view", icon: <EditOutlined />, label: t("common.view"), onClick: () => showDrawer(record) },
   ];
 
   const handleSearchKeyChange = (newKey: string) => {

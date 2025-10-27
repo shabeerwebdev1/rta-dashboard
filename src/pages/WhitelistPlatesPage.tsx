@@ -268,6 +268,48 @@ const WhitelistPlatesPage: React.FC = () => {
     );
   };
 
+  const transformDataForCSV = (data: any[]) => {
+    return data.map((item) => {
+      const csvRecord: Record<string, unknown> = {};
+
+      config.tableConfig.columns.forEach((column) => {
+        if (column.key === "plateNumber") {
+          csvRecord[t("form.Number")] = item.plateNumber || "";
+        } else if (column.key === "plateSource_Id") {
+          csvRecord[t("form.Source")] = getLabelFromValue(item.plateSource_Id, plateSourceOptions, i18n) || "";
+        } else if (column.key === "plateType_Id") {
+          csvRecord[t("form.Type")] = getLabelFromValue(item.plateType_Id, plateTypeOptions, i18n) || "";
+        } else if (column.key === "plateColor_Id") {
+          csvRecord[t("form.Color")] = getLabelFromValue(item.plateColor_Id, plateColorOptions, i18n) || "";
+        } else if (column.key === "plateStatus_Id") {
+          csvRecord[t("form.status")] = getLabelFromValue(item.plateStatus_Id, plateStatusOptions, i18n) || "";
+        } else if (column.key === "exemptionReason_ID") {
+          csvRecord[t("form.exemptionReason")] =
+            getLabelFromValue(item.exemptionReason_ID, exemptionReasons, i18n) || "";
+        } else if (column.key === "isByLaw") {
+          // Convert true/false to Yes/No
+          csvRecord[t("form.isByLaw")] = item.isByLaw ? t("common.yes") : t("common.no");
+        } else if (column.key === "fromDate") {
+          csvRecord[t("form.fromDate")] = item.fromDate ? dayjs(item.fromDate).format("DD-MM-YYYY") : "";
+        } else if (column.key === "toDate") {
+          csvRecord[t("form.toDate")] = item.toDate ? dayjs(item.toDate).format("DD-MM-YYYY") : "";
+        }
+        // Skip any other fields that are not in the table config
+      });
+
+      return csvRecord;
+    });
+  };
+
+  // Get CSV filename based on current language
+  const getCsvFilename = () => {
+    if (i18n.language === "ar") {
+      return `قائمة_اللوحات_البيضاء.csv`;
+    } else {
+      return `Whitelist_Plates.csv`;
+    }
+  };
+
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
@@ -278,22 +320,32 @@ const WhitelistPlatesPage: React.FC = () => {
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = data?.data
-          .filter((item: any) => selectedRowKeys.includes(item.id))
-          .map((item: any) => ({
-            ...item,
-            // Map numeric values to their corresponding labels
-            plateSource_Id: getLabelFromValue(item.plateSource_Id, plateSourceOptions, i18n),
-            plateType_Id: getLabelFromValue(item.plateType_Id, plateTypeOptions, i18n),
-            plateColor_Id: getLabelFromValue(item.plateColor_Id, plateColorOptions, i18n),
-            plateStatus_Id: getLabelFromValue(item.plateStatus_Id, plateStatusOptions, i18n),
-            exemptionReason_ID: getLabelFromValue(item.exemptionReason_ID, exemptionReasons, i18n),
-            isByLaw: item.isByLaw ? t("common.true") : t("common.false"),
-          }));
+        try {
+          // Get the selected data from the current page data
+          const selectedData = platesData.filter((item: any) => selectedRowKeys.includes(item.id));
 
-        exportToCsv(selectedData, `whitelist-plates_export.csv`);
-        notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
-        setSelectedRowKeys([]);
+          if (selectedData.length === 0) {
+            notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
+            return;
+          }
+
+          // Transform the data to match UI display
+          const transformedData = transformDataForCSV(selectedData);
+
+          // Get filename based on current language
+          const filename = getCsvFilename();
+
+          // Export to CSV using your common component
+          exportToCsv(transformedData, filename);
+
+          notification.success(
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            t("messages.exportSuccess"),
+          );
+          setSelectedRowKeys([]);
+        } catch (error) {
+          notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
+        }
       },
     });
   };
@@ -426,6 +478,7 @@ const WhitelistPlatesPage: React.FC = () => {
                 style={{ width: 450 }}
                 allowClear
               />
+              {/* <span>{t("common.filterByFromDate")}</span> */}
               <DatePicker.RangePicker
                 value={state.dateRange}
                 format={"DD-MM-YYYY"}
@@ -501,9 +554,17 @@ const WhitelistPlatesPage: React.FC = () => {
                 <Form.Item
                   name="plateNumber"
                   label={t("form.Number")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.Number") }) }]}
+                  rules={[
+                    { required: true, message: t("validation.required", { field: t("form.Number") }) },
+
+                    {
+                      pattern: /^[0-9]+$/,
+                      message: t("validation.onlyNumbers", { field: t("form.Number") }),
+                    },
+                  ]}
+                  validateFirst
                 >
-                  <Input placeholder={t("placeholders.plateNumber")} />
+                  <Input placeholder={t("placeholders.plateNumber")} maxLength={20} />
                 </Form.Item>
               </Col>
 
@@ -643,8 +704,8 @@ const WhitelistPlatesPage: React.FC = () => {
                       (option?.label as string).toLowerCase().includes(input.toLowerCase())
                     }
                     options={[
-                      { label: t("common.true"), value: true },
-                      { label: t("common.false"), value: false },
+                      { label: t("common.yes"), value: true },
+                      { label: t("common.no"), value: false },
                     ]}
                   />
                 </Form.Item>

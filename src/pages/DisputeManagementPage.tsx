@@ -440,22 +440,65 @@ const DisputeManagementPage: React.FC = () => {
       return;
     }
 
-    // Use filtered data for CSV export when My Approvals is active
-    const dataToExport = showMyApprovals ? filteredData : data?.data || [];
-    const selectedData = dataToExport.filter((item: any) => selectedRowKeys.includes(item.dispute_Id));
-
-    if (selectedData.length === 0) {
-      notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
-      return;
-    }
-
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        exportToCsv(selectedData, `disputes_export${showMyApprovals ? "_my_approvals" : ""}.csv`);
-        notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
-        setSelectedRowKeys([]);
+        try {
+          const dataToExport = showMyApprovals ? filteredData : data?.data || [];
+          const selectedData = dataToExport.filter((item: any) => selectedRowKeys.includes(item.dispute_Id));
+
+          if (selectedData.length === 0) {
+            notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
+            return;
+          }
+
+          // ✅ CSV column mapping similar to Whitelist format
+          const csvData = selectedData.map((item: any) => ({
+            [t("form.fineNumber")]: item.fine_Number || item.fineId || "-",
+            [t("form.name")]: item.name || "-",
+            [t("form.department")]: getLabelFromValue(
+              item.department,
+              filterOptionsByCategory(lookupOptions, 1000),
+              i18n,
+            ),
+            [t("form.paymentType")]: getLabelFromValue(
+              item.payment_Type,
+              filterOptionsByCategory(lookupOptions, 1100),
+              i18n,
+            ),
+
+            [t("form.status")]: disputeStatusEnum.find((s) => s.value === item.dispute_Status)
+              ? i18n.language === "ar"
+                ? disputeStatusEnum.find((s) => s.value === item.dispute_Status)?.labelAr
+                : disputeStatusEnum.find((s) => s.value === item.dispute_Status)?.labelEn
+              : "-",
+            [t("form.actualDisputeDate")]: item.actualDisputeDate
+              ? dayjs(item.actualDisputeDate).format("DD-MM-YYYY")
+              : "-",
+            [t("form.crmReference")]: item.crm_Ref || "-",
+            [t("form.email")]: item.email || "-",
+            [t("form.phoneNumber")]: item.phone || "-",
+            [t("form.address")]: item.address || "-",
+          }));
+
+          // ✅ File name in Whitelist-style
+          const filename =
+            i18n.language === "ar"
+              ? `النزاعات${showMyApprovals ? "_المعينة_لي" : ""}.csv`
+              : `Disputes${showMyApprovals ? "_My_Approvals" : ""}.csv`;
+
+          exportToCsv(csvData, filename);
+
+          notification.success(
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            t("messages.exportSuccess"),
+          );
+
+          setSelectedRowKeys([]);
+        } catch (error) {
+          notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
+        }
       },
     });
   };

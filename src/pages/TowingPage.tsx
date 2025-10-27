@@ -86,12 +86,84 @@ const TowingPage: React.FC = () => {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
       return;
     }
+
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
         const selectedData = apiData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID)) || [];
-        exportToCsv(selectedData, `towing_export.csv`);
+
+        // Format data to match UI table display
+        const formattedData = selectedData.map((item: any) => {
+          const csvRow: any = {};
+
+          // Process each column based on table configuration
+          config.tableConfig.columns.forEach((column: any) => {
+            const key = column.key;
+            let value = item[key];
+
+            // Skip action columns
+            if (key === "actions") return;
+
+            // Apply formatting based on column type
+            switch (key) {
+              case "towing_Status":
+                // Format status with translated labels
+                const statusMap: Record<string, string> = {
+                  pending: t("status.pending"),
+                  Approved: t("status.approved"),
+                  Rejected: t("status.rejected"),
+                  cancelled: t("status.cancelled"),
+                };
+                value = statusMap[value] || value;
+                break;
+
+              case "created_Date":
+              case "updated_Date":
+              case "towing_Date":
+              case "inspection_Date":
+                // Format dates to dd-mm-yyyy (without time)
+                if (value) {
+                  try {
+                    value = dayjs(value).format("DD-MM-YYYY");
+                  } catch (error) {
+                    value = value; // Keep original if parsing fails
+                  }
+                } else {
+                  value = ""; // Empty string for null dates
+                }
+                break;
+
+              default:
+                // For other columns, use raw value with proper null handling
+                value = value != null ? String(value) : "";
+                break;
+            }
+
+            // ✅ ADDED: Auto-detect any other date fields not in the switch statement
+            if (
+              !key.includes("Status") &&
+              (key.includes("Date") || key.includes("date") || key.includes("Time") || key.includes("time"))
+            ) {
+              if (value) {
+                try {
+                  value = dayjs(value).format("DD-MM-YYYY");
+                } catch (error) {
+                  // Keep original value if parsing fails
+                }
+              } else {
+                value = "";
+              }
+            }
+
+            // Use column label as CSV header
+            csvRow[columnLabels[key] || key] = value;
+          });
+
+          return csvRow;
+        });
+
+        exportToCsv(formattedData, `Towing.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
       },

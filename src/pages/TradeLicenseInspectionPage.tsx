@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tag } from "antd";
-import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
+import { EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -72,7 +72,6 @@ const TradeLicenseInspectionPage: React.FC = () => {
       const result = await triggerGetLookups([1300, 1400, 1500, 1800]).unwrap();
       setLookupOptions(result);
     } catch (error) {
-      console.error("Failed to fetch lookup data:", error);
       notification.error({ data: { en_Msg: "Failed to load dropdown options" } }, "Load Failed");
     }
   };
@@ -118,6 +117,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
     setDrawerVisible(true);
   };
 
+  // ✅ FIXED: CSV download function that exports exactly what's shown in UI table
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
@@ -128,16 +128,70 @@ const TradeLicenseInspectionPage: React.FC = () => {
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = tableData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID)) || [];
-        const mappedData = selectedData.map((item: any) => ({
-          ...item,
-          inspectionType: getLabelFromValue(item.inspectionType, inspectionTypeOptions, i18n),
-          inspectionCategory: getLabelFromValue(item.inspectionCategory, inspectionCategoryOptions, i18n),
-        }));
+        try {
+          const selectedData = tableData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID));
 
-        exportToCsv(mappedData, `trade_license_inspections_export_${i18n.language}.csv`);
-        notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
-        setSelectedRowKeys([]);
+          if (selectedData.length === 0) {
+            notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
+            return;
+          }
+
+          // ✅ FIXED: Export exactly what's displayed in the table columns with date formatting
+          const transformedData = selectedData.map((item: any) => {
+            const csvRecord: Record<string, unknown> = {};
+
+            // Use the same enhanced table config to get the exact same data as UI
+            enhancedTableConfig.columns.forEach((column: any) => {
+              const columnKey = column.key;
+              const headerName = columnLabels[columnKey];
+
+              // Apply the exact same render logic as in the table
+              let displayValue = item[columnKey];
+
+              if (columnKey === "inspectionType") {
+                displayValue =
+                  displayValue == null
+                    ? t("common.noData")
+                    : getLabelFromValue(displayValue, inspectionTypeOptions, i18n);
+              } else if (columnKey === "inspectionCategory") {
+                displayValue =
+                  displayValue == null || displayValue === ""
+                    ? t("common.noData")
+                    : getLabelFromValue(displayValue, inspectionCategoryOptions, i18n);
+              } else if (columnKey === "fineAmount") {
+                displayValue = displayValue == null || displayValue === "" ? t("common.noData") : `${displayValue} AED`;
+              } else if (columnKey === "inspectionStatus") {
+                // For CSV, we just want the label text without the Tag component
+                displayValue =
+                  displayValue == null ? t("common.noData") : getLabelFromValue(displayValue, lookupOptions, i18n);
+              }
+              // ✅ ADDED: Date formatting for common date fields
+              else if (columnKey.includes("Date") || columnKey.includes("date")) {
+                // Format any date field to DD-MM-YYYY
+                displayValue = displayValue ? dayjs(displayValue).format("DD-MM-YYYY") : t("common.noData");
+              } else {
+                displayValue = displayValue == null || displayValue === "" ? t("common.noData") : displayValue;
+              }
+
+              csvRecord[headerName] = displayValue;
+            });
+
+            return csvRecord;
+          });
+
+          // ✅ FIXED: Language-specific filename
+          const filename = i18n.language === "ar" ? `تفتيش_التراخيص_التجارية.csv` : `Parkings_inspections.csv`;
+
+          exportToCsv(transformedData, filename);
+
+          notification.success(
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            t("messages.exportSuccess"),
+          );
+          setSelectedRowKeys([]);
+        } catch (error) {
+          notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
+        }
       },
     });
   };
@@ -151,7 +205,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
     {
       key: "view",
       label: t("common.view"),
-      icon: <EyeOutlined />,
+      icon: record.inspectionStatus === 15003 ? <EditOutlined /> : <EyeOutlined />,
       onClick: () => handleView(record),
     },
   ];

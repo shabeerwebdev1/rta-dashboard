@@ -16,7 +16,7 @@ import {
   Tag,
   Image,
 } from "antd";
-import { PlusOutlined, EyeOutlined, DownloadOutlined } from "@ant-design/icons";
+import { PlusOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
@@ -111,7 +111,7 @@ const InspectionObstaclesPage: React.FC = () => {
     triggerGetZones({});
   }, [i18n.language]);
 
-  // ✅ UPDATED: Create a memoized map of area IDs to area names for quick lookup
+  // Create a memoized map of area IDs to area names for quick lookup
   const areaIdToNameMap = useMemo(() => {
     const map = new Map();
     if (allAreasData) {
@@ -122,7 +122,7 @@ const InspectionObstaclesPage: React.FC = () => {
     return map;
   }, [allAreasData]);
 
-  // ✅ UPDATED: Transform all areas data into options format
+  // Transform all areas data into options format
   useEffect(() => {
     if (allAreasData) {
       const transformedAreas = allAreasData.map((area: any) => ({
@@ -148,12 +148,13 @@ const InspectionObstaclesPage: React.FC = () => {
     }
   };
 
-  // ✅ UPDATED: Zone options from zones API
+  // Zone options from zones API - using GUID as value
   const zoneOptions = useMemo(() => {
     if (!zonesData) return [];
 
     return zonesData.map((zone: any) => ({
-      value: zone.zoneId, // Keep as number to match API response
+      value: zone.zone_Id || zone.zoneId, // Use GUID from API
+      numericId: zone.zoneId, // Keep numeric ID for filtering
       label: `${zone.zoneCode}-${zone.zone}`,
       original: zone,
     }));
@@ -194,7 +195,7 @@ const InspectionObstaclesPage: React.FC = () => {
     form.resetFields();
   };
 
-  // Update the zone onChange handler to filter areas
+  // Update the zone onChange handler to filter areas and enable the field
   const handleZoneChange = (zoneId: number) => {
     form.setFieldsValue({ Area: undefined }); // reset Area when Zone changes
 
@@ -209,7 +210,7 @@ const InspectionObstaclesPage: React.FC = () => {
           original: area,
         })) || [];
 
-    setAreaOptions(filteredAreas);
+    setFilteredAreaOptions(filteredAreas);
   };
 
   const generateGuid = () =>
@@ -317,6 +318,44 @@ const InspectionObstaclesPage: React.FC = () => {
     );
   };
 
+  // Transform data for CSV export with proper column headers
+  const transformDataForCSV = (data: any[]) => {
+    return data.map((item) => {
+      const csvRecord: Record<string, unknown> = {};
+
+      config.tableConfig.columns.forEach((column) => {
+        if (column.key === "zone") {
+          const zoneOption = zoneOptions.find((opt) => opt.value.toString() === item.zone.toString());
+          csvRecord[t("form.zone")] = zoneOption ? zoneOption.label : item.zone;
+        } else if (column.key === "area") {
+          csvRecord[t("form.area")] = areaIdToNameMap.get(item.area) || item.area;
+        } else if (column.key === "sourceOfObstacle") {
+          const sourceOption = sourceOptions.find((opt) => opt.value.toString() === item.sourceOfObstacle.toString());
+          csvRecord[t("form.sourceOfObstacle")] = sourceOption ? sourceOption.label : item.sourceOfObstacle;
+        } else if (column.key === "closestPaymentDevice") {
+          csvRecord[t("form.closestPD")] = item.closestPaymentDevice || "";
+        } else if (column.key === "comments") {
+          csvRecord[t("form.comments")] = item.comments || "";
+        } else if (column.key === "status") {
+          csvRecord[t("form.status")] = statusLabels[item.status] || item.status;
+        } else if (column.key === "createdDate") {
+          csvRecord[t("form.createdDate")] = item.createdDate ? dayjs(item.createdDate).format("DD-MM-YYYY") : "";
+        }
+      });
+
+      return csvRecord;
+    });
+  };
+
+  // Get CSV filename based on current language
+  const getCsvFilename = () => {
+    if (i18n.language === "ar") {
+      return `معوقات_التفتيش.csv`;
+    } else {
+      return `Inspection_Obstacles.csv`;
+    }
+  };
+
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
@@ -326,25 +365,32 @@ const InspectionObstaclesPage: React.FC = () => {
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = data?.data.filter((item: any) => selectedRowKeys.includes(item.id));
+        try {
+          // Get the selected data from the current page data
+          const selectedData = platesData.filter((item: any) => selectedRowKeys.includes(item.id));
 
-        // ✅ Map values → labels before exporting
-        const formattedData = selectedData.map((item: any) => {
-          // Find area name from areaIdToNameMap
-          const areaName = areaIdToNameMap.get(item.area) || item.area;
+          if (selectedData.length === 0) {
+            notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
+            return;
+          }
 
-          return {
-            ...item,
-            zone: getLabelFromValue(item.zone, zoneOptions, i18n),
-            area: areaName,
-            sourceOfObstacle: getLabelFromValue(item.sourceOfObstacle, sourceOptions, i18n),
-            status: statusLabels[item.status] || item.status,
-          };
-        });
+          // Transform the data to match UI display with proper headers
+          const transformedData = transformDataForCSV(selectedData);
 
-        exportToCsv(formattedData, `obstacles_export.csv`);
-        notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
-        setSelectedRowKeys([]);
+          // Get filename based on current language
+          const filename = getCsvFilename();
+
+          // Export to CSV
+          exportToCsv(transformedData, filename);
+
+          notification.success(
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            t("messages.exportSuccess"),
+          );
+          setSelectedRowKeys([]);
+        } catch (error) {
+          notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
+        }
       },
     });
   };
@@ -403,7 +449,7 @@ const InspectionObstaclesPage: React.FC = () => {
   );
 
   const actionMenuItems = (record: any) => [
-    { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
+    { key: "view", label: t("common.view"), icon: <EditOutlined />, onClick: () => handleView(record) },
   ];
 
   const searchAddon = (
@@ -416,7 +462,7 @@ const InspectionObstaclesPage: React.FC = () => {
     </Select>
   );
 
-  // ✅ UPDATED: Filter area options based on selected zone
+  // Filter area options based on selected zone
   useEffect(() => {
     const selectedZoneId = state.columnFilters.zone?.[0];
     if (selectedZoneId && allAreasData) {
@@ -428,10 +474,6 @@ const InspectionObstaclesPage: React.FC = () => {
       setFilteredAreaOptions(allAreasData?.map((area: any) => ({ label: area.area, value: area.area_Id })) || []);
     }
   }, [state.columnFilters.zone, allAreasData]);
-
-  useEffect(() => {
-    setPageTitle(t(config.title));
-  }, [setPageTitle, t, config.title, i18n.language]);
 
   const handleDropdownFilterChange = (key: "zone" | "area", value: string | null) => {
     const newFilters: Record<string, any> = { ...state.columnFilters };
@@ -451,7 +493,7 @@ const InspectionObstaclesPage: React.FC = () => {
     handleTableChange({ current: 1, pageSize: apiParams.PageSize }, newFilters, sorter);
   };
 
-  // ✅ UPDATED: Enhanced custom label function for zones and areas
+  // Enhanced custom label function for zones and areas
   const getCustomLabelFromValue = (value: number | string, options: any[], i18nInstance: any) => {
     // Handle Zone
     const zone = zoneOptions.find((z) => z.value?.toString() === value.toString());
@@ -485,6 +527,7 @@ const InspectionObstaclesPage: React.FC = () => {
       totalRecords: data.totalRecords,
     };
   }, [data]);
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <StatsDisplay statsConfig={config.statsConfig} data={platesData} metadata={metadata} loading={isLoading} />
@@ -532,7 +575,6 @@ const InspectionObstaclesPage: React.FC = () => {
           </Col>
         </Row>
 
-        {/* ✅ UPDATED: ActiveFiltersDisplay with zone and area options */}
         <ActiveFiltersDisplay
           state={state}
           onClearFilter={clearFilter}
@@ -541,7 +583,6 @@ const InspectionObstaclesPage: React.FC = () => {
           lookupOptions={lookupOptions}
           getLabelFromValue={getCustomLabelFromValue}
           statusLabels={statusLabels}
-          // ✅ PASS ZONE AND AREA OPTIONS
           zoneOptions={zoneOptions}
           areaOptions={areaOptions}
           areaIdToNameMap={areaIdToNameMap}
@@ -550,7 +591,7 @@ const InspectionObstaclesPage: React.FC = () => {
 
       <DataTableWrapper
         pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
-        data={platesData} // Use the extracted array
+        data={platesData}
         total={totalCount}
         isLoading={isLoading || isFetching || isLoadingAllAreas}
         apiParams={apiParams}
@@ -623,9 +664,10 @@ const InspectionObstaclesPage: React.FC = () => {
                   <Select
                     placeholder={t("placeholders.area")}
                     loading={isLoadingAllAreas}
-                    options={areaOptions}
+                    options={filteredAreaOptions}
                     showSearch
                     filterOption={(input, option) => (option?.label ?? "").toLowerCase().includes(input.toLowerCase())}
+                    disabled={!form.getFieldValue("Zone")}
                   />
                 </Form.Item>
               </Col>

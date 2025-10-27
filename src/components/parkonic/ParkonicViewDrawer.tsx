@@ -2,16 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Space, Image, Select } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
-
 import {
   useUpdateParkonicMutation,
-  useGetParkonicVoilationsQuery,
   useGetInspectionAttachmentsQuery,
   getMobileFileUrl,
 } from "../../services/rtkApiFactory";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useAppNotification } from "../../utils/notificationManager";
 import dayjs from "dayjs";
+import { EMIRATES, PLATE_TYPE_SHORT, PLATE_COLOR } from "../../config/pageConfigs/whitelistPlateConfig";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -30,7 +29,6 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
   const { success, error } = useAppNotification();
 
   const [reviewParkonic, { isLoading: isSubmitting }] = useUpdateParkonicMutation();
-  const { data: violationsData, isLoading: violationsLoading } = useGetParkonicVoilationsQuery({});
 
   // Use the inspection attachments query like in FinesViewDrawer
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
@@ -70,32 +68,6 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
   };
 
   const handleSubmitReview = async () => {
-    if (reviewStatus === 0 && !rejectionReason) {
-      error(
-        {
-          data: {
-            en_Msg: t("messages.enterRejectionReason") || "Please provide a rejection reason",
-            ar_Msg: "يرجى تقديم سبب الرفض",
-          },
-        },
-        "",
-      );
-      return;
-    }
-
-    if (reviewStatus === 1 && !selectedViolation) {
-      error(
-        {
-          data: {
-            en_Msg: t("messages.selectViolation") || "Please select a violation before approving",
-            ar_Msg: "يرجى اختيار المخالفة قبل الموافقة",
-          },
-        },
-        "",
-      );
-      return;
-    }
-
     try {
       await reviewParkonic({
         fineId: mappedRecord?.fineId,
@@ -187,7 +159,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                 </Card>
               </Col>
 
-              {/* Additional Information */}
+              {/* Vehicle Details */}
               <Col span={12}>
                 <Card
                   title={t("form.vehicleDetails")}
@@ -203,131 +175,145 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                     <Col span={10}>
                       <Text strong>{t("form.plateSource")}</Text>
                     </Col>
-                    <Col span={14}>{record?.plateSource || "---"}</Col>
-
+                    <Col span={14}>{record?.plateSource ? EMIRATES[record.plateSource]?.en || "---" : "---"}</Col>
                     <Col span={10}>
                       <Text strong>{t("form.plateCategory")}</Text>
                     </Col>
-                    <Col span={14}>{record?.plateCategory || "---"}</Col>
-
+                    <Col span={14}>
+                      {record?.plateCategory ? PLATE_TYPE_SHORT[record.plateCategory] || "---" : "---"}
+                    </Col>
                     <Col span={10}>
                       <Text strong>{t("form.plateCode")}</Text>
                     </Col>
-                    <Col span={14}>{record?.plateCode || "---"}</Col>
+                    <Col span={14}>{record?.plateCode ? PLATE_COLOR[record.plateCode] || "---" : "---"}</Col>{" "}
                   </Row>
                 </Card>
               </Col>
             </Row>
 
-            {/* Location Information */}
-            <Card
-              title={t("common.location")}
-              size="small"
-              style={{ marginBottom: 16, borderRadius: 12 }}
-              headStyle={{ background: "#fafafa", fontWeight: 600 }}
-            >
-              <Empty description={t("form.NoLocationDataAvailable")} />
-            </Card>
-
-            {/* Attached Photos - Same format as FinesViewDrawer */}
-            <Card
-              title={t("form.AttachedPhotos")}
-              size="small"
-              style={{ marginBottom: 16, borderRadius: 12 }}
-              headStyle={{ background: "#fafafa", fontWeight: 600 }}
-            >
-              <Spin spinning={isLoadingAttachments}>
-                {attachments.length > 0 ? (
-                  <Image.PreviewGroup>
-                    <Space wrap>
-                      {attachments.slice(0, 3).map((file) => (
-                        <Image
-                          key={file.attachmentGUID}
-                          width={100}
-                          height={100}
-                          src={getMobileFileUrl(file.filePath)}
-                          alt={file.fileName}
-                          style={{ objectFit: "cover", borderRadius: 8 }}
-                        />
-                      ))}
-                      {attachments.length > 3 && (
-                        <div
-                          style={{
-                            width: 100,
-                            height: 100,
-                            background: "#f5f5f5",
-                            borderRadius: 8,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Text type="secondary">+{attachments.length - 3} more</Text>
-                        </div>
-                      )}
-                    </Space>
-                  </Image.PreviewGroup>
-                ) : (
-                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
-                )}
-              </Spin>
-            </Card>
-
-            {/* Review Section */}
-            <Card
-              title={t("common.review")}
-              size="small"
-              style={{ marginBottom: 16, borderRadius: 12 }}
-              headStyle={{ background: "#fafafa", fontWeight: 600 }}
-            >
-              <Space direction="vertical" style={{ width: "100%" }}>
-                <Select
-                  value={reviewStatus}
-                  onChange={(value) => setReviewStatus(value)}
-                  style={{ width: "100%" }}
-                  placeholder={t("form.selectReviewStatus")}
+            {/* Location and Photos Side by Side */}
+            <Row gutter={16}>
+              {/* Location Information */}
+              <Col span={12}>
+                <Card
+                  title={t("common.location")}
+                  size="small"
+                  style={{ marginBottom: 16, borderRadius: 12 }}
+                  headStyle={{ background: "#fafafa", fontWeight: 600 }}
                 >
-                  <Option value={1}>{t("common.approve")}</Option>
-                  <Option value={0}>{t("common.reject")}</Option>
-                </Select>
+                  <Empty description={t("form.NoLocationDataAvailable")} />
+                </Card>
+              </Col>
 
-                {/* Violations dropdown - only show if approving */}
-                {reviewStatus === 1 && (
+              {/* Attached Photos */}
+              <Col span={12}>
+                <Card
+                  title={t("form.AttachedPhotos")}
+                  size="small"
+                  style={{ marginBottom: 16, borderRadius: 12 }}
+                  headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                >
+                  <Spin spinning={isLoadingAttachments}>
+                    {attachments.length > 0 ? (
+                      <Image.PreviewGroup>
+                        <Space wrap>
+                          {attachments.slice(0, 3).map((file) => (
+                            <Image
+                              key={file.attachmentGUID}
+                              width={100}
+                              height={100}
+                              src={getMobileFileUrl(file.filePath)}
+                              alt={file.fileName}
+                              style={{ objectFit: "cover", borderRadius: 8 }}
+                            />
+                          ))}
+                          {attachments.length > 3 && (
+                            <div
+                              style={{
+                                width: 100,
+                                height: 100,
+                                background: "#f5f5f5",
+                                borderRadius: 8,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <Text type="secondary">+{attachments.length - 3} more</Text>
+                            </div>
+                          )}
+                        </Space>
+                      </Image.PreviewGroup>
+                    ) : (
+                      <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
+                    )}
+                  </Spin>
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Comments Section without Card */}
+            <div style={{ marginBottom: 16 }}>
+              <Text strong style={{ display: "block", marginBottom: 8 }}>
+                {t("form.comments")}
+              </Text>
+              <TextArea
+                placeholder={t("placeholders.enterComments")}
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={4}
+                style={{ width: "100%" }}
+              />
+            </div>
+
+            {/* Review Section - All in one line without Card */}
+            <Row gutter={16} align="middle" justify="space-between" style={{ marginBottom: 16 }}>
+              <Col>
+                <Space align="center" size="middle">
+                  <Text strong style={{ margin: 0, whiteSpace: "nowrap" }}>
+                    {t("common.review")}:
+                  </Text>
                   <Select
-                    placeholder={t("form.selectViolation")}
-                    value={selectedViolation || undefined}
-                    onChange={(value) => setSelectedViolation(value)}
-                    loading={violationsLoading}
-                    style={{ width: "100%" }}
+                    value={reviewStatus}
+                    onChange={(value) => setReviewStatus(value)}
+                    style={{ width: 300 }}
+                    placeholder={t("form.selectReviewStatus")}
+                    status={reviewStatus === null ? "error" : ""}
                   >
-                    {violationsData?.map((violation: any) => (
-                      <Option key={violation.violationGUID} value={violation.violationGUID}>
-                        {i18n.language === "ar" ? violation.violationNameAr : violation.violationNameEn}
-                      </Option>
-                    ))}
+                    <Option value={1}>{t("common.approve")}</Option>
+                    <Option value={0}>{t("common.reject")}</Option>
                   </Select>
-                )}
 
-                {reviewStatus === 0 && (
-                  <TextArea
-                    placeholder={t("messages.enterRejectionReason")}
-                    value={rejectionReason}
-                    onChange={(e) => setRejectionReason(e.target.value)}
-                    rows={4}
-                    style={{ width: "100%" }}
-                  />
-                )}
+                  {/* Required message */}
+                  {reviewStatus === null && (
+                    <Text type="danger" style={{ whiteSpace: "nowrap" }}>
+                      {t("form.selectReviewStatus") || "Please select review status"}
+                    </Text>
+                  )}
+                </Space>
+              </Col>
 
-                <div style={{ textAlign: "right", marginTop: 16 }}>
-                  <Button onClick={onClose} style={{ marginRight: 8 }}>
-                    {t("common.cancel")}
-                  </Button>
-                  <Button type="primary" loading={isSubmitting} onClick={handleSubmitReview}>
+              {/* Action Buttons */}
+              <Col>
+                <Space>
+                  <Button onClick={onClose}>{t("common.cancel")}</Button>
+                  <Button
+                    type="primary"
+                    loading={isSubmitting}
+                    onClick={() => {
+                      if (reviewStatus === undefined) {
+                        // Trigger validation message
+                        setReviewStatus(null);
+                        return;
+                      }
+                      handleSubmitReview();
+                    }}
+                  >
                     {t("common.submit")}
                   </Button>
-                </div>
-              </Space>
-            </Card>
+                </Space>
+              </Col>
+            </Row>
           </div>
         )}
       </Spin>

@@ -6,7 +6,6 @@ import { useAuth } from "../contexts/AuthContext";
 
 const FALLBACK_CODE = "20250919B8E7824B44624665BC686917";
 
-
 const SPLASH_DELAY = 1300;
 
 export default function SplashPage() {
@@ -65,7 +64,7 @@ export default function SplashPage() {
           <div style={{ marginBottom: 20 }}>
             <Image
               preview={false}
-              src="https://images.seeklogo.com/logo-png/4/2/dubai-roads-transport-authority-logo-png_seeklogo-44110.png"
+              src="/images/LOGO.png"
               alt="Dubai Roads Transport Authority"
               width={300}
               height={300}

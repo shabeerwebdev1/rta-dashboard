@@ -7,7 +7,7 @@ const MOBILE_FILES_BASE_URL = "https://kandaprojects.live/documents";
 
 // const RTA_API_TARGET = `http://10.14.64.104:9010`;
 
-// Helper to build a download URL for preview
+//helper to get inspections images url
 export const getMobileFileUrl = (filePath: string) => {
   if (!filePath) return "";
   let normalizedPath = filePath.replace(/\\/g, "/");
@@ -16,6 +16,9 @@ export const getMobileFileUrl = (filePath: string) => {
 
   return `${MOBILE_FILES_BASE_URL}/${normalizedPath}`;
 };
+
+//helper to get images  from localserver
+export const getFileUrl = (fileName: string) => `${RTA_API_TARGET}/api/Files/download/${fileName}`;
 
 const baseQuery = fetchBaseQuery({
   baseUrl: RTA_API_TARGET,
@@ -57,6 +60,7 @@ export const dynamicApi = createApi({
     "Towing",
     "ParkonicsLocation",
     "InspectionAttachments",
+    "Files",
   ],
 
   endpoints: (builder) => ({
@@ -81,6 +85,24 @@ export const dynamicApi = createApi({
         );
       },
       providesTags: ["VLookups"],
+    }),
+
+    // File Upload and Management (from fileserver)
+    uploadFiles: builder.mutation<unknown, FormData>({
+      query: (formData) => ({
+        url: "/api/Files/upload-multiple",
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["Files"],
+    }),
+
+    deleteFile: builder.mutation<void, string>({
+      query: (fileName) => ({
+        url: `/api/Files/delete/${fileName}`,
+        method: "GET",
+      }),
+      invalidatesTags: ["Files"],
     }),
 
     // File Upload and Management for Inspections
@@ -468,9 +490,13 @@ export const dynamicApi = createApi({
 });
 
 export const {
-  // File Upload and Management
+  // File Upload for Inspections and obstacles
   useUploadInspectionFilesMutation,
   useGetInspectionAttachmentsQuery,
+
+  // File Uploads (from local server)
+  useUploadFilesMutation,
+  useDeleteFileMutation,
 
   // Whitelist Plates
   useGetPlatesQuery,

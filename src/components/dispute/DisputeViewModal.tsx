@@ -274,6 +274,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
 
       // Call the callback if provided (but don't close the modal)
       onStatusUpdate?.();
+      onClose?.();
     } catch (error: any) {
       if (error.errorFields) {
         // Validation errors
@@ -340,7 +341,12 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
       footer={null}
       title={null}
       closable={false}
-      bodyStyle={{ padding: 24 }}
+      style={{ top: 40 }}
+      bodyStyle={{
+        padding: 24,
+        maxHeight: "calc(100vh - 150px)",
+        overflowY: "auto",
+      }}
     >
       <Spin spinning={isLoading || isUpdating || isLoadingLookups}>
         {/* Custom Header */}

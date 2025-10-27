@@ -104,7 +104,10 @@
     "shareSuccessAr": "تم نسخ رابط المشاركة إلى الحافظة!",
     "shareErrorAr": "فشل في نسخ الرابط.",
     "shareSuccessTitle": "تم النسخ",
-    "shareErrorTitle": "فشل النسخ"
+    "shareErrorTitle": "فشل النسخ",
+    "reviewFailed": "فشل في جلب بيانات المراجعة",
+    "noDataToExport": "لا توجد بيانات للتصدير",
+    "exportFailed": "فشل في تصدير البيانات"
   },
   "form": {
     "Number": "الرقم",
@@ -290,8 +293,6 @@
     "DarkMode": "الوضع الداكن",
     "Logout": "تسجيل الخروج",
     "NoLocationDataAvailable": "لا تتوفر بيانات الموقع"
-
-
   },
   "common": {
     "action": "إجراء",
@@ -326,15 +327,15 @@
     "review": "مراجعة",
     "approve": "موافقة",
     "selectUser": "اختر المستخدم",
-    "getDetails": "الحصول على التفاصيل",
+    "getDetails": "التفاصيل",
     "viewLocation": "عرض الموقع",
     "viewAttachments": "عرض المرفقات",
     "selectInspector": "اختر المفتش",
     "selectShift": "اختر الوردية  ",
     "showMyApprovals": "إظهار موافقتي",
-    "showingyourApprovals": "إظهار موافقتك"
-
-
+    "showingyourApprovals": "إظهار موافقتك",
+    "yes": "نعم",
+    "no": "لا"
   },
   "entity": {
     "plate": "لوحة",
@@ -454,7 +455,6 @@
     "TotalLeaves": "إجمالي الإجازات",
     "TotalTowings": "إجمالي السحوبات",
     "IsByLaw": "قانوني"
-
   },
   "validation": {
     "required": "يرجى إدخال {{field}}",

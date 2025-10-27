@@ -412,31 +412,42 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                 style={{ marginBottom: 16, borderRadius: 12 }}
                 headStyle={{ background: "#fafafa", fontWeight: 600 }}
               >
-                <Form form={form} onFinish={handleFormSubmit} layout="vertical" disabled={isProcessing}>
+                <Form
+                  form={form}
+                  onFinish={handleFormSubmit}
+                  layout="vertical"
+                  disabled={isProcessing}
+                  style={{ marginBottom: 0 }}
+                >
                   <Form.Item
                     name="comment"
-                    rules={[{ required: true, message: "Please enter comments before approving or rejecting" }]}
+                    rules={[{ required: true, message: t("placeholders.enterComments") }]}
+                    style={{ marginBottom: 8 }}
                   >
-                    <TextArea rows={3} placeholder={t("placeholders.comments")} style={{ marginBottom: 16 }} />
+                    <TextArea rows={3} placeholder={t("placeholders.comments")} />
                   </Form.Item>
-                  <Space>
-                    <Button
-                      type="primary"
-                      onClick={handleApproveClick}
-                      disabled={isProcessing}
-                      loading={isProcessing && lastAction === "approve"}
-                    >
-                      {t("form.approve")}
-                    </Button>
-                    <Button
-                      danger
-                      onClick={handleRejectClick}
-                      disabled={isProcessing}
-                      loading={isProcessing && lastAction === "reject"}
-                    >
-                      {t("form.reject")}
-                    </Button>
-                  </Space>
+
+                  {/* Actions */}
+                  <Row justify={"end"}>
+                    <Space style={{ marginTop: 0, marginBottom: 0 }}>
+                      <Button
+                        type="primary"
+                        onClick={handleApproveClick}
+                        disabled={isProcessing}
+                        loading={isProcessing && lastAction === "approve"}
+                      >
+                        {t("form.approve")}
+                      </Button>
+                      <Button
+                        danger
+                        onClick={handleRejectClick}
+                        disabled={isProcessing}
+                        loading={isProcessing && lastAction === "reject"}
+                      >
+                        {t("form.reject")}
+                      </Button>
+                    </Space>
+                  </Row>
                 </Form>
               </Card>
             )}

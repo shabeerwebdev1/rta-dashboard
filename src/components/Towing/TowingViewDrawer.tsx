@@ -43,12 +43,28 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
     const inspectionGUID = record?.inspectionGUID;
 
     if (!inspectionGUID) {
-      notification.error({}, "Missing inspection GUID");
+      notification.error(
+        {
+          data: {
+            en_Msg: "Missing inspection GUID",
+            ar_Msg: "معرّف الفحص مفقود",
+          },
+        },
+        "",
+      );
       return;
     }
 
     if (!comments.trim()) {
-      notification.error({}, "Please enter review comments");
+      notification.error(
+        {
+          data: {
+            en_Msg: "Please enter review comments",
+            ar_Msg: "يرجى إدخال ملاحظات المراجعة",
+          },
+        },
+        "",
+      );
       return;
     }
 
@@ -181,20 +197,10 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
                 />
               </div>
               <Space>
-                <Button
-                  type="primary"
-                  loading={isLoading}
-                  onClick={() => handleUpdateStatus(1, "Approved")}
-                  disabled={!comments.trim()}
-                >
+                <Button type="primary" loading={isLoading} onClick={() => handleUpdateStatus(1, "Approved")}>
                   {t("form.approve")}
                 </Button>
-                <Button
-                  danger
-                  loading={isLoading}
-                  onClick={() => handleUpdateStatus(2, "Rejected")}
-                  disabled={!comments.trim()}
-                >
+                <Button danger loading={isLoading} onClick={() => handleUpdateStatus(2, "Rejected")}>
                   {t("form.reject")}
                 </Button>
               </Space>

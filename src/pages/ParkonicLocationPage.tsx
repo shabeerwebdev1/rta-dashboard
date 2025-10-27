@@ -345,10 +345,36 @@ const ParkonicLocationPage: React.FC = () => {
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       onOk: () => {
-        const selectedData = filteredData.filter((item: any) => selectedRowKeys.includes(item.id));
-        exportToCsv(selectedData, `parkonic-locations_export.csv`);
-        notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
-        setSelectedRowKeys([]);
+        try {
+          const selectedData = filteredData.filter((item: any) => selectedRowKeys.includes(item.id));
+
+          if (selectedData.length === 0) {
+            notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
+            return;
+          }
+
+          // Since filteredData already has formatted dates, use it directly
+          const transformedData = selectedData.map((item) => ({
+            [t("form.parkingName")]: item.parking_Name_En,
+            [t("form.parkingNameArabic")]: item.parking_Name_Ar,
+            [t("form.zone")]: item.zone,
+            [t("form.area")]: item.area,
+            [t("form.createdDate")]: item.created_At, // Already formatted in filteredData
+          }));
+
+          const filename = i18n.language === "ar" ? `مواقع_باركونيك.csv` : `Parkonic_Locations.csv`;
+
+          exportToCsv(transformedData, filename);
+
+          notification.success(
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            t("messages.exportSuccess"),
+          );
+
+          setSelectedRowKeys([]);
+        } catch (error) {
+          notification.error({ data: { en_Msg: "Failed to export CSV" } }, "Export Failed");
+        }
       },
     });
   };
