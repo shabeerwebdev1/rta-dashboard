@@ -443,6 +443,8 @@ const DisputeManagementPage: React.FC = () => {
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
+      okText: t("common.ok"),
+      cancelText: t("common.cancel"),
       onOk: () => {
         try {
           const dataToExport = showMyApprovals ? filteredData : data?.data || [];

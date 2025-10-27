@@ -335,7 +335,8 @@
     "showMyApprovals": "إظهار موافقتي",
     "showingyourApprovals": "إظهار موافقتك",
     "yes": "نعم",
-    "no": "لا"
+    "no": "لا",
+    "ok": " موافق "
   },
   "entity": {
     "plate": "لوحة",

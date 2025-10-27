@@ -90,6 +90,8 @@ const TowingPage: React.FC = () => {
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
+      okText: t("common.ok"),
+      cancelText: t("common.cancel"),
       onOk: () => {
         const selectedData = apiData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID)) || [];
 

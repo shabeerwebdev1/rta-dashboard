@@ -319,6 +319,8 @@ const WhitelistPlatesPage: React.FC = () => {
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
+      okText: t("common.ok"),
+      cancelText: t("common.cancel"),
       onOk: () => {
         try {
           // Get the selected data from the current page data

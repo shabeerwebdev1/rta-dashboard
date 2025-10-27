@@ -198,7 +198,7 @@ export const whitelistPlateConfig: PageConfig = {
       },
       color: "#faad14",
     },
-    
+
     {
       title: "stats.IsByLaw",
       icon: <CheckCircleOutlined />,

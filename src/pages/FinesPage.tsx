@@ -151,6 +151,8 @@ const FinesPage: React.FC = () => {
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
+      okText: t("common.ok"),
+      cancelText: t("common.cancel"),
       onOk: () => {
         try {
           const selectedData = tableData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID));

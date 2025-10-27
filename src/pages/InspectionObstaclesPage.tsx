@@ -16,7 +16,7 @@ import {
   Tag,
   Image,
 } from "antd";
-import { PlusOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
+import { PlusOutlined, DownloadOutlined, EyeOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
@@ -364,10 +364,13 @@ const InspectionObstaclesPage: React.FC = () => {
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
+      okText: t("common.ok"),
+      cancelText: t("common.cancel"),
       onOk: () => {
         try {
           // Get the selected data from the current page data
-          const selectedData = platesData.filter((item: any) => selectedRowKeys.includes(item.id));
+          const selectedData = platesData.filter((item: any) => selectedRowKeys.includes(item.iid));
+          console.log(selectedData);
 
           if (selectedData.length === 0) {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
@@ -382,7 +385,6 @@ const InspectionObstaclesPage: React.FC = () => {
 
           // Export to CSV
           exportToCsv(transformedData, filename);
-
           notification.success(
             { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
             t("messages.exportSuccess"),
@@ -449,7 +451,7 @@ const InspectionObstaclesPage: React.FC = () => {
   );
 
   const actionMenuItems = (record: any) => [
-    { key: "view", label: t("common.view"), icon: <EditOutlined />, onClick: () => handleView(record) },
+    { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
   ];
 
   const searchAddon = (
@@ -600,6 +602,7 @@ const InspectionObstaclesPage: React.FC = () => {
         rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
+        rowKey="iid"
         state={state}
         lookupOptions={lookupOptions}
         getLabelFromValue={getLabelFromValue}

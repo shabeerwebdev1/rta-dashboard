@@ -338,7 +338,8 @@
     "showMyApprovals": "Show My Approvals",
     "showingyourApprovals": "Showing your Approvals",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "ok": "Ok"
   },
   "entity": {
     "plate": "Plate",

@@ -93,6 +93,8 @@ const ParkonicPage: React.FC = () => {
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
+      okText: t("common.ok"),
+      cancelText: t("common.cancel"),
       onOk: () => {
         const selectedData = data?.data?.filter((item: any) => selectedRowKeys.includes(item.fineId)) || [];
         exportToCsv(selectedData, `parkonic_export.csv`);
