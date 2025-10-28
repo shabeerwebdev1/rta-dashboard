@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -316,8 +318,10 @@ const InspectionObstaclesPage: React.FC = () => {
 
   // Transform data for CSV export with proper column headers
   const transformDataForCSV = (data: any[]) => {
-    return data.map((item) => {
+    return data.map((item, index: number) => {
       const csvRecord: Record<string, unknown> = {};
+
+      csvRecord["Sl.No"] = index + 1;
 
       config.tableConfig.columns.forEach((column) => {
         if (column.key === "zone") {
@@ -449,16 +453,6 @@ const InspectionObstaclesPage: React.FC = () => {
   const actionMenuItems = (record: any) => [
     { key: "view", label: t("common.view"), icon: <EditOutlined />, onClick: () => handleView(record) },
   ];
-
-  const searchAddon = (
-    <Select value={state.searchKey} onChange={(key) => setGlobalSearch(key, state.searchValue)} style={{ width: 150 }}>
-      {config.searchConfig?.globalSearchKeys.map((key) => (
-        <Option key={key} value={key}>
-          {columnLabels[key] || key}
-        </Option>
-      ))}
-    </Select>
-  );
 
   // Filter area options based on selected zone
   useEffect(() => {

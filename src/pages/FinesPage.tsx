@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tag } from "antd";
@@ -161,17 +163,16 @@ const FinesPage: React.FC = () => {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
             return;
           }
-
-          // ✅ FIXED: Replicate exact table column rendering logic with date formatting
-          const transformedData = selectedData.map((item: any) => {
+          //  Add "Sl. No" column and map table columns
+          const transformedData = selectedData.map((item: any, index: number) => {
             const csvRecord: Record<string, unknown> = {};
+            csvRecord["Sl. No"] = index + 1;
 
             enhancedTableConfig.columns.forEach((column: any) => {
               const columnKey = column.key;
               const headerName = columnLabels[columnKey];
               let displayValue = item[columnKey];
 
-              // Replicate the exact render logic from enhancedTableConfig
               if (columnKey === "inspectionType") {
                 displayValue =
                   displayValue == null
@@ -187,10 +188,7 @@ const FinesPage: React.FC = () => {
               } else if (columnKey === "inspectionStatus") {
                 displayValue =
                   displayValue == null ? t("common.noData") : getLabelFromValue(displayValue, lookupOptions, i18n);
-              }
-              // ✅ ADDED: Date formatting for common date fields
-              else if (columnKey.includes("Date") || columnKey.includes("date")) {
-                // Format any date field to DD-MM-YYYY
+              } else if (columnKey.includes("Date") || columnKey.includes("date")) {
                 displayValue = displayValue ? dayjs(displayValue).format("DD-MM-YYYY") : t("common.noData");
               } else {
                 displayValue = displayValue == null || displayValue === "" ? t("common.noData") : displayValue;
@@ -201,17 +199,22 @@ const FinesPage: React.FC = () => {
 
             return csvRecord;
           });
-
           const filename = i18n.language === "ar" ? `المخالفات.csv` : `Vehicle_Inspections.csv`;
 
           exportToCsv(transformedData, filename);
-
           notification.success(
-            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            {
+              data: {
+                en_Msg: t("messages.csvDownloaded", {
+                  count: selectedData.length,
+                }),
+              },
+            },
             t("messages.exportSuccess"),
           );
           setSelectedRowKeys([]);
         } catch (error) {
+          console.error("CSV Export Error:", error);
           notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
         }
       },

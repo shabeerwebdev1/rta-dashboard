@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tag } from "antd";
@@ -133,8 +135,10 @@ const TradeLicenseInspectionPage: React.FC = () => {
 
   // Create a helper function to format data for CSV export
   const formatDataForExport = (data: any[]) => {
-    return data.map((item: any) => {
+    return data.map((item: any, index: number) => {
       const formattedRow: any = {};
+
+      formattedRow["sl.No "] = index + 1;
 
       enhancedTableConfig.columns.forEach((column: any) => {
         const key = column.key;

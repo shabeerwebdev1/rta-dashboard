@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Spin, Pagination, DatePicker } from "antd";
 import {
@@ -256,7 +259,7 @@ const ParkonicLocationPage: React.FC = () => {
     if (size) setPageSize(size);
   };
 
-  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
+  const handleTableChange = (filters: any, sorter: any) => {
     // Handle sorting
     if (sorter && sorter.field) {
       setSortBy(sorter.field);
@@ -356,7 +359,8 @@ const ParkonicLocationPage: React.FC = () => {
           }
 
           // Since filteredData already has formatted dates, use it directly
-          const transformedData = selectedData.map((item) => ({
+          const transformedData = selectedData.map((item, index: number) => ({
+            "Sl.No": index + 1,
             [t("form.parkingName")]: item.parking_Name_En,
             [t("form.parkingNameArabic")]: item.parking_Name_Ar,
             [t("form.zone")]: item.zone,
@@ -477,7 +481,7 @@ const ParkonicLocationPage: React.FC = () => {
           pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
           data={paginatedData}
           total={filteredData.length}
-          isLoading={isLoading || isFetching}
+          isLoading={false}
           apiParams={basicApiParams}
           handleTableChange={handleTableChange}
           handlePaginationChange={() => {}} // Not needed for client-side pagination

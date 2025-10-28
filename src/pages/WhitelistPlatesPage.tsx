@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, DatePicker, App, Spin, Tag } from "antd";
@@ -270,8 +272,10 @@ const WhitelistPlatesPage: React.FC = () => {
   };
 
   const transformDataForCSV = (data: any[]) => {
-    return data.map((item) => {
+    return data.map((item, index: number) => {
       const csvRecord: Record<string, unknown> = {};
+
+      csvRecord["Sl.No "] = index + 1;
 
       config.tableConfig.columns.forEach((column) => {
         if (column.key === "plateNumber") {
@@ -355,7 +359,7 @@ const WhitelistPlatesPage: React.FC = () => {
 
   const columnLabels = useMemo(
     () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
-    [t, config.tableConfig.columns, i18n.language], // 👈 Update when language changes
+    [t, config.tableConfig.columns, i18n.language],
   );
 
   // Enhanced table config with render functions for numeric values

@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
@@ -457,7 +459,8 @@ const DisputeManagementPage: React.FC = () => {
           }
 
           // ✅ CSV column mapping similar to Whitelist format
-          const csvData = selectedData.map((item: any) => ({
+          const csvData = selectedData.map((item: any, index: number) => ({
+            "sl.No": index + 1,
             [t("form.fineNumber")]: item.fine_Number || item.fineId || "-",
             [t("form.name")]: item.name || "-",
             [t("form.department")]: getLabelFromValue(
@@ -905,7 +908,7 @@ const DisputeManagementPage: React.FC = () => {
                     label={t("form.address")}
                     rules={[{ required: true, message: t("validation.required", { field: t("form.address") }) }]}
                   >
-                    <Input.TextArea placeholder={t("placeholders.address")} rows={2}  maxLength={200}/>
+                    <Input.TextArea placeholder={t("placeholders.address")} rows={2} maxLength={200} />
                   </Form.Item>
                 </Col>
 

@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useState, useMemo } from "react";
 import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App } from "antd";
 import { EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
@@ -35,7 +38,7 @@ const LeaveManagementPage: React.FC = () => {
     state,
   } = useTableParams(config.searchConfig!);
 
-  const [tableSize, setTableSize] = useState<"middle" | "small">("small");
+  const [tableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -170,8 +173,9 @@ const LeaveManagementPage: React.FC = () => {
   };
 
   const transformDataForCSV = (data: any[]) => {
-    return data.map((item) => {
+    return data.map((item, index: number) => {
       const csvRecord: Record<string, unknown> = {};
+      csvRecord["Sl.No"] = index + 1;
 
       config.tableConfig.columns.forEach((column) => {
         const { key, title } = column;

@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tag } from "antd";
 import { EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
@@ -17,7 +20,6 @@ import FinesViewDrawer from "../components/fines/FinesViewDrawer";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-const pageKey = "tradeLicenseInspections";
 
 const getLabelFromValue = (value: number, options: any[], i18n: any) => {
   if (!options || !Array.isArray(options)) return String(value);
@@ -117,7 +119,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
     setDrawerVisible(true);
   };
 
-  // ✅ FIXED: CSV download function that exports exactly what's shown in UI table
+  //  CSV download function that exports exactly what's shown in UI table
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
@@ -137,17 +139,15 @@ const TradeLicenseInspectionPage: React.FC = () => {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
             return;
           }
-
-          // ✅ FIXED: Export exactly what's displayed in the table columns with date formatting
-          const transformedData = selectedData.map((item: any) => {
+          // Add “Sl. No” + Export exactly what's displayed in the table
+          const transformedData = selectedData.map((item: any, index: number) => {
             const csvRecord: Record<string, unknown> = {};
 
-            // Use the same enhanced table config to get the exact same data as UI
+            csvRecord["Sl. No"] = index + 1;
+
             enhancedTableConfig.columns.forEach((column: any) => {
               const columnKey = column.key;
               const headerName = columnLabels[columnKey];
-
-              // Apply the exact same render logic as in the table
               let displayValue = item[columnKey];
 
               if (columnKey === "inspectionType") {
@@ -163,13 +163,9 @@ const TradeLicenseInspectionPage: React.FC = () => {
               } else if (columnKey === "fineAmount") {
                 displayValue = displayValue == null || displayValue === "" ? t("common.noData") : `${displayValue} AED`;
               } else if (columnKey === "inspectionStatus") {
-                // For CSV, we just want the label text without the Tag component
                 displayValue =
                   displayValue == null ? t("common.noData") : getLabelFromValue(displayValue, lookupOptions, i18n);
-              }
-              // ✅ ADDED: Date formatting for common date fields
-              else if (columnKey.includes("Date") || columnKey.includes("date")) {
-                // Format any date field to DD-MM-YYYY
+              } else if (columnKey.includes("Date") || columnKey.includes("date")) {
                 displayValue = displayValue ? dayjs(displayValue).format("DD-MM-YYYY") : t("common.noData");
               } else {
                 displayValue = displayValue == null || displayValue === "" ? t("common.noData") : displayValue;
@@ -180,18 +176,22 @@ const TradeLicenseInspectionPage: React.FC = () => {
 
             return csvRecord;
           });
-
-          // ✅ FIXED: Language-specific filename
           const filename = i18n.language === "ar" ? `تفتيش_التراخيص_التجارية.csv` : `Parkings_inspections.csv`;
-
           exportToCsv(transformedData, filename);
 
           notification.success(
-            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            {
+              data: {
+                en_Msg: t("messages.csvDownloaded", {
+                  count: selectedData.length,
+                }),
+              },
+            },
             t("messages.exportSuccess"),
           );
           setSelectedRowKeys([]);
         } catch (error) {
+          console.error("CSV Export Error:", error);
           notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
         }
       },

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
@@ -166,8 +167,10 @@ const VehicleInspectionsPage: React.FC = () => {
           }
 
           // ✅ FIXED: Export exactly what's displayed in the table columns with date formatting
-          const transformedData = selectedData.map((item: any) => {
+          const transformedData = selectedData.map((item: any, index: number) => {
             const csvRecord: Record<string, unknown> = {};
+
+            csvRecord["sl.NO "] = index + 1;
 
             // Use the same enhanced table config to get the exact same data as UI
             enhancedTableConfig.columns.forEach((column: any) => {

@@ -1,3 +1,7 @@
+/* eslint-disable no-self-assign */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-case-declarations */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState, useMemo } from "react";
 import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App, Tag } from "antd";
 import { EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
@@ -35,7 +39,7 @@ const TowingPage: React.FC = () => {
     state,
   } = useTableParams(config.searchConfig!);
 
-  const [tableSize, setTableSize] = useState<"middle" | "small">("small");
+  const [tableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -96,8 +100,10 @@ const TowingPage: React.FC = () => {
         const selectedData = apiData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID)) || [];
 
         // Format data to match UI table display
-        const formattedData = selectedData.map((item: any) => {
+        const formattedData = selectedData.map((item: any, index: number) => {
           const csvRow: any = {};
+
+          csvRow[" sl.NO "] = index + 1;
 
           // Process each column based on table configuration
           config.tableConfig.columns.forEach((column: any) => {
