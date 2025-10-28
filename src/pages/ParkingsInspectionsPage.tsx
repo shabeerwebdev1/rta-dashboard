@@ -57,6 +57,10 @@ const TradeLicenseInspectionPage: React.FC = () => {
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
+
+  //state to maintain the rows data for downlaoding
+  const [selectedRows, setSelectedRows] = useState([]);
+
   const enhancedApiParams = useMemo(() => {
     const params = { ...apiParams };
 
@@ -202,8 +206,8 @@ const TradeLicenseInspectionPage: React.FC = () => {
       okText: t("common.ok"),
       cancelText: t("common.cancel"),
       onOk: () => {
-        const selectedData = tableData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID)) || [];
-        const formattedData = formatDataForExport(selectedData);
+        //const selectedData = tableData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID)) || [];
+        const formattedData = formatDataForExport(selectedRows);
 
         const filename = i18n.language === "ar" ? `مخالفات_التراخيص_التجارية.csv` : `Parkings_Fines.csv`;
 
@@ -213,6 +217,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
           t("messages.exportSuccess"),
         );
         setSelectedRowKeys([]);
+        setSelectedRows([]);
       },
     });
   };
@@ -371,7 +376,22 @@ const TradeLicenseInspectionPage: React.FC = () => {
         apiParams={apiParams}
         handleTableChange={handleTableChange}
         handlePaginationChange={handlePaginationChange}
-        rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+        rowSelection={{
+          selectedRowKeys,
+          onChange: (keys: React.Key[], selectedRows: any[]) => {
+            setSelectedRowKeys(keys);
+
+            setSelectedRows((prev) => {
+              // Remove rows that are no longer selected
+              const remaining = prev.filter((p) => keys.includes(p.id));
+
+              // Add newly selected rows (avoid duplicates)
+              const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+
+              return [...remaining, ...newSelected];
+            });
+          },
+        }}
         tableSize="small"
         rowKey={config.tableConfig.rowKey}
         actionMenuItems={actionMenuItems}

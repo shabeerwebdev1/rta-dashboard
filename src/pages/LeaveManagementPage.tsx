@@ -49,6 +49,9 @@ const LeaveManagementPage: React.FC = () => {
   const { data, isFetching } = useGetLeaveDetailsQuery(apiParams);
   const [getLookups, { data: lookupData }] = useLazyGetLookupsQuery();
 
+  //state to maintain the rows data for downlaoding
+  const [selectedRows, setSelectedRows] = useState([]);
+
   // Fetch leave type lookup (ensure we request category 1900)
   useEffect(() => {
     getLookups([1900]);
@@ -220,15 +223,15 @@ const LeaveManagementPage: React.FC = () => {
       onOk: () => {
         try {
           // ✅ FIXED: Get the selected data from the current page data
-          const selectedData = tableData.filter((item: any) => selectedRowKeys.includes(item.id));
+          //const selectedRows = tableData.filter((item: any) => selectedRowKeys.includes(item.id));
 
-          if (selectedData.length === 0) {
+          if (selectedRows.length === 0) {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
             return;
           }
 
           // ✅ FIXED: Transform the data to match UI display
-          const transformedData = transformDataForCSV(selectedData);
+          const transformedData = transformDataForCSV(selectedRows);
 
           // ✅ FIXED: Get filename based on current language
           const filename = getCsvFilename();
@@ -237,10 +240,11 @@ const LeaveManagementPage: React.FC = () => {
           exportToCsv(transformedData, filename);
 
           notification.success(
-            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedRows.length }) } },
             t("messages.exportSuccess"),
           );
           setSelectedRowKeys([]);
+          setSelectedRows([]);
         } catch (error) {
           notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
         }
@@ -369,7 +373,19 @@ const LeaveManagementPage: React.FC = () => {
           handlePaginationChange={handlePaginationChange}
           rowSelection={{
             selectedRowKeys,
-            onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
+            onChange: (keys: React.Key[], selectedRows: any[]) => {
+              setSelectedRowKeys(keys);
+
+              setSelectedRows((prev) => {
+                // Remove rows that are no longer selected
+                const remaining = prev.filter((p) => keys.includes(p.id));
+
+                // Add newly selected rows (avoid duplicates)
+                const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+
+                return [...remaining, ...newSelected];
+              });
+            },
             getCheckboxProps: (record: any) => ({
               // Use id as the row key since that's the unique identifier in your data
               name: record.id,

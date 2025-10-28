@@ -406,7 +406,13 @@ const SupervisorViewPage: React.FC = () => {
           </>
         }
       >
-        <Table columns={checkInColumns} dataSource={checkInData} pagination={false} size="small" />
+        <Table
+          scroll={{ x: "max-content" }}
+          columns={checkInColumns}
+          dataSource={checkInData}
+          pagination={false}
+          size="small"
+        />
       </Card>
 
       {/* Drawer */}

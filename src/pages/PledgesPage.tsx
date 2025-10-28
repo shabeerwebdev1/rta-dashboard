@@ -98,6 +98,9 @@ const PledgesPage: React.FC = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
 
+  //state to maintain the rows data for downlaoding
+  const [selectedRows, setSelectedRows] = useState([]);
+
   const getBase64 = (file: File) =>
     new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -409,15 +412,15 @@ const PledgesPage: React.FC = () => {
       onOk: () => {
         try {
           // ✅ FIXED: Get the selected data from the current page data
-          const selectedData = platesData.filter((item: any) => selectedRowKeys.includes(item.id));
+          //const selectedRows = platesData.filter((item: any) => selectedRowKeys.includes(item.id));
 
-          if (selectedData.length === 0) {
+          if (selectedRows.length === 0) {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
             return;
           }
 
           // ✅ FIXED: Transform the data to match UI display
-          const transformedData = transformDataForCSV(selectedData);
+          const transformedData = transformDataForCSV(selectedRows);
 
           // ✅ FIXED: Get filename based on current language
           const filename = getCsvFilename();
@@ -426,10 +429,11 @@ const PledgesPage: React.FC = () => {
           exportToCsv(transformedData, filename);
 
           notification.success(
-            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedRows.length }) } },
             t("messages.exportSuccess"),
           );
           setSelectedRowKeys([]);
+          setSelectedRows([]);
         } catch (error) {
           notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
         }
@@ -567,7 +571,19 @@ const PledgesPage: React.FC = () => {
         handlePaginationChange={handlePaginationChange}
         rowSelection={{
           selectedRowKeys,
-          onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
+          onChange: (keys: React.Key[], selectedRows: any[]) => {
+            setSelectedRowKeys(keys);
+
+            setSelectedRows((prev) => {
+              // Remove rows that are no longer selected
+              const remaining = prev.filter((p) => keys.includes(p.id));
+
+              // Add newly selected rows (avoid duplicates)
+              const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+
+              return [...remaining, ...newSelected];
+            });
+          },
           getCheckboxProps: (record: any) => ({
             // Use id as the row key since that's the unique identifier in your data
             name: record.id,

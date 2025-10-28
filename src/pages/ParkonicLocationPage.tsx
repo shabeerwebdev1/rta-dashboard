@@ -91,6 +91,9 @@ const ParkonicLocationPage: React.FC = () => {
   const [triggerGetLocation, { data: singleRecordData, isSuccess: isSingleRecordSuccess }] =
     useLazyGetParkonicsLocationByIdQuery();
 
+  //state to maintain the rows data for downlaoding
+  const [selectedRows, setSelectedRows] = useState([]);
+
   // Client-side filtering logic with formatted dates
   const filteredData = useMemo(() => {
     if (!data?.data) return [];
@@ -351,15 +354,15 @@ const ParkonicLocationPage: React.FC = () => {
       cancelText: t("common.cancel"),
       onOk: () => {
         try {
-          const selectedData = filteredData.filter((item: any) => selectedRowKeys.includes(item.id));
+          //const selectedRows = filteredData.filter((item: any) => selectedRowKeys.includes(item.id));
 
-          if (selectedData.length === 0) {
+          if (selectedRows.length === 0) {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
             return;
           }
 
           // Since filteredData already has formatted dates, use it directly
-          const transformedData = selectedData.map((item, index: number) => ({
+          const transformedData = selectedRows.map((item, index: number) => ({
             "Sl.No": index + 1,
             [t("form.parkingName")]: item.parking_Name_En,
             [t("form.parkingNameArabic")]: item.parking_Name_Ar,
@@ -373,11 +376,12 @@ const ParkonicLocationPage: React.FC = () => {
           exportToCsv(transformedData, filename);
 
           notification.success(
-            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedRows.length }) } },
             t("messages.exportSuccess"),
           );
 
           setSelectedRowKeys([]);
+          setSelectedRows([]);
         } catch (error) {
           notification.error({ data: { en_Msg: "Failed to export CSV" } }, "Export Failed");
         }
@@ -485,7 +489,22 @@ const ParkonicLocationPage: React.FC = () => {
           apiParams={basicApiParams}
           handleTableChange={handleTableChange}
           handlePaginationChange={() => {}} // Not needed for client-side pagination
-          rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
+          rowSelection={{
+            selectedRowKeys,
+            onChange: (keys: React.Key[], selectedRows: any[]) => {
+              setSelectedRowKeys(keys);
+
+              setSelectedRows((prev) => {
+                // Remove rows that are no longer selected
+                const remaining = prev.filter((p) => keys.includes(p.id));
+
+                // Add newly selected rows (avoid duplicates)
+                const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+
+                return [...remaining, ...newSelected];
+              });
+            },
+          }}
           actionMenuItems={actionMenuItems}
           tableSize={tableSize}
           state={filterState}

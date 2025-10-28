@@ -59,6 +59,9 @@ const VehicleInspectionsPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
+  //state to maintain the rows data for downlaoding
+  const [selectedRows, setSelectedRows] = useState([]);
+
   // Merge permanent filter with user filters
   const enhancedApiParams = useMemo(() => {
     const params = { ...apiParams };
@@ -159,15 +162,15 @@ const VehicleInspectionsPage: React.FC = () => {
       cancelText: t("common.cancel"),
       onOk: () => {
         try {
-          const selectedData = tableData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID));
+          //const selectedRows = tableData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID));
 
-          if (selectedData.length === 0) {
+          if (selectedRows.length === 0) {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
             return;
           }
 
           // ✅ FIXED: Export exactly what's displayed in the table columns with date formatting
-          const transformedData = selectedData.map((item: any, index: number) => {
+          const transformedData = selectedRows.map((item: any, index: number) => {
             const csvRecord: Record<string, unknown> = {};
 
             csvRecord["sl.NO "] = index + 1;
@@ -222,10 +225,11 @@ const VehicleInspectionsPage: React.FC = () => {
           exportToCsv(transformedData, filename);
 
           notification.success(
-            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedRows.length }) } },
             t("messages.exportSuccess"),
           );
           setSelectedRowKeys([]);
+          setSelectedRows([]);
         } catch (error) {
           notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
         }
@@ -379,7 +383,22 @@ const VehicleInspectionsPage: React.FC = () => {
         apiParams={enhancedApiParams}
         handleTableChange={handleTableChange}
         handlePaginationChange={handlePaginationChange}
-        rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+        rowSelection={{
+          selectedRowKeys,
+          onChange: (keys: React.Key[], selectedRows: any[]) => {
+            setSelectedRowKeys(keys);
+
+            setSelectedRows((prev) => {
+              // Remove rows that are no longer selected
+              const remaining = prev.filter((p) => keys.includes(p.id));
+
+              // Add newly selected rows (avoid duplicates)
+              const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+
+              return [...remaining, ...newSelected];
+            });
+          },
+        }}
         tableSize="small"
         rowKey={config.tableConfig.rowKey}
         actionMenuItems={actionMenuItems}

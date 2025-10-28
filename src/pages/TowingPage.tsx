@@ -47,6 +47,9 @@ const TowingPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
+  //state to maintain the rows data for downlaoding
+  const [selectedRows, setSelectedRows] = useState([]);
+
   // Fetch towing data from API
   const { data, isFetching } = useGetTowingDetailsQuery(apiParams);
 
@@ -97,10 +100,10 @@ const TowingPage: React.FC = () => {
       okText: t("common.ok"),
       cancelText: t("common.cancel"),
       onOk: () => {
-        const selectedData = apiData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID)) || [];
+        //const selectedData = apiData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID)) || [];
 
         // Format data to match UI table display
-        const formattedData = selectedData.map((item: any, index: number) => {
+        const formattedData = selectedRows.map((item: any, index: number) => {
           const csvRow: any = {};
 
           csvRow[" sl.NO "] = index + 1;
@@ -174,6 +177,7 @@ const TowingPage: React.FC = () => {
         exportToCsv(formattedData, `Towing.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
+        setSelectedRows([]);
       },
     });
   };
@@ -270,7 +274,19 @@ const TowingPage: React.FC = () => {
           handlePaginationChange={handlePaginationChange}
           rowSelection={{
             selectedRowKeys,
-            onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
+            onChange: (keys: React.Key[], selectedRows: any[]) => {
+              setSelectedRowKeys(keys);
+
+              setSelectedRows((prev) => {
+                // Remove rows that are no longer selected
+                const remaining = prev.filter((p) => keys.includes(p.id));
+
+                // Add newly selected rows (avoid duplicates)
+                const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+
+                return [...remaining, ...newSelected];
+              });
+            },
           }}
           actionMenuItems={actionMenuItems}
           tableSize={tableSize}

@@ -99,6 +99,9 @@ const DisputeManagementPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
+  //state to maintain the rows data for downlaoding
+  const [selectedRows, setSelectedRows] = useState([]);
+
   // NEW: State for My Approvals filter
   const [showMyApprovals, setShowMyApprovals] = useState(false);
 
@@ -451,15 +454,15 @@ const DisputeManagementPage: React.FC = () => {
       onOk: () => {
         try {
           const dataToExport = showMyApprovals ? filteredData : data?.data || [];
-          const selectedData = dataToExport.filter((item: any) => selectedRowKeys.includes(item.dispute_Id));
+          //const selectedRows = dataToExport.filter((item: any) => selectedRowKeys.includes(item.dispute_Id));
 
-          if (selectedData.length === 0) {
+          if (selectedRows.length === 0) {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
             return;
           }
 
           // ✅ CSV column mapping similar to Whitelist format
-          const csvData = selectedData.map((item: any, index: number) => ({
+          const csvData = selectedRows.map((item: any, index: number) => ({
             "sl.No": index + 1,
             [t("form.fineNumber")]: item.fine_Number || item.fineId || "-",
             [t("form.name")]: item.name || "-",
@@ -497,11 +500,12 @@ const DisputeManagementPage: React.FC = () => {
           exportToCsv(csvData, filename);
 
           notification.success(
-            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedRows.length }) } },
             t("messages.exportSuccess"),
           );
 
           setSelectedRowKeys([]);
+          setSelectedRows([]);
         } catch (error) {
           notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
         }
@@ -705,7 +709,22 @@ const DisputeManagementPage: React.FC = () => {
           apiParams={apiParams}
           handleTableChange={handleTableChange}
           handlePaginationChange={handlePaginationChange}
-          rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
+          rowSelection={{
+            selectedRowKeys,
+            onChange: (keys: React.Key[], selectedRows: any[]) => {
+              setSelectedRowKeys(keys);
+
+              setSelectedRows((prev) => {
+                // Remove rows that are no longer selected
+                const remaining = prev.filter((p) => keys.includes(p.id));
+
+                // Add newly selected rows (avoid duplicates)
+                const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+
+                return [...remaining, ...newSelected];
+              });
+            },
+          }}
           actionMenuItems={actionMenuItems}
           tableSize={tableSize}
           rowKey={config.tableConfig.rowKey}

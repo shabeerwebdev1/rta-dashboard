@@ -96,6 +96,9 @@ const WhitelistPlatesPage: React.FC = () => {
   const [triggerGetPlate, { data: singleRecordData, isSuccess: isSingleRecordSuccess }] = useLazyGetPlateByIdQuery();
   const [triggerGetLookups] = useLazyGetLookupsQuery();
 
+  //state to maintain the rows data for downlaoding
+  const [selectedRows, setSelectedRows] = useState([]);
+
   // Fetch lookup data when modal opens or language changes
   useEffect(() => {
     fetchLookupData();
@@ -329,15 +332,15 @@ const WhitelistPlatesPage: React.FC = () => {
       onOk: () => {
         try {
           // Get the selected data from the current page data
-          const selectedData = platesData.filter((item: any) => selectedRowKeys.includes(item.id));
+          //const selectedRows = platesData.filter((item: any) => selectedRowKeys.includes(item.iid));
 
-          if (selectedData.length === 0) {
+          if (selectedRows.length === 0) {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
             return;
           }
 
           // Transform the data to match UI display
-          const transformedData = transformDataForCSV(selectedData);
+          const transformedData = transformDataForCSV(selectedRows);
 
           // Get filename based on current language
           const filename = getCsvFilename();
@@ -346,10 +349,11 @@ const WhitelistPlatesPage: React.FC = () => {
           exportToCsv(transformedData, filename);
 
           notification.success(
-            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedRows.length }) } },
             t("messages.exportSuccess"),
           );
           setSelectedRowKeys([]);
+          setSelectedRows([]);
         } catch (error) {
           notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
         }
@@ -532,7 +536,22 @@ const WhitelistPlatesPage: React.FC = () => {
         apiParams={apiParams}
         handleTableChange={handleTableChange}
         handlePaginationChange={handlePaginationChange}
-        rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
+        rowSelection={{
+          selectedRowKeys,
+          onChange: (keys: React.Key[], selectedRows: any[]) => {
+            setSelectedRowKeys(keys);
+
+            setSelectedRows((prev) => {
+              // Remove rows that are no longer selected
+              const remaining = prev.filter((p) => keys.includes(p.id));
+
+              // Add newly selected rows (avoid duplicates)
+              const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+
+              return [...remaining, ...newSelected];
+            });
+          },
+        }}
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
         state={state}

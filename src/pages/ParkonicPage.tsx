@@ -43,6 +43,9 @@ const ParkonicPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
+  //state to maintain the rows data for downlaoding
+  const [selectedRows, setSelectedRows] = useState([]);
+
   const { data, isLoading, isFetching } = useGetParkonicsQuery(apiParams, {
     refetchOnMountOrArgChange: true,
   });
@@ -96,10 +99,11 @@ const ParkonicPage: React.FC = () => {
       okText: t("common.ok"),
       cancelText: t("common.cancel"),
       onOk: () => {
-        const selectedData = data?.data?.filter((item: any) => selectedRowKeys.includes(item.fineId)) || [];
-        exportToCsv(selectedData, `parkonic_export.csv`);
+        //const selectedData = data?.data?.filter((item: any) => selectedRowKeys.includes(item.fineId)) || [];
+        exportToCsv(selectedRows, `parkonic_export.csv`);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
+        setSelectedRows([]);
       },
     });
   };
@@ -182,7 +186,22 @@ const ParkonicPage: React.FC = () => {
         apiParams={apiParams}
         handleTableChange={handleTableChange}
         handlePaginationChange={handlePaginationChange}
-        rowSelection={{ selectedRowKeys, onChange: (keys: React.Key[]) => setSelectedRowKeys(keys) }}
+        rowSelection={{
+          selectedRowKeys,
+          onChange: (keys: React.Key[], selectedRows: any[]) => {
+            setSelectedRowKeys(keys);
+
+            setSelectedRows((prev) => {
+              // Remove rows that are no longer selected
+              const remaining = prev.filter((p) => keys.includes(p.id));
+
+              // Add newly selected rows (avoid duplicates)
+              const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+
+              return [...remaining, ...newSelected];
+            });
+          },
+        }}
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
         rowKey={config.tableConfig.rowKey}

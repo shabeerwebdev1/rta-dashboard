@@ -65,6 +65,9 @@ const TradeLicenseInspectionPage: React.FC = () => {
 
   const [triggerGetLookups] = useLazyGetLookupsQuery();
 
+  //state to maintain the rows data for downlaoding
+  const [selectedRows, setSelectedRows] = useState([]);
+
   useEffect(() => {
     fetchLookupData();
   }, [i18n.language]);
@@ -133,14 +136,14 @@ const TradeLicenseInspectionPage: React.FC = () => {
       cancelText: t("common.cancel"),
       onOk: () => {
         try {
-          const selectedData = tableData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID));
+          //const selectedRows = tableData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID));
 
-          if (selectedData.length === 0) {
+          if (selectedRows.length === 0) {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
             return;
           }
           // Add “Sl. No” + Export exactly what's displayed in the table
-          const transformedData = selectedData.map((item: any, index: number) => {
+          const transformedData = selectedRows.map((item: any, index: number) => {
             const csvRecord: Record<string, unknown> = {};
 
             csvRecord["Sl. No"] = index + 1;
@@ -183,13 +186,14 @@ const TradeLicenseInspectionPage: React.FC = () => {
             {
               data: {
                 en_Msg: t("messages.csvDownloaded", {
-                  count: selectedData.length,
+                  count: selectedRows.length,
                 }),
               },
             },
             t("messages.exportSuccess"),
           );
           setSelectedRowKeys([]);
+          setSelectedRows([]);
         } catch (error) {
           console.error("CSV Export Error:", error);
           notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
@@ -354,7 +358,22 @@ const TradeLicenseInspectionPage: React.FC = () => {
         apiParams={apiParams}
         handleTableChange={handleTableChange}
         handlePaginationChange={handlePaginationChange}
-        rowSelection={{ selectedRowKeys, onChange: setSelectedRowKeys }}
+        rowSelection={{
+          selectedRowKeys,
+          onChange: (keys: React.Key[], selectedRows: any[]) => {
+            setSelectedRowKeys(keys);
+
+            setSelectedRows((prev) => {
+              // Remove rows that are no longer selected
+              const remaining = prev.filter((p) => keys.includes(p.id));
+
+              // Add newly selected rows (avoid duplicates)
+              const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+
+              return [...remaining, ...newSelected];
+            });
+          },
+        }}
         tableSize="small"
         rowKey={config.tableConfig.rowKey}
         actionMenuItems={actionMenuItems}
