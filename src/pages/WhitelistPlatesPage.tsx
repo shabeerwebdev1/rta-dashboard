@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, DatePicker, App, Spin, Tag } from "antd";
 import {
@@ -392,6 +393,9 @@ const WhitelistPlatesPage: React.FC = () => {
               if (value === 5002) {
                 return <Tag color="red">{label}</Tag>;
               }
+              if (value === 5003) {
+                return <Tag color="orange">{label}</Tag>;
+              }
 
               return <Tag>{label}</Tag>; // fallback
             },
@@ -480,7 +484,7 @@ const WhitelistPlatesPage: React.FC = () => {
                 style={{ width: 450 }}
                 allowClear
               />
-              {/* <span>{t("common.filterByFromDate")}</span> */}
+              <span>{t("common.filterByFromDate")}</span>
               <DatePicker.RangePicker
                 value={state.dateRange}
                 format={"DD-MM-YYYY"}
@@ -566,7 +570,7 @@ const WhitelistPlatesPage: React.FC = () => {
                   ]}
                   validateFirst
                 >
-                  <Input placeholder={t("placeholders.plateNumber")} maxLength={20} />
+                  <Input placeholder={t("placeholders.plateNumber")} maxLength={5} />
                 </Form.Item>
               </Col>
 
@@ -668,7 +672,6 @@ const WhitelistPlatesPage: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-
               {modalMode === "edit" && (
                 <Col span={12}>
                   <Form.Item
@@ -683,10 +686,26 @@ const WhitelistPlatesPage: React.FC = () => {
                       filterOption={(input, option) =>
                         (option?.label as string).toLowerCase().includes(input.toLowerCase())
                       }
-                      options={plateStatusOptions.map((option) => ({
-                        label: option.label,
-                        value: option.value,
-                      }))}
+                      // 👇 Dynamically build options
+                      options={(() => {
+                        const statusId = form.getFieldValue("plateStatus_Id");
+                        const baseOptions = plateStatusOptions.filter((opt) => [5001, 5002].includes(opt.value));
+
+                        // If current status is 5003 (expired), include it for display only
+                        if (statusId === 5003) {
+                          const expiredOption = plateStatusOptions.find((opt) => opt.value === 5003);
+                          if (expiredOption) {
+                            baseOptions.push(expiredOption);
+                          }
+                        }
+
+                        return baseOptions.map((option) => ({
+                          label: option.label,
+                          value: option.value,
+                        }));
+                      })()}
+                      // 👇 Optional: disable select when expired
+                      disabled={form.getFieldValue("plateStatus_Id") === 5003}
                     />
                   </Form.Item>
                 </Col>

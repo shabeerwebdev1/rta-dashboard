@@ -326,6 +326,8 @@ const LeaveManagementPage: React.FC = () => {
                   style={{ width: 450 }}
                   allowClear
                 />
+                <span>{t("common.filterByFromDate")}</span>
+
                 <DatePicker.RangePicker
                   value={state.dateRange}
                   format={"DD-MM-YYYY"}

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Space,
@@ -16,7 +17,7 @@ import {
   Tag,
   Image,
 } from "antd";
-import { PlusOutlined, DownloadOutlined, EyeOutlined } from "@ant-design/icons";
+import { PlusOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
@@ -75,7 +76,7 @@ const InspectionObstaclesPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any>(null);
-  const [tableSize, setTableSize] = useState<"middle" | "small">("small");
+  const [tableSize] = useState<"middle" | "small">("small");
   const [filteredAreaOptions, setFilteredAreaOptions] = useState<any[]>([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
@@ -178,11 +179,6 @@ const InspectionObstaclesPage: React.FC = () => {
   useEffect(() => {
     setGlobalSearch(state.searchKey, debouncedSearchValue);
   }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
-
-  const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
-    if (type === "search") setSearchValue("");
-    clearFilter(type, key, value);
-  };
 
   const handleClearAll = () => {
     setSearchValue("");
@@ -451,7 +447,7 @@ const InspectionObstaclesPage: React.FC = () => {
   );
 
   const actionMenuItems = (record: any) => [
-    { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
+    { key: "view", label: t("common.view"), icon: <EditOutlined />, onClick: () => handleView(record) },
   ];
 
   const searchAddon = (
@@ -556,6 +552,8 @@ const InspectionObstaclesPage: React.FC = () => {
                 onChange={(value) => handleDropdownFilterChange("area", value)}
                 disabled={!state.columnFilters.zone?.[0]}
               />
+              <span>{t("common.filterBycreatedDate")}</span>
+
               <DatePicker.RangePicker
                 value={state.dateRange}
                 format={"DD-MM-YYYY"}
@@ -698,7 +696,7 @@ const InspectionObstaclesPage: React.FC = () => {
                   label={t("form.closestPD")}
                   rules={[{ required: true, message: t("validation.required", { field: t("form.closestPD") }) }]}
                 >
-                  <Input placeholder={t("placeholders.closestPaymentDevice")} />
+                  <Input placeholder={t("placeholders.closestPaymentDevice")} maxLength={20} />
                 </Form.Item>
               </Col>
               <Col span={24}>
@@ -713,7 +711,7 @@ const InspectionObstaclesPage: React.FC = () => {
                     listType="picture-card"
                     beforeUpload={() => false}
                     multiple
-                    accept=".jpg,.jpeg,.png,.svg"
+                    accept=".jpg,.jpeg,.png"
                     onPreview={async (file) => {
                       let src = file.url;
                       if (!src && file.originFileObj) {
@@ -745,7 +743,7 @@ const InspectionObstaclesPage: React.FC = () => {
               </Col>
               <Col span={24}>
                 <Form.Item name="Comments" label={t("form.comments")}>
-                  <Input.TextArea placeholder={t("placeholders.comments")} />
+                  <Input.TextArea placeholder={t("placeholders.comments")} maxLength={500} />
                 </Form.Item>
               </Col>
             </Row>

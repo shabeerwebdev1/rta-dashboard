@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App, Tag } from "antd";
-import { EyeOutlined, DownloadOutlined } from "@ant-design/icons";
+import { EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { useTableParams } from "../hooks/useTableParams";
@@ -180,7 +180,7 @@ const TowingPage: React.FC = () => {
   const actionMenuItems = (record: any) => [
     {
       key: "view",
-      icon: <EyeOutlined />,
+      icon: record.towing_Status?.toLowerCase() === "pending" ? <EditOutlined /> : <EyeOutlined />,
       label: t("common.view"),
       onClick: () => {
         setSelectedRecord(record);
@@ -225,6 +225,8 @@ const TowingPage: React.FC = () => {
                   style={{ width: 450 }}
                   allowClear
                 />
+                <span>{t("common.filterBytowingDate")}</span>
+
                 <DatePicker.RangePicker
                   value={state.dateRange}
                   format={"DD-MM-YYYY"}

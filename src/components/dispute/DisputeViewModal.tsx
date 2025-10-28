@@ -38,7 +38,7 @@ import ArcGISMap from "../common/ArcGISMap";
 import { useAuth } from "../../contexts/AuthContext";
 import dayjs from "dayjs";
 import { PLATE_COLOR, PLATE_TYPE_SHORT } from "../../config/pageConfigs/finesConfig";
-import { EMIRATES } from "../../config/pageConfigs/whitelistPlateConfig";
+import { plateSources } from "../../config/pageConfigs/finesConfig";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -182,7 +182,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   const getVehicleLabel = (type: "color" | "plateType" | "source", value: number) => {
     if (type === "color") return PLATE_COLOR[value] || value;
     if (type === "plateType") return PLATE_TYPE_SHORT[value] || value;
-    if (type === "source") return EMIRATES[value]?.en || value;
+    if (type === "source") return plateSources[value]?.en || value;
     return value;
   };
 

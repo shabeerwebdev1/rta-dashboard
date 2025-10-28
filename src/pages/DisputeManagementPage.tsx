@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Space,
@@ -642,6 +643,7 @@ const DisputeManagementPage: React.FC = () => {
                   style={{ width: 450 }}
                   allowClear
                 />
+                <span>{t("common.filterBycreatedDate")}</span>
 
                 <DatePicker.RangePicker
                   value={state.dateRange}
@@ -746,8 +748,9 @@ const DisputeManagementPage: React.FC = () => {
                     name="FineId"
                     label={t("form.fineNumber")}
                     rules={[{ required: true, message: t("validation.required", { field: t("form.fineNumber") }) }]}
+                    validateFirst
                   >
-                    <Input placeholder={t("placeholders.fineNumber")} type="text" />
+                    <Input placeholder={t("placeholders.fineNumber")} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
@@ -902,7 +905,7 @@ const DisputeManagementPage: React.FC = () => {
                     label={t("form.address")}
                     rules={[{ required: true, message: t("validation.required", { field: t("form.address") }) }]}
                   >
-                    <Input.TextArea placeholder={t("placeholders.address")} rows={2} />
+                    <Input.TextArea placeholder={t("placeholders.address")} rows={2}  maxLength={200}/>
                   </Form.Item>
                 </Col>
 
@@ -912,7 +915,7 @@ const DisputeManagementPage: React.FC = () => {
                     label={t("form.comments")}
                     rules={[{ required: true, message: t("validation.required", { field: t("form.comments") }) }]}
                   >
-                    <Input.TextArea placeholder={t("placeholders.comments")} rows={2} />
+                    <Input.TextArea placeholder={t("placeholders.comments")} rows={2} maxLength={500} />
                   </Form.Item>
                 </Col>
 

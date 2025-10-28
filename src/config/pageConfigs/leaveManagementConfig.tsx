@@ -2,7 +2,6 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
-  StopOutlined,
   IdcardOutlined,
 } from "@ant-design/icons";
 import { PageConfig } from "../../types/config";
@@ -34,7 +33,7 @@ export const leaveManagementPageConfig: PageConfig = {
   },
   statsConfig: [
     {
-      title: "stats.TotalLeaves",
+      title: "stats.TotalLeaveRequests",
       icon: <IdcardOutlined />,
       value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
     },

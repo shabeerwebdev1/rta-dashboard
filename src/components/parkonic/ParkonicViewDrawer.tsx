@@ -10,8 +10,7 @@ import {
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useAppNotification } from "../../utils/notificationManager";
 import dayjs from "dayjs";
-import { EMIRATES, PLATE_TYPE_SHORT, PLATE_COLOR } from "../../config/pageConfigs/whitelistPlateConfig";
-
+import { plateSources, PLATE_TYPE_SHORT, PLATE_COLOR } from "../../config/pageConfigs/finesConfig";
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
@@ -175,7 +174,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                     <Col span={10}>
                       <Text strong>{t("form.plateSource")}</Text>
                     </Col>
-                    <Col span={14}>{record?.plateSource ? EMIRATES[record.plateSource]?.en || "---" : "---"}</Col>
+                    <Col span={14}>{record?.plateSource ? plateSources[record.plateSource]?.en || "---" : "---"}</Col>
                     <Col span={10}>
                       <Text strong>{t("form.plateCategory")}</Text>
                     </Col>

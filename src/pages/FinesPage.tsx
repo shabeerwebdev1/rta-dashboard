@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tag } from "antd";
 import { EyeOutlined, DownloadOutlined, EnvironmentOutlined, PaperClipOutlined, EditOutlined } from "@ant-design/icons";
@@ -19,7 +20,6 @@ import AttachmentsModal from "../components/fines/AttachmentsModal";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
-const pageKey = "fines";
 
 const getLabelFromValue = (value: number, options: any[], i18n: any) => {
   if (!options || !Array.isArray(options)) return String(value);
@@ -344,6 +344,8 @@ const FinesPage: React.FC = () => {
                 style={{ width: 450 }}
                 allowClear
               />
+              <span>{t("common.filterByfinedDate")}</span>
+
               <RangePicker
                 value={state.dateRange}
                 format={"DD-MM-YYYY"}

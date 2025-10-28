@@ -336,7 +336,12 @@
     "showingyourApprovals": "إظهار موافقتك",
     "yes": "نعم",
     "no": "لا",
-    "ok": " موافق "
+    "ok": " موافق ",
+    "filterByFromDate": "التصفية حسب من التاريخ",
+    "filterBycreatedDate": "التصفية حسب تاريخ الإنشاء",
+    "filterByPledgeStartDate": "التصفية حسب تاريخ بدء التعهد",
+    "filterByfinedDate": "التصفية حسب تاريخ الغرامة",
+    "filterBytowingDate": "التصفية حسب تاريخ السحب"
   },
   "entity": {
     "plate": "لوحة",
@@ -453,13 +458,14 @@
     "TotalPledges": "إجمالي التعهدات",
     "CorporatePledges": "تعهدات الشركات",
     "IndividualPledges": "تعهدات الأفراد",
-    "TotalLeaves": "إجمالي الإجازات",
+    "TotalLeaveRequests": "إجمالي طلبات الإجازة",
     "TotalTowings": "إجمالي السحوبات",
     "IsByLaw": "قانوني"
   },
   "validation": {
     "required": "يرجى إدخال {{field}}",
     "invalidEmail": "يرجى إدخال بريد إلكتروني صالح",
-    "onlyNumbers": "يرجى إدخال أرقام فقط"
+    "onlyNumbers": "يرجى إدخال أرقام فقط",
+    "lengthRange": "يجب أن يحتوي {{field}} على أرقام فقط وبحد أدنى {{min}} أرقام "
   }
 }

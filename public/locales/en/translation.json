@@ -339,7 +339,12 @@
     "showingyourApprovals": "Showing your Approvals",
     "yes": "Yes",
     "no": "No",
-    "ok": "Ok"
+    "ok": "Ok",
+    "filterByFromDate": "Filter by From Date",
+    "filterBycreatedDate": "Filter by Created Date",
+    "filterByPledgeStartDate": "Filter by Pledge Start Date",
+    "filterByfinedDate": "Filter by Fined Date",
+    "filterBytowingDate": "Filter by Towing Date"
   },
   "entity": {
     "plate": "Plate",
@@ -459,13 +464,14 @@
     "TotalPledges": "Total Pledges",
     "CorporatePledges": "Corporate Pledges",
     "IndividualPledges": "Individual Pledges",
-    "TotalLeaves": "Total Leaves",
+    "TotalLeaveRequests": "Total Leave Requests",
     "TotalTowings": "Total Towings",
     "IsByLaw": "Is By-Law"
   },
   "validation": {
     "required": " Please enter {{field}} ",
     "invalidEmail": " Please enter a valid email address ",
-    "onlyNumbers": " Only numbers are allowed "
+    "onlyNumbers": " Only numbers are allowed ",
+    "lengthRange": "{{field}} must contain digits {{min}} only."
   }
 }
