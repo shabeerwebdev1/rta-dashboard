@@ -18,7 +18,7 @@ export const plateSources: Record<number, { en: string; ar: string }> = {
 export const PLATE_TYPE_SHORT: Record<number, string> = {
   1: "Private",
   2: "Taxi",
-  3: "PubTra", // Public Transportation
+  3: "PubTra", 
   4: "Motorc", // Motorcycle
   5: "TaxiYel", // Taxi Yellow
   6: "Other", // Other (Specify)

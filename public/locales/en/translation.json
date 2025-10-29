@@ -291,7 +291,8 @@
     "Red": "Red",
     "DarkMode": "Dark Mode",
     "Logout": "Logout",
-    "NoLocationDataAvailable": "No Location Data Available"
+    "NoLocationDataAvailable": "No Location Data Available",
+    "Sl.No": "Sl.No"
   },
   "common": {
     "action": "Action",

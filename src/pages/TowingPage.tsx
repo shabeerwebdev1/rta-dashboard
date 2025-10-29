@@ -22,7 +22,7 @@ import TowingViewDrawer from "../components/Towing/TowingViewDrawer";
 const { Option } = Select;
 
 const TowingPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
@@ -106,7 +106,7 @@ const TowingPage: React.FC = () => {
         const formattedData = selectedRows.map((item: any, index: number) => {
           const csvRow: any = {};
 
-          csvRow[" sl.NO "] = index + 1;
+          csvRow[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
 
           // Process each column based on table configuration
           config.tableConfig.columns.forEach((column: any) => {
@@ -173,8 +173,9 @@ const TowingPage: React.FC = () => {
 
           return csvRow;
         });
+        const filename = i18n.language === "ar" ? "سحب_المركبات.csv" : "Towing.csv";
 
-        exportToCsv(formattedData, `Towing.csv`);
+        exportToCsv(formattedData, filename);
         notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
         setSelectedRowKeys([]);
         setSelectedRows([]);

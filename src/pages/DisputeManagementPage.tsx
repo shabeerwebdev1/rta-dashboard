@@ -463,7 +463,7 @@ const DisputeManagementPage: React.FC = () => {
 
           // ✅ CSV column mapping similar to Whitelist format
           const csvData = selectedRows.map((item: any, index: number) => ({
-            "sl.No": index + 1,
+            [t("form.Sl.No")]: index + 1,
             [t("form.fineNumber")]: item.fine_Number || item.fineId || "-",
             [t("form.name")]: item.name || "-",
             [t("form.department")]: getLabelFromValue(
@@ -745,6 +745,7 @@ const DisputeManagementPage: React.FC = () => {
           title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
           onCancel={handleModalClose}
           width="720px"
+          style={{ top: 20 }}
           footer={[
             <Button key="reset" onClick={() => form.resetFields()}>
               {t("common.reset")}
@@ -863,7 +864,7 @@ const DisputeManagementPage: React.FC = () => {
                     label={t("form.crmReference")}
                     rules={[{ required: true, message: t("validation.required", { field: t("form.crmReference") }) }]}
                   >
-                    <Input placeholder={t("placeholders.crmReference")} />
+                    <Input placeholder={t("placeholders.crmReference")} maxLength={20} />
                   </Form.Item>
                 </Col>
 

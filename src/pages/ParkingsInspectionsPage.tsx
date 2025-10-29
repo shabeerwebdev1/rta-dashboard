@@ -142,7 +142,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
     return data.map((item: any, index: number) => {
       const formattedRow: any = {};
 
-      formattedRow["sl.No "] = index + 1;
+      formattedRow[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
 
       enhancedTableConfig.columns.forEach((column: any) => {
         const key = column.key;

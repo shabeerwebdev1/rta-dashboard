@@ -292,7 +292,8 @@
     "Red": "أحمر",
     "DarkMode": "الوضع الداكن",
     "Logout": "تسجيل الخروج",
-    "NoLocationDataAvailable": "لا تتوفر بيانات الموقع"
+    "NoLocationDataAvailable": "لا تتوفر بيانات الموقع",
+    "Sl.No": "التسلسل"
   },
   "common": {
     "action": "إجراء",

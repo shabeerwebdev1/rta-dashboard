@@ -146,7 +146,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
           const transformedData = selectedRows.map((item: any, index: number) => {
             const csvRecord: Record<string, unknown> = {};
 
-            csvRecord["Sl. No"] = index + 1;
+            csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
 
             enhancedTableConfig.columns.forEach((column: any) => {
               const columnKey = column.key;

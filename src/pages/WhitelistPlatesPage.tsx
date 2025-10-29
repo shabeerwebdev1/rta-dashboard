@@ -278,7 +278,7 @@ const WhitelistPlatesPage: React.FC = () => {
     return data.map((item, index: number) => {
       const csvRecord: Record<string, unknown> = {};
 
-      csvRecord["Sl.No "] = index + 1;
+      csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
 
       config.tableConfig.columns.forEach((column) => {
         if (column.key === "plateNumber") {

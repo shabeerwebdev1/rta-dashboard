@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Upload, DatePicker, Spin, Image } from "antd";
 import { PlusOutlined, EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
@@ -74,7 +77,7 @@ const PledgesPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any>(null);
-  const [tableSize, setTableSize] = useState<"middle" | "small">("small");
+  const [tableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [tlData, setTlData] = useState<any | null>(null);
   const [companyEmail, setCompanyEmail] = useState("");
@@ -362,8 +365,9 @@ const PledgesPage: React.FC = () => {
 
   // ✅ FIXED: Enhanced function to transform data for CSV export with proper headers
   const transformDataForCSV = (data: any[]) => {
-    return data.map((item) => {
+    return data.map((item , index : number) => {
       const csvRecord: Record<string, unknown> = {};
+      csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
 
       // Only include fields that are visible in the UI table
       config.tableConfig.columns.forEach((column) => {

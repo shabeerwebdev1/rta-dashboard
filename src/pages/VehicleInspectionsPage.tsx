@@ -173,7 +173,7 @@ const VehicleInspectionsPage: React.FC = () => {
           const transformedData = selectedRows.map((item: any, index: number) => {
             const csvRecord: Record<string, unknown> = {};
 
-            csvRecord["sl.NO "] = index + 1;
+            csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
 
             // Use the same enhanced table config to get the exact same data as UI
             enhancedTableConfig.columns.forEach((column: any) => {

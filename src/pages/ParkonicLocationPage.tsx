@@ -363,7 +363,7 @@ const ParkonicLocationPage: React.FC = () => {
 
           // Since filteredData already has formatted dates, use it directly
           const transformedData = selectedRows.map((item, index: number) => ({
-            "Sl.No": index + 1,
+           [ t("form.Sl.No")]: index + 1,
             [t("form.parkingName")]: item.parking_Name_En,
             [t("form.parkingNameArabic")]: item.parking_Name_Ar,
             [t("form.zone")]: item.zone,
