@@ -33,6 +33,21 @@ export const pledgeConfig: PageConfig = {
       icon: <SnippetsOutlined />,
       value: (data, metadata) => `${data.filter((d) => d.pledgeType === 9002).length} / ${metadata?.individual || 0}`,
     },
+    {
+      title: "stats.activePledges",
+      icon: <SnippetsOutlined />,
+      value: (data, metadata) => `${data.filter((d) => d.pledgeType === 9002).length} / ${metadata?.active || 0}`,
+    },
+    {
+      title: "stats.inactivePledges",
+      icon: <SnippetsOutlined />,
+      value: (data, metadata) => `${data.filter((d) => d.pledgeType === 9002).length} / ${metadata?.inActive || 0}`,
+    },
+    {
+      title: "stats.expiredPledges",
+      icon: <SnippetsOutlined />,
+      value: (data, metadata) => `${data.filter((d) => d.pledgeType === 9002).length} / ${metadata?.expired || 0}`,
+    },
   ],
   tableConfig: {
     columns: [
@@ -41,6 +56,7 @@ export const pledgeConfig: PageConfig = {
       { key: "pledgeType", title: "form.pledgeType", type: "string", filterable: true },
       { key: "pledgeDate", title: "form.pledgestartDate", type: "date", sortable: true },
       { key: "pledgeEndDate", title: "form.pledgeEndDate", type: "date", sortable: true },
+      { key: "isActive", title: "form.status", type: "boolean", sortable: true },
     ],
     viewRecord: true,
   },

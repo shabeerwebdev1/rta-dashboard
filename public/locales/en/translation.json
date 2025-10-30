@@ -465,6 +465,9 @@
     "TotalPledges": "Total Pledges",
     "CorporatePledges": "Corporate Pledges",
     "IndividualPledges": "Individual Pledges",
+    "activePledges": "Active Pledges",
+    "inactivePledges": "Inactive Pledges",
+    "expiredPledges": "Expired Pledges",
     "TotalLeaveRequests": "Total Leave Requests",
     "TotalTowings": "Total Towings",
     "IsByLaw": "Is By-Law"

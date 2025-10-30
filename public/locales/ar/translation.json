@@ -461,7 +461,10 @@
     "IndividualPledges": "تعهدات الأفراد",
     "TotalLeaveRequests": "إجمالي طلبات الإجازة",
     "TotalTowings": "إجمالي السحوبات",
-    "IsByLaw": "قانوني"
+    "IsByLaw": "قانوني",
+    "activePledges": "التعهدات النشطة",
+    "inactivePledges": "التعهدات غير النشطة",
+    "expiredPledges": "التعهدات المنتهية"
   },
   "validation": {
     "required": "يرجى إدخال {{field}}",

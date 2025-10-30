@@ -202,7 +202,7 @@ export const whitelistPlateConfig: PageConfig = {
     {
       title: "stats.IsByLaw",
       icon: <CheckCircleOutlined />,
-      value: (data) => `${data.filter((d) => d.isByLaw === true).length}`,
+      value: (data, metadata) => `${data.filter((d) => d.isByLaw === true).length} / ${metadata?.isbylawRecords || 0}`,
       color: "#1890ff",
     },
   ],

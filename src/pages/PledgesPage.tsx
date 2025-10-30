@@ -2,7 +2,23 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Upload, DatePicker, Spin, Image } from "antd";
+import {
+  Space,
+  Card,
+  Input,
+  Button,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Select,
+  App,
+  Upload,
+  DatePicker,
+  Spin,
+  Image,
+  Tag,
+} from "antd";
 import { PlusOutlined, EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
@@ -44,6 +60,35 @@ const getLabelFromValue = (value: number, options: any[], i18n: any) => {
 // Helper function to filter options by category
 const filterOptionsByCategory = (options: any[], categoryId: number) => {
   return options.filter((option) => option.categoryId === categoryId);
+};
+
+// Helper function to determine pledge status
+// ✅ KEEP THIS - Updated to handle both number and boolean
+const getPledgeStatus = (record: any, i18n: any) => {
+  const today = dayjs();
+  const pledgeEndDate = dayjs(record.pledgeEndDate);
+
+  // Handle both number (1/0) and boolean (true/false) from backend
+  const isActiveBoolean = record.isActive === 1 || record.isActive === true;
+
+  if (!isActiveBoolean) {
+    return {
+      status: i18n.language === "ar" ? "غير نشط" : "Inactive",
+      color: "orange",
+    };
+  }
+
+  if (pledgeEndDate.isBefore(today, "day")) {
+    return {
+      status: i18n.language === "ar" ? "منتهي" : "Expired",
+      color: "red",
+    };
+  }
+
+  return {
+    status: i18n.language === "ar" ? "نشط" : "Active",
+    color: "green",
+  };
 };
 
 const PledgesPage: React.FC = () => {
@@ -226,6 +271,12 @@ const PledgesPage: React.FC = () => {
         remarks: record.remarks,
         document: fileList,
         dateRange: dateRange,
+        isActive: record.isActive === 1 ? true : record.isActive, // Convert 1→true, 0→false
+      });
+    } else {
+      // For add mode, set isActive to true by default
+      form.setFieldsValue({
+        isActive: true,
       });
     }
   };
@@ -248,6 +299,7 @@ const PledgesPage: React.FC = () => {
       BusinessName: values.businessName,
       Remarks: values.remarks,
       DocumentUploaded: false,
+      IsActive: values.isActive,
       // Add date fields with proper formatting
       PledgeDate: startDate ? startDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]") : null,
       PledgeEndDate: endDate ? endDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]") : null,
@@ -365,7 +417,7 @@ const PledgesPage: React.FC = () => {
 
   // ✅ FIXED: Enhanced function to transform data for CSV export with proper headers
   const transformDataForCSV = (data: any[]) => {
-    return data.map((item , index : number) => {
+    return data.map((item, index: number) => {
       const csvRecord: Record<string, unknown> = {};
       csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
 
@@ -383,6 +435,9 @@ const PledgesPage: React.FC = () => {
           csvRecord[t("form.pledgeEndDate")] = item.pledgeEndDate ? dayjs(item.pledgeEndDate).format("DD-MM-YYYY") : "";
         } else if (column.key === "remarks") {
           csvRecord[t("form.remarks")] = item.remarks || "";
+        } else if (column.key === "isActive") {
+          const statusInfo = getPledgeStatus(item, i18n);
+          csvRecord[t("form.status")] = statusInfo.status;
         } else if (column.key === "createdDate") {
           csvRecord[t("form.createdDate")] = item.createdDate ? dayjs(item.createdDate).format("DD-MM-YYYY") : "";
         }
@@ -415,9 +470,6 @@ const PledgesPage: React.FC = () => {
       cancelText: t("common.cancel"),
       onOk: () => {
         try {
-          // ✅ FIXED: Get the selected data from the current page data
-          //const selectedRows = platesData.filter((item: any) => selectedRowKeys.includes(item.id));
-
           if (selectedRows.length === 0) {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
             return;
@@ -450,7 +502,7 @@ const PledgesPage: React.FC = () => {
     [t, config.tableConfig.columns, i18n.language],
   );
 
-  // Enhanced table config with render functions for dropdown values
+  // Enhanced table config with render functions for dropdown values and status
   const enhancedTableConfig = useMemo(
     () => ({
       ...config.tableConfig,
@@ -459,6 +511,15 @@ const PledgesPage: React.FC = () => {
           return {
             ...column,
             render: (value: any) => getLabelFromValue(value, pledgeTypeOptions, i18n),
+          };
+        }
+        if (column.key === "isActive") {
+          return {
+            ...column,
+            render: (value: any, record: any) => {
+              const statusInfo = getPledgeStatus(record, i18n);
+              return <Tag color={statusInfo.color}>{statusInfo.status}</Tag>;
+            },
           };
         }
         return column;
@@ -509,6 +570,9 @@ const PledgesPage: React.FC = () => {
       totalCount: data.totalCount,
       corporate: data.corporate,
       individual: data.individual,
+      active: data.active,
+      inActive: data.inActive,
+      expired: data.expired,
     };
   }, [data]);
 
@@ -743,11 +807,20 @@ const PledgesPage: React.FC = () => {
                 </Form.Item>
               </Col>
 
-              {/* <Col span={12}>
-  <Form.Item label={t("form.companyEmail")}>
-    <Input value={companyEmail} disabled placeholder={t("placeholders.companyEmail")} />
-  </Form.Item>
-</Col> */}
+              {modalMode === "edit" && (
+                <Col span={12}>
+                  <Form.Item
+                    name="isActive"
+                    label={t("form.status")}
+                    rules={[{ required: true, message: t("validation.required", { field: t("form.status") }) }]}
+                  >
+                    <Select placeholder={t("placeholders.status")}>
+                      <Option value={true}>{t("status.active")}</Option>
+                      <Option value={false}>{t("status.inactive")}</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+              )}
 
               <Col span={12}>
                 <Form.Item

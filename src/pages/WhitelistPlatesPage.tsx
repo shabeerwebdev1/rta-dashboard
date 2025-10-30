@@ -399,10 +399,10 @@ const WhitelistPlatesPage: React.FC = () => {
                 return <Tag color="green">{label}</Tag>;
               }
               if (value === 5002) {
-                return <Tag color="red">{label}</Tag>;
+                return <Tag color="orange">{label}</Tag>;
               }
               if (value === 5003) {
-                return <Tag color="orange">{label}</Tag>;
+                return <Tag color="red">{label}</Tag>;
               }
 
               return <Tag>{label}</Tag>; // fallback
@@ -474,6 +474,7 @@ const WhitelistPlatesPage: React.FC = () => {
       activeRecords: data.activeRecords,
       inactiveRecords: data.inactiveRecords,
       expiredRecords: data.expiredRecords,
+      isbylawRecords: data.isbylawRecords,
     };
   }, [data]);
 
