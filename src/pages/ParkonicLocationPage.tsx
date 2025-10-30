@@ -317,7 +317,7 @@ const ParkonicLocationPage: React.FC = () => {
     const params = new URLSearchParams(searchParams);
     params.set("viewRecord", viewRecord.id);
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-    navigator.clipboard.writeText(shareUrl).then(
+    navigator.clipboard?.writeText(shareUrl).then(
       () =>
         notification.success(
           {

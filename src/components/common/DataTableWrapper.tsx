@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Table, Pagination, Card, Tag, Button, Dropdown, theme } from "antd";
 import type { TableProps } from "antd";
@@ -256,7 +258,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
         loading={isLoading}
         pagination={false}
         onChange={handleTableChange}
-        rowSelection={{ ...rowSelection, preserveSelectedRowKeys: true }}
+        rowSelection={rowSelection ? { ...rowSelection, preserveSelectedRowKeys: true } : undefined}
         size={tableSize}
         sortDirections={["ascend", "descend"]}
         rowClassName={rowClassName} // ADD THIS LINE

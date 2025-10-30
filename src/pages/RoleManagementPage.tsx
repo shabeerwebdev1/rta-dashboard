@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState, useMemo } from "react";
-import { Card, Select, Checkbox, Space, Spin, Alert, Table, Button, Col, Row } from "antd";
+import { Card, Select, Checkbox, Space, Spin, Alert, Button, Col, Row } from "antd";
 import { roleManagementConfig } from "../config/pageConfigs/roleManagementConfig";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
@@ -41,7 +41,7 @@ const RoleManagementPage: React.FC = () => {
   const [originalData, setOriginalData] = useState<TableRow[]>([]);
 
   const { setPageTitle } = usePage();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const notification = useAppNotification();
 
   // API hooks
@@ -224,7 +224,14 @@ const RoleManagementPage: React.FC = () => {
         </Row>
 
         {permissionsError && (
-          <Alert message="Error" description="Failed to load permissions for this role." type="error" showIcon />
+          <Alert
+            message={i18n.language === "ar" ? "خطأ" : "Error"}
+            description={
+              i18n.language === "ar" ? "فشل تحميل الأذونات لهذا الدور." : "Failed to load permissions for this role."
+            }
+            type="error"
+            showIcon
+          />
         )}
 
         {isLoadingPermissions ? (
@@ -248,6 +255,7 @@ const RoleManagementPage: React.FC = () => {
               tableSize="middle"
               state={{ columnFilters: {} }}
               showPagination={false}
+              rowSelection={null}
               rowKey={(record: TableRow) => record.key ?? record.roleGUID ?? Math.random()}
             />
           )

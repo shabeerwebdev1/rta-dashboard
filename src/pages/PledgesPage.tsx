@@ -339,7 +339,7 @@ const PledgesPage: React.FC = () => {
     url.searchParams.set("viewRecord", record.id);
     const shareUrl = url.toString();
 
-    navigator.clipboard.writeText(shareUrl).then(
+    navigator.clipboard?.writeText(shareUrl).then(
       () =>
         notification.success(
           {

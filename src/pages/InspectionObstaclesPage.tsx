@@ -295,7 +295,7 @@ const InspectionObstaclesPage: React.FC = () => {
   };
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href).then(
+    navigator.clipboard?.writeText(window.location.href).then(
       () =>
         notification.success(
           {

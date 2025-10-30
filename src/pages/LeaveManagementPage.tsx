@@ -280,7 +280,7 @@ const LeaveManagementPage: React.FC = () => {
 
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 
-    navigator.clipboard.writeText(shareUrl).then(
+    navigator.clipboard?.writeText(shareUrl).then(
       () => notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!"),
       () => notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed"),
     );
