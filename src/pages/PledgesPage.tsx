@@ -524,12 +524,24 @@ const PledgesPage: React.FC = () => {
         if (column.key === "isActive") {
           return {
             ...column,
+            filters: statusFilterOptions, // attach the options
+            onFilter: (value: string, record: any) => {
+              const today = dayjs();
+              const pledgeEndDate = dayjs(record.pledgeEndDate);
+              const isActive = record.isActive === 1 || record.isActive === true;
+
+              if (value === "active") return isActive && !pledgeEndDate.isBefore(today, "day");
+              if (value === "inactive") return !isActive;
+              if (value === "expired") return isActive && pledgeEndDate.isBefore(today, "day");
+              return true;
+            },
             render: (value: any, record: any) => {
               const statusInfo = getPledgeStatus(record, i18n);
               return <Tag color={statusInfo.color}>{statusInfo.status}</Tag>;
             },
           };
         }
+
         return column;
       }),
     }),
@@ -566,6 +578,8 @@ const PledgesPage: React.FC = () => {
     if (!data) return [];
     return Array.isArray(data) ? data : data.data || [];
   }, [data]);
+
+  // console.log(platesData);
 
   const totalCount = useMemo(() => {
     if (!data) return 0;
