@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { Drawer, Descriptions, Typography, Button, Space, Image, Empty, Spin } from "antd";
 import { useTranslation } from "react-i18next";
@@ -5,7 +7,7 @@ import { ShareAltOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useSearchParams } from "react-router-dom";
 import type { PageConfig } from "../../types/config";
-import { getFileUrl } from "../../services/fileApi";
+import { getFileUrl } from "../../services/rtkApiFactory";
 import { useLazyGetLookupsQuery, useLazyGetPledgeByIdQuery } from "../../services/rtkApiFactory";
 
 // ---------- Helper Functions ----------

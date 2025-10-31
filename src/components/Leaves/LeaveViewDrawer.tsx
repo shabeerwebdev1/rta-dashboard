@@ -82,7 +82,7 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
                   status === LeaveStatus.Approved
                     ? "green"
                     : status === LeaveStatus.Pending
-                      ? "blue"
+                      ? "orange"
                       : status === LeaveStatus.Cancelled
                         ? "orange"
                         : "red"

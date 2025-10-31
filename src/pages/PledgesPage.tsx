@@ -35,7 +35,7 @@ import {
   useLazyGetPledgeByIdQuery,
   useLazyGetTradeLicenseDetailsQuery,
 } from "../services/rtkApiFactory";
-import { getFileUrl, useUploadFilesMutation } from "../services/fileApi";
+import { getFileUrl, useUploadFilesMutation } from "../services/rtkApiFactory";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
@@ -293,6 +293,7 @@ const PledgesPage: React.FC = () => {
     const startDate = values.dateRange?.[0];
     const endDate = values.dateRange?.[1];
 
+    // Build payload
     const payload: Record<string, string | number | boolean | null> = {
       PledgeType: values.pledgeType,
       TradeLicenseNumber: values.tradeLicenseNumber,
@@ -310,23 +311,23 @@ const PledgesPage: React.FC = () => {
       const existingFiles: string[] = [];
       const newFiles: any[] = [];
 
-      if (values.document) {
+      if (values.document && Array.isArray(values.document)) {
         values.document.forEach((file: any) => {
           if (file.originFileObj) {
-            // New file to upload
+            // 🆕 New file to upload
             newFiles.push(file);
           } else if (file.url) {
-            // Existing file - extract the path from the URL
-            const urlPath = file.url.replace(getFileUrl(""), "");
-            existingFiles.push(urlPath);
+            // 🧩 Extract just the filename (no URL, no query)
+            const filename = file.url.split("/").pop()?.split("?")[0] || "";
+            if (filename) existingFiles.push(filename);
           }
         });
       }
 
-      // Build document path array starting with existing files
+      // 🧱 Start with existing filenames
       const allDocumentPaths: string[] = [...existingFiles];
 
-      // Upload new files if any
+      // 📤 Upload new files if any
       if (newFiles.length > 0) {
         const formData = new FormData();
         formData.append("Category", "PledgeDocuments");
@@ -338,16 +339,17 @@ const PledgesPage: React.FC = () => {
         const uploadResult = await uploadFiles(formData).unwrap();
         const savedFileNames = (uploadResult as any[]).map((f) => f.savedAs);
 
-        // Add newly uploaded files to the path array
+        // Add newly uploaded file names
         allDocumentPaths.push(...savedFileNames);
       }
 
-      // Set the combined document path
+      // 🪄 Combine all filenames into semicolon-separated string
       if (allDocumentPaths.length > 0) {
         payload.DocumentPath = allDocumentPaths.join(";");
         payload.DocumentUploaded = true;
       }
 
+      // 🧾 Save or update pledge
       let response;
       if (modalMode === "add") {
         response = await addPledge(payload).unwrap();
@@ -497,6 +499,12 @@ const PledgesPage: React.FC = () => {
     });
   };
 
+  const statusFilterOptions = [
+    { text: t("status.active"), value: "active" },
+    { text: t("status.inactive"), value: "inactive" },
+    { text: t("status.expired"), value: "expired" },
+  ];
+
   const columnLabels = useMemo(
     () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
     [t, config.tableConfig.columns, i18n.language],
@@ -643,17 +651,12 @@ const PledgesPage: React.FC = () => {
             setSelectedRowKeys(keys);
 
             setSelectedRows((prev) => {
-              // Remove rows that are no longer selected
               const remaining = prev.filter((p) => keys.includes(p.id));
-
-              // Add newly selected rows (avoid duplicates)
               const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
-
               return [...remaining, ...newSelected];
             });
           },
           getCheckboxProps: (record: any) => ({
-            // Use id as the row key since that's the unique identifier in your data
             name: record.id,
           }),
         }}
@@ -662,6 +665,7 @@ const PledgesPage: React.FC = () => {
         state={state}
         lookupOptions={lookupOptions}
         getLabelFromValue={getLabelFromValue}
+        filterOptions={{ isActive: statusFilterOptions }}
       />
 
       <Modal
@@ -752,6 +756,7 @@ const PledgesPage: React.FC = () => {
                     >
                       <Input
                         style={{ width: "calc(100% - 90px)" }}
+                        addonBefore="TL-"
                         placeholder={t("placeholders.tradeLicenseNumber")}
                         minLength={6}
                         maxLength={12}
@@ -814,10 +819,18 @@ const PledgesPage: React.FC = () => {
                     label={t("form.status")}
                     rules={[{ required: true, message: t("validation.required", { field: t("form.status") }) }]}
                   >
-                    <Select placeholder={t("placeholders.status")}>
-                      <Option value={true}>{t("status.active")}</Option>
-                      <Option value={false}>{t("status.inactive")}</Option>
-                    </Select>
+                    {selectedRecord && dayjs(selectedRecord.pledgeEndDate).isBefore(dayjs(), "day") ? (
+                      // 🔒 Expired: show disabled Select with "Expired" value
+                      <Select value="expired" disabled>
+                        <Option value="expired">{t("status.expired")}</Option>
+                      </Select>
+                    ) : (
+                      // ✅ Active/InActive: normal editable Select
+                      <Select placeholder={t("placeholders.status")}>
+                        <Option value={true}>{t("status.active")}</Option>
+                        <Option value={false}>{t("status.inactive")}</Option>
+                      </Select>
+                    )}
                   </Form.Item>
                 </Col>
               )}
@@ -833,6 +846,7 @@ const PledgesPage: React.FC = () => {
                     format={"DD-MM-YYYY"}
                     disabledDate={(d) => d && d < dayjs().startOf("day")}
                     placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
+                    disabled={[modalMode === "edit", false]}
                   />
                 </Form.Item>
               </Col>
@@ -886,7 +900,7 @@ const PledgesPage: React.FC = () => {
               </Col>
               <Col span={24}>
                 <Form.Item name="remarks" label={t("form.remarks")}>
-                  <Input.TextArea placeholder={t("placeholders.remarks")} maxLength={500} />
+                  <Input.TextArea placeholder={t("placeholders.remarks")} maxLength={4000} />
                 </Form.Item>
               </Col>
             </Row>

@@ -1,3 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Form, Space, Image } from "antd";
 import { CloseOutlined, ShareAltOutlined } from "@ant-design/icons";
@@ -156,12 +159,20 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
     return map[inspectionStatus || 0] || t("status.unknown");
   };
 
-  const getStatusColor = (isPaid: boolean, inspectionStatus: number) => {
-    if (isPaid) return "green";
-    if (inspectionStatus === 2) return "red";
-    if (inspectionStatus === 15003) return "orange";
-    return "orange";
+
+  const fineStatusColorMap: Record<number, string> = {
+    15001: "orange",
+    15002: "green",
+    15003: "red",
+    15004: "blue",
+    15005: "purple",
+    15006: "indigo",
   };
+
+  const getStatusColor = (isPaid: boolean, inspectionStatus: number) => {
+  if (isPaid) return "green";
+  return fineStatusColorMap[inspectionStatus] || "orange";
+};
 
   const handleFormSubmit = async (values: { comment: string }) => {
     if (!mappedFine || !lastAction) return;

@@ -76,7 +76,7 @@ const WhitelistPlatesViewDrawer: React.FC<WhitelistPlatesViewDrawerProps> = ({
       plateColor: getLabelFromValue(record.plateColor_Id as number, plateColorOptions, i18n),
       plateStatus: getLabelFromValue(record.plateStatus_Id as number, plateStatusOptions, i18n),
       exemptionReason: getLabelFromValue(record.exemptionReason_ID as number, exemptionReasons, i18n),
-      isByLawLabel: record.isByLaw ? t("common.true") : t("common.false"),
+      isByLawLabel: record.isByLaw ? t("common.yes") : t("common.no"),
       fromDateFormatted: record.fromDate ? dayjs(record.fromDate as string).format("YYYY-MM-DD") : "",
       toDateFormatted: record.toDate ? dayjs(record.toDate as string).format("YYYY-MM-DD") : "",
     };

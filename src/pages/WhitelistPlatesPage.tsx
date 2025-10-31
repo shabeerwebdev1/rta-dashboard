@@ -250,8 +250,41 @@ const WhitelistPlatesPage: React.FC = () => {
     const params = new URLSearchParams(searchParams);
     params.set("viewRecord", viewRecord.id);
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-    navigator.clipboard?.writeText(shareUrl).then(
-      () =>
+
+    // ✅ Try Clipboard API, fallback to execCommand
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard
+        .writeText(shareUrl)
+        .then(() => {
+          notification.success(
+            {
+              data: {
+                en_Msg: t("messages.shareSuccessEn"),
+                ar_Msg: t("messages.shareSuccessAr"),
+              },
+            },
+            t("messages.shareSuccessTitle"),
+          );
+        })
+        .catch(() => {
+          notification.error(
+            {
+              data: {
+                en_Msg: t("messages.shareErrorEn"),
+                ar_Msg: t("messages.shareErrorAr"),
+              },
+            },
+            t("messages.shareErrorTitle"),
+          );
+        });
+    } else {
+      // 🔙 Fallback for HTTP / unsupported browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = shareUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand("copy");
         notification.success(
           {
             data: {
@@ -260,8 +293,8 @@ const WhitelistPlatesPage: React.FC = () => {
             },
           },
           t("messages.shareSuccessTitle"),
-        ),
-      () =>
+        );
+      } catch {
         notification.error(
           {
             data: {
@@ -270,8 +303,11 @@ const WhitelistPlatesPage: React.FC = () => {
             },
           },
           t("messages.shareErrorTitle"),
-        ),
-    );
+        );
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
   };
 
   const transformDataForCSV = (data: any[]) => {

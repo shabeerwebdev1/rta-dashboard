@@ -78,6 +78,7 @@ const FinesPage: React.FC = () => {
     15003: "red",
     15004: "blue",
     15005: "purple",
+    15006: "indigo",
   };
 
   useEffect(() => {

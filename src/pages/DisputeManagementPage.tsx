@@ -32,7 +32,7 @@ import {
   useLazyGetLookupsQuery,
   useLazyGetDisputeByIdQuery,
 } from "../services/rtkApiFactory";
-import { getFileUrl, useUploadFilesMutation } from "../services/fileApi";
+import { getFileUrl, useUploadFilesMutation } from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";

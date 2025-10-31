@@ -1,6 +1,6 @@
 import UAEPlate from "../../components/UAEPlate";
 import type { PageConfig } from "../../types/config";
-import { IdcardOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { IdcardOutlined, CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 
 export const EMIRATES: Record<number, { en: string; ar: string; code: string }> = {
   1: { en: "Dubai", ar: "دبي", code: "DXB" },
@@ -186,17 +186,17 @@ export const whitelistPlateConfig: PageConfig = {
       icon: <CloseCircleOutlined />,
       value: (data, metadata) =>
         `${data.filter((d) => d.plateStatus_Id === 5002).length} / ${metadata?.inactiveRecords || 0}`,
-      color: "#ff4d4f",
+      color: "#faad14",
     },
     {
       title: "stats.ExpiredPlates",
-      icon: <CloseCircleOutlined />,
+      icon: <ExclamationCircleOutlined />,
       value: (data, metadata) => {
         const today = new Date();
         const expiredCount = data.filter((d) => d.toDate && new Date(d.toDate) < today).length;
         return `${expiredCount} / ${metadata?.expiredRecords || 0}`;
       },
-      color: "#faad14",
+      color: "#ff4d4f",
     },
 
     {

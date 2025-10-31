@@ -304,7 +304,8 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
     15002: "green",
     15003: "red",
     15004: "blue",
-    15005: "purple", // example
+    15005: "purple",
+    15006: "indigo",
   };
 
   const getFineStatusColor = (status: number) => fineStatusColorMap[status] || "default";

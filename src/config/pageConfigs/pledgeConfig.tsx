@@ -1,5 +1,12 @@
 import type { PageConfig } from "../../types/config";
-import { AuditOutlined, SnippetsOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
+import {
+  AuditOutlined,
+  CheckCircleOutlined,
+  SnippetsOutlined,
+  CloseCircleOutlined,
+  ExclamationCircleOutlined,
+} from "@ant-design/icons";
 
 export const pledgeConfig: PageConfig = {
   key: "pledges",
@@ -13,7 +20,7 @@ export const pledgeConfig: PageConfig = {
   },
   searchConfig: {
     globalSearchKeys: ["tradeLicenseNumber", "businessName"],
-    columnFilterKeys: ["pledgeType"],
+    columnFilterKeys: ["pledgeType" , "isActive"],
     dateRangeKey: "pledgeDate",
   },
 
@@ -21,34 +28,67 @@ export const pledgeConfig: PageConfig = {
     {
       title: "stats.TotalPledges",
       icon: <AuditOutlined />,
-      value: (data, metadata) => `${data.length} / ${metadata?.totalCount || 0}`,
+      value: (data, metadata) => `${data?.length || 0} / ${metadata?.totalCount || 0}`,
     },
+
     {
       title: "stats.CorporatePledges",
       icon: <SnippetsOutlined />,
-      value: (data, metadata) => `${data.filter((d) => d.pledgeType === 9001).length} / ${metadata?.corporate || 0}`,
+      value: (data, metadata) =>
+        `${data?.filter((d) => d.pledgeType === 9001).length || 0} / ${metadata?.corporate || 0}`,
     },
+
     {
       title: "stats.IndividualPledges",
       icon: <SnippetsOutlined />,
-      value: (data, metadata) => `${data.filter((d) => d.pledgeType === 9002).length} / ${metadata?.individual || 0}`,
+      value: (data, metadata) =>
+        `${data?.filter((d) => d.pledgeType === 9002).length || 0} / ${metadata?.individual || 0}`,
     },
+
     {
       title: "stats.activePledges",
-      icon: <SnippetsOutlined />,
-      value: (data, metadata) => `${data.filter((d) => d.pledgeType === 9002).length} / ${metadata?.active || 0}`,
+      icon: <CheckCircleOutlined />,
+      value: (data, metadata) => {
+        const today = dayjs();
+        const activeCount =
+          data?.filter((d) => {
+            const endDate = dayjs(d.pledgeEndDate);
+            return (
+              (d.isActive === true || d.isActive === 1) &&
+              (endDate.isAfter(today, "day") || endDate.isSame(today, "day"))
+            );
+          }).length || 0;
+        return `${activeCount} / ${metadata?.active || 0}`;
+      },
+      color: "#52c41a",
     },
+
     {
       title: "stats.inactivePledges",
-      icon: <SnippetsOutlined />,
-      value: (data, metadata) => `${data.filter((d) => d.pledgeType === 9002).length} / ${metadata?.inActive || 0}`,
+      icon: <CloseCircleOutlined />,
+      value: (data, metadata) => {
+        const inactiveCount = data?.filter((d) => d.isActive === false || d.isActive === 0).length || 0;
+        return `${inactiveCount} / ${metadata?.inActive || 0}`;
+      },
+      color: "#faad14",
     },
+
     {
       title: "stats.expiredPledges",
-      icon: <SnippetsOutlined />,
-      value: (data, metadata) => `${data.filter((d) => d.pledgeType === 9002).length} / ${metadata?.expired || 0}`,
+      icon: <ExclamationCircleOutlined />,
+      value: (data, metadata) => {
+        const today = dayjs();
+        const expiredCount =
+          data?.filter((d) => {
+            const endDate = dayjs(d.pledgeEndDate);
+            return (d.isActive === true || d.isActive === 1) && endDate.isBefore(today, "day");
+          }).length || 0;
+        return `${expiredCount} / ${metadata?.expired || 0}`;
+      },
+      color: "#ff4d4f",
     },
   ],
+
   tableConfig: {
     columns: [
       { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "string", sortable: true },
@@ -56,20 +96,14 @@ export const pledgeConfig: PageConfig = {
       { key: "pledgeType", title: "form.pledgeType", type: "string", filterable: true },
       { key: "pledgeDate", title: "form.pledgestartDate", type: "date", sortable: true },
       { key: "pledgeEndDate", title: "form.pledgeEndDate", type: "date", sortable: true },
-      { key: "isActive", title: "form.status", type: "boolean", sortable: true },
+      { key: "isActive", title: "form.status", type: "string", sortable: true, filterable: true },
     ],
-    viewRecord: true,
   },
+
   formConfig: {
     modalWidth: "720px",
     fields: [
-      {
-        name: "pledgeNumber",
-        label: "form.pledgeNumber",
-        type: "text",
-        required: true,
-        span: 12,
-      },
+      { name: "pledgeNumber", label: "form.pledgeNumber", type: "text", required: true, span: 12 },
       {
         name: "pledgeType",
         label: "form.pledgeType",
@@ -78,20 +112,8 @@ export const pledgeConfig: PageConfig = {
         span: 12,
         options: ["Corporate", "Individual"],
       },
-      {
-        name: "tradeLicenseNumber",
-        label: "form.tradeLicenseNumber",
-        type: "text",
-        required: true,
-        span: 12,
-      },
-      {
-        name: "businessName",
-        label: "form.businessName",
-        type: "text",
-        required: true,
-        span: 12,
-      },
+      { name: "tradeLicenseNumber", label: "form.tradeLicenseNumber", type: "text", required: true, span: 12 },
+      { name: "businessName", label: "form.businessName", type: "text", required: true, span: 12 },
       {
         name: "documentPath",
         label: "form.document",
@@ -101,13 +123,7 @@ export const pledgeConfig: PageConfig = {
         fileCategory: "PledgeDocuments",
         responseKey: "documentPath",
       },
-      {
-        name: "remarks",
-        label: "form.remarks",
-        type: "textarea",
-        required: false,
-        span: 24,
-      },
+      { name: "remarks", label: "form.remarks", type: "textarea", required: false, span: 24 },
       { name: "documentUploaded", label: "", type: "hidden", span: 0 },
       { name: "submittedBy", label: "", type: "hidden", span: 0 },
     ],

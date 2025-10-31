@@ -755,7 +755,7 @@ const InspectionObstaclesPage: React.FC = () => {
               </Col>
               <Col span={24}>
                 <Form.Item name="Comments" label={t("form.comments")}>
-                  <Input.TextArea placeholder={t("placeholders.comments")} maxLength={500} />
+                  <Input.TextArea placeholder={t("placeholders.comments")} maxLength={4000} />
                 </Form.Item>
               </Col>
             </Row>
