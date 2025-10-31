@@ -19,7 +19,20 @@ export const getMobileFileUrl = (filePath: string) => {
 };
 
 //helper to get images  from localserver
-export const getFileUrl = (fileName: string) => `${RTA_API_TARGET}/api/Files/download/${fileName}`;
+export const getFileUrl = (fileName: string) => {
+  if (!fileName) return "";
+
+  // If already encoded with %5C (working format), skip fixing
+  if (fileName.includes("%5C")) {
+    return `${RTA_API_TARGET}/api/Files/download/${fileName}`;
+  }
+
+  // Replace any forward or backward slashes with double backslashes
+  const fixedFileName = fileName.replace(/[\\/]+/g, "\\\\");
+
+  // Build and return the encoded URL
+  return encodeURI(`${RTA_API_TARGET}/api/Files/download/${fixedFileName}`);
+};
 
 const baseQuery = fetchBaseQuery({
   baseUrl: RTA_API_TARGET,
