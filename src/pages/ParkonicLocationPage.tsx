@@ -285,7 +285,13 @@ const ParkonicLocationPage: React.FC = () => {
 
   const totalCount = useMemo(() => {
     if (!data) return 0;
-    return Array.isArray(data) ? data.length : data.totalCount || 0;
+
+    if (Array.isArray(data)) {
+      return data.length;
+    }
+
+    // Check multiple possible field names
+    return data.total || data.totalCount || data.count || 0;
   }, [data]);
 
   return (
@@ -348,14 +354,9 @@ const ParkonicLocationPage: React.FC = () => {
           selectedRowKeys,
           onChange: (keys: React.Key[], selectedRows: any[]) => {
             setSelectedRowKeys(keys);
-
             setSelectedRows((prev) => {
-              // Remove rows that are no longer selected
               const remaining = prev.filter((p) => keys.includes(p.id));
-
-              // Add newly selected rows (avoid duplicates)
               const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
-
               return [...remaining, ...newSelected];
             });
           },
@@ -363,6 +364,15 @@ const ParkonicLocationPage: React.FC = () => {
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
         state={state}
+        // ✅ ADD THIS: Explicit pagination config
+        pagination={{
+          current: apiParams.PageNumber,
+          pageSize: apiParams.PageSize,
+          total: totalCount,
+          showSizeChanger: true,
+          showTotal: (total, range) => t("pagination.showTotal", { start: range[0], end: range[1], total }),
+          pageSizeOptions: ["10", "20", "50", "100"],
+        }}
       />
     </Space>
   );
