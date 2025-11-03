@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useValidatecodeQuery } from "../services/rtkApiFactory";
 import { useAuth } from "../contexts/AuthContext";
 
-const FALLBACK_CODE = "202511033D379AC8435047E8BF300B7E";
+const FALLBACK_CODE = "20250919B8E7824B44624665BC686917";
 
 const SPLASH_DELAY = 1300;
 

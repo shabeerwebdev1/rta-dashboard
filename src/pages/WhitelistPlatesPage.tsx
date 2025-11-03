@@ -785,8 +785,8 @@ const WhitelistPlatesPage: React.FC = () => {
                       (option?.label as string).toLowerCase().includes(input.toLowerCase())
                     }
                     options={[
-                      { label: t("common.yes"), value: true },
-                      { label: t("common.no"), value: false },
+                      { label: t("common.true"), value: true },
+                      { label: t("common.false"), value: false },
                     ]}
                   />
                 </Form.Item>

@@ -400,13 +400,43 @@ const PledgesPage: React.FC = () => {
   };
 
   const handleShare = (record: any) => {
-    // Create URL with record ID parameter
     const url = new URL(window.location.href);
     url.searchParams.set("viewRecord", record.id);
     const shareUrl = url.toString();
 
-    navigator.clipboard?.writeText(shareUrl).then(
-      () =>
+    if (navigator?.clipboard && window.isSecureContext) {
+      navigator.clipboard
+        .writeText(shareUrl)
+        .then(() => {
+          notification.success(
+            {
+              data: {
+                en_Msg: t("messages.shareSuccessEn"),
+                ar_Msg: t("messages.shareSuccessAr"),
+              },
+            },
+            t("messages.shareSuccessTitle"),
+          );
+        })
+        .catch(() => {
+          notification.error(
+            {
+              data: {
+                en_Msg: t("messages.shareErrorEn"),
+                ar_Msg: t("messages.shareErrorAr"),
+              },
+            },
+            t("messages.shareErrorTitle"),
+          );
+        });
+    } else {
+      // Fallback for insecure context or unsupported browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = shareUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand("copy");
         notification.success(
           {
             data: {
@@ -415,8 +445,8 @@ const PledgesPage: React.FC = () => {
             },
           },
           t("messages.shareSuccessTitle"),
-        ),
-      () =>
+        );
+      } catch {
         notification.error(
           {
             data: {
@@ -425,8 +455,10 @@ const PledgesPage: React.FC = () => {
             },
           },
           t("messages.shareErrorTitle"),
-        ),
-    );
+        );
+      }
+      document.body.removeChild(textArea);
+    }
   };
 
   // ✅ FIXED: Enhanced function to transform data for CSV export with proper headers

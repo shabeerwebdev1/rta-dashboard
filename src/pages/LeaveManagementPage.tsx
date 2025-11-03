@@ -271,7 +271,15 @@ const LeaveManagementPage: React.FC = () => {
 
   const handleShare = () => {
     if (!selectedRecord || !selectedRecord.id) {
-      notification.error({ data: { en_Msg: "No record selected" } }, "No Record");
+      notification.error(
+        {
+          data: {
+            en_Msg: t("messages.noRecordEn"),
+            ar_Msg: t("messages.noRecordAr"),
+          },
+        },
+        t("messages.noRecordTitle"),
+      );
       return;
     }
 
@@ -280,10 +288,69 @@ const LeaveManagementPage: React.FC = () => {
 
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 
-    navigator.clipboard?.writeText(shareUrl).then(
-      () => notification.success({ data: { en_Msg: "Share link copied to clipboard!" } }, "Link Copied!"),
-      () => notification.error({ data: { en_Msg: "Failed to copy link." } }, "Copy Failed"),
-    );
+    // ✅ Clipboard API (modern browsers + HTTPS)
+    if (navigator?.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(shareUrl).then(
+        () =>
+          notification.success(
+            {
+              data: {
+                en_Msg: t("messages.shareSuccessEn"),
+                ar_Msg: t("messages.shareSuccessAr"),
+              },
+            },
+            t("messages.shareSuccessTitle"),
+          ),
+        () =>
+          notification.error(
+            {
+              data: {
+                en_Msg: t("messages.shareErrorEn"),
+                ar_Msg: t("messages.shareErrorAr"),
+              },
+            },
+            t("messages.shareErrorTitle"),
+          ),
+      );
+    } else {
+      // ⚙️ Fallback for HTTP or unsupported browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = shareUrl;
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        const success = document.execCommand("copy");
+        if (success) {
+          notification.success(
+            {
+              data: {
+                en_Msg: t("messages.shareSuccessEn"),
+                ar_Msg: t("messages.shareSuccessAr"),
+              },
+            },
+            t("messages.shareSuccessTitle"),
+          );
+        } else {
+          throw new Error("Copy command failed");
+        }
+      } catch {
+        notification.error(
+          {
+            data: {
+              en_Msg: t("messages.shareErrorEn"),
+              ar_Msg: t("messages.shareErrorAr"),
+            },
+          },
+          t("messages.shareErrorTitle"),
+        );
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
   };
 
   const handleSearchKeyChange = (newKey: string) => {

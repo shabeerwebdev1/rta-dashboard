@@ -293,7 +293,8 @@
     "Logout": "Logout",
     "NoLocationDataAvailable": "No Location Data Available",
     "Sl.No": "Sl.No",
-    "disputenumber": "Dispute Number"
+    "disputenumber": "Dispute Number",
+    "parkonicslocationId": "Parkonics Location ID"
   },
   "common": {
     "action": "Action",
@@ -346,7 +347,8 @@
     "filterBycreatedDate": "Filter by Created Date",
     "filterByPledgeStartDate": "Filter by Pledge Start Date",
     "filterByfinedDate": "Filter by Fined Date",
-    "filterBytowingDate": "Filter by Towing Date"
+    "filterBytowingDate": "Filter by Towing Date",
+    "filterByaddedon": "Filter by Added On"
   },
   "entity": {
     "plate": "Plate",

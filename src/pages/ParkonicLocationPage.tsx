@@ -2,46 +2,31 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Spin, Pagination, DatePicker } from "antd";
-import {
-  PlusOutlined,
-  EyeOutlined,
-  EditOutlined,
-  DownloadOutlined,
-  CalendarOutlined,
-  EnvironmentOutlined,
-} from "@ant-design/icons";
+import { Space, Card, Input, Button, Form, Row, Col, Select, App, DatePicker } from "antd";
+import { DownloadOutlined, UserSwitchOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import dayjs from "dayjs";
-import isBetween from "dayjs/plugin/isBetween";
-
-// Enable the isBetween plugin
-dayjs.extend(isBetween);
 import { usePage } from "../contexts/PageContext";
+import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
 import {
   useGetParkonicsLocationQuery,
-  useAddParkonicsLocationMutation,
   useUpdateParkonicsLocationMutation,
   useLazyGetParkonicsLocationByIdQuery,
 } from "../services/rtkApiFactory";
+import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
 import { pageConfigs } from "../config/pageConfigs";
 import { parkonicLocationPageConfig } from "../config/pageConfigs/parkonicLocationConfig";
 import DataTableWrapper from "../components/common/DataTableWrapper";
-import ParkonicLocationViewDrawer from "../components/ParkonicLocation/ParkonicLocationViewDrawer";
-import { usePermission } from "../hooks/usePermission";
-import ArcGISMap from "../components/common/ArcGISMap";
 
 const { Option } = Select;
-const { RangePicker } = DatePicker;
 const pageKey = "parkonic-location";
 
 const ParkonicLocationPage: React.FC = () => {
-  const { canCreate, canEdit } = usePermission();
   const menuName = "ParkonicLocation";
   const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
@@ -50,10 +35,21 @@ const ParkonicLocationPage: React.FC = () => {
   const config = pageConfigs[pageKey] || parkonicLocationPageConfig;
   const [searchParams] = useSearchParams();
 
-  // Basic API params without filtering - fetch all data
-  const basicApiParams = {
-    PageNumber: 1,
-    PageSize: 1000, // Fetch all records for client-side filtering
+  const {
+    apiParams: rawApiParams,
+    handleTableChange,
+    handlePaginationChange,
+    setGlobalSearch,
+    setDateRange,
+    clearFilter,
+    clearAll,
+    state,
+  } = useTableParams(config.searchConfig!);
+
+  const apiParams = {
+    PageNumber: rawApiParams.PageNumber || 1,
+    PageSize: rawApiParams.PageSize || 10,
+    ...rawApiParams,
   };
 
   const [form] = Form.useForm();
@@ -69,108 +65,25 @@ const ParkonicLocationPage: React.FC = () => {
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
 
-  // Client-side filter states
-  const [searchValue, setSearchValue] = useState<string>("");
-  const [searchKey, setSearchKey] = useState<string>("zone");
-  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
-  const [columnFilters, setColumnFilters] = useState<Record<string, (string | number)[] | null>>({});
-  const [sortBy, setSortBy] = useState<string | undefined>();
-  const [sortOrder, setSortOrder] = useState<"ascend" | "descend" | undefined>();
-
-  // Pagination states - matching UserZoneLinking pattern
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
+  const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
-  const { data, isLoading, isFetching } = useGetParkonicsLocationQuery(basicApiParams, {
+  const { data, isLoading, isFetching } = useGetParkonicsLocationQuery(apiParams, {
     refetchOnMountOrArgChange: true,
   });
-  const [addLocation, { isLoading: isAdding }] = useAddParkonicsLocationMutation();
   const [updateLocation, { isLoading: isUpdating }] = useUpdateParkonicsLocationMutation();
   const [triggerGetLocation, { data: singleRecordData, isSuccess: isSingleRecordSuccess }] =
     useLazyGetParkonicsLocationByIdQuery();
 
-  //state to maintain the rows data for downlaoding
+  // State to maintain the rows data for downloading
   const [selectedRows, setSelectedRows] = useState([]);
 
-  // Client-side filtering logic with formatted dates
-  const filteredData = useMemo(() => {
-    if (!data?.data) return [];
-
-    // 🔑 Format dates before doing any filtering
-    let formatted = data.data.map((item: any) => ({
-      ...item,
-      created_At: item.created_At ? dayjs(item.created_At).format("DD-MM-YYYY") : "-",
-    }));
-
-    let filtered = [...formatted];
-
-    // Apply search filter
-    if (debouncedSearchValue && searchKey) {
-      filtered = filtered.filter((item) => {
-        const value = item[searchKey]?.toString().toLowerCase() || "";
-        return value.includes(debouncedSearchValue.toLowerCase());
-      });
-    }
-
-    // Apply date range filter
-    if (dateRange) {
-      const [startDate, endDate] = dateRange;
-      filtered = filtered.filter((item) => {
-        if (!item.created_At) return false;
-        const itemDate = dayjs(item.created_At);
-        return itemDate.isBetween(startDate, endDate, "day", "[]");
-      });
-    }
-
-    // Apply column filters
-    Object.entries(columnFilters).forEach(([key, values]) => {
-      if (values && values.length > 0) {
-        filtered = filtered.filter((item) => {
-          return values.includes(item[key]);
-        });
-      }
-    });
-
-    // Apply sorting
-    if (sortBy && sortOrder) {
-      filtered.sort((a, b) => {
-        const aVal = a[sortBy];
-        const bVal = b[sortBy];
-
-        if (aVal === bVal) return 0;
-
-        const comparison = aVal < bVal ? -1 : 1;
-        return sortOrder === "ascend" ? comparison : -comparison;
-      });
-    }
-
-    return filtered;
-  }, [data, debouncedSearchValue, searchKey, dateRange, columnFilters, sortBy, sortOrder]);
-
-  // Paginated data for display - matching UserZoneLinking pattern
-  const paginatedData = useMemo(() => {
-    const startIdx = (currentPage - 1) * pageSize;
-    return filteredData.slice(startIdx, startIdx + pageSize);
-  }, [filteredData, currentPage, pageSize]);
-
-  // Create state object for ActiveFiltersDisplay
-  const filterState = {
-    searchKey,
-    searchValue: debouncedSearchValue,
-    dateRange,
-    columnFilters,
-    sortBy,
-    sortOrder,
-  };
-
   useEffect(() => {
-    const recordId = searchParams.get("viewRecord");
+    const recordId = state.viewRecordId;
     if (recordId && !isDrawerOpen) {
       triggerGetLocation(recordId);
     }
-  }, [searchParams, triggerGetLocation, isDrawerOpen]);
+  }, [state.viewRecordId, triggerGetLocation, isDrawerOpen]);
 
   useEffect(() => {
     if (isSingleRecordSuccess && singleRecordData) {
@@ -183,37 +96,20 @@ const ParkonicLocationPage: React.FC = () => {
     setPageTitle(t(config.title));
   }, [setPageTitle, t, config.title, i18n.language]);
 
+  useEffect(() => {
+    setGlobalSearch(state.searchKey, debouncedSearchValue);
+  }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
+
   const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
     if (type === "search") {
       setSearchValue("");
-    } else if (type === "date") {
-      setDateRange(null);
-    } else if (type === "column" && key) {
-      if (value !== undefined) {
-        // Remove specific value from column filter
-        setColumnFilters((prev) => {
-          const current = prev[key] || [];
-          const updated = current.filter((v) => v !== value);
-          return { ...prev, [key]: updated.length > 0 ? updated : null };
-        });
-      } else {
-        // Remove entire column filter
-        setColumnFilters((prev) => ({ ...prev, [key]: null }));
-      }
-    } else if (type === "sorter") {
-      setSortBy(undefined);
-      setSortOrder(undefined);
     }
-    setCurrentPage(1); // Reset to first page when filters change
+    clearFilter(type, key, value);
   };
 
   const handleClearAll = () => {
     setSearchValue("");
-    setDateRange(null);
-    setColumnFilters({});
-    setSortBy(undefined);
-    setSortOrder(undefined);
-    setCurrentPage(1);
+    clearAll();
   };
 
   const handleModalOpen = (mode: "add" | "edit", record?: any) => {
@@ -232,12 +128,6 @@ const ParkonicLocationPage: React.FC = () => {
     }
   };
 
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedRecord(null);
-    form.resetFields();
-  };
-
   // Handle map location selection
   const handleMapLocationSelect = (location: { lat: number; lng: number }) => {
     setSelectedLocation(location);
@@ -249,96 +139,37 @@ const ParkonicLocationPage: React.FC = () => {
     setIsMapModalOpen(false);
   };
 
-  const handleInspectorClick = (inspector: any) => {
-    handleMapLocationSelect({
-      lat: inspector.lat,
-      lng: inspector.lng,
+  const transformDataForCSV = (data: any[]) => {
+    return data.map((item, index: number) => {
+      const csvRecord: Record<string, unknown> = {};
+
+      csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
+
+      config.tableConfig.columns.forEach((column) => {
+        if (column.key === "parking_Name_En") {
+          csvRecord[t("form.parkingName")] = item.parking_Name_En || "";
+        } else if (column.key === "parking_Name_Ar") {
+          csvRecord[t("form.parkingNameArabic")] = item.parking_Name_Ar || "";
+        } else if (column.key === "zone") {
+          csvRecord[t("form.zone")] = item.zone || "";
+        } else if (column.key === "area") {
+          csvRecord[t("form.area")] = item.area || "";
+        } else if (column.key === "created_At") {
+          csvRecord[t("form.createdDate")] = item.created_At ? dayjs(item.created_At).format("DD-MM-YYYY") : "";
+        }
+      });
+
+      return csvRecord;
     });
   };
 
-  // Updated pagination handler to match UserZoneLinking pattern
-  const handlePageChange = (page: number, size?: number) => {
-    setCurrentPage(page);
-    if (size) setPageSize(size);
-  };
-
-  const handleTableChange = (filters: any, sorter: any) => {
-    // Handle sorting
-    if (sorter && sorter.field) {
-      setSortBy(sorter.field);
-      setSortOrder(sorter.order);
+  // Get CSV filename based on current language
+  const getCsvFilename = () => {
+    if (i18n.language === "ar") {
+      return `مواقع_باركونيك.csv`;
     } else {
-      setSortBy(undefined);
-      setSortOrder(undefined);
+      return `Parkonic_Locations.csv`;
     }
-
-    // Handle column filters
-    const newColumnFilters: Record<string, (string | number)[] | null> = {};
-    Object.entries(filters).forEach(([key, values]) => {
-      if (values && Array.isArray(values) && values.length > 0) {
-        newColumnFilters[key] = values as (string | number)[];
-      }
-    });
-    setColumnFilters(newColumnFilters);
-    setCurrentPage(1); // Reset to first page when table changes
-  };
-
-  const handleFormSubmit = async (values: any) => {
-    try {
-      const payload = {
-        parking_Name_En: values.parkingName,
-        parking_Name_Ar: values.parkingNameArabic,
-        zone: values.zone,
-        area: values.area,
-        latitude: values.latitude,
-        longitude: values.longitude,
-      };
-
-      let response;
-      if (modalMode === "add") {
-        response = await addLocation(payload).unwrap();
-        notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
-      } else {
-        response = await updateLocation({ ...payload, id: selectedRecord.id }).unwrap();
-        notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
-      }
-      handleModalClose();
-    } catch (err) {
-      notification.error(err as any, "Operation Failed");
-    }
-  };
-
-  const handleView = (record: any) => {
-    setViewRecord(record);
-    setIsDrawerOpen(true);
-  };
-
-  const handleShare = () => {
-    const params = new URLSearchParams(searchParams);
-    params.set("viewRecord", viewRecord.id);
-    const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-    navigator.clipboard?.writeText(shareUrl).then(
-      () =>
-        notification.success(
-          {
-            data: {
-              en_Msg: t("messages.shareSuccessEn"),
-              ar_Msg: t("messages.shareSuccessAr"),
-            },
-          },
-          t("messages.shareSuccessTitle"),
-        ),
-      () =>
-        notification.error(
-          {
-            data: {
-              en_Msg: t("messages.shareErrorEn"),
-              ar_Msg: t("messages.shareErrorAr"),
-            },
-          },
-          t("messages.shareErrorTitle"),
-        ),
-    );
   };
 
   const handleDownloadCsv = () => {
@@ -354,36 +185,28 @@ const ParkonicLocationPage: React.FC = () => {
       cancelText: t("common.cancel"),
       onOk: () => {
         try {
-          //const selectedRows = filteredData.filter((item: any) => selectedRowKeys.includes(item.id));
-
           if (selectedRows.length === 0) {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
             return;
           }
 
-          // Since filteredData already has formatted dates, use it directly
-          const transformedData = selectedRows.map((item, index: number) => ({
-           [ t("form.Sl.No")]: index + 1,
-            [t("form.parkingName")]: item.parking_Name_En,
-            [t("form.parkingNameArabic")]: item.parking_Name_Ar,
-            [t("form.zone")]: item.zone,
-            [t("form.area")]: item.area,
-            [t("form.createdDate")]: item.created_At, // Already formatted in filteredData
-          }));
+          // Transform the data to match UI display
+          const transformedData = transformDataForCSV(selectedRows);
 
-          const filename = i18n.language === "ar" ? `مواقع_باركونيك.csv` : `Parkonic_Locations.csv`;
+          // Get filename based on current language
+          const filename = getCsvFilename();
 
+          // Export to CSV using your common component
           exportToCsv(transformedData, filename);
 
           notification.success(
             { data: { en_Msg: t("messages.csvDownloaded", { count: selectedRows.length }) } },
             t("messages.exportSuccess"),
           );
-
           setSelectedRowKeys([]);
           setSelectedRows([]);
         } catch (error) {
-          notification.error({ data: { en_Msg: "Failed to export CSV" } }, "Export Failed");
+          notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
         }
       },
     });
@@ -398,10 +221,10 @@ const ParkonicLocationPage: React.FC = () => {
     () => ({
       ...config.tableConfig,
       columns: config.tableConfig.columns.map((column) => {
-        if (column.key === "zone" || column.key === "area") {
+        if (column.key === "created_At") {
           return {
             ...column,
-            filterable: false, // Enable column filtering for zone and area
+            render: (value: any) => (value ? dayjs(value).format("DD-MM-YYYY") : "-"),
           };
         }
         return column;
@@ -410,19 +233,43 @@ const ParkonicLocationPage: React.FC = () => {
     [config.tableConfig],
   );
 
+  const handleAssign = async (record: any) => {
+    try {
+      const payload = {
+        id: record.id,
+        parking_Name_En: record.parking_Name_En || "Parking EN " + Math.floor(Math.random() * 1000),
+        parking_Name_Ar: record.parking_Name_Ar || "موقف " + Math.floor(Math.random() * 1000),
+        zone: record.zone || "Zone-" + Math.floor(Math.random() * 10),
+        area: record.area || "Area-" + Math.floor(Math.random() * 10),
+        latitude: record.latitude || (25 + Math.random()).toFixed(6).toString(),
+        longitude: record.longitude || (55 + Math.random()).toFixed(6).toString(),
+        updated_By: "system",
+        status: true,
+      };
+      await updateLocation(payload).unwrap();
+      notification.success({ data: { en_Msg: t("messages.assignSuccess") } }, t("messages.assignSuccess"));
+    } catch (error: any) {
+      notification.error({ data: { en_Msg: t("messages.assignFailed") } }, t("messages.assignFailed"));
+    }
+  };
+
   const actionMenuItems = (record: any) => [
-    { key: "view", label: t("common.view"), icon: <EyeOutlined />, onClick: () => handleView(record) },
     {
-      key: "edit",
-      label: t("common.edit"),
-      icon: <EditOutlined />,
-      onClick: () => handleModalOpen("edit", record),
-      disabled: canEdit(menuName),
-    },
+      key: "assign",
+      label: t("common.assign"),
+      icon: <UserSwitchOutlined />,
+      onClick: () => handleAssign(record),
+    }, // {
+    //   key: "edit",
+    //   label: t("common.edit"),
+    //   icon: <EditOutlined />,
+    //   onClick: () => handleModalOpen("edit", record),
+    //   disabled: !canEdit(menuName),
+    // },
   ];
 
   const searchAddon = (
-    <Select value={searchKey} onChange={(key) => setSearchKey(key)} style={{ width: 150 }}>
+    <Select value={state.searchKey} onChange={(key) => setGlobalSearch(key, state.searchValue)} style={{ width: 150 }}>
       {config.searchConfig?.globalSearchKeys.map((key) => (
         <Option key={key} value={key}>
           {columnLabels[key]}
@@ -430,6 +277,16 @@ const ParkonicLocationPage: React.FC = () => {
       ))}
     </Select>
   );
+
+  const locationsData = useMemo(() => {
+    if (!data) return [];
+    return Array.isArray(data) ? data : data.data || [];
+  }, [data]);
+
+  const totalCount = useMemo(() => {
+    if (!data) return 0;
+    return Array.isArray(data) ? data.length : data.totalCount || 0;
+  }, [data]);
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -445,13 +302,12 @@ const ParkonicLocationPage: React.FC = () => {
                 style={{ width: 450 }}
                 allowClear
               />
-              <RangePicker
-                value={dateRange}
-                onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
-                format="DD-MM-YYYY"
+              <span>{t("common.filterByaddedon")}</span>
+              <DatePicker.RangePicker
+                value={state.dateRange}
+                format={"DD-MM-YYYY"}
                 placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
-                allowClear
-                suffixIcon={<CalendarOutlined />}
+                onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
             </Space>
           </Col>
@@ -460,225 +316,54 @@ const ParkonicLocationPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
-              <Button
+
+              {/* <Button
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => handleModalOpen("add")}
-                disabled={canCreate(menuName)}
+                disabled={!canCreate(menuName)}
               >
                 {t("common.addNew")}
-              </Button>
+              </Button> */}
             </Space>
           </Col>
         </Row>
-
         <ActiveFiltersDisplay
-          state={filterState}
+          state={state}
           onClearFilter={handleClearFilter}
           onClearAll={handleClearAll}
           columnLabels={columnLabels}
         />
       </Card>
 
-      <Spin spinning={isLoading || isFetching || isAdding || isUpdating}>
-        <DataTableWrapper
-          pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
-          data={paginatedData}
-          total={filteredData.length}
-          isLoading={false}
-          apiParams={basicApiParams}
-          handleTableChange={handleTableChange}
-          handlePaginationChange={() => {}} // Not needed for client-side pagination
-          rowSelection={{
-            selectedRowKeys,
-            onChange: (keys: React.Key[], selectedRows: any[]) => {
-              setSelectedRowKeys(keys);
+      <DataTableWrapper
+        pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
+        data={locationsData}
+        total={totalCount}
+        isLoading={isLoading || isFetching}
+        apiParams={apiParams}
+        handleTableChange={handleTableChange}
+        handlePaginationChange={handlePaginationChange}
+        rowSelection={{
+          selectedRowKeys,
+          onChange: (keys: React.Key[], selectedRows: any[]) => {
+            setSelectedRowKeys(keys);
 
-              setSelectedRows((prev) => {
-                // Remove rows that are no longer selected
-                const remaining = prev.filter((p) => keys.includes(p.id));
+            setSelectedRows((prev) => {
+              // Remove rows that are no longer selected
+              const remaining = prev.filter((p) => keys.includes(p.id));
 
-                // Add newly selected rows (avoid duplicates)
-                const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+              // Add newly selected rows (avoid duplicates)
+              const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
 
-                return [...remaining, ...newSelected];
-              });
-            },
-          }}
-          actionMenuItems={actionMenuItems}
-          tableSize={tableSize}
-          state={filterState}
-          showPagination={false}
-        />
-
-        <div
-          style={{
-            marginTop: 1,
-            textAlign: "right",
-            padding: "12px 16px",
-            backgroundColor: "#fafafa",
-            border: "1px solid #f0f0f0",
-          }}
-        >
-          <Pagination
-            current={currentPage}
-            pageSize={pageSize}
-            total={filteredData.length}
-            onChange={handlePageChange}
-            showSizeChanger={{ showSearch: false }}
-            pageSizeOptions={["10", "20", "50"]}
-            showQuickJumper={false}
-            showTotal={(total, range) => (
-              <span style={{ marginRight: 16, color: "#666" }}>{`${range[0]}-${range[1]} of ${total} items`}</span>
-            )}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          />
-        </div>
-      </Spin>
-
-      <Modal
-        open={isModalOpen}
-        title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
-        onCancel={handleModalClose}
-        width="720px"
-        footer={[
-          <Button key="reset" onClick={() => form.resetFields()}>
-            {t("common.reset")}
-          </Button>,
-          <Button key="back" onClick={handleModalClose}>
-            {t("common.cancel")}
-          </Button>,
-          <Button key="submit" type="primary" loading={isAdding || isUpdating} onClick={() => form.submit()}>
-            {t(modalMode === "add" ? "common.submit" : "common.update")}
-          </Button>,
-        ]}
-      >
-        <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-          <Row gutter={24}>
-            <Col span={12}>
-              <Form.Item
-                name="parkingName"
-                label={t("form.parkingName")}
-                rules={[{ required: true, message: t("validation.required", { field: t("form.parkingName") }) }]}
-              >
-                <Input placeholder={t("placeholders.parkingName")} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="parkingNameArabic"
-                label={t("form.parkingNameArabic")}
-                rules={[{ required: true, message: t("validation.required", { field: t("form.parkingNameArabic") }) }]}
-              >
-                <Input placeholder={t("placeholders.parkingNameArabic")} dir="rtl" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="zone"
-                label={t("form.zone")}
-                rules={[{ required: true, message: t("validation.required", { field: t("form.zone") }) }]}
-              >
-                <Input placeholder={t("placeholders.zones")} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="area"
-                label={t("form.area")}
-                rules={[{ required: true, message: t("validation.required", { field: t("form.area") }) }]}
-              >
-                <Input placeholder={t("placeholders.areas")} />
-              </Form.Item>
-            </Col>
-
-            <Col span={24}>
-              <Form.Item label={t("form.pickLocation")} required>
-                <Input.Group compact style={{ display: "flex" }}>
-                  <Form.Item
-                    name="latitude"
-                    noStyle
-                    rules={[{ required: true, message: t("validation.required", { field: t("form.latitude") }) }]}
-                    style={{ width: "50%" }}
-                  >
-                    <Input placeholder={t("placeholders.latitude")} />
-                  </Form.Item>
-
-                  <Form.Item
-                    name="longitude"
-                    noStyle
-                    rules={[{ required: true, message: t("validation.required", { field: t("form.longitude") }) }]}
-                    style={{ width: "50%" }}
-                  >
-                    <Input placeholder={t("placeholders.longitude")} />
-                  </Form.Item>
-
-                  <Button
-                    type="primary"
-                    icon={<EnvironmentOutlined />}
-                    onClick={() => setIsMapModalOpen(true)}
-                    style={{ width: "20%" }}
-                  >
-                    {t("form.pick")}
-                  </Button>
-                </Input.Group>
-              </Form.Item>
-            </Col>
-          </Row>
-        </Form>
-      </Modal>
-
-      <Modal
-        open={isMapModalOpen}
-        title="Select Location on Map"
-        onCancel={() => setIsMapModalOpen(false)}
-        width="80%"
-        style={{ maxWidth: "1000px" }}
-        footer={[
-          <Button key="cancel" onClick={() => setIsMapModalOpen(false)}>
-            Cancel
-          </Button>,
-          <Button
-            key="confirm"
-            type="primary"
-            disabled={!selectedLocation}
-            onClick={() => {
-              if (selectedLocation) {
-                handleMapLocationSelect(selectedLocation);
-              }
-            }}
-          >
-            Confirm Location
-          </Button>,
-        ]}
-      >
-        <div style={{ height: "400px" }}>
-          <ArcGISMap
-            inspectors={[]}
-            center={[55.2743, 25.1972]}
-            zoom={12}
-            height="100%"
-            onInspectorClick={handleInspectorClick}
-          />
-        </div>
-      </Modal>
-
-      {viewRecord && (
-        <ParkonicLocationViewDrawer
-          open={isDrawerOpen}
-          onClose={() => {
-            setIsDrawerOpen(false);
-            setViewRecord(null);
-          }}
-          record={viewRecord}
-          config={config}
-          onShare={handleShare}
-        />
-      )}
+              return [...remaining, ...newSelected];
+            });
+          },
+        }}
+        actionMenuItems={actionMenuItems}
+        tableSize={tableSize}
+        state={state}
+      />
     </Space>
   );
 };

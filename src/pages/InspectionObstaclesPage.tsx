@@ -295,8 +295,46 @@ const InspectionObstaclesPage: React.FC = () => {
   };
 
   const handleShare = () => {
-    navigator.clipboard?.writeText(window.location.href).then(
-      () =>
+    const shareUrl = window.location.href;
+
+    // Check for clipboard API support and secure context
+    if (navigator?.clipboard && window.isSecureContext) {
+      navigator.clipboard
+        .writeText(shareUrl)
+        .then(() => {
+          notification.success(
+            {
+              data: {
+                en_Msg: t("messages.shareSuccessEn"),
+                ar_Msg: t("messages.shareSuccessAr"),
+              },
+            },
+            t("messages.shareSuccessTitle"),
+          );
+        })
+        .catch(() => {
+          notification.error(
+            {
+              data: {
+                en_Msg: t("messages.shareErrorEn"),
+                ar_Msg: t("messages.shareErrorAr"),
+              },
+            },
+            t("messages.shareErrorTitle"),
+          );
+        });
+    } else {
+      // Fallback: Use execCommand (works in most browsers)
+      const textArea = document.createElement("textarea");
+      textArea.value = shareUrl;
+      textArea.style.position = "fixed"; // prevent scroll jump
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        document.execCommand("copy");
         notification.success(
           {
             data: {
@@ -305,8 +343,8 @@ const InspectionObstaclesPage: React.FC = () => {
             },
           },
           t("messages.shareSuccessTitle"),
-        ),
-      () =>
+        );
+      } catch {
         notification.error(
           {
             data: {
@@ -315,8 +353,11 @@ const InspectionObstaclesPage: React.FC = () => {
             },
           },
           t("messages.shareErrorTitle"),
-        ),
-    );
+        );
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
   };
 
   // Transform data for CSV export with proper column headers

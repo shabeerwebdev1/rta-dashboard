@@ -294,7 +294,9 @@
     "Logout": "تسجيل الخروج",
     "NoLocationDataAvailable": "لا تتوفر بيانات الموقع",
     "Sl.No": "التسلسل",
-    "disputenumber": "رقم النزاع"
+    "disputenumber": "رقم النزاع",
+    "parkonicslocationId": "معرف موقع باركونيك"
+
 
   },
   "common": {
@@ -344,7 +346,9 @@
     "filterBycreatedDate": "التصفية حسب تاريخ الإنشاء",
     "filterByPledgeStartDate": "التصفية حسب تاريخ بدء التعهد",
     "filterByfinedDate": "التصفية حسب تاريخ الغرامة",
-    "filterBytowingDate": "التصفية حسب تاريخ السحب"
+    "filterBytowingDate": "التصفية حسب تاريخ السحب",
+    "filterByaddedon": "التصفية حسب تمت الإضافة في"
+
   },
   "entity": {
     "plate": "لوحة",
