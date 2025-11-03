@@ -314,7 +314,7 @@ const DisputeManagementPage: React.FC = () => {
 
     if (mode === "edit" && record) {
       try {
-        const result = await triggerGetDisputeById(record.dispute_Id).unwrap();
+        const result = await triggerGetDisputeById(record.disputeCode).unwrap();
         if (result.data) {
           let fileList: any[] = [];
           if (result.data.evidencePath) {
@@ -453,7 +453,7 @@ const DisputeManagementPage: React.FC = () => {
       cancelText: t("common.cancel"),
       onOk: () => {
         try {
-          const dataToExport = showMyApprovals ? filteredData : data?.data || [];
+          // const dataToExport = showMyApprovals ? filteredData : data?.data || [];
           //const selectedRows = dataToExport.filter((item: any) => selectedRowKeys.includes(item.dispute_Id));
 
           if (selectedRows.length === 0) {
@@ -465,6 +465,7 @@ const DisputeManagementPage: React.FC = () => {
           const csvData = selectedRows.map((item: any, index: number) => ({
             [t("form.Sl.No")]: index + 1,
             [t("form.fineNumber")]: item.fine_Number || item.fineId || "-",
+            [t("form.disputenumber")]: item.dispute_Id || "-",
             [t("form.name")]: item.name || "-",
             [t("form.department")]: getLabelFromValue(
               item.department,
@@ -592,13 +593,13 @@ const DisputeManagementPage: React.FC = () => {
       icon: <EyeOutlined />,
       onClick: () => handleView(record),
     },
-    {
-      key: "edit",
-      label: t("common.edit"),
-      icon: <EditOutlined />,
-      onClick: () => handleModalOpen("edit", record),
-      disabled: !canEdit(menuName) || record.dispute_Status === 2 || record.dispute_Status === 3,
-    },
+    // {
+    //   key: "edit",
+    //   label: t("common.edit"),
+    //   icon: <EditOutlined />,
+    //   onClick: () => handleModalOpen("edit", record),
+    //   disabled: !canEdit(menuName) || record.dispute_Status === 2 || record.dispute_Status === 3,
+    // },
   ];
 
   const handleSearchKeyChange = (newKey: string) => {
@@ -773,7 +774,7 @@ const DisputeManagementPage: React.FC = () => {
                     rules={[{ required: true, message: t("validation.required", { field: t("form.fineNumber") }) }]}
                     validateFirst
                   >
-                    <Input placeholder={t("placeholders.fineNumber")} />
+                    <Input placeholder={t("placeholders.fineNumber")} maxLength={50} />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
@@ -953,7 +954,7 @@ const DisputeManagementPage: React.FC = () => {
                       listType="picture-card"
                       beforeUpload={() => false}
                       multiple={true}
-                      accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,image/jpeg,image/png"
+                      accept=".jpg,.jpeg,image/jpeg"
                       onPreview={async (file) => {
                         let src = file.url;
                         if (!src && file.originFileObj) {
@@ -995,7 +996,7 @@ const DisputeManagementPage: React.FC = () => {
               setIsDrawerOpen(false);
               setViewRecord(null);
             }}
-            disputeId={viewRecord.dispute_Id}
+            disputeId={viewRecord.disputeCode}
             onStatusUpdate={refetch}
           />
         )}

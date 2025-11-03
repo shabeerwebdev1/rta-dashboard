@@ -293,7 +293,9 @@
     "DarkMode": "الوضع الداكن",
     "Logout": "تسجيل الخروج",
     "NoLocationDataAvailable": "لا تتوفر بيانات الموقع",
-    "Sl.No": "التسلسل"
+    "Sl.No": "التسلسل",
+    "disputenumber": "رقم النزاع"
+
   },
   "common": {
     "action": "إجراء",

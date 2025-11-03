@@ -20,7 +20,7 @@ export const pledgeConfig: PageConfig = {
   },
   searchConfig: {
     globalSearchKeys: ["tradeLicenseNumber", "businessName"],
-    columnFilterKeys: ["pledgeType" , "isActive"],
+    columnFilterKeys: ["pledgeType", "pledgeStatus"],
     dateRangeKey: "pledgeDate",
   },
 
@@ -28,7 +28,7 @@ export const pledgeConfig: PageConfig = {
     {
       title: "stats.TotalPledges",
       icon: <AuditOutlined />,
-      value: (data, metadata) => `${data?.length || 0} / ${metadata?.totalCount || 0}`,
+      value: (data, metadata) => `${data?.length || 0} / ${metadata?.totalRecords || 0}`,
     },
 
     {
@@ -49,15 +49,7 @@ export const pledgeConfig: PageConfig = {
       title: "stats.activePledges",
       icon: <CheckCircleOutlined />,
       value: (data, metadata) => {
-        const today = dayjs();
-        const activeCount =
-          data?.filter((d) => {
-            const endDate = dayjs(d.pledgeEndDate);
-            return (
-              (d.isActive === true || d.isActive === 1) &&
-              (endDate.isAfter(today, "day") || endDate.isSame(today, "day"))
-            );
-          }).length || 0;
+        const activeCount = data?.filter((d) => d.pledgeStatus === 5001).length || 0;
         return `${activeCount} / ${metadata?.active || 0}`;
       },
       color: "#52c41a",
@@ -67,7 +59,7 @@ export const pledgeConfig: PageConfig = {
       title: "stats.inactivePledges",
       icon: <CloseCircleOutlined />,
       value: (data, metadata) => {
-        const inactiveCount = data?.filter((d) => d.isActive === false || d.isActive === 0).length || 0;
+        const inactiveCount = data?.filter((d) => d.pledgeStatus === 5002).length || 0;
         return `${inactiveCount} / ${metadata?.inActive || 0}`;
       },
       color: "#faad14",
@@ -77,12 +69,7 @@ export const pledgeConfig: PageConfig = {
       title: "stats.expiredPledges",
       icon: <ExclamationCircleOutlined />,
       value: (data, metadata) => {
-        const today = dayjs();
-        const expiredCount =
-          data?.filter((d) => {
-            const endDate = dayjs(d.pledgeEndDate);
-            return (d.isActive === true || d.isActive === 1) && endDate.isBefore(today, "day");
-          }).length || 0;
+        const expiredCount = data?.filter((d) => d.pledgeStatus === 5003).length || 0;
         return `${expiredCount} / ${metadata?.expired || 0}`;
       },
       color: "#ff4d4f",
@@ -96,7 +83,7 @@ export const pledgeConfig: PageConfig = {
       { key: "pledgeType", title: "form.pledgeType", type: "string", filterable: true },
       { key: "pledgeDate", title: "form.pledgestartDate", type: "date", sortable: true },
       { key: "pledgeEndDate", title: "form.pledgeEndDate", type: "date", sortable: true },
-      { key: "isActive", title: "form.status", type: "string", sortable: true, filterable: true },
+      { key: "pledgeStatus", title: "form.status", type: "string", sortable: true, filterable: true },
     ],
   },
 

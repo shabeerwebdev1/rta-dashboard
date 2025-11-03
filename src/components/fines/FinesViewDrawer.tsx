@@ -126,6 +126,14 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
       statusLabel: getStatusLabel(fine.isPaid, fine.inspectionStatus),
       statusColor: getStatusColor(fine.isPaid, fine.inspectionStatus),
       blackPointsFormatted: (fine.blackPoint ?? fine.blackPoint === 0) ? fine.blackPoint : "0",
+      inspectorName:
+        i18n.language === "ar"
+          ? fine.inspectorNameAr || fine.inspectorNameEn || "No Data"
+          : fine.inspectorNameEn || fine.inspectorNameAr || "No Data",
+      supervisorName:
+        i18n.language === "ar"
+          ? fine.supervisorNameAr || fine.supervisorNameEn || "No Data"
+          : fine.supervisorNameEn || fine.supervisorNameAr || "No Data",
     });
   };
 
@@ -159,7 +167,6 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
     return map[inspectionStatus || 0] || t("status.unknown");
   };
 
-
   const fineStatusColorMap: Record<number, string> = {
     15001: "orange",
     15002: "green",
@@ -170,9 +177,9 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
   };
 
   const getStatusColor = (isPaid: boolean, inspectionStatus: number) => {
-  if (isPaid) return "green";
-  return fineStatusColorMap[inspectionStatus] || "orange";
-};
+    if (isPaid) return "green";
+    return fineStatusColorMap[inspectionStatus] || "orange";
+  };
 
   const handleFormSubmit = async (values: { comment: string }) => {
     if (!mappedFine || !lastAction) return;
@@ -328,10 +335,24 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                       <Tag color={mappedFine.statusColor}>{mappedFine.inspectionStatusLabel}</Tag>
                     </Col>
 
-                    <Col span={10}>
+                    {/* <Col span={10}>
                       <Text strong>{t("form.blackPoints")}:</Text>
                     </Col>
-                    <Col span={14}>{mappedFine.blackPointsFormatted}</Col>
+                    <Col span={14}>{mappedFine.blackPointsFormatted}</Col> */}
+
+                    <Col span={10}>
+                      <Text strong>{t("form.inspectorName")}:</Text>
+                    </Col>
+                    <Col span={14}>{mappedFine.inspectorName}</Col>
+
+                    {mappedFine.supervisorName && mappedFine.supervisorName !== "No Data" && (
+                      <>
+                        <Col span={10}>
+                          <Text strong>{t("form.supervisorName")}:</Text>
+                        </Col>
+                        <Col span={14}>{mappedFine.supervisorName}</Col>
+                      </>
+                    )}
                   </Row>
                 </Card>
               </Col>

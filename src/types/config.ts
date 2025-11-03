@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Rule } from "antd/es/form";
 import { ColumnsType, ColumnType } from "antd/es/table";
 import type { ReactNode } from "react";
@@ -62,7 +63,7 @@ export interface SearchConfig {
   dateRangeKey: string;
 }
 export interface AppColumn<T = any> extends ColumnType<T> {
-  type?: "string" | "date" | "badge" | "tag" | "ReactNode";
+  type?: "string" | "date" | "badge" | "tag" | "ReactNode" | "number" | "custom" | "select";
   sortable?: boolean;
   filterable?: boolean;
   lookupCategory?: number;

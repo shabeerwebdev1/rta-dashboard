@@ -355,7 +355,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
           <Col>
             <Space size="middle" align="center">
               <Title level={4} style={{ margin: 0 }}>
-                {t("form.disputereview")} <Text type="danger">#{dispute?.fineId || storedDisputeId}</Text>
+                {t("form.disputereview")} <Text type="danger">#{dispute?.dispute_Id || storedDisputeId}</Text>
               </Title>
 
               {dispute?.dispute_Status !== undefined &&

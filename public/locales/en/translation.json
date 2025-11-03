@@ -292,7 +292,8 @@
     "DarkMode": "Dark Mode",
     "Logout": "Logout",
     "NoLocationDataAvailable": "No Location Data Available",
-    "Sl.No": "Sl.No"
+    "Sl.No": "Sl.No",
+    "disputenumber": "Dispute Number"
   },
   "common": {
     "action": "Action",

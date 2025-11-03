@@ -1,3 +1,5 @@
+/* eslint-disable no-prototype-builtins */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { TableProps } from "antd";
@@ -9,7 +11,7 @@ interface TableState {
   page: number;
   pageSize: number;
   sortBy?: string;
-  sortOrder?: "ascend" | "descend";
+  sortOrder?: "ascend" | "descend" | null;
   columnFilters: Record<string, (string | number)[] | null>;
   searchKey: string;
   searchValue: string;
@@ -133,7 +135,9 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
     // Convert table filters to our state format
     const columnFilters: Record<string, (string | number)[] | null> = {};
     for (const key in tableColumnFilters) {
-      columnFilters[key] = tableColumnFilters[key] || null;
+      columnFilters[key] = Array.isArray(tableColumnFilters[key])
+        ? (tableColumnFilters[key] as (string | number)[])
+        : null;
     }
 
     setState((prev) => ({
@@ -157,12 +161,12 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
   // Updated setGlobalSearch to handle search key changes properly
   const setGlobalSearch = useCallback((key: string, value: string) => {
     setState((prev) => {
-      // If the search key is changing and there's a current search value, 
+      // If the search key is changing and there's a current search value,
       // preserve it as a column filter
       if (key !== prev.searchKey && prev.searchValue.trim()) {
         const newColumnFilters = { ...prev.columnFilters };
         const currentFilter = newColumnFilters[prev.searchKey];
-        
+
         if (currentFilter) {
           // If there's already a filter for this key, add to it
           if (!currentFilter.includes(prev.searchValue)) {
@@ -172,7 +176,7 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
           // Create new filter for the previous search
           newColumnFilters[prev.searchKey] = [prev.searchValue];
         }
-        
+
         return {
           ...prev,
           page: 1,
@@ -181,7 +185,7 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
           columnFilters: newColumnFilters,
         };
       }
-      
+
       // Normal search value update for the same key
       return { ...prev, page: 1, searchKey: key, searchValue: value };
     });
@@ -248,7 +252,11 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
 
     for (const key in state.columnFilters) {
       const value = state.columnFilters[key];
-      if (value && value.length > 0) orFilters[key] = value;
+      if (value && value.length > 0) {
+        // Convert 'status' (frontend) to 'leave_status' (backend)
+        const backendKey = key === 'status' ? 'leavestatus' : key;
+        orFilters[backendKey] = value;
+      }
     }
     if (state.searchKey && state.searchValue) {
       orFilters[state.searchKey] = state.searchValue;

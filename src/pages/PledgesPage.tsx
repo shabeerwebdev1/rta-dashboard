@@ -62,33 +62,21 @@ const filterOptionsByCategory = (options: any[], categoryId: number) => {
   return options.filter((option) => option.categoryId === categoryId);
 };
 
-// Helper function to determine pledge status
-// ✅ KEEP THIS - Updated to handle both number and boolean
-const getPledgeStatus = (record: any, i18n: any) => {
+// Helper function to determine pledge status based on dates and isActive
+const determinePledgeStatus = (record: any) => {
   const today = dayjs();
   const pledgeEndDate = dayjs(record.pledgeEndDate);
+  const isActive = record.isActive === 1 || record.isActive === true;
 
-  // Handle both number (1/0) and boolean (true/false) from backend
-  const isActiveBoolean = record.isActive === 1 || record.isActive === true;
-
-  if (!isActiveBoolean) {
-    return {
-      status: i18n.language === "ar" ? "غير نشط" : "Inactive",
-      color: "orange",
-    };
+  if (!isActive) {
+    return 5002; // Inactive
   }
 
   if (pledgeEndDate.isBefore(today, "day")) {
-    return {
-      status: i18n.language === "ar" ? "منتهي" : "Expired",
-      color: "red",
-    };
+    return 5003; // Expired
   }
 
-  return {
-    status: i18n.language === "ar" ? "نشط" : "Active",
-    color: "green",
-  };
+  return 5001; // Active
 };
 
 const PledgesPage: React.FC = () => {
@@ -178,8 +166,8 @@ const PledgesPage: React.FC = () => {
   const fetchLookupData = async () => {
     setIsLoadingLookups(true);
     try {
-      // Use category ID 900 for pledge types
-      const result = await triggerGetLookups([900]).unwrap();
+      // Use category ID 900 for pledge types and 500 for status
+      const result = await triggerGetLookups([900, 500]).unwrap();
       setLookupOptions(result);
     } catch (error) {
       notification.error({ data: { en_Msg: "Failed to load dropdown options" } }, "Load Failed");
@@ -196,6 +184,26 @@ const PledgesPage: React.FC = () => {
         label: i18n.language === "ar" ? option.labelAr : option.labelEn,
       })),
     [lookupOptions, i18n.language],
+  );
+
+  // Get pledge status options with proper labels based on current language
+  const pledgeStatusOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 500).map((option) => ({
+        ...option,
+        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      })),
+    [lookupOptions, i18n.language],
+  );
+
+  // Status filter options for the table column
+  const statusFilterOptions = useMemo(
+    () => [
+      { text: getLabelFromValue(5001, pledgeStatusOptions, i18n), value: 5001 },
+      { text: getLabelFromValue(5002, pledgeStatusOptions, i18n), value: 5002 },
+      { text: getLabelFromValue(5003, pledgeStatusOptions, i18n), value: 5003 },
+    ],
+    [pledgeStatusOptions, i18n],
   );
 
   useEffect(() => {
@@ -264,6 +272,9 @@ const PledgesPage: React.FC = () => {
       const dateRange =
         record.pledgeDate && record.pledgeEndDate ? [dayjs(record.pledgeDate), dayjs(record.pledgeEndDate)] : null;
 
+      // Determine the current status for display
+      const currentStatus = record.pledgeStatus || determinePledgeStatus(record);
+
       form.setFieldsValue({
         pledgeType: record.pledgeType,
         tradeLicenseNumber: record.tradeLicenseNumber,
@@ -271,12 +282,12 @@ const PledgesPage: React.FC = () => {
         remarks: record.remarks,
         document: fileList,
         dateRange: dateRange,
-        isActive: record.isActive === 1 ? true : record.isActive, // Convert 1→true, 0→false
+        pledgeStatus: currentStatus,
       });
     } else {
-      // For add mode, set isActive to true by default
+      // For add mode, set pledgeStatus to active (5001) by default
       form.setFieldsValue({
-        isActive: true,
+        pledgeStatus: 5001,
       });
     }
   };
@@ -293,14 +304,15 @@ const PledgesPage: React.FC = () => {
     const startDate = values.dateRange?.[0];
     const endDate = values.dateRange?.[1];
 
-    // Build payload
+    // Build payload - send pledgeStatus directly to backend
     const payload: Record<string, string | number | boolean | null> = {
       PledgeType: values.pledgeType,
       TradeLicenseNumber: values.tradeLicenseNumber,
       BusinessName: values.businessName,
       Remarks: values.remarks,
       DocumentUploaded: false,
-      IsActive: values.isActive,
+      PledgeStatus: values.pledgeStatus, // Send the status directly
+      IsActive: values.pledgeStatus === 5002 ? false : true, // Map 5002 to inactive
       // Add date fields with proper formatting
       PledgeDate: startDate ? startDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]") : null,
       PledgeEndDate: endDate ? endDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]") : null,
@@ -432,14 +444,15 @@ const PledgesPage: React.FC = () => {
         } else if (column.key === "businessName") {
           csvRecord[t("form.businessName")] = item.businessName || "";
         } else if (column.key === "pledgeDate") {
-          csvRecord[t("form.pledgeDate")] = item.pledgeDate ? dayjs(item.pledgeDate).format("DD-MM-YYYY") : "";
+          csvRecord[t("form.pledgestartDate")] = item.pledgeDate ? dayjs(item.pledgeDate).format("DD-MM-YYYY") : "";
         } else if (column.key === "pledgeEndDate") {
           csvRecord[t("form.pledgeEndDate")] = item.pledgeEndDate ? dayjs(item.pledgeEndDate).format("DD-MM-YYYY") : "";
         } else if (column.key === "remarks") {
           csvRecord[t("form.remarks")] = item.remarks || "";
-        } else if (column.key === "isActive") {
-          const statusInfo = getPledgeStatus(item, i18n);
-          csvRecord[t("form.status")] = statusInfo.status;
+        } else if (column.key === "pledgeStatus") {
+          // Use the actual pledgeStatus from backend or calculate it
+          const status = item.pledgeStatus || determinePledgeStatus(item);
+          csvRecord[t("form.status")] = getLabelFromValue(status, pledgeStatusOptions, i18n);
         } else if (column.key === "createdDate") {
           csvRecord[t("form.createdDate")] = item.createdDate ? dayjs(item.createdDate).format("DD-MM-YYYY") : "";
         }
@@ -499,12 +512,6 @@ const PledgesPage: React.FC = () => {
     });
   };
 
-  const statusFilterOptions = [
-    { text: t("status.active"), value: "active" },
-    { text: t("status.inactive"), value: "inactive" },
-    { text: t("status.expired"), value: "expired" },
-  ];
-
   const columnLabels = useMemo(
     () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
     [t, config.tableConfig.columns, i18n.language],
@@ -521,23 +528,30 @@ const PledgesPage: React.FC = () => {
             render: (value: any) => getLabelFromValue(value, pledgeTypeOptions, i18n),
           };
         }
-        if (column.key === "isActive") {
+        if (column.key === "pledgeStatus") {
           return {
             ...column,
-            filters: statusFilterOptions, // attach the options
-            onFilter: (value: string, record: any) => {
-              const today = dayjs();
-              const pledgeEndDate = dayjs(record.pledgeEndDate);
-              const isActive = record.isActive === 1 || record.isActive === true;
-
-              if (value === "active") return isActive && !pledgeEndDate.isBefore(today, "day");
-              if (value === "inactive") return !isActive;
-              if (value === "expired") return isActive && pledgeEndDate.isBefore(today, "day");
-              return true;
+            filters: statusFilterOptions,
+            onFilter: (value: number, record: any) => {
+              const recordStatus = record.pledgeStatus || determinePledgeStatus(record);
+              return recordStatus === value;
             },
             render: (value: any, record: any) => {
-              const statusInfo = getPledgeStatus(record, i18n);
-              return <Tag color={statusInfo.color}>{statusInfo.status}</Tag>;
+              // Use the actual pledgeStatus from backend or calculate it
+              const status = record.pledgeStatus || determinePledgeStatus(record);
+              const label = getLabelFromValue(status, pledgeStatusOptions, i18n);
+
+              if (status === 5001) {
+                return <Tag color="green">{label}</Tag>;
+              }
+              if (status === 5002) {
+                return <Tag color="orange">{label}</Tag>;
+              }
+              if (status === 5003) {
+                return <Tag color="red">{label}</Tag>;
+              }
+
+              return <Tag>{label}</Tag>; // fallback
             },
           };
         }
@@ -545,7 +559,7 @@ const PledgesPage: React.FC = () => {
         return column;
       }),
     }),
-    [config.tableConfig, pledgeTypeOptions, i18n],
+    [config.tableConfig, pledgeTypeOptions, pledgeStatusOptions, statusFilterOptions, i18n],
   );
 
   const actionMenuItems = (record: any) => [
@@ -576,10 +590,14 @@ const PledgesPage: React.FC = () => {
 
   const platesData = useMemo(() => {
     if (!data) return [];
-    return Array.isArray(data) ? data : data.data || [];
-  }, [data]);
+    const rawData = Array.isArray(data) ? data : data.data || [];
 
-  // console.log(platesData);
+    // Enhance data with calculated pledgeStatus if not provided by backend
+    return rawData.map((item) => ({
+      ...item,
+      pledgeStatus: item.pledgeStatus || determinePledgeStatus(item),
+    }));
+  }, [data]);
 
   const totalCount = useMemo(() => {
     if (!data) return 0;
@@ -589,7 +607,7 @@ const PledgesPage: React.FC = () => {
   const metadata = useMemo(() => {
     if (!data || Array.isArray(data)) return {};
     return {
-      totalCount: data.totalCount,
+      totalRecords: data.totalRecords,
       corporate: data.corporate,
       individual: data.individual,
       active: data.active,
@@ -653,7 +671,7 @@ const PledgesPage: React.FC = () => {
 
       <DataTableWrapper
         pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
-        data={platesData} // Use the extracted array
+        data={platesData} // Use the enhanced array
         total={totalCount}
         isLoading={isLoading || isFetching || isDeleting}
         apiParams={apiParams}
@@ -679,7 +697,7 @@ const PledgesPage: React.FC = () => {
         state={state}
         lookupOptions={lookupOptions}
         getLabelFromValue={getLabelFromValue}
-        filterOptions={{ isActive: statusFilterOptions }}
+        filterOptions={{ pledgeStatus: statusFilterOptions }}
       />
 
       <Modal
@@ -770,7 +788,7 @@ const PledgesPage: React.FC = () => {
                     >
                       <Input
                         style={{ width: "calc(100% - 90px)" }}
-                        addonBefore="TL-"
+                        addonBefore={i18n.language === "ar" ? "ر خ -" : "TL-"}
                         placeholder={t("placeholders.tradeLicenseNumber")}
                         minLength={6}
                         maxLength={12}
@@ -829,22 +847,38 @@ const PledgesPage: React.FC = () => {
               {modalMode === "edit" && (
                 <Col span={12}>
                   <Form.Item
-                    name="isActive"
+                    name="pledgeStatus"
                     label={t("form.status")}
                     rules={[{ required: true, message: t("validation.required", { field: t("form.status") }) }]}
                   >
-                    {selectedRecord && dayjs(selectedRecord.pledgeEndDate).isBefore(dayjs(), "day") ? (
-                      // 🔒 Expired: show disabled Select with "Expired" value
-                      <Select value="expired" disabled>
-                        <Option value="expired">{t("status.expired")}</Option>
-                      </Select>
-                    ) : (
-                      // ✅ Active/InActive: normal editable Select
-                      <Select placeholder={t("placeholders.status")}>
-                        <Option value={true}>{t("status.active")}</Option>
-                        <Option value={false}>{t("status.inactive")}</Option>
-                      </Select>
-                    )}
+                    <Select
+                      showSearch
+                      placeholder={t("placeholders.status")}
+                      optionFilterProp="label"
+                      filterOption={(input, option) =>
+                        (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                      }
+                      // 👇 Dynamically build options - allow only 5001 and 5002 for editing
+                      options={(() => {
+                        const currentStatus = form.getFieldValue("pledgeStatus");
+                        const baseOptions = pledgeStatusOptions.filter((opt) => [5001, 5002].includes(opt.value));
+
+                        // If current status is 5003 (expired), include it for display only
+                        if (currentStatus === 5003) {
+                          const expiredOption = pledgeStatusOptions.find((opt) => opt.value === 5003);
+                          if (expiredOption) {
+                            baseOptions.push(expiredOption);
+                          }
+                        }
+
+                        return baseOptions.map((option) => ({
+                          label: option.label,
+                          value: option.value,
+                        }));
+                      })()}
+                      // 👇 Disable select when expired (5003)
+                      disabled={form.getFieldValue("pledgeStatus") === 5003}
+                    />
                   </Form.Item>
                 </Col>
               )}

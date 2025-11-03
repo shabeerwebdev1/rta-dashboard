@@ -177,7 +177,13 @@ const FinesPage: React.FC = () => {
               const headerName = columnLabels[columnKey];
               let displayValue = item[columnKey];
 
-              if (columnKey === "inspectionType") {
+              if (columnKey === "inspectorName") {
+                const lang = i18n.language.startsWith("ar") ? "ar" : "en";
+                displayValue =
+                  lang === "ar"
+                    ? item.inspectorNameAr || item.inspectorNameEn || t("common.noData")
+                    : item.inspectorNameEn || item.inspectorNameAr || t("common.noData");
+              } else if (columnKey === "inspectionType") {
                 displayValue =
                   displayValue == null
                     ? t("common.noData")

@@ -28,7 +28,7 @@ export const leaveManagementPageConfig: PageConfig = {
   api: { get: "/api/LeaveManagement", post: "", put: "", delete: "" },
   searchConfig: {
     globalSearchKeys: ["userName"],
-    columnFilterKeys: ["leaveType", "status"],
+    columnFilterKeys: ["leaveType", "leave_status"],
     dateRangeKey: "LeaveFromDate",
   },
   statsConfig: [

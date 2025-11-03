@@ -33,6 +33,11 @@ export const disputeManagementConfig: PageConfig = {
         type: "select",
       },
       {
+        key: "dispute_Id",
+        title: "form.disputenumber",
+        type: "select",
+      },
+      {
         key: "payment_Type",
         title: "form.paymentType",
         type: "select",
