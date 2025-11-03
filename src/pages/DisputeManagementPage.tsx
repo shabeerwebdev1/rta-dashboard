@@ -590,7 +590,7 @@ const DisputeManagementPage: React.FC = () => {
     {
       key: "view",
       label: t("common.view"),
-      icon: <EyeOutlined />,
+      icon: record.assignedTo !== user?.userGUID ? <EyeOutlined /> : <EditOutlined />,
       onClick: () => handleView(record),
     },
     // {
@@ -947,6 +947,7 @@ const DisputeManagementPage: React.FC = () => {
                   <Form.Item
                     name="Evidence"
                     label={t("form.evidence")}
+                    rules={[{ required: true, message: t("validation.required", { field: t("form.evidence") }) }]}
                     valuePropName="fileList"
                     getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
                   >

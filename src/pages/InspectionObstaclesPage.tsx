@@ -715,7 +715,7 @@ const InspectionObstaclesPage: React.FC = () => {
                 <Form.Item
                   name="Photo"
                   label={t("form.photo")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.closestPD") }) }]}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.photo") }) }]}
                   valuePropName="fileList"
                   getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
                 >

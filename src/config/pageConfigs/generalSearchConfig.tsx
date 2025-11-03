@@ -12,6 +12,3 @@ export const carPlatePageConfig: PageConfig = {
     viewRecord: true,
   },
 };
-
-
-

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Card, Space, Button, Row, Col, Form, Select, Input, Tabs, Descriptions } from "antd";
+import { Card, Space, Button, Row, Col, Form, Select, Input, Tabs, Descriptions, Table, TableColumnProps } from "antd";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import {
@@ -7,6 +7,7 @@ import {
   useSearchFinesQuery,
   useLazyGetCarPlateDetailsQuery,
   useLazyGetTradeLicenseDetailsQuery,
+  useLazyGetPermitsRequestQuery,
 } from "../services/rtkApiFactory";
 
 import FineViewDrawer from "../components/GeneralSearch/GeneralSearchViewDrawer";
@@ -17,6 +18,13 @@ import { useAppNotification } from "../utils/notificationManager"; //
 
 const { Option } = Select;
 const { TabPane } = Tabs;
+
+const permitsRequestTableColumn: TableColumnProps[] = [
+  { title: "Application ID", dataIndex: "applicationID", key: "applicationID" },
+  { title: "Permit Status", dataIndex: "permitStatus", key: "permitStatus" },
+  { title: "Permit Type", dataIndex: "permitType", key: "permitType" },
+  { title: "Trade License Number", dataIndex: "tradeLicenseNumber", key: "tradeLicenseNumber" },
+];
 
 const GeneralSearchPage: React.FC = () => {
   const { setPageTitle } = usePage();
@@ -33,6 +41,7 @@ const GeneralSearchPage: React.FC = () => {
   const [selectedFine, setSelectedFine] = useState<any | null>(null);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
+  const [permitsRequest, setPermitsRequest] = useState([]);
 
   const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [triggerGetCarPlateDetails, { isFetching: isFetchingCarDetails }] = useLazyGetCarPlateDetailsQuery();
@@ -54,6 +63,8 @@ const GeneralSearchPage: React.FC = () => {
     },
     { skip: !plateNumber },
   );
+
+  const [triggerGetPermitsRequest, { isLoading: isLoadingPermitsRequest }] = useLazyGetPermitsRequestQuery();
 
   useEffect(() => {
     fetchLookupData();
@@ -133,10 +144,20 @@ const GeneralSearchPage: React.FC = () => {
 
   const handleTlSearch = async (values: any) => {
     try {
+      const permitsRequestsParams = {
+        permitIssueDateFrom: "string",
+        permitIssueDateTo: "string",
+        permitType: "string",
+        tradeLicenseNumber: values.licenseNo.toString() || "",
+      };
+
       // API expects only a string in JSON (e.g., "1234")
       const result = await triggerGetTradeLicenseDetails(JSON.stringify(values.licenseNo.toString())).unwrap();
-
+      const permitsRequestResult = await triggerGetPermitsRequest(permitsRequestsParams);
       setTlData(result?.data || result); // bind response to state
+      console.log(permitsRequestResult);
+
+      setPermitsRequest(permitsRequestResult?.data?.data || []);
       notification.success(result, t("messages.tradeLicenseFetched"));
     } catch (error: any) {
       console.error("Trade License fetch failed:", error);
@@ -341,30 +362,39 @@ const GeneralSearchPage: React.FC = () => {
               </Row>
             </Form>
 
-            {tlData && (
-              <Card title={t("info.basicDetails")} className="mt-4">
-                <Descriptions bordered column={2} size="small">
-                  <Descriptions.Item label={t("form.licenseNo")}>{tlData.licenseNo || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label={t("form.companyName")}>{tlData.companyName || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label={t("form.companyEmail")}>{tlData.companyEmail || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label={t("form.blackPoints")}>
-                    {tlData.totalBlackPoints || "N/A"}
-                  </Descriptions.Item>
-                  <Descriptions.Item label={t("form.goldenPoints")}>{tlData.goldenPoints || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label={t("form.mobileNumber")}>{tlData.mobileNo || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label={t("form.faxNumber")}>{tlData.faxNo || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label={t("form.streetName")}>{tlData.streetName || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label={t("form.streetNumber")}>{tlData.streetNo || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label={t("form.buildingName")}>{tlData.buildingName || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label={t("form.floorNumber")}>{tlData.floorNo || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label={t("form.premiseNameEn")}>{tlData.premiseNameEn || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label={t("form.premiseNameAr")}>{tlData.premiseNameAr || "N/A"}</Descriptions.Item>
-                  <Descriptions.Item label={t("form.licenseIssuedDate")}>
-                    {tlData.licenseIssueDate || "N/A"}
-                  </Descriptions.Item>
-                </Descriptions>
-              </Card>
-            )}
+            <>
+              {tlData && (
+                <Card title={t("info.basicDetails")} className="mt-4">
+                  <Descriptions bordered column={2} size="small">
+                    <Descriptions.Item label={t("form.licenseNo")}>{tlData.licenseNo || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.companyName")}>{tlData.companyName || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.companyEmail")}>{tlData.companyEmail || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.blackPoints")}>
+                      {tlData.totalBlackPoints || "N/A"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={t("form.goldenPoints")}>{tlData.goldenPoints || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.mobileNumber")}>{tlData.mobileNo || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.faxNumber")}>{tlData.faxNo || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.streetName")}>{tlData.streetName || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.streetNumber")}>{tlData.streetNo || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.buildingName")}>{tlData.buildingName || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.floorNumber")}>{tlData.floorNo || "N/A"}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.premiseNameEn")}>
+                      {tlData.premiseNameEn || "N/A"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={t("form.premiseNameAr")}>
+                      {tlData.premiseNameAr || "N/A"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={t("form.licenseIssuedDate")}>
+                      {tlData.licenseIssueDate || "N/A"}
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Card>
+              )}
+              {permitsRequest.length > 0 && (
+                <Table scroll={{ x: "max-content" }} columns={permitsRequestTableColumn} dataSource={permitsRequest} />
+              )}
+            </>
           </TabPane>
         </Tabs>
       </Card>

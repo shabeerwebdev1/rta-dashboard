@@ -285,6 +285,15 @@ export const dynamicApi = createApi({
       },
     }),
 
+    getViolationDetails: builder.query<any[], { inspectionGUID: string; entityCode: string }>({
+      query: ({ inspectionGUID, entityCode }) => ({
+        url: `/api/Inspection/${inspectionGUID}/${entityCode}`,
+        method: "GET",
+      }),
+      transformResponse: (response: any) => response?.data || [],
+      // providesTags: ["InspectionViolation"],
+    }),
+
     // Update Fine Cancel Status
     updateFineCancelStatus: builder.mutation({
       query: (body) => ({
@@ -442,6 +451,16 @@ export const dynamicApi = createApi({
       providesTags: ["CallIntegration"],
     }),
 
+    getPermitsRequest: builder.query({
+      query: (body) => ({
+        url: "/api/CallIntegration/PermitsRequest",
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      }),
+      providesTags: ["CallIntegration"],
+    }),
+
     // Towing Approvals
     getTowingDetails: builder.query({
       query: (params) => ({ url: "/api/Towing", params }),
@@ -539,6 +558,9 @@ export const {
   useUpdateFineCancelStatusMutation,
   useSearchTradeQuery,
 
+  //Inspection Violation
+  useGetViolationDetailsQuery,
+
   // Parkonics
   useGetParkonicsQuery,
   useUpdateParkonicMutation,
@@ -580,6 +602,7 @@ export const {
   // General Search
   useLazyGetCarPlateDetailsQuery,
   useLazyGetTradeLicenseDetailsQuery,
+  useLazyGetPermitsRequestQuery,
 
   // Towing Approvals
   useGetTowingDetailsQuery,

@@ -5,8 +5,9 @@ import React, { useState, useEffect } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Form, Space, Image } from "antd";
 import { CloseOutlined, ShareAltOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
+import { theme } from "antd";
 
-import { useLazyGetLookupsQuery } from "../../services/rtkApiFactory";
+import { useLazyGetLookupsQuery, useGetViolationDetailsQuery } from "../../services/rtkApiFactory";
 import {
   useUpdateFineCancelStatusMutation,
   useGetInspectionAttachmentsQuery,
@@ -53,6 +54,10 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
   onViewLocation,
   onViewAttachments,
 }) => {
+  const {
+    token: { borderRadius },
+  } = theme.useToken();
+
   const { t, i18n } = useTranslation();
   const notification = useAppNotification();
   const [form] = Form.useForm();
@@ -66,10 +71,13 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
 
   const lookupOptionsToUse = externalLookupOptions.length > 0 ? externalLookupOptions : internalLookupOptions;
   const getLabelFunction = externalGetLabelFromValue || getLabelFromValue;
-
   const isStatus15003 = mappedFine?.inspectionStatus === 15003;
 
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
+    fine ? { inspectionGUID: fine.inspectionGUID, entityCode: fine.entityCode } : skipToken,
+  );
+
+  const { data: violationDetails, isLoading: isLoadingViolation } = useGetViolationDetailsQuery(
     fine ? { inspectionGUID: fine.inspectionGUID, entityCode: fine.entityCode } : skipToken,
   );
 
@@ -433,7 +441,38 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
               style={{ marginBottom: 16, borderRadius: 12 }}
               headStyle={{ background: "#fafafa", fontWeight: 600 }}
             >
-              <Empty description={t("form.Noviolationdetailsavailable")} />
+              {violationDetails?.length === 0 ? (
+                <Empty description={t("form.Noviolationdetailsavailable")} />
+              ) : (
+                <Spin spinning={isLoadingViolation}>
+                  {violationDetails?.map((value, index) => {
+                    return (
+                      <Row
+                        key={index}
+                        gutter={[0, 0]}
+                        style={{
+                          alignItems: "center",
+                          border: "1px solid #e8e8e8",
+                          padding: "8px 12px",
+                          background: "#fff",
+                          marginBottom: "5px",
+                          borderRadius: borderRadius,
+                        }}
+                      >
+                        <Col flex="1">
+                          <Text strong>{i18n.language === "ar" ? value?.violationNameAr : value?.violationNameEn}</Text>
+                        </Col>
+                        <Col>
+                          <Text strong>{t("form.amount")}:</Text>
+                        </Col>
+                        <Col style={{ textAlign: "right" }}>
+                          <Text strong> {value?.totalFineAmount} AED </Text>
+                        </Col>
+                      </Row>
+                    );
+                  })}
+                </Spin>
+              )}
             </Card>
 
             {/* Approval Actions */}
