@@ -1,5 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Card, Space, Button, Row, Col, Form, Select, Input, Tabs, Descriptions, Table, TableColumnProps } from "antd";
+import {
+  Card,
+  Space,
+  Button,
+  Row,
+  Col,
+  Form,
+  Select,
+  Input,
+  Tabs,
+  Descriptions,
+  Table,
+  TableColumnProps,
+  theme,
+} from "antd";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import {
@@ -19,17 +33,12 @@ import { useAppNotification } from "../utils/notificationManager"; //
 const { Option } = Select;
 const { TabPane } = Tabs;
 
-const permitsRequestTableColumn: TableColumnProps[] = [
-  { title: "Application ID", dataIndex: "applicationID", key: "applicationID" },
-  { title: "Permit Status", dataIndex: "permitStatus", key: "permitStatus" },
-  { title: "Permit Type", dataIndex: "permitType", key: "permitType" },
-  { title: "Trade License Number", dataIndex: "tradeLicenseNumber", key: "tradeLicenseNumber" },
-];
-
 const GeneralSearchPage: React.FC = () => {
   const { setPageTitle } = usePage();
   const { t } = useTranslation();
   const notification = useAppNotification(); // ✅ initialize notification hook
+
+  const { token } = theme.useToken();
 
   const [formCar] = Form.useForm();
   const [formTL] = Form.useForm();
@@ -52,6 +61,13 @@ const GeneralSearchPage: React.FC = () => {
   //   { plateNumber: plateNumber },
   //   { skip: !plateNumber },
   // );
+
+  const permitsRequestTableColumn: TableColumnProps[] = [
+    { title: t("form.applicationId"), dataIndex: "applicationID", key: "applicationID" },
+    { title: t("form.permitStatus"), dataIndex: "permitStatus", key: "permitStatus" },
+    { title: t("form.permitType"), dataIndex: "permitType", key: "permitType" },
+    { title: t("form.tradeLicenseNumber"), dataIndex: "tradeLicenseNumber", key: "tradeLicenseNumber" },
+  ];
 
   const { data: finesData, isFetching: isFetchingFines } = useSearchFinesQuery(
     {
@@ -392,7 +408,19 @@ const GeneralSearchPage: React.FC = () => {
                 </Card>
               )}
               {permitsRequest.length > 0 && (
-                <Table scroll={{ x: "max-content" }} columns={permitsRequestTableColumn} dataSource={permitsRequest} />
+                <Card title={t("info.permitsRequest")} style={{ marginTop: "16px" }}>
+                  <Table
+                    scroll={{ x: "max-content" }}
+                    columns={permitsRequestTableColumn}
+                    dataSource={permitsRequest}
+                    style={{
+                      border: `1px solid ${token.colorBorderSecondary}`,
+                      borderRadius: token.borderRadiusLG,
+                      overflow: "hidden",
+                      fontSize: 13,
+                    }}
+                  />
+                </Card>
               )}
             </>
           </TabPane>

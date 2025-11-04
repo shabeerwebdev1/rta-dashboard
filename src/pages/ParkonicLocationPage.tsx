@@ -235,19 +235,27 @@ const ParkonicLocationPage: React.FC = () => {
 
   const handleAssign = async (record: any) => {
     try {
-      const payload = {
-        id: record.id,
-        parking_Name_En: record.parking_Name_En || "Parking EN " + Math.floor(Math.random() * 1000),
-        parking_Name_Ar: record.parking_Name_Ar || "موقف " + Math.floor(Math.random() * 1000),
-        zone: record.zone || "Zone-" + Math.floor(Math.random() * 10),
-        area: record.area || "Area-" + Math.floor(Math.random() * 10),
-        latitude: record.latitude || (25 + Math.random()).toFixed(6).toString(),
-        longitude: record.longitude || (55 + Math.random()).toFixed(6).toString(),
-        updated_By: "system",
-        status: true,
-      };
-      await updateLocation(payload).unwrap();
-      notification.success({ data: { en_Msg: t("messages.assignSuccess") } }, t("messages.assignSuccess"));
+      modal.confirm({
+        title: t("messages.confirmAssignTitle"),
+        content: t("messages.confirmAssignContent"),
+        okText: t("common.ok"),
+        cancelText: t("common.cancel"),
+        onOk: async () => {
+          const payload = {
+            id: record.id,
+            parking_Name_En: record.parking_Name_En || "Parking EN " + Math.floor(Math.random() * 1000),
+            parking_Name_Ar: record.parking_Name_Ar || "موقف " + Math.floor(Math.random() * 1000),
+            zone: record.zone || "Zone-" + Math.floor(Math.random() * 10),
+            area: record.area || "Area-" + Math.floor(Math.random() * 10),
+            latitude: record.latitude || (25 + Math.random()).toFixed(6).toString(),
+            longitude: record.longitude || (55 + Math.random()).toFixed(6).toString(),
+            updated_By: "system",
+            status: true,
+          };
+          await updateLocation(payload).unwrap();
+          notification.success({ data: { en_Msg: t("messages.assignSuccess") } }, t("messages.assignSuccess"));
+        },
+      });
     } catch (error: any) {
       notification.error({ data: { en_Msg: t("messages.assignFailed") } }, t("messages.assignFailed"));
     }

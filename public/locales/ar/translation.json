@@ -50,7 +50,8 @@
   },
   "info": {
     "basicDetails": "التفاصيل الأساسية",
-    "allFines": "جميع الغرامات"
+    "allFines": "جميع الغرامات",
+    "permitsRequest": " طلبات التصاريح"
   },
   "page": {
     "title": {
@@ -107,7 +108,11 @@
     "shareErrorTitle": "فشل النسخ",
     "reviewFailed": "فشل في جلب بيانات المراجعة",
     "noDataToExport": "لا توجد بيانات للتصدير",
-    "exportFailed": "فشل في تصدير البيانات"
+    "exportFailed": "فشل في تصدير البيانات",
+    "assignSuccess": "تم التعيين بنجاح",
+    "assignFailed": "فشل في التعيين",
+    "confirmAssignTitle": "تأكيد التعيين",
+    "confirmAssignContent": " هل أنت متأكد أنك تريد التعيين "
   },
   "form": {
     "Number": "الرقم",
@@ -295,9 +300,9 @@
     "NoLocationDataAvailable": "لا تتوفر بيانات الموقع",
     "Sl.No": "التسلسل",
     "disputenumber": "رقم النزاع",
-    "parkonicslocationId": "معرف موقع باركونيك"
-
-
+    "parkonicslocationId": "معرف موقع باركونيك",
+    "applicationId": " معرف التطبيق ",
+    "permitStatus": " حالة التصريح "
   },
   "common": {
     "action": "إجراء",
@@ -348,7 +353,6 @@
     "filterByfinedDate": "التصفية حسب تاريخ الغرامة",
     "filterBytowingDate": "التصفية حسب تاريخ السحب",
     "filterByaddedon": "التصفية حسب تمت الإضافة في"
-
   },
   "entity": {
     "plate": "لوحة",

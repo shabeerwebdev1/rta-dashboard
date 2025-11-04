@@ -49,7 +49,8 @@
   },
   "info": {
     "basicDetails": "Basic Details",
-    "allFines": "All Fines"
+    "allFines": "All Fines",
+    "permitsRequest": "Permits Request"
   },
   "page": {
     "title": {
@@ -107,7 +108,11 @@
     "shareErrorTitle": "Copy Failed",
     "reviewFailed": "Failed to submit review",
     "noDataToExport": "No data available to export",
-    "exportFailed": "Data export failed"
+    "exportFailed": "Data export failed",
+    "assignSuccess": "Assigned successfully",
+    "assignFailed": "Failed to assign",
+    "confirmAssignTitle": "Confirm Assignment",
+    "confirmAssignContent": "Are you sure you want to assign "
   },
   "form": {
     "Number": "Number",
@@ -294,7 +299,9 @@
     "NoLocationDataAvailable": "No Location Data Available",
     "Sl.No": "Sl.No",
     "disputenumber": "Dispute Number",
-    "parkonicslocationId": "Parkonics Location ID"
+    "parkonicslocationId": "Parkonics Location ID",
+    "applicationId": "Application ID",
+    "permitStatus": "Permit Status"
   },
   "common": {
     "action": "Action",
