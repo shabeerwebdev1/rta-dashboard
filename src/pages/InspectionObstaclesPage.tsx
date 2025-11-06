@@ -694,7 +694,7 @@ const InspectionObstaclesPage: React.FC = () => {
                 <Form.Item
                   name="Zone"
                   label={t("form.zone")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.zone") }) }]}
+                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.zone") }) }]}
                 >
                   <Select
                     placeholder={t("placeholders.zone")}
@@ -713,7 +713,7 @@ const InspectionObstaclesPage: React.FC = () => {
                 <Form.Item
                   name="Area"
                   label={t("form.area")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.area") }) }]}
+                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.area") }) }]}
                 >
                   <Select
                     placeholder={t("placeholders.area")}
@@ -729,7 +729,7 @@ const InspectionObstaclesPage: React.FC = () => {
                 <Form.Item
                   name="SourceOfObstacle"
                   label={t("form.sourceOfObstacle")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.sourceOfObstacle") }) }]}
+                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.sourceOfObstacle") }) }]}
                 >
                   <Select
                     placeholder={t("placeholders.sourceOfObstacle")}
@@ -756,7 +756,7 @@ const InspectionObstaclesPage: React.FC = () => {
                 <Form.Item
                   name="Photo"
                   label={t("form.photo")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.photo") }) }]}
+                  rules={[{ required: true, message: t("validation.uploadRequired", { field: t("form.photo") }) }]}
                   valuePropName="fileList"
                   getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
                 >

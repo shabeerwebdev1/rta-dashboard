@@ -638,7 +638,7 @@ const WhitelistPlatesPage: React.FC = () => {
                 <Form.Item
                   name="plateSource_Id"
                   label={t("form.Source")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.Source") }) }]}
+                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.Source") }) }]}
                 >
                   <Select
                     showSearch
@@ -659,7 +659,7 @@ const WhitelistPlatesPage: React.FC = () => {
                 <Form.Item
                   name="plateType_Id"
                   label={t("form.Type")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.Type") }) }]}
+                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.Type") }) }]}
                 >
                   <Select
                     showSearch
@@ -680,7 +680,7 @@ const WhitelistPlatesPage: React.FC = () => {
                 <Form.Item
                   name="plateColor_Id"
                   label={t("form.Color")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.Color") }) }]}
+                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.Color") }) }]}
                 >
                   <Select
                     showSearch
@@ -701,7 +701,7 @@ const WhitelistPlatesPage: React.FC = () => {
                 <Form.Item
                   name="dateRange"
                   label={t("form.dateRange")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.dateRange") }) }]}
+                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.dateRange") }) }]}
                 >
                   <DatePicker.RangePicker
                     style={{ width: "100%" }}
@@ -716,7 +716,9 @@ const WhitelistPlatesPage: React.FC = () => {
                 <Form.Item
                   name="exemptionReason_ID"
                   label={t("form.exemptionReason")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.exemptionReason") }) }]}
+                  rules={[
+                    { required: true, message: t("validation.selectRequired", { field: t("form.exemptionReason") }) },
+                  ]}
                 >
                   <Select
                     showSearch
@@ -737,7 +739,7 @@ const WhitelistPlatesPage: React.FC = () => {
                   <Form.Item
                     name="plateStatus_Id"
                     label={t("form.status")}
-                    rules={[{ required: true, message: t("validation.required", { field: t("form.status") }) }]}
+                    rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.status") }) }]}
                   >
                     <Select
                       showSearch
@@ -775,7 +777,7 @@ const WhitelistPlatesPage: React.FC = () => {
                 <Form.Item
                   name="isByLaw"
                   label={t("form.isByLaw")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.isByLaw") }) }]}
+                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.isByLaw") }) }]}
                 >
                   <Select
                     showSearch

@@ -192,8 +192,7 @@ export const whitelistPlateConfig: PageConfig = {
       title: "stats.ExpiredPlates",
       icon: <ExclamationCircleOutlined />,
       value: (data, metadata) => {
-        const today = new Date();
-        const expiredCount = data.filter((d) => d.toDate && new Date(d.toDate) < today).length;
+        const expiredCount = data?.filter((d) => d.plateStatus_Id === 5003).length || 0;
         return `${expiredCount} / ${metadata?.expiredRecords || 0}`;
       },
       color: "#ff4d4f",

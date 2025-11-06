@@ -761,7 +761,7 @@ const PledgesPage: React.FC = () => {
                 <Form.Item
                   name="pledgeType"
                   label={t("form.pledgeType")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.pledgeType") }) }]}
+                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.pledgeType") }) }]}
                 >
                   <Select
                     placeholder={t("placeholders.pledgeType")}
@@ -881,7 +881,7 @@ const PledgesPage: React.FC = () => {
                   <Form.Item
                     name="pledgeStatus"
                     label={t("form.status")}
-                    rules={[{ required: true, message: t("validation.required", { field: t("form.status") }) }]}
+                    rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.status") }) }]}
                   >
                     <Select
                       showSearch
@@ -919,7 +919,7 @@ const PledgesPage: React.FC = () => {
                 <Form.Item
                   name="dateRange"
                   label={t("form.Validity")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.Validity") }) }]}
+                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.Validity") }) }]}
                 >
                   <DatePicker.RangePicker
                     style={{ width: "100%" }}
@@ -937,8 +937,8 @@ const PledgesPage: React.FC = () => {
                   label={t("form.photo")}
                   rules={[
                     {
-                      required: modalMode === "add",
-                      message: t("validation.required", { field: t("form.photo") }),
+                      required: true,
+                      message: t("validation.uploadRequired", { field: t("form.photo") }),
                     },
                   ]}
                   valuePropName="fileList"

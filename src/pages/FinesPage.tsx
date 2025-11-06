@@ -358,7 +358,7 @@ const FinesPage: React.FC = () => {
                 style={{ width: 450 }}
                 allowClear
               />
-              <span>{t("common.filterByfinedDate")}</span>
+              <span>{t("common.filterByInspectionDate")}</span>
 
               <RangePicker
                 value={state.dateRange}

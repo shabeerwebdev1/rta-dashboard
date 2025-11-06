@@ -6,9 +6,15 @@ const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
 
 const MOBILE_FILES_BASE_URL = "https://kandaprojects.live/documents";
 
-// const RTA_API_TARGET = `http://10.14.64.104:9010`; // RTA SERVER
+// const MOBILE_FILES_BASE_URL = "http://10.0.1.85:9000/documents"; // K and A SERVER 85
 
-// const RTA_API_TARGET = `http://10.0.1.85:9010`;   // K and A SERVER
+// const RTA_API_TARGET = `http://10.0.1.85:9010`;   // K and A SERVER 85
+
+/////RTA stagging URl
+
+// const MOBILE_FILES_BASE_URL = "http://10.14.64.104:9000/documents";  // RTA SERVER
+
+// const RTA_API_TARGET = `http://10.14.64.104:9010`; // RTA SERVER
 
 //helper to get inspections images url
 export const getMobileFileUrl = (filePath: string) => {
@@ -501,6 +507,7 @@ export const dynamicApi = createApi({
       invalidatesTags: ["ParkonicsLocation"],
     }),
 
+    // Reports
     getHtmlReport: builder.mutation<Blob, { reportPath: string; format: "HTML4.0" | "PDF"; parameters: any }>({
       query: (body) => ({
         url: "/api/Report",

@@ -26,7 +26,6 @@ const TradeLicenseInspectionPage = lazy(() => import("./pages/TradeLicenseInspec
 const TowingPage = lazy(() => import("./pages/TowingPage"));
 const ParkonicLocationPage = lazy(() => import("./pages/ParkonicLocationPage"));
 const AnalyticsInsightsPage = lazy(() => import("./pages/AnalyticsInsightsPage"));
-const FineInspectionsPage = lazy(() => import("./pages/FineInspectionsPage"));
 const VehicleInspectionsPage = lazy(() => import("./pages/VehicleInspectionsPage"));
 const ParkingsInspectionsPage = lazy(() => import("./pages/ParkingsInspectionsPage"));
 

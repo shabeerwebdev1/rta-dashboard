@@ -16,7 +16,6 @@ import {
   useUpdateParkonicsLocationMutation,
   useLazyGetParkonicsLocationByIdQuery,
 } from "../services/rtkApiFactory";
-import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
 import { pageConfigs } from "../config/pageConfigs";
@@ -27,7 +26,6 @@ const { Option } = Select;
 const pageKey = "parkonic-location";
 
 const ParkonicLocationPage: React.FC = () => {
-  const menuName = "ParkonicLocation";
   const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
@@ -112,52 +110,21 @@ const ParkonicLocationPage: React.FC = () => {
     clearAll();
   };
 
-  const handleModalOpen = (mode: "add" | "edit", record?: any) => {
-    setModalMode(mode);
-    setSelectedRecord(record || null);
-    setIsModalOpen(true);
-    if (mode === "edit" && record) {
-      form.setFieldsValue({
-        parkingName: record.parking_Name_En,
-        parkingNameArabic: record.parking_Name_Ar,
-        zone: record.zone,
-        area: record.area,
-        latitude: record.latitude,
-        longitude: record.longitude,
-      });
-    }
-  };
-
-  // Handle map location selection
-  const handleMapLocationSelect = (location: { lat: number; lng: number }) => {
-    setSelectedLocation(location);
-    // Update the form fields with the selected coordinates
-    form.setFieldsValue({
-      latitude: location.lat.toString(),
-      longitude: location.lng.toString(),
-    });
-    setIsMapModalOpen(false);
-  };
-
   const transformDataForCSV = (data: any[]) => {
     return data.map((item, index: number) => {
       const csvRecord: Record<string, unknown> = {};
 
+      // Serial number column
       csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
 
-      config.tableConfig.columns.forEach((column) => {
-        if (column.key === "parking_Name_En") {
-          csvRecord[t("form.parkingName")] = item.parking_Name_En || "";
-        } else if (column.key === "parking_Name_Ar") {
-          csvRecord[t("form.parkingNameArabic")] = item.parking_Name_Ar || "";
-        } else if (column.key === "zone") {
-          csvRecord[t("form.zone")] = item.zone || "";
-        } else if (column.key === "area") {
-          csvRecord[t("form.area")] = item.area || "";
-        } else if (column.key === "created_At") {
-          csvRecord[t("form.createdDate")] = item.created_At ? dayjs(item.created_At).format("DD-MM-YYYY") : "";
-        }
-      });
+      // Parking name column (depends on current language)
+      if (i18n.language === "ar") {
+        csvRecord[t("form.parkingNameArabic")] = item.parking_Name_Ar || "";
+      } else {
+        csvRecord[t("form.parkingName")] = item.parking_Name_En || "";
+      }
+
+      csvRecord[t("form.createdDate")] = item.created_At ? dayjs(item.created_At).format("DD-MM-YYYY") : "";
 
       return csvRecord;
     });

@@ -352,7 +352,8 @@
     "filterByPledgeStartDate": "التصفية حسب تاريخ بدء التعهد",
     "filterByfinedDate": "التصفية حسب تاريخ الغرامة",
     "filterBytowingDate": "التصفية حسب تاريخ السحب",
-    "filterByaddedon": "التصفية حسب تمت الإضافة في"
+    "filterByaddedon": "التصفية حسب تمت الإضافة في",
+    "filterByInspectionDate": "التصفية حسب تاريخ التفتيش"
   },
   "entity": {
     "plate": "لوحة",
@@ -478,6 +479,8 @@
   },
   "validation": {
     "required": "يرجى إدخال {{field}}",
+    "uploadRequired": "يرجى رفع {{field}}",
+    "selectRequired": "يرجى اختيار {{field}}",
     "invalidEmail": "يرجى إدخال بريد إلكتروني صالح",
     "onlyNumbers": "يرجى إدخال أرقام فقط",
     "lengthRange": "يجب أن يحتوي {{field}} على أرقام فقط وبحد أدنى {{min}} أرقام "

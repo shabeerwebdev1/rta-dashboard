@@ -472,6 +472,7 @@ const LeaveManagementPage: React.FC = () => {
         onClose={() => setDrawerOpen(false)}
         record={selectedRecord}
         onShare={handleShare}
+        getLeaveTypeName={getLeaveTypeName}
       />
     </>
   );

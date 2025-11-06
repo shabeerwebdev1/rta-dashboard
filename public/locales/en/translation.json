@@ -355,7 +355,8 @@
     "filterByPledgeStartDate": "Filter by Pledge Start Date",
     "filterByfinedDate": "Filter by Fined Date",
     "filterBytowingDate": "Filter by Towing Date",
-    "filterByaddedon": "Filter by Added On"
+    "filterByaddedon": "Filter by Added On",
+    "filterByInspectionDate": "Filter by Inspection Date"
   },
   "entity": {
     "plate": "Plate",
@@ -484,6 +485,8 @@
   },
   "validation": {
     "required": " Please enter {{field}} ",
+    "selectRequired": " Please select {{field}} ",
+    "uploadRequired": " Please upload {{field}} ",
     "invalidEmail": " Please enter a valid email address ",
     "onlyNumbers": " Only numbers are allowed ",
     "lengthRange": "{{field}} must contain digits {{min}} only."

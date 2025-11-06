@@ -373,8 +373,10 @@ const DisputeManagementPage: React.FC = () => {
   const handleFormSubmit = async (values: any) => {
     try {
       const formData = new FormData();
+      const tempFineId = values.FineId?.split("");
+      const validFineId = tempFineId?.filter((char: string) => char !== " " && char !== "\t").join("");
 
-      formData.append("FineId", values.FineId || "");
+      formData.append("FineId", validFineId || "");
       formData.append("Department", values.Department || "0");
       formData.append("Payment_Type", values.Payment_Type || "0");
       formData.append("Comments", values.Comments || "");
@@ -791,7 +793,9 @@ const DisputeManagementPage: React.FC = () => {
                   <Form.Item
                     name="Department"
                     label={t("form.department")}
-                    rules={[{ required: true, message: t("validation.required", { field: t("form.department") }) }]}
+                    rules={[
+                      { required: true, message: t("validation.selectRequired", { field: t("form.department") }) },
+                    ]}
                   >
                     <Select
                       placeholder={t("placeholders.department")}
@@ -808,7 +812,9 @@ const DisputeManagementPage: React.FC = () => {
                   <Form.Item
                     name="DisputeMainReason"
                     label={t("form.disputereason")}
-                    rules={[{ required: true, message: t("validation.required", { field: t("form.disputereason") }) }]}
+                    rules={[
+                      { required: true, message: t("validation.selectRequired", { field: t("form.disputereason") }) },
+                    ]}
                   >
                     <Select
                       placeholder={t("placeholders.reason")}
@@ -827,7 +833,10 @@ const DisputeManagementPage: React.FC = () => {
                     name="DisputeSubReason"
                     label={t("form.disputesubreason")}
                     rules={[
-                      { required: true, message: t("validation.required", { field: t("form.disputesubreason") }) },
+                      {
+                        required: true,
+                        message: t("validation.selectRequired", { field: t("form.disputesubreason") }),
+                      },
                     ]}
                   >
                     <Select
@@ -846,7 +855,9 @@ const DisputeManagementPage: React.FC = () => {
                   <Form.Item
                     name="Payment_Type"
                     label={t("form.paymentType")}
-                    rules={[{ required: true, message: t("validation.required", { field: t("form.paymentType") }) }]}
+                    rules={[
+                      { required: true, message: t("validation.selectRequired", { field: t("form.paymentType") }) },
+                    ]}
                   >
                     <Select
                       placeholder={t("placeholders.paymentType")}
@@ -912,7 +923,10 @@ const DisputeManagementPage: React.FC = () => {
                     name="ActualDisputeDate"
                     label={t("form.actualDisputeDate")}
                     rules={[
-                      { required: true, message: t("validation.required", { field: t("form.actualDisputeDate") }) },
+                      {
+                        required: true,
+                        message: t("validation.selectRequired", { field: t("form.actualDisputeDate") }),
+                      },
                     ]}
                   >
                     <DatePicker
@@ -947,7 +961,7 @@ const DisputeManagementPage: React.FC = () => {
                   <Form.Item
                     name="Evidence"
                     label={t("form.evidence")}
-                    rules={[{ required: true, message: t("validation.required", { field: t("form.evidence") }) }]}
+                    rules={[{ required: true, message: t("validation.uploadRequired", { field: t("form.evidence") }) }]}
                     valuePropName="fileList"
                     getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
                   >
