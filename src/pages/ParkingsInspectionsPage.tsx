@@ -153,6 +153,12 @@ const TradeLicenseInspectionPage: React.FC = () => {
 
         // Apply the same formatting as in the table
         switch (key) {
+          case "inspectorName":
+            value =
+              i18n.language === "ar"
+                ? item?.inspectorNameAr || item?.inspectorNameEn || t("common.noData")
+                : item?.inspectorNameEn || item?.inspectorNameAr || t("common.noData");
+            break;
           case "inspectionType":
             value = getLabelFromValue(value, inspectionTypeOptions, i18n);
             break;

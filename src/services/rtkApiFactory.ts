@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { serializeParams } from "../hooks/useTableParams";
+import { RTA_API_TARGET, EXTERNAL_FILES_URL } from "../config/envConfig";
 
-const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
+// const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
 
-const MOBILE_FILES_BASE_URL = "https://kandaprojects.live/documents";
+// const MOBILE_FILES_BASE_URL = "https://kandaprojects.live/documents";
 
 // const MOBILE_FILES_BASE_URL = "http://10.0.1.85:9000/documents"; // K and A SERVER 85
 
@@ -23,7 +24,7 @@ export const getMobileFileUrl = (filePath: string) => {
   normalizedPath = normalizedPath.replace(/\/+/g, "/");
   normalizedPath = normalizedPath.replace(/^\/+/, "");
 
-  return `${MOBILE_FILES_BASE_URL}/${normalizedPath}`;
+  return `${EXTERNAL_FILES_URL}/${normalizedPath}`;
 };
 
 //helper to get images  from localserver

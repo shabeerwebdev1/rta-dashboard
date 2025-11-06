@@ -4,10 +4,11 @@ import { useTranslation } from "react-i18next";
 import ThemeSwitcher from "../ThemeSwitcher";
 import LanguageSwitcher from "../LanguageSwitcher";
 import { usePage } from "../../contexts/PageContext";
+import { EXTERNAL_LOGIN_URL } from "../../config/envConfig";
 
 const { Header } = Layout;
 const { Title } = Typography;
-const EXTERNAL_LOGIN_URL = "https://sso.kandaprojects.live/webapp/ui/common/login.aspx";
+// const EXTERNAL_LOGIN_URL = "https://sso.kandaprojects.live/webapp/ui/common/login.aspx";
 // const EXTERNAL_LOGIN_URL = "http://localhost:7000/webapp/ui/common/login.aspx";
 const AppHeader = () => {
   const { pageTitle } = usePage();

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CheckCircleOutlined, CloseCircleOutlined, FileSearchOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
 
@@ -48,11 +49,32 @@ export const tradeLicenseConfig: PageConfig = {
         title: "form.tradeLicense",
         type: "string",
       },
+      {
+        key: "inspectorName",
+        title: "form.inspectorName",
+        type: "custom" as const,
+        render: (_text: any, record: any) => {
+          const getCurrentLanguage = () => {
+            const storedLang = localStorage.getItem("i18nextLng");
+            if (storedLang) return storedLang;
+            if (document.documentElement.dir === "rtl") return "ar";
+            if (document.body.classList.contains("rtl")) return "ar";
+            return "en";
+          };
+
+          const language = getCurrentLanguage();
+          const isArabic = language.startsWith("ar");
+
+          return isArabic
+            ? record?.inspectorNameAr || record?.inspectorNameEn || "No Data"
+            : record?.inspectorNameEn || record?.inspectorNameAr || "No Data";
+        },
+      },
       { key: "inspectionType", title: "form.inspectionType", type: "number", filterable: true },
       { key: "inspectionCategory", title: "form.fineType", type: "string", filterable: true },
-      { key: "fineAmount", title: "form.fineAmount", type: "number" },
+      // { key: "fineAmount", title: "form.fineAmount", type: "number" },
 
-      { key: "entityDateTime", title: "form.finedDate", type: "date" },
+      { key: "entityDateTime", title: "form.inspectionDate", type: "date" },
       { key: "inspectionStatus", title: "form.inspectionStatus", type: "string", filterable: true },
     ],
     viewRecord: true,

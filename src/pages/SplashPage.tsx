@@ -3,10 +3,11 @@ import { Image, Spin, Row, Col } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useValidatecodeQuery } from "../services/rtkApiFactory";
 import { useAuth } from "../contexts/AuthContext";
+import { EXTERNAL_LOGIN_URL } from "../config/envConfig";
 
 const FALLBACK_CODE = "20250919B8E7824B44624665BC686917";
 const SPLASH_DELAY = 1300;
-const EXTERNAL_LOGIN_URL = "https://sso.kandaprojects.live/webapp/ui/common/login.aspx";
+// const EXTERNAL_LOGIN_URL = "https://sso.kandaprojects.live/webapp/ui/common/login.aspx";
 
 // const EXTERNAL_LOGIN_URL = "http://localhost:7000/webapp/ui/common/login.aspx";
 
