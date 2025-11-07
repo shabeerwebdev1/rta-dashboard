@@ -172,10 +172,16 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         },
       ],
     },
+    // {
+    //   key: FULL_PATHS.ANALYTICS,
+    //   icon: <BarChartOutlined />,
+    //   labelText: t("sidebar.analytics"),
+    //   permission: "WebDashboard",
+    // },
     {
-      key: FULL_PATHS.ANALYTICS,
+      key: FULL_PATHS.REPORTS,
       icon: <BarChartOutlined />,
-      labelText: t("sidebar.analytics"),
+      labelText: t("sidebar.reports"),
       permission: "WebDashboard",
     },
     {

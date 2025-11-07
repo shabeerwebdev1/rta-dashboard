@@ -8,14 +8,13 @@ export const PATHS = {
   WHITELIST: "whitelist",
   PLATES: "plates",
   TRADELICENSES: "tradelicenses",
-  INSPECTIONS_OBSTACLES: "inspections-obstacles", 
+  INSPECTIONS_OBSTACLES: "inspections-obstacles",
 
   PLEDGES: "pledges",
   INSPECTIONS: "inspections",
   FINES: "fines",
-  TRADE_LICENSE_INSPECTIONS: "trade-license-inspections", 
+  TRADE_LICENSE_INSPECTIONS: "trade-license-inspections",
 
-  
   PARKONIC: "parkonic",
   DISPUTE: "dispute",
   GENERAL: "general",
@@ -23,10 +22,10 @@ export const PATHS = {
   INSPECTOR_MANAGEMENT: "inspector-management",
   SUPERVISROR_MANGEMENT: "supervisor-management",
   LEAVE_MANGEMENT: "leave-management",
-  CREATESHIFTPLAN:"createshiftplan",
+  CREATESHIFTPLAN: "createshiftplan",
   ANALYTICS: "analytics",
   TOWING: "towing",
-  ADHOCSHIFTPLAN:"adhocshiftplan",
+  ADHOCSHIFTPLAN: "adhocshiftplan",
   SHIFT_MANAGEMENT: "shift-management",
   FINES_VEHICLES: "vehicles",
   FINES_PARKINGS: "parkings",
@@ -37,7 +36,6 @@ export const PATHS = {
   LEAVE_MANAGEMENT: "leave-management",
   PARKONIC_LOCATION: "parkonic-location",
   FINES_INSPECTIONS: "fines-inspections",
-  
 };
 
 export const FULL_PATHS = {
@@ -62,8 +60,6 @@ export const FULL_PATHS = {
   FINES_INSPECTIONS: "/fines-inspections",
   TRADE_LICENSE_INSPECTIONS: "/trade-license-inspections", // ✅ renamed
 
-
-
   LEAVE_MANGEMENT: "/leave-management",
   TOWING: "/towing",
 
@@ -76,8 +72,9 @@ export const FULL_PATHS = {
   FINES_PARKINGS: "/fines/parkings",
 
   ANALYTICS: "/analytics",
+  REPORTS: "/reports",
   CREATESHIFTPLAN: "/createshiftplan",
-  ADHOCSHIFTPLAN:"/adhocshiftplan",
+  ADHOCSHIFTPLAN: "/adhocshiftplan",
   ROLE_MANAGEMENT: "/role-management",
-  PARKONIC_LOCATION: "/parkonic-location"
+  PARKONIC_LOCATION: "/parkonic-location",
 };

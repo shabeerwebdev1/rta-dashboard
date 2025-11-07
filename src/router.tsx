@@ -5,6 +5,7 @@ import PageLoader from "./components/common/PageLoader";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import { PATHS, FULL_PATHS } from "./constants/paths";
 import GeneralSearchPage from "./pages/GeneralSearchPage";
+import ReportsPage from "./pages/ReportsPage";
 
 // Lazy-loaded Pages
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -25,7 +26,7 @@ const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
 const TradeLicenseInspectionPage = lazy(() => import("./pages/TradeLicenseInspectionPage"));
 const TowingPage = lazy(() => import("./pages/TowingPage"));
 const ParkonicLocationPage = lazy(() => import("./pages/ParkonicLocationPage"));
-const AnalyticsInsightsPage = lazy(() => import("./pages/AnalyticsInsightsPage"));
+//const AnalyticsInsightsPage = lazy(() => import("./pages/AnalyticsInsightsPage"));
 const VehicleInspectionsPage = lazy(() => import("./pages/VehicleInspectionsPage"));
 const ParkingsInspectionsPage = lazy(() => import("./pages/ParkingsInspectionsPage"));
 
@@ -180,11 +181,19 @@ const AppRoutes = () => (
             </ProtectedRoute>
           }
         />
-        <Route
+        {/* <Route
           path={FULL_PATHS.ANALYTICS}
           element={
             <ProtectedRoute>
               <AnalyticsInsightsPage />
+            </ProtectedRoute>
+          }
+        /> */}
+        <Route
+          path={FULL_PATHS.REPORTS}
+          element={
+            <ProtectedRoute>
+              <ReportsPage />
             </ProtectedRoute>
           }
         />

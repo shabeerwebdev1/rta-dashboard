@@ -509,17 +509,21 @@ export const dynamicApi = createApi({
     }),
 
     // Reports
-    getHtmlReport: builder.mutation<Blob, { reportPath: string; format: "HTML4.0" | "PDF"; parameters: any }>({
+    getHtmlReport: builder.mutation<
+      Blob,
+      {
+        reportPath: string;
+        format: "HTML4.0" | "PDF" | "EXCEL" | "EXCELOPENXML" | "WORD" | "WORDOPENXML" | "CSV" | "XML" | "MHTML";
+        parameters: any;
+      }
+    >({
       query: (body) => ({
         url: "/api/Report",
         method: "POST",
         body,
         responseHandler: async (response) => {
           const contentType = response.headers.get("content-type");
-          if (contentType && contentType.includes("application/pdf")) {
-            return response.blob();
-          }
-          return response.text();
+          return response.blob();
         },
       }),
     }),
