@@ -521,5 +521,16 @@
     "invalidEmail": " Please enter a valid email address ",
     "onlyNumbers": " Only numbers are allowed ",
     "lengthRange": "{{field}} must contain digits of at least {{min}}."
+  },
+  "reports":{
+    "parkingInspectorsEvaluation": "Parking Inspectors Evaluation Summary",
+    "qatarVehicle": "Qatar Vehicle - TBD",
+    "vehicleViolations": "Vehicle Violations",
+    "violationWithLocation": "Violation with Location",
+    "inspectorPerformance": "Inspector Performance",
+    "proactiveInspection": "Proactive Inspection and Campaign Report",
+    "disputes": "Disputes Report",
+    "monthlyLeave": "Monthly Leave Report",
+    "leaveRequest": "Leave Request Report"
   }
 }

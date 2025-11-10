@@ -515,5 +515,16 @@
     "invalidEmail": "يرجى إدخال بريد إلكتروني صالح",
     "onlyNumbers": "يرجى إدخال أرقام فقط",
     "lengthRange": "{{field}} يجب أن يحتوي على أرقام لا تقل عن {{min}}."
+  },
+  "reports": {
+    "parkingInspectorsEvaluation": "ملخص تقييم مفتشي المواقف",
+    "qatarVehicle": "مركبة قطر - قيد التطوير",
+    "vehicleViolations": "مخالفات المركبات",
+    "violationWithLocation": "المخالفات مع الموقع",
+    "inspectorPerformance": "أداء المفتش",
+    "proactiveInspection": "تقرير التفتيش الاستباقي والحملات",
+    "disputes": "تقرير المنازعات",
+    "monthlyLeave": "تقرير الإجازات الشهرية",
+    "leaveRequest": "تقرير طلبات الإجازة"
   }
 }

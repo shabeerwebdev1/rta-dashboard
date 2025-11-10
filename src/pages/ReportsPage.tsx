@@ -14,7 +14,6 @@ import {
   ReportConfig,
 } from "../config/pageConfigs/reportsConfig";
 import { useGetHtmlReportMutation } from "../services/rtkApiFactory";
-import StatsDisplay from "../components/common/StatsDisplay";
 
 const { Option } = Select;
 
@@ -36,6 +35,14 @@ const ReportsPage: React.FC = () => {
   useEffect(() => {
     setPageTitle(t(config.title));
   }, [setPageTitle, t, config.title]);
+
+  // Helper function to get translated description
+  const getTranslatedDescription = (report: ReportConfig) => {
+    if (report.descriptionKey) {
+      return t(report.descriptionKey);
+    }
+    return report.description; // Fallback to original description
+  };
 
   // Filter reports based on search
   const filteredReports = useMemo(() => {
@@ -80,19 +87,19 @@ const ReportsPage: React.FC = () => {
         parameters: {},
       };
 
-      // NOTE: Parameters logic - commented out for future implementation
-      // if (reportConfig?.parameters.requiresDateRange && values.dateRange) {
-      //   payload.parameters.FromDate = values.dateRange[0].format("MM/DD/YYYY");
-      //   payload.parameters.ToDate = values.dateRange[1].format("MM/DD/YYYY");
-      // }
+      // Add parameters based on report configuration
+      if (reportConfig?.parameters.requiresDateRange && values.dateRange) {
+        payload.parameters.FromDate = values.dateRange[0].format("YYYY/MM/DD");
+        payload.parameters.ToDate = values.dateRange[1].format("YYYY/MM/DD");
+      }
 
-      // if (reportConfig?.parameters.requiresLeaveStatus && values.leaveStatus) {
-      //   payload.parameters.LeaveStatus = values.leaveStatus;
-      // }
+      if (reportConfig?.parameters.requiresLeaveStatus && values.leaveStatus) {
+        payload.parameters.LeaveStatus = values.leaveStatus;
+      }
 
-      // if (reportConfig?.parameters.requiresUserId && values.userId) {
-      //   payload.parameters.UserId = values.userId;
-      // }
+      if (reportConfig?.parameters.requiresUserId && values.userId) {
+        payload.parameters.UserId = values.userId;
+      }
 
       console.log("Report payload:", payload);
 
@@ -181,9 +188,6 @@ const ReportsPage: React.FC = () => {
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      {/* Stats Display */}
-      <StatsDisplay statsConfig={config.statsConfig} data={reports} loading={false} />
-
       {/* Search and Filters Card */}
       <Card bordered={false} bodyStyle={{ padding: "16px" }}>
         <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
@@ -258,7 +262,7 @@ const ReportsPage: React.FC = () => {
                             color: "#1890ff",
                           }}
                         >
-                          {report.description}
+                          {getTranslatedDescription(report)}
                         </h3>
                         <p
                           style={{
@@ -311,7 +315,7 @@ const ReportsPage: React.FC = () => {
       ) : (
         // Report Parameters View with Form
         <Card
-          title={reportConfig?.description || t("page.reportViewer")}
+          title={reportConfig ? getTranslatedDescription(reportConfig) : t("page.reportViewer")}
           extra={
             <Space>
               <Button onClick={handleCancel}>{t("common.back")}</Button>
@@ -333,7 +337,9 @@ const ReportsPage: React.FC = () => {
               marginBottom: "16px",
             }}
           >
-            <h3 style={{ margin: "0 0 4px 0", fontSize: "14px", fontWeight: 600 }}>{reportConfig?.description}</h3>
+            <h3 style={{ margin: "0 0 4px 0", fontSize: "14px", fontWeight: 600 }}>
+              {reportConfig ? getTranslatedDescription(reportConfig) : t("page.reportViewer")}
+            </h3>
             <p
               style={{
                 margin: "0",
