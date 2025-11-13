@@ -329,6 +329,7 @@
     "search": "Search",
     "filter": "Filter",
     "reset": "Reset",
+    "preview": "Preview",
     "delete": "Delete",
     "cancel": "Cancel",
     "download": "Download",
@@ -522,7 +523,7 @@
     "onlyNumbers": " Only numbers are allowed ",
     "lengthRange": "{{field}} must contain digits of at least {{min}}."
   },
-  "reports":{
+  "reports": {
     "parkingInspectorsEvaluation": "Parking Inspectors Evaluation Summary",
     "qatarVehicle": "Qatar Vehicle - TBD",
     "vehicleViolations": "Vehicle Violations",

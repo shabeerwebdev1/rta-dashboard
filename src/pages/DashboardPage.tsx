@@ -47,7 +47,8 @@ const SupervisorViewPage: React.FC = () => {
   const [selectedInspectorDropdown, setSelectedInspectorDropdown] = useState<string | null>(null);
   const [shifts, setShifts] = useState<any[]>([]);
   const [selectedShift, setSelectedShift] = useState<string | null>(null);
-
+  //the below state is for managing the state of the map url index maintained in arcgis component
+  const [mapUrlIndex, setMapUrlIndex] = useState(2);
   const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery({});
   const [triggerGetShifts, { isLoading: isLoadingShiftsDropdown }] = useLazyGetShiftsQuery();
 
@@ -89,6 +90,8 @@ const SupervisorViewPage: React.FC = () => {
 
   const handleInspectorChange = (value: string) => {
     setSelectedInspectorDropdown(value);
+    //this is to simulate the map update when inspector is changed
+    setMapUrlIndex(handleRandomUrlIndexGenerate());
   };
 
   // Mock Inspectors (replace with API data if needed)
@@ -126,6 +129,11 @@ const SupervisorViewPage: React.FC = () => {
   const handleDrawerClose = () => {
     setDrawerVisible(false);
     setSelectedInspector(null);
+  };
+
+  // this method is simulate the map url update as the inspector changes
+  const handleRandomUrlIndexGenerate = () => {
+    return Math.floor(Math.random() * 2);
   };
 
   // Table Config
@@ -247,6 +255,7 @@ const SupervisorViewPage: React.FC = () => {
               center={[55.2743, 25.1972]}
               zoom={12}
               height="495px"
+              mapUrlIndex={mapUrlIndex}
               clickable={false} // This disables all click functionality
               onInspectorClick={undefined} // Not needed since clickable is false
             />

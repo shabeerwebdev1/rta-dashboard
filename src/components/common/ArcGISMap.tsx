@@ -8,6 +8,7 @@ import PictureMarkerSymbol from "@arcgis/core/symbols/PictureMarkerSymbol";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import { Dropdown, Menu } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
+import esriConfig from "@arcgis/core/config";
 
 type Inspector = {
   id: number;
@@ -28,18 +29,30 @@ interface ArcGISMapProps {
   height?: string;
   onInspectorClick?: (inspector: Inspector) => void;
 }
+interface ArcGISMapProps {
+  mapUrlIndex?: number;
+}
+
+const featureServiceUrls = [
+  "https://services1.arcgis.com/0zsuvMZIPja7Lm9C/arcgis/rest/services/Testing_2/FeatureServer",
+  "https://services1.arcgis.com/0zsuvMZIPja7Lm9C/arcgis/rest/services/Testing_3/FeatureServer",
+  "https://services1.arcgis.com/0zsuvMZIPja7Lm9C/arcgis/rest/services/RTA_Dubai/FeatureServer",
+];
 
 const ArcGISMap: React.FC<ArcGISMapProps> = ({
   inspectors,
   center = [55.2743, 25.1972],
   zoom = 15,
   height = "500px",
+  mapUrlIndex = 2,
   onInspectorClick,
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<__esri.MapView | null>(null);
   const [basemap, setBasemap] = useState("streets-navigation-vector");
   const [selectedPoint, setSelectedPoint] = useState<Point | null>(null);
+  //const featureLayerUrl = ;
+  const [featureLayerUrl, setfeatureLayerUrl] = useState<string>(featureServiceUrls[mapUrlIndex]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -54,20 +67,24 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     });
     viewRef.current = view;
 
+    esriConfig.request.interceptors.push({
+      urls: featureLayerUrl,
+      before: function (params) {
+        params.requestOptions.query = params.requestOptions.query || {};
+        params.requestOptions.query.token =
+          "mzFcMRqhxzPAoRJavp2MJpSdUV_UVcsTrLt1Ox-VIw0tFjEM4ACDyL0H2CwsFUUc-qpr7tKNNafX4hbIhhJek6WtcD_GU9sqX0h_BqdogAV8ynOUX3soVY8mw5jDexifGTu-udRTeKAzsEtTVXajBL6_rclLsCSv7zYYSqOWFoMay5KMow7Qd1g5jg1Xmg6Z";
+      },
+    });
+
     // ✅ Add FeatureLayer (Feature Service)
     const featureLayer = new FeatureLayer({
-      url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Landscape_Trees/FeatureServer/0",
+      url: featureLayerUrl,
     });
 
     featureLayer
       .load()
       .then(() => {
-        console.log("✅ Feature layer loaded successfully");
-        console.log("📍 Layer extent:", featureLayer.fullExtent);
         return featureLayer.queryFeatureCount();
-      })
-      .then((count) => {
-        console.log("🌳 Total features in layer:", count);
       })
       .catch((error) => {
         console.error("❌ Feature layer error:", error);
@@ -75,22 +92,16 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
 
     map.add(featureLayer);
 
-    // Optional: Zoom to layer extent after loading
+    // ✅ **UPDATED: Removed auto-zoom to feature layer extent**
     view.when(() => {
       featureLayer.when(() => {
-        if (featureLayer.fullExtent) {
-          view
-            .goTo(featureLayer.fullExtent)
-            .then(() => console.log("✅ Zoomed to feature layer extent"))
-            .catch((err) => console.error("❌ Zoom error:", err));
-        }
+        // Removed: view.goTo(featureLayer.fullExtent) - this was causing unwanted zoom out
       });
 
       view.whenLayerView(featureLayer).then((layerView) => {
-        console.log("✅ LayerView created");
         layerView.watch("updating", (updating) => {
           if (!updating) {
-            console.log("✅ LayerView finished updating");
+            // Layer finished updating
           }
         });
       });
@@ -145,42 +156,43 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     }
 
     // ✅ Click event for selecting point / inspector
-    const clickHandler = view.on("click", (event) => {
-      const point = new Point({
-        longitude: event.mapPoint.longitude,
-        latitude: event.mapPoint.latitude,
-      });
+    // const clickHandler = view.on("click", (event) => {
+    //   const point = new Point({
+    //     longitude: event.mapPoint.longitude,
+    //     latitude: event.mapPoint.latitude,
+    //   });
 
-      setSelectedPoint(point);
+    //   setSelectedPoint(point);
 
-      // Check if clicked on inspector
-      view.hitTest(event).then((response) => {
-        if (response.results.length > 0) {
-          const graphic = response.results[0].graphic;
-          const inspector = graphic.attributes?.inspector;
-          if (inspector && onInspectorClick) {
-            onInspectorClick(inspector);
-          }
-        } else if (onInspectorClick) {
-          // No inspector, return coordinates
-          onInspectorClick({
-            lat: event.mapPoint.latitude,
-            lng: event.mapPoint.longitude,
-          
-          });
-        }
-      });
-    });
+    //   // Check if clicked on inspector
+    //   view.hitTest(event).then((response) => {
+    //     if (response.results.length > 0) {
+    //       const graphic = response.results[0].graphic;
+    //       const inspector = graphic.attributes?.inspector;
+    //       if (inspector && onInspectorClick) {
+    //         onInspectorClick(inspector);
+    //       }
+    //     } else if (onInspectorClick) {
+    //       // No inspector, return coordinates
+    //       onInspectorClick({
+    //         lat: event.mapPoint.latitude,
+    //         lng: event.mapPoint.longitude,
+    //       });
+    //     }
+    //   });
+    // });
 
     // ✅ Cleanup
     return () => {
-      if (clickHandler) clickHandler.remove();
       if (viewRef.current) {
         viewRef.current.destroy();
         viewRef.current = null;
       }
     };
-  }, [inspectors, basemap, selectedPoint, center, zoom]);
+  }, [inspectors, basemap, selectedPoint, center, zoom, mapUrlIndex]);
+  useEffect(() => {
+    setfeatureLayerUrl(featureServiceUrls[mapUrlIndex]);
+  }, [mapUrlIndex]);
 
   // ✅ Basemap Switcher Menu
   const menu = (
@@ -224,22 +236,6 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
           }}
         />
       </Dropdown>
-
-      {/* Instructions */}
-      <div
-        style={{
-          position: "absolute",
-          top: 12,
-          left: 12,
-          background: "rgba(255,255,255,0.9)",
-          padding: "8px 12px",
-          borderRadius: "4px",
-          fontSize: "12px",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-        }}
-      >
-        Click anywhere on the map to select a location
-      </div>
     </div>
   );
 };
