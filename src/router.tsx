@@ -5,7 +5,6 @@ import PageLoader from "./components/common/PageLoader";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import { PATHS, FULL_PATHS } from "./constants/paths";
 import GeneralSearchPage from "./pages/GeneralSearchPage";
-import ReportsPage from "./pages/ReportsPage";
 
 // Lazy-loaded Pages
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -29,6 +28,7 @@ const ParkonicLocationPage = lazy(() => import("./pages/ParkonicLocationPage"));
 //const AnalyticsInsightsPage = lazy(() => import("./pages/AnalyticsInsightsPage"));
 const VehicleInspectionsPage = lazy(() => import("./pages/VehicleInspectionsPage"));
 const ParkingsInspectionsPage = lazy(() => import("./pages/ParkingsInspectionsPage"));
+const ReportsPage = lazy(() => import("./pages/ReportsPage"));
 
 const AppRoutes = () => (
   <Routes>

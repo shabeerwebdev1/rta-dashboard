@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useMemo, useState } from "react";
 import { Image, Layout, Menu, MenuProps } from "antd";
 import {
@@ -22,6 +24,8 @@ import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import { FULL_PATHS } from "../../constants/paths";
 import { useAuth } from "../../contexts/AuthContext";
+import { reports } from "../../config/pageConfigs/reportsConfig";
+import { useSearchParams } from "react-router-dom";
 
 const { Sider } = Layout;
 
@@ -35,9 +39,26 @@ type RawItem = {
 
 const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corporateIndigo" }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const { canAccessAny, hasRead } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  // Helper function to get translated description
+  const getTranslatedDescription = (report: any) => {
+    if (report.descriptionKey) {
+      return t(report.descriptionKey);
+    }
+    return report.description;
+  };
+
+  // Determine current language
+  const currentLanguage = i18n.language === "ar" || i18n.language === "ar-SA" ? "Arabic" : "English";
+
+  // Filter reports based on current language
+  const filteredReports = useMemo(() => {
+    return reports.filter((report) => report.language === currentLanguage);
+  }, [currentLanguage]);
 
   const rawMenu: RawItem[] = [
     {
@@ -120,7 +141,6 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         },
       ],
     },
-
     {
       key: FULL_PATHS.FINES,
       icon: <WarningOutlined />,
@@ -140,7 +160,6 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         },
       ],
     },
-
     {
       key: FULL_PATHS.DISPUTE,
       icon: <ExclamationCircleOutlined />,
@@ -172,17 +191,18 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         },
       ],
     },
-    // {
-    //   key: FULL_PATHS.ANALYTICS,
-    //   icon: <BarChartOutlined />,
-    //   labelText: t("sidebar.analytics"),
-    //   permission: "WebDashboard",
-    // },
+    // Reports as parent with filtered reports based on language
     {
-      key: FULL_PATHS.REPORTS,
+      key: "reports",
       icon: <BarChartOutlined />,
       labelText: t("sidebar.reports"),
       permission: "WebDashboard",
+      children: filteredReports.map((report) => ({
+        key: `${FULL_PATHS.REPORTS}?report=${report.key}`,
+        icon: <FileTextOutlined />,
+        labelText: getTranslatedDescription(report),
+        permission: "WebDashboard",
+      })),
     },
     {
       key: "shiftplanning",
@@ -216,7 +236,9 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
     items.map((it) => {
       if (it.children && it.children.length > 0) {
         const processedChildren = applyPermissions(it.children);
-        const parentHasRead = it.permission ? hasRead(it.permission) : false;
+
+        // Check if hasRead function exists before calling it
+        const parentHasRead = it.permission && hasRead ? hasRead(it.permission) : false;
         const someChildEnabled = processedChildren.some((c: any) => !c.disabled);
 
         if (parentHasRead) {
@@ -227,11 +249,12 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         return { ...it, children: processedChildren, disabled: !someChildEnabled };
       }
 
-      const allowed = it.permission ? canAccessAny(it.permission) : false;
+      // Check if canAccessAny function exists before calling it
+      const allowed = it.permission && canAccessAny ? canAccessAny(it.permission) : false;
       return { ...it, disabled: !allowed };
     });
 
-  const permApplied = useMemo(() => applyPermissions(rawMenu), [rawMenu, canAccessAny, hasRead]);
+  const permApplied = useMemo(() => applyPermissions(rawMenu), [rawMenu, canAccessAny, hasRead, filteredReports]);
 
   // Transform to Antd Menu items (disable visually without changing color)
   const transformToAntd = (items: any[]): MenuProps["items"] =>
@@ -264,30 +287,65 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
 
   const getSelectedKeys = () => {
     const path = location.pathname;
-    let bestMatch = "";
+    const search = location.search;
+    const fullPath = path + search;
+
+    const currentReportParam = searchParams.get("report");
+    const lang = i18n.language === "ar" ? "arb" : "eng";
+
     const flatten = (items: any[]): any[] => items.flatMap((item) => (item.children ? flatten(item.children) : [item]));
-    for (const item of flatten(menuItems as any[])) {
-      if (path.startsWith(String(item.key)) && String(item.key).length > bestMatch.length) {
-        bestMatch = item.key;
+
+    const flatItems = flatten(menuItems as any[]);
+
+    // 💡 If on REPORTS page → match by base report key dynamically
+    if (path === FULL_PATHS.REPORTS && currentReportParam) {
+      const base = currentReportParam.replace(/(_eng|_arb)$/, "");
+      const targetKey = `${FULL_PATHS.REPORTS}?report=${base}_${lang}`;
+
+      const match = flatItems.find((item) => item.key === targetKey);
+      if (match) return [match.key];
+    }
+
+    // Normal exact match
+    const exactMatch = flatItems.find((item) => String(item.key) === fullPath);
+    if (exactMatch) return [exactMatch.key];
+
+    // Fallback by path-only
+    let bestMatch = "";
+    for (const item of flatItems) {
+      const itemKey = String(item.key);
+      const itemPath = itemKey.split("?")[0];
+      if (path.startsWith(itemPath) && itemPath.length > bestMatch.length) {
+        bestMatch = itemKey;
       }
     }
+
     return [bestMatch || FULL_PATHS.DASHBOARD];
   };
 
   const getDefaultOpenKeys = () => {
     const path = location.pathname;
+    const search = location.search;
+    const fullPath = path + search;
+
     const openKeys: string[] = [];
-    const findParents = (items: any[], currentPath: string) => {
+    const findParents = (items: any[], currentPath: string, currentFullPath: string) => {
       for (const item of items) {
         if (item.children) {
-          if (item.children.some((c: any) => currentPath.startsWith(String(c.key)))) {
+          // Check if any child matches the current full path (for reports with query params)
+          const hasMatchingChild = item.children.some((c: any) => {
+            const childKey = String(c.key);
+            return childKey === currentFullPath || currentPath.startsWith(childKey.split("?")[0]);
+          });
+
+          if (hasMatchingChild) {
             openKeys.push(item.key);
-            findParents(item.children, currentPath);
+            findParents(item.children, currentPath, currentFullPath);
           }
         }
       }
     };
-    findParents(menuItems as any[], path);
+    findParents(menuItems as any[], path, fullPath);
     return openKeys;
   };
 

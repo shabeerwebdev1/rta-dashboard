@@ -320,7 +320,8 @@
     "disputenumber": "Dispute Number",
     "parkonicslocationId": "Parkonics Location ID",
     "applicationId": "Application ID",
-    "permitStatus": "Permit Status"
+    "permitStatus": "Permit Status",
+    "selectExportFormat": "Select Export Format"
   },
   "common": {
     "action": "Action",

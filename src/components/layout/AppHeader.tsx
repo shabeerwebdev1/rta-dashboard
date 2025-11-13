@@ -1,18 +1,23 @@
 import { Layout, Space, Avatar, Dropdown, type MenuProps, Typography } from "antd";
 import { UserOutlined, LogoutOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import ThemeSwitcher from "../ThemeSwitcher";
 import LanguageSwitcher from "../LanguageSwitcher";
 import { usePage } from "../../contexts/PageContext";
 import { EXTERNAL_LOGIN_URL } from "../../config/envConfig";
+import { FULL_PATHS } from "../../constants/paths";
 
 const { Header } = Layout;
 const { Title } = Typography;
-// const EXTERNAL_LOGIN_URL = "https://sso.kandaprojects.live/webapp/ui/common/login.aspx";
-// const EXTERNAL_LOGIN_URL = "http://localhost:7000/webapp/ui/common/login.aspx";
+
 const AppHeader = () => {
   const { pageTitle } = usePage();
   const { t, i18n } = useTranslation();
+  const location = useLocation();
+
+  // Check if current page is reports page
+  const isReportsPage = location.pathname === FULL_PATHS.REPORTS;
 
   // 🔹 Get user info from localStorage
   const userName =
@@ -51,10 +56,9 @@ const AppHeader = () => {
 
       <Space size="middle" align="center">
         <ThemeSwitcher />
-        <LanguageSwitcher />
-        {/* <Badge dot>
-          <Button type="text" icon={<BellOutlined />} />
-        </Badge> */}
+        {/* Hide LanguageSwitcher on Reports page */}
+        {!isReportsPage && <LanguageSwitcher />}
+
         <Dropdown menu={{ items: userMenuItems, onClick: handleMenuClick }} placement="bottomRight">
           <Space style={{ cursor: "pointer" }}>
             <Avatar src={userImage} icon={<UserOutlined />} />

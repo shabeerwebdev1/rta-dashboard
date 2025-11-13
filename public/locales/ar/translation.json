@@ -321,7 +321,9 @@
     "disputenumber": "رقم النزاع",
     "parkonicslocationId": "معرف موقع باركونيك",
     "applicationId": " معرف التطبيق ",
-    "permitStatus": " حالة التصريح "
+    "permitStatus": " حالة التصريح ",
+    "selectExportFormat": "اختر تنسيق التصدير"
+
   },
   "common": {
     "action": "إجراء",
