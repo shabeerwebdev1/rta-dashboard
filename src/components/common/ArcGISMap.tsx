@@ -5,12 +5,13 @@ import Graphic from "@arcgis/core/Graphic";
 import Point from "@arcgis/core/geometry/Point";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import PictureMarkerSymbol from "@arcgis/core/symbols/PictureMarkerSymbol";
+import Extent from "@arcgis/core/geometry/Extent";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import { Dropdown, Menu } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import esriConfig from "@arcgis/core/config";
 
-type Inspector = {
+export type Inspector = {
   id: number;
   name: string;
   nameAr: string;
@@ -20,6 +21,7 @@ type Inspector = {
   statusAr: string;
   details?: { zone: string; lastCheckIn: string };
   markerType?: "default" | "google-pin";
+  zone?: string;
 };
 
 interface ArcGISMapProps {
@@ -28,9 +30,8 @@ interface ArcGISMapProps {
   zoom?: number;
   height?: string;
   onInspectorClick?: (inspector: Inspector) => void;
-}
-interface ArcGISMapProps {
-  mapUrlIndex?: number;
+  onlyInspector?: Inspector | null;
+  clickable?: boolean;
 }
 
 const featureServiceUrls = [
@@ -44,20 +45,18 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   center = [55.2743, 25.1972],
   zoom = 15,
   height = "500px",
-  mapUrlIndex = 2,
   onInspectorClick,
+  onlyInspector = null,
+  clickable = true,
 }) => {
-  const mapRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<__esri.MapView | null>(null);
+  const featureLayersRef = useRef<__esri.FeatureLayer[]>([]);
   const [basemap, setBasemap] = useState("streets-navigation-vector");
-  const [selectedPoint, setSelectedPoint] = useState<Point | null>(null);
-  //const featureLayerUrl = ;
-  const [featureLayerUrl, setfeatureLayerUrl] = useState<string>(featureServiceUrls[mapUrlIndex]);
 
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Create map and view
     const map = new Map({ basemap });
     const view = new MapView({
       container: mapRef.current,
@@ -68,7 +67,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     viewRef.current = view;
 
     esriConfig.request.interceptors.push({
-      urls: featureLayerUrl,
+      urls: featureServiceUrls,
       before: function (params) {
         params.requestOptions.query = params.requestOptions.query || {};
         params.requestOptions.query.token =
@@ -76,42 +75,59 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       },
     });
 
-    // ✅ Add FeatureLayer (Feature Service)
-    const featureLayer = new FeatureLayer({
-      url: featureLayerUrl,
+    // add all feature layers (use /0 endpoint)
+    featureLayersRef.current = featureServiceUrls.map((url) => {
+      const layerUrl = url.endsWith("/0") ? url : `${url.replace(/\/+$/, "")}/0`;
+      const fl = new FeatureLayer({ url: layerUrl });
+      map.add(fl);
+      return fl;
     });
 
-    featureLayer
-      .load()
-      .then(() => {
-        return featureLayer.queryFeatureCount();
-      })
-      .catch((error) => {
-        console.error("❌ Feature layer error:", error);
-      });
-
-    map.add(featureLayer);
-
-    // ✅ **UPDATED: Removed auto-zoom to feature layer extent**
+    // watch but do not auto-zoom to full extent
     view.when(() => {
-      featureLayer.when(() => {
-        // Removed: view.goTo(featureLayer.fullExtent) - this was causing unwanted zoom out
+      featureLayersRef.current.forEach((fl) => {
+        fl.when().catch((e) => console.warn("[ArcGISMap] feature layer load failed:", e));
       });
 
-      view.whenLayerView(featureLayer).then((layerView) => {
-        layerView.watch("updating", (updating) => {
-          if (!updating) {
-            // Layer finished updating
-          }
+      Promise.all(featureLayersRef.current.map((f) => f.when().catch(() => null))).then(() => {
+        featureLayersRef.current.forEach((fl) => {
+          view
+            .whenLayerView(fl)
+            .then((lv) => {
+              lv.watch("updating", (updating) => {
+                if (!updating) {
+                  // intentionally left blank
+                }
+              });
+            })
+            .catch(() => {});
         });
       });
     });
 
-    // ✅ Clear graphics before adding
+    return () => {
+      if (viewRef.current) {
+        viewRef.current.destroy();
+        viewRef.current = null;
+      }
+      featureLayersRef.current = [];
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (viewRef.current) viewRef.current.map.basemap = basemap as any;
+  }, [basemap]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+
     view.graphics.removeAll();
 
-    // ✅ Add inspector markers
-    inspectors.forEach((inspector) => {
+    const toDraw = onlyInspector ? [onlyInspector] : inspectors;
+
+    toDraw.forEach((inspector) => {
       const point = new Point({
         longitude: inspector.lng,
         latitude: inspector.lat,
@@ -139,62 +155,75 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       view.graphics.add(graphic);
     });
 
-    // ✅ Add selected point marker if it exists
-    if (selectedPoint) {
-      const selectedSymbol = new PictureMarkerSymbol({
-        url: "https://cdn-icons-png.flaticon.com/512/684/684908.png", // Green pin
-        width: "32px",
-        height: "32px",
-      });
+    // when a single inspector is shown, zoom out a bit more than before
+    if (onlyInspector) {
+      const lng = onlyInspector.lng;
+      const lat = onlyInspector.lat;
+      const SINGLE_ZOOM = 13; // reduced number -> more zoomed out
+      view
+        .goTo({ center: [lng, lat], zoom: SINGLE_ZOOM }, { duration: 600 })
+        .catch((e) => console.warn("goTo single inspector failed:", e));
+    } else {
+      if (inspectors.length > 1) {
+        const lngs = inspectors.map((i) => i.lng);
+        const lats = inspectors.map((i) => i.lat);
+        const minLng = Math.min(...lngs);
+        const maxLng = Math.max(...lngs);
+        const minLat = Math.min(...lats);
+        const maxLat = Math.max(...lats);
 
-      const selectedGraphic = new Graphic({
-        geometry: selectedPoint,
-        symbol: selectedSymbol,
-      });
+        const lngPadding = (maxLng - minLng) * 0.35 || 0.02;
+        const latPadding = (maxLat - minLat) * 0.35 || 0.02;
 
-      view.graphics.add(selectedGraphic);
+        const xmin = minLng - lngPadding;
+        const xmax = maxLng + lngPadding;
+        const ymin = minLat - latPadding;
+        const ymax = maxLat + latPadding;
+
+        const spanX = Math.abs(xmax - xmin);
+        const spanY = Math.abs(ymax - ymin);
+        if (spanX > 0 && spanY > 0 && spanX <= 30 && spanY <= 30) {
+          const extent = new Extent({
+            xmin,
+            ymin,
+            xmax,
+            ymax,
+            spatialReference: { wkid: 4326 },
+          });
+          view.goTo({ target: extent }, { duration: 600 }).catch(() => {
+            view.goTo({ center, zoom }).catch(() => {});
+          });
+        } else {
+          view.goTo({ center, zoom }).catch(() => {});
+        }
+      } else if (inspectors.length === 1) {
+        const only = inspectors[0];
+        view.goTo({ center: [only.lng, only.lat], zoom: 13 }).catch(() => {});
+      } else {
+        view.goTo({ center, zoom }).catch(() => {});
+      }
     }
 
-    // ✅ Click event for selecting point / inspector
-    // const clickHandler = view.on("click", (event) => {
-    //   const point = new Point({
-    //     longitude: event.mapPoint.longitude,
-    //     latitude: event.mapPoint.latitude,
-    //   });
+    let clickHandle: any = null;
+    if (clickable && onInspectorClick) {
+      try {
+        clickHandle = (view as any).on("click", (event: any) => {
+          view.hitTest(event).then((response: any) => {
+            if (response.results && response.results.length > 0) {
+              const g = response.results[0].graphic;
+              const insp = g?.attributes?.inspector;
+              if (insp) onInspectorClick(insp);
+            }
+          });
+        });
+      } catch (e) {}
+    }
 
-    //   setSelectedPoint(point);
-
-    //   // Check if clicked on inspector
-    //   view.hitTest(event).then((response) => {
-    //     if (response.results.length > 0) {
-    //       const graphic = response.results[0].graphic;
-    //       const inspector = graphic.attributes?.inspector;
-    //       if (inspector && onInspectorClick) {
-    //         onInspectorClick(inspector);
-    //       }
-    //     } else if (onInspectorClick) {
-    //       // No inspector, return coordinates
-    //       onInspectorClick({
-    //         lat: event.mapPoint.latitude,
-    //         lng: event.mapPoint.longitude,
-    //       });
-    //     }
-    //   });
-    // });
-
-    // ✅ Cleanup
     return () => {
-      if (viewRef.current) {
-        viewRef.current.destroy();
-        viewRef.current = null;
-      }
+      if (clickHandle && typeof clickHandle.remove === "function") clickHandle.remove();
     };
-  }, [inspectors, basemap, selectedPoint, center, zoom, mapUrlIndex]);
-  useEffect(() => {
-    setfeatureLayerUrl(featureServiceUrls[mapUrlIndex]);
-  }, [mapUrlIndex]);
+  }, [inspectors, onlyInspector, clickable, onInspectorClick, center, zoom]);
 
-  // ✅ Basemap Switcher Menu
   const menu = (
     <Menu
       onClick={(e) => setBasemap(e.key)}
@@ -208,19 +237,9 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     />
   );
 
-  // ✅ JSX
   return (
     <div style={{ position: "relative" }}>
-      <div
-        ref={mapRef}
-        style={{
-          width: "100%",
-          height: height,
-          minHeight: "400px",
-        }}
-      />
-
-      {/* Basemap Switcher */}
+      <div ref={mapRef} style={{ width: "100%", height: height, minHeight: "400px" }} />
       <Dropdown overlay={menu} trigger={["click"]}>
         <MoreOutlined
           style={{

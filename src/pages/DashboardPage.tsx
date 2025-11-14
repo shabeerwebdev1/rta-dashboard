@@ -23,7 +23,6 @@ import {
   EyeOutlined,
   CarOutlined,
   AppstoreAddOutlined,
-  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import DashboardViewDrawer from "../components/dashboard/DashboardViewDrawer";
@@ -33,7 +32,7 @@ import {
   useLazyGetShiftsQuery,
 } from "../services/rtkApiFactory";
 import { useTranslation } from "react-i18next";
-import ArcGISMap from "../components/common/ArcGISMap"; // ✅ our new reusable map
+import ArcGISMap, { Inspector as ArcInspector } from "../components/common/ArcGISMap";
 
 const { Text } = Typography;
 
@@ -47,7 +46,6 @@ const SupervisorViewPage: React.FC = () => {
   const [selectedInspectorDropdown, setSelectedInspectorDropdown] = useState<string | null>(null);
   const [shifts, setShifts] = useState<any[]>([]);
   const [selectedShift, setSelectedShift] = useState<string | null>(null);
-  //the below state is for managing the state of the map url index maintained in arcgis component
   const [mapUrlIndex, setMapUrlIndex] = useState(2);
   const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery({});
   const [triggerGetShifts, { isLoading: isLoadingShiftsDropdown }] = useLazyGetShiftsQuery();
@@ -56,8 +54,8 @@ const SupervisorViewPage: React.FC = () => {
   const screens = useBreakpoint();
   const isMobile = screens.xs && !screens.md;
   const isTablet = screens.md && !screens.lg;
+
   useEffect(() => {
-    // Fetch shifts when page loads
     const fetchShifts = async () => {
       try {
         const result = await triggerGetShifts({}).unwrap();
@@ -88,20 +86,14 @@ const SupervisorViewPage: React.FC = () => {
     setSelectedSupervisor(value);
   };
 
-  const handleInspectorChange = (value: string) => {
-    setSelectedInspectorDropdown(value);
-    //this is to simulate the map update when inspector is changed
-    setMapUrlIndex(handleRandomUrlIndexGenerate());
-  };
-
   // Mock Inspectors (replace with API data if needed)
-  const inspectorAvatars = [
+  const inspectorAvatars: ArcInspector[] = [
     {
       id: 1,
       name: "Inspector 1",
       nameAr: "المفتش ١",
-      lat: 25.1972,
-      lng: 55.2743,
+      lat: 25.251223,
+      lng: 55.294172,
       status: "Checked-in",
       statusAr: "تم التسجيل",
       details: { zone: "Zone A", lastCheckIn: "08:30 AM" },
@@ -110,13 +102,42 @@ const SupervisorViewPage: React.FC = () => {
       id: 2,
       name: "Inspector 2",
       nameAr: "المفتش ٢",
-      lat: 25.1965,
-      lng: 55.2728,
+      lat: 25.257065,
+      lng: 55.289494,
       status: "Pending",
       statusAr: "قيد الانتظار",
       details: { zone: "Zone B", lastCheckIn: "09:15 AM" },
     },
+    {
+      id: 3,
+      name: "Inspector 3",
+      nameAr: "المفتش ٣",
+      lat: 25.275635,
+      lng: 55.315544,
+      status: "Pending",
+      statusAr: "قيد الانتظار",
+      details: { zone: "Zone C", lastCheckIn: "10:15 AM" },
+    },
   ];
+
+  // sequential index to pick next inspector on select
+  const [sequentialIndex, setSequentialIndex] = useState(0);
+
+  // When dropdown changes, pick next inspector sequentially. If cleared, show all inspectors.
+  const handleInspectorChange = (value: string | undefined) => {
+    setSelectedInspectorDropdown(value ?? null);
+
+    // if cleared, show all inspectors again
+    if (!value) {
+      setSelectedInspector(null);
+      return;
+    }
+
+    // pick next inspector in sequence
+    const next = inspectorAvatars[sequentialIndex % inspectorAvatars.length];
+    setSelectedInspector(next);
+    setSequentialIndex((prev) => (prev + 1) % inspectorAvatars.length);
+  };
 
   const handleViewClick = (record: any) => {
     const inspector = inspectorAvatars.find((insp) => insp.name === record.inspectorName);
@@ -131,12 +152,6 @@ const SupervisorViewPage: React.FC = () => {
     setSelectedInspector(null);
   };
 
-  // this method is simulate the map url update as the inspector changes
-  const handleRandomUrlIndexGenerate = () => {
-    return Math.floor(Math.random() * 2);
-  };
-
-  // Table Config
   const checkInData = inspectorAvatars.map((insp, idx) => ({
     key: idx,
     checkInId: `C000${idx + 1}`,
@@ -184,7 +199,6 @@ const SupervisorViewPage: React.FC = () => {
 
   return (
     <div>
-      {/* Supervisor Info */}
       <Card style={{ marginBottom: 20 }}>
         <Row gutter={16}>
           <Col span={6}>
@@ -207,7 +221,7 @@ const SupervisorViewPage: React.FC = () => {
             <Select
               placeholder={t("common.selectInspector", "Select Inspector")}
               style={{ width: "100%" }}
-              value={selectedInspectorDropdown}
+              value={selectedInspectorDropdown ?? undefined}
               onChange={handleInspectorChange}
               allowClear
               loading={isLoadingShifts}
@@ -247,7 +261,6 @@ const SupervisorViewPage: React.FC = () => {
       {(isLoading || isLoadingShifts) && <Spin size="large" style={{ display: "block", margin: "50px auto" }} />}
 
       <Row gutter={16} style={{ marginBottom: 20 }}>
-        {/* ✅ ArcGIS Map (Reusable Component) */}
         <Col span={14}>
           <Card bodyStyle={{ padding: 0, height: "100%", position: "relative" }}>
             <ArcGISMap
@@ -255,17 +268,15 @@ const SupervisorViewPage: React.FC = () => {
               center={[55.2743, 25.1972]}
               zoom={12}
               height="495px"
-              mapUrlIndex={mapUrlIndex}
-              clickable={false} // This disables all click functionality
-              onInspectorClick={undefined} // Not needed since clickable is false
+              clickable={false}
+              onInspectorClick={undefined}
+              onlyInspector={selectedInspector ?? null}
             />
           </Card>
         </Col>
 
-        {/* Stats Section */}
         <Col span={10}>
           <Row gutter={[16, 16]}>
-            {/* Total Inspectors Card */}
             <Col span={24}>
               <Card style={{ borderColor: "#1890ff" }}>
                 <Row align="bottom" justify="space-between" wrap={true} gutter={8}>
@@ -298,7 +309,6 @@ const SupervisorViewPage: React.FC = () => {
               </Card>
             </Col>
 
-            {/* Total Approvals Card */}
             <Col span={24}>
               <Card style={{ borderColor: "#52c41a" }}>
                 <Row align="bottom" justify="space-between" wrap={true} gutter={8}>
@@ -328,7 +338,6 @@ const SupervisorViewPage: React.FC = () => {
               </Card>
             </Col>
 
-            {/* Total Inspections Card */}
             <Col span={24}>
               <Card style={{ borderColor: "#faad14" }}>
                 <Row align="bottom" justify="space-between" wrap={true} gutter={8}>
@@ -359,7 +368,6 @@ const SupervisorViewPage: React.FC = () => {
               </Card>
             </Col>
 
-            {/* Total Obstacles Card */}
             <Col span={24}>
               <Card style={{ borderColor: "#ff4d4f", cursor: "pointer" }}>
                 <Row align="bottom" justify="space-between" wrap={true} gutter={8}>
@@ -383,7 +391,6 @@ const SupervisorViewPage: React.FC = () => {
         </Col>
       </Row>
 
-      {/* Table Section */}
       <Card
         title={t("dashboard.overviewData", "Overview Data")}
         extra={
@@ -424,7 +431,6 @@ const SupervisorViewPage: React.FC = () => {
         />
       </Card>
 
-      {/* Drawer */}
       <DashboardViewDrawer open={drawerVisible} onClose={handleDrawerClose} inspector={selectedInspector} />
     </div>
   );
