@@ -29,6 +29,7 @@ const ParkonicLocationPage = lazy(() => import("./pages/ParkonicLocationPage"));
 const VehicleInspectionsPage = lazy(() => import("./pages/VehicleInspectionsPage"));
 const ParkingsInspectionsPage = lazy(() => import("./pages/ParkingsInspectionsPage"));
 const ReportsPage = lazy(() => import("./pages/ReportsPage"));
+const ShiftPlanPage = lazy(() => import("./pages/ShiftPlanPage"));
 
 const AppRoutes = () => (
   <Routes>
@@ -211,6 +212,14 @@ const AppRoutes = () => (
           element={
             <ProtectedRoute>
               <ParkonicLocationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={PATHS.SHIFT_PLAN}
+          element={
+            <ProtectedRoute>
+              <ShiftPlanPage/>
             </ProtectedRoute>
           }
         />

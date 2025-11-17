@@ -37,7 +37,8 @@
     "tradeLicense": "الرخص التجارية",
     "parkonicLocation": "الموقع باركونيك",
     "Vehicle": "المركبة",
-    "Parkings": "مواقف السيارات"
+    "Parkings": "مواقف السيارات",
+    "shiftplan": "الخطة التراثية للمناوبات"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -323,7 +324,6 @@
     "applicationId": " معرف التطبيق ",
     "permitStatus": " حالة التصريح ",
     "selectExportFormat": "اختر تنسيق التصدير"
-
   },
   "common": {
     "action": "إجراء",

@@ -36,6 +36,7 @@ export const PATHS = {
   LEAVE_MANAGEMENT: "leave-management",
   PARKONIC_LOCATION: "parkonic-location",
   FINES_INSPECTIONS: "fines-inspections",
+  SHIFT_PLAN: "shift-plan",
 };
 
 export const FULL_PATHS = {
@@ -77,4 +78,5 @@ export const FULL_PATHS = {
   ADHOCSHIFTPLAN: "/adhocshiftplan",
   ROLE_MANAGEMENT: "/role-management",
   PARKONIC_LOCATION: "/parkonic-location",
+  SHIFT_PLAN: "/shift-plan",
 };
