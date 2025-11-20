@@ -5,6 +5,7 @@ import PageLoader from "./components/common/PageLoader";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import { PATHS, FULL_PATHS } from "./constants/paths";
 import GeneralSearchPage from "./pages/GeneralSearchPage";
+import TeamEvaluationPage from "./pages/TeamEvaluationPage";
 
 // Lazy-loaded Pages
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -30,6 +31,9 @@ const VehicleInspectionsPage = lazy(() => import("./pages/VehicleInspectionsPage
 const ParkingsInspectionsPage = lazy(() => import("./pages/ParkingsInspectionsPage"));
 const ReportsPage = lazy(() => import("./pages/ReportsPage"));
 const ShiftPlanPage = lazy(() => import("./pages/ShiftPlanPage"));
+const CriteriaPage = lazy(() => import("./pages/CriteriaPage"));
+const ProactiveCampaignsPage = lazy(() => import("./pages/ProactiveCampaignsPage"));
+const HRMSPage = lazy(() => import("./pages/HRMSPage"));
 
 const AppRoutes = () => (
   <Routes>
@@ -54,6 +58,13 @@ const AppRoutes = () => (
           }
         />
         <Route
+          path={PATHS.HRMS}
+          element={
+            <ProtectedRoute>
+              <HRMSPage />
+            </ProtectedRoute>
+          }/>
+        <Route
           path={PATHS.PERMITS}
           element={
             <ProtectedRoute>
@@ -66,6 +77,14 @@ const AppRoutes = () => (
           element={
             <ProtectedRoute>
               <FinesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={PATHS.PROACTIVECAMPAIGN}
+          element={
+            <ProtectedRoute>
+              <ProactiveCampaignsPage />
             </ProtectedRoute>
           }
         />
@@ -206,6 +225,22 @@ const AppRoutes = () => (
             </ProtectedRoute>
           }
         />
+        <Route
+          path={FULL_PATHS.TEAM_EVALUATION}
+          element={
+            <ProtectedRoute>
+              <TeamEvaluationPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={FULL_PATHS.CRITERIA}
+          element={
+            <ProtectedRoute>
+              <CriteriaPage />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path={PATHS.PARKONIC_LOCATION}
@@ -219,7 +254,7 @@ const AppRoutes = () => (
           path={PATHS.SHIFT_PLAN}
           element={
             <ProtectedRoute>
-              <ShiftPlanPage/>
+              <ShiftPlanPage />
             </ProtectedRoute>
           }
         />

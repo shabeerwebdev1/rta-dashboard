@@ -71,7 +71,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       before: function (params) {
         params.requestOptions.query = params.requestOptions.query || {};
         params.requestOptions.query.token =
-          "mzFcMRqhxzPAoRJavp2MJpSdUV_UVcsTrLt1Ox-VIw0tFjEM4ACDyL0H2CwsFUUc-qpr7tKNNafX4hbIhhJek6WtcD_GU9sqX0h_BqdogAV8ynOUX3soVY8mw5jDexifGTu-udRTeKAzsEtTVXajBL6_rclLsCSv7zYYSqOWFoMay5KMow7Qd1g5jg1Xmg6Z";
+          "mzFcMRqhxzPAoRJavp2MJpSdUV_UVcsTrLt1Ox-VIw0tFjEM4ACDyL0H2CwsFUUc-qpr7tKNNafX4hbIhhJekyPNZP0hkq3qUnERH5uBsEuKSFY9_j_jftyQSq4685glDBt9-jy-dc2qvgxc8D_l5tBogE7INT8cd1bJjRvbBGXiQGHBVLyFhM4vCg6RdA17";
       },
     });
 

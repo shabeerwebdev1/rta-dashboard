@@ -37,6 +37,10 @@ export const PATHS = {
   PARKONIC_LOCATION: "parkonic-location",
   FINES_INSPECTIONS: "fines-inspections",
   SHIFT_PLAN: "shift-plan",
+  CRITERIA: "criteria",
+  PROACTIVECAMPAIGN : "proactive-campaign",
+  HRMS:"hrms",
+
 };
 
 export const FULL_PATHS = {
@@ -46,6 +50,7 @@ export const FULL_PATHS = {
   SPLASH: "/splash",
   PERMITS: "/permits",
   GENERAL: "/general",
+  HRMS:"/hrms",
 
   // --- Whitelist section ---
   WHITELIST: "/whitelist",
@@ -79,4 +84,6 @@ export const FULL_PATHS = {
   ROLE_MANAGEMENT: "/role-management",
   PARKONIC_LOCATION: "/parkonic-location",
   SHIFT_PLAN: "/shift-plan",
+  CRITERIA: "/criteria",
+  PROACTIVECAMPAIGN : "/proactive-campaign",
 };

@@ -19,6 +19,7 @@ import {
   CarFilled,
   WarningOutlined,
   IdcardOutlined,
+  BookOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -65,6 +66,12 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       key: FULL_PATHS.DASHBOARD,
       icon: <DashboardOutlined />,
       labelText: t("sidebar.dashboard"),
+      permission: "WebDashboard",
+    },
+    {
+      key:FULL_PATHS.HRMS,
+      icon: <BookOutlined />,
+      labelText: t("sidebar.hrms"),
       permission: "WebDashboard",
     },
     {
@@ -139,6 +146,12 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           labelText: t("sidebar.Parkings"),
           permission: "Inspection",
         },
+        {
+          key: FULL_PATHS.PROACTIVECAMPAIGN,
+          icon: <AuditOutlined />,
+          labelText: t("sidebar.proactivecampaigns"),
+          permission: "Inspection",
+        },
       ],
     },
     {
@@ -177,6 +190,12 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       icon: <UsergroupAddOutlined />,
       labelText: t("sidebar.traningAndEvaluation"),
       children: [
+        {
+          key: FULL_PATHS.CRITERIA,
+          icon: <UsergroupAddOutlined />,
+          labelText: t("sidebar.Criteria&Weights"),
+          permission: "CallIntegration",
+        },
         {
           key: FULL_PATHS.TEAM_EVALUATION,
           icon: <UsergroupAddOutlined />,

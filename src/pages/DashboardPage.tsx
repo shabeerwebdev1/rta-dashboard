@@ -512,7 +512,7 @@ const SupervisorViewPage: React.FC = () => {
         <Col xs={24} lg={10} style={{ display: "flex" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%", flex: 1 }}>
             <Card style={{ borderColor: "#1890ff", flex: 1, display: "flex", flexDirection: "column" }}>
-              <Row align="middle" justify="space-between" wrap={true} gutter={[8, 8]}>
+              <Row align="bottom" justify="space-between" wrap={true} gutter={[8, 8]}>
                 <Col xs={11} sm={11} md={5}>
                   <Statistic
                     title={t("dashboard.totalInspectors", "Total Inspectors")}
@@ -552,7 +552,7 @@ const SupervisorViewPage: React.FC = () => {
             </Card>
 
             <Card style={{ borderColor: "#52c41a", flex: 1, display: "flex", flexDirection: "column" }}>
-              <Row align="middle" justify="space-between" wrap={true} gutter={[8, 8]}>
+              <Row align="bottom" justify="space-between" wrap={true} gutter={[8, 8]}>
                 <Col xs={11} sm={11} md={7}>
                   <Statistic
                     title={t("dashboard.totalApprovals", "Total Approvals")}
@@ -585,7 +585,7 @@ const SupervisorViewPage: React.FC = () => {
             </Card>
 
             <Card style={{ borderColor: "#faad14", flex: 1, display: "flex", flexDirection: "column" }}>
-              <Row align="middle" justify="space-between" wrap={true} gutter={[8, 8]}>
+              <Row align="bottom" justify="space-between" wrap={true} gutter={[8, 8]}>
                 <Col xs={11} sm={11} md={7}>
                   <Statistic
                     title={t("dashboard.totalInspections", "Total Inspections")}
@@ -621,7 +621,7 @@ const SupervisorViewPage: React.FC = () => {
             <Card
               style={{ borderColor: "#ff4d4f", cursor: "pointer", flex: 1, display: "flex", flexDirection: "column" }}
             >
-              <Row align="middle" justify="space-between" wrap={true} gutter={[8, 8]}>
+              <Row align="bottom" justify="space-between" wrap={true} gutter={[8, 8]}>
                 <Col xs={18} sm={18} md={20}>
                   <Statistic
                     title={t("dashboard.totalObstacles", "Total Obstacles")}

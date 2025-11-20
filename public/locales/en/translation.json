@@ -37,7 +37,9 @@
     "tradeLicense": "Trade License",
     "parkonicLocation": "Parkonic Location",
     "Vehicle": "Vehicles",
-    "Parkings": "Parkings"
+    "Parkings": "Parkings",
+    "Criteria&Weights": "Criteria & Weights",
+    "proactivecampaigns": "Proactive Campaigns"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -78,7 +80,10 @@
       "vehicleInspections": "Vehicle Inspections",
       "parkingsInspections": "Parking Inspections",
       "vehiclefines": "Vehicle Fines",
-      "parkingsfines": "Parking Fines"
+      "parkingsfines": "Parking Fines",
+      "team-evaluation": "Team Evaluation",
+      "criteria": "Criteria & Weights",
+      "proactive-campaigns": "Proactive Campaigns"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",
@@ -129,7 +134,17 @@
     "assignSuccess": "Assigned successfully",
     "assignFailed": "Failed to assign",
     "confirmAssignTitle": "Confirm Assignment",
-    "confirmAssignContent": "Are you sure you want to assign "
+    "confirmAssignContent": "Are you sure you want to assign ",
+    "approveConfirmTitle": "Confirm Approval",
+    "approveConfirmContent": "Are you sure you want to approve this evaluation?",
+    "approveSuccess": "Evaluation approved successfully!",
+    "returnConfirmTitle": "Confirm Return",
+    "returnConfirmContent": "Do you want to return this evaluation to pending status?",
+    "returnSuccess": "Evaluation returned successfully!",
+    "exportSuccess": "Data exported successfully!",
+    "boundaryDrawn": "Boundary drawn successfully!",
+    "polygonSavedToForm": "Polygon saved to form",
+    "editAssignedInspectors": "Assigned inspectors ready for editing"
   },
   "form": {
     "Number": "Number",
@@ -322,7 +337,41 @@
     "parkonicslocationId": "Parkonics Location ID",
     "applicationId": "Application ID",
     "permitStatus": "Permit Status",
-    "selectExportFormat": "Select Export Format"
+    "selectExportFormat": "Select Export Format",
+    "evaluationDate": "Evaluation Date",
+    "evaluationType": "Evaluation Type",
+    "totalScore": "Total Score",
+    "grade": "Grade",
+    "evaluatorName": "Evaluator Name",
+    "evaluationPeriod": "Evaluation Period",
+    "supervisorNotes": "Supervisor Notes",
+    "inspector": "Inspector",
+    "supervisor": "Supervisor",
+    "evaluationCriteria": "Evaluation Criteria",
+    "rating": "Rating",
+    "weight": "Weight",
+    "descriptionEn": "Description (EN)",
+    "descriptionAr": "Description (AR)",
+    "ratingScale": "Rating Scale",
+    "isActive": "Active",
+    "objectiveType": "Objective Type",
+    "titleEn": "Title (EN)",
+    "titleAr": "Title (AR)",
+    "timeInterval": "Time Interval",
+    "violationTypes": "Violation Types",
+    "assignedInspectors": "Assigned Inspectors",
+    "drawBoundary": "Draw Boundary",
+    "currentPolygon": "Current Polygon",
+    "autoAssignedInspectors": "Auto-Assigned Inspectors",
+    "polygon": "Boundary Polygon",
+    "notificationMessageEn": "Notification Message (EN)",
+    "notificationMessageAr": "Notification Message (AR)",
+    "createdBy": "Created By",
+    "saveBoundaryToForm": "Save Boundary to Form",
+    "editAssigned": "Edit Assigned Inspectors",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "score" : "Score"
   },
   "common": {
     "action": "Action",
@@ -387,7 +436,16 @@
     "filterByfinedDate": "Filter by Fined Date",
     "filterBytowingDate": "Filter by Towing Date",
     "filterByaddedon": "Filter by Added On",
-    "filterByInspectionDate": "Filter by Inspection Date"
+    "filterByInspectionDate": "Filter by Inspection Date",
+    "createEvaluation": "Create Evaluation",
+    "viewEvaluation": "View Evaluation",
+    "close": "Close",
+    "return": "Return",
+    "actions": "Actions",
+    "viewCriteria": "View Criteria",
+    "viewCampaign": "View Campaign",
+    "active": "Active"
+
   },
   "entity": {
     "plate": "Plate",
@@ -396,7 +454,11 @@
     "inspectionObstacle": "Inspection Obstacle",
     "Pledges": "Pledges",
     "dispute": "Dispute",
-    "location": "Location"
+    "location": "Location",
+    "evaluation": "Team Evaluation",
+    "evaluations": "Evaluations",
+    "proactiveCampaign": "Proactive Campaign",
+    "criteria": "Criteria & Weights"
   },
   "status": {
     "active": "Active",
@@ -463,7 +525,26 @@
     "areas": "Enter Area Name",
     "parkingName": "Enter Parking Name",
     "parkingNameArabic": "Enter Parking Name in (Arabic)",
-    "name": "Enter Name"
+    "name": "Enter Name",
+    "supervisorNotes": "Enter supervisor notes",
+    "selectEvaluationType": "Select evaluation type",
+    "selectZone": "Select zone",
+    "selectDate": "Select date",
+    "selectInspector": "Select inspector",
+    "descriptionEn": "Enter description in English",
+    "descriptionAr": "Enter description in Arabic",
+    "selectObjective": "Select objective type",
+    "selectRatingScale": "Select rating scale",
+    "titleEn": "Enter campaign title in English",
+    "titleAr": "Enter campaign title in Arabic",
+    "selectLocation": "Select location",
+    "selectViolationTypes": "Select violation types",
+    "noPolygon": "No boundary drawn yet",
+    "notificationMessageEn": "Enter notification message (EN)",
+    "notificationMessageAr": "Enter notification message (AR)",
+    "createdBy": "Enter creator name",
+    "selectInspectors": "Select inspectors",
+    "score" : "Enter score"
   },
 
   "dashboard": {
@@ -518,7 +599,16 @@
     "expiredPledges": "Expired Pledges",
     "TotalLeaveRequests": "Total Leave Requests",
     "TotalTowings": "Total Towings",
-    "IsByLaw": "Is By-Law"
+    "IsByLaw": "Is By-Law",
+    "TotalEvaluations": "Total Evaluations",
+    "CompletedEvaluations": "Completed Evaluations",
+    "PendingEvaluations": "Pending Evaluations",
+    "ApprovedEvaluations": "Approved Evaluations",
+    "TotalCriteria": "Total Criteria",
+    "ActiveCriteria": "Active Criteria",
+    "TotalCampaigns": "Total Campaigns",
+    "ActiveCampaigns": "Active Campaigns",
+    "DraftCampaigns": "Draft Campaigns"
   },
   "validation": {
     "required": " Please enter {{field}} ",
