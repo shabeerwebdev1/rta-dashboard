@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Card,
@@ -370,6 +372,7 @@ const GeneralSearchPage: React.FC = () => {
                     name="licenseNo"
                     label={t("form.tradeLicenseNumber")}
                     rules={[
+                      { required: true, message: t("validation.required", { field: t("form.tradeLicenseNumber") }) },
                       {
                         validator: (_, value) => {
                           if (!value) return Promise.resolve();

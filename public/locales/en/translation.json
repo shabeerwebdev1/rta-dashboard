@@ -31,7 +31,6 @@
     "carplateinspections": "Car Plate ",
     "tradelicenseinspections": "Trade License ",
     "shiftplan": "Shift Plan Legacy",
-
     "management": "Management",
     "carplate": "Car Plate",
     "tradeLicense": "Trade License",
@@ -83,14 +82,14 @@
       "parkingsfines": "Parking Fines",
       "team-evaluation": "Team Evaluation",
       "criteria": "Criteria & Weights",
-      "proactive-campaigns": "Proactive Campaigns"
+      "proactive-campaigns": "Proactive Campaigns",
+      "hrms": "HRMS Attendance"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",
     "viewTitle": "{{entity}} Details",
     "selectReport": "Select Report"
   },
-
   "messages": {
     "addSuccess": "{{entity}} added successfully!",
     "updateSuccess": "{{entity}} updated successfully!",
@@ -371,7 +370,28 @@
     "editAssigned": "Edit Assigned Inspectors",
     "startTime": "Start Time",
     "endTime": "End Time",
-    "score" : "Score"
+    "score": "Score",
+    "inspectorId": "Inspector ID",
+    "mobile": "Mobile Number",
+    "shift": "Shift",
+    "checkInTime": "Check In Time",
+    "checkOutTime": "Check Out Time",
+    "basicDetails": "Basic Details",
+    "checkInLocation": "Check In Details",
+    "workingHours": "Working Hours",
+    "coordinates": "Coordinates",
+    "additionalInfo": "Working Hours Summary",
+    "todayPerformance": "Today's Performance",
+    "obstacles": "Obstacles",
+    "finesIssued": "Fines Issued",
+    "towingRequests": "Towing Requests",
+    "leaveRequested": "Leave Requested",
+    "upcomingShifts": "Upcoming Shift Details",
+    "MapLegend": "Map Legend",
+    "StartPoint": "Start Point",
+    "InspectorPath" : "Inspector Path",
+    "FineLocations": "Fine Locations",
+    "CurrentLocation": "Current Location"
   },
   "common": {
     "action": "Action",
@@ -444,8 +464,12 @@
     "actions": "Actions",
     "viewCriteria": "View Criteria",
     "viewCampaign": "View Campaign",
-    "active": "Active"
-
+    "active": "Active",
+    "notCheckedOut": "Not Checked Out",
+    "inProgress": "In Progress",
+    "filterByDate": "Filter by Date:",
+    "startDate": "Start Date",
+    "endDate": "End Date"
   },
   "entity": {
     "plate": "Plate",
@@ -458,7 +482,8 @@
     "evaluation": "Team Evaluation",
     "evaluations": "Evaluations",
     "proactiveCampaign": "Proactive Campaign",
-    "criteria": "Criteria & Weights"
+    "criteria": "Criteria & Weights",
+    "hrms": "HRMS Record"
   },
   "status": {
     "active": "Active",
@@ -473,9 +498,11 @@
     "rejected": "Rejected",
     "cancelled": "Cancelled",
     "recalled": "Recalled",
-    "assigned": "Assigned"
+    "assigned": "Assigned",
+    "present": "Present",
+    "absent": "Absent",
+    "leave": "Leave"
   },
-
   "placeholders": {
     "plateNumber": "Enter the plate number",
     "plateSource": "Select the plate source",
@@ -511,7 +538,6 @@
     "address": "Enter your address",
     "SourceUser": "Enter source user",
     "subreason": "Enter the dispute sub-reason",
-
     "plateCategory": "Select plate category",
     "plateCode": "Select plate code",
     "selectShift": "Select Shift",
@@ -544,9 +570,9 @@
     "notificationMessageAr": "Enter notification message (AR)",
     "createdBy": "Enter creator name",
     "selectInspectors": "Select inspectors",
-    "score" : "Enter score"
+    "score": "Enter score",
+    "searchPlaceholder": "Search..."
   },
-
   "dashboard": {
     "totalInspectors": "Total Inspectors",
     "checkedIn": "Checked In",
@@ -565,7 +591,6 @@
     "leaveRequests": "Leave Requests",
     "obstacle": "Obstacle"
   },
-
   "weekdays": {
     "Monday": "Monday",
     "Tuesday": "Tuesday",
@@ -608,7 +633,8 @@
     "ActiveCriteria": "Active Criteria",
     "TotalCampaigns": "Total Campaigns",
     "ActiveCampaigns": "Active Campaigns",
-    "DraftCampaigns": "Draft Campaigns"
+    "DraftCampaigns": "Draft Campaigns",
+    "TotalAttendance": "Total Attendance Records"
   },
   "validation": {
     "required": " Please enter {{field}} ",

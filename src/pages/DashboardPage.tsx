@@ -29,6 +29,7 @@ import {
   AimOutlined,
   DollarOutlined,
   MobileOutlined,
+  CreditCardOutlined,
 } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import DashboardViewDrawer from "../components/dashboard/DashboardViewDrawer";
@@ -466,7 +467,7 @@ const SupervisorViewPage: React.FC = () => {
                       minWidth: isMobile ? "100px" : "auto",
                     }}
                   >
-                    <DollarOutlined /> {t("dashboard.fineLocations", "Fines")}
+                    <CreditCardOutlined /> {t("dashboard.fineLocations", "Fines")}
                   </Radio.Button>
                   <Radio.Button
                     value="movementLocations"

@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect } from "react";
-import { Modal, Descriptions, Card, Row, Col, Statistic, Divider, Badge } from "antd";
+import { Modal, Descriptions, Card, Row, Col, Statistic, Badge } from "antd";
 import { useTranslation } from "react-i18next";
-import { ShareAltOutlined, CheckCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import type { PageConfig } from "../../types/config";
 import ArcGISMap from "../common/ArcGISMap";
@@ -15,7 +17,7 @@ interface HRMSViewDrawerProps {
   statusLabels: Record<string, string>;
 }
 
-const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, config, onShare, statusLabels }) => {
+const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, statusLabels }) => {
   const { t, i18n } = useTranslation();
 
   // ✅ DEBUG LOGGING - Check what data we're receiving
@@ -118,13 +120,6 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
               )}
             </div>
           </div>
-          <ShareAltOutlined
-            onClick={(e) => {
-              e.stopPropagation();
-              onShare();
-            }}
-            style={{ cursor: "pointer", fontSize: "18px", color: "#1890ff" }}
-          />
         </div>
       }
       footer={null}
@@ -158,7 +153,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                 border: "1px solid #e8e8e8",
               }}
             >
-              <h4 style={{ margin: "0 0 8px 0", fontSize: "13px", fontWeight: 600 }}>Map Legend:</h4>
+              <h4 style={{ margin: "0 0 8px 0", fontSize: "13px", fontWeight: 600 }}>{t("form.MapLegend")}</h4>
               <Row gutter={[16, 8]}>
                 <Col span={6}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "12px" }}>
@@ -172,7 +167,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                         boxShadow: "0 0 3px rgba(0,0,0,0.3)",
                       }}
                     />
-                    <span>Start Point</span>
+                    <span>{t("form.StartPoint")}</span>
                   </div>
                 </Col>
                 <Col span={6}>
@@ -184,7 +179,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                         background: "#0070ff",
                       }}
                     />
-                    <span>Inspector Path</span>
+                    <span>{t("form.InspectorPath")}</span>
                   </div>
                 </Col>
                 <Col span={6}>
@@ -197,7 +192,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                         borderRadius: "50%",
                       }}
                     />
-                    <span>Fine Locations</span>
+                    <span>{t("form.FineLocations")}</span>
                   </div>
                 </Col>
                 <Col span={6}>
@@ -210,7 +205,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                         e.currentTarget.style.display = "none";
                       }}
                     />
-                    <span>Current Location</span>
+                    <span>{t("form.CurrentLocation")}</span>
                   </div>
                 </Col>
               </Row>

@@ -271,11 +271,22 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       });
     }
 
-    // ✅ 3. Draw Inspectors (Main markers)
+    // ✅ 3. Draw Inspectors (Main markers) - AVATAR AT END POINT
     toDraw.forEach((inspector, index) => {
+      // ✅ CRITICAL FIX: Use last path point as avatar position if path exists
+      let avatarLng = inspector.lng;
+      let avatarLat = inspector.lat;
+
+      if (showPath && inspectorPath && inspectorPath.length > 0) {
+        const lastPathPoint = inspectorPath[inspectorPath.length - 1];
+        avatarLng = lastPathPoint.lng;
+        avatarLat = lastPathPoint.lat;
+        console.log(`Moving avatar for ${inspector.name} to end point:`, { avatarLng, avatarLat });
+      }
+
       const point = new Point({
-        longitude: inspector.lng,
-        latitude: inspector.lat,
+        longitude: avatarLng,  // ✅ Use calculated position
+        latitude: avatarLat,   // ✅ Use calculated position
         spatialReference: { wkid: 4326 },
       });
 
@@ -323,8 +334,20 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       // Calculate extent based on all points (inspectors, path, fines)
       const allPoints: Array<{ lng: number; lat: number }> = [];
 
-      // Add inspector positions
-      inspectors.forEach((i) => allPoints.push({ lng: i.lng, lat: i.lat }));
+      // Add inspector positions (using updated avatar positions)
+      toDraw.forEach((inspector) => {
+        let lng = inspector.lng;
+        let lat = inspector.lat;
+        
+        // Use the same logic as above for consistent positioning
+        if (showPath && inspectorPath && inspectorPath.length > 0) {
+          const lastPathPoint = inspectorPath[inspectorPath.length - 1];
+          lng = lastPathPoint.lng;
+          lat = lastPathPoint.lat;
+        }
+        
+        allPoints.push({ lng, lat });
+      });
 
       // Add path points
       if (inspectorPath && inspectorPath.length > 0) {

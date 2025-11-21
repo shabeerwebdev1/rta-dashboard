@@ -86,7 +86,8 @@
       "parkingsfines": "غرامات مواقف السيارات",
       "team-evaluation": "تقييم الفريق",
       "criteria": "المعايير والأوزان",
-      "proactive-campaigns": "الحملات الاستباقية"
+      "proactive-campaigns": "الحملات الاستباقية",
+      "hrms": "سجلات الحضور والانصراف"
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",
@@ -374,7 +375,28 @@
     "editAssigned": "تعديل المفتشين المعينين",
     "startTime": "وقت البدء",
     "endTime": "وقت الانتهاء",
-    "score" : "النتيجة"
+    "score": "النتيجة",
+    "inspectorId": "رقم المفتش",
+    "mobile": "رقم الجوال",
+    "shift": "الوردية",
+    "checkInTime": "وقت الحضور",
+    "checkOutTime": "وقت الانصراف",
+    "basicDetails": "البيانات الأساسية",
+    "checkInLocation": "تفاصيل الحضور",
+    "workingHours": "ساعات العمل",
+    "coordinates": "الإحداثيات",
+    "additionalInfo": "ملخص ساعات العمل",
+    "todayPerformance": "أداء اليوم",
+    "obstacles": "العوائق",
+    "finesIssued": "الغرامات المصدرة",
+    "towingRequests": "طلبات السحب",
+    "leaveRequested": "الإجازات المطلوبة",
+    "upcomingShifts": "تفاصيل الورديات القادمة",
+    "MapLegend": "أسطورة الخريطة",
+    "StartPoint": "نقطة البداية",
+    "InspectorPath" : "مسار المفتش",
+    "FineLocations": "مواقع الغرامات",
+    "CurrentLocation": "الموقع الحالي"
   },
   "common": {
     "action": "إجراء",
@@ -443,7 +465,12 @@
     "actions": "الإجراءات",
     "viewCriteria": "عرض المعايير",
     "viewCampaign": "عرض الحملة",
-    "active": "نشط"
+    "active": "نشط",
+    "notCheckedOut": "لم يتم الانصراف",
+    "inProgress": "قيد التنفيذ",
+    "filterByDate": "التصفية حسب التاريخ:",
+    "startDate": "تاريخ البدء",
+    "endDate": "تاريخ الانتهاء"
   },
   "entity": {
     "plate": "لوحة",
@@ -456,7 +483,8 @@
     "evaluation": "تقييم",
     "evaluations": "التقييمات",
     "proactiveCampaign": "حملة استباقية",
-    "criteria": "معيار"
+    "criteria": "معيار",
+    "hrms": "سجل الحضور والانصراف"
   },
   "status": {
     "active": "نشط",
@@ -471,9 +499,11 @@
     "rejected": "مرفوض",
     "cancelled": "ملغى",
     "recalled": "تم الاسترجاع",
-    "assigned": "مُعين"
+    "assigned": "مُعين",
+    "present": "حاضر",
+    "absent": "غائب",
+    "leave": "إجازة"
   },
-
   "placeholders": {
     "plateNumber": "أدخل رقم اللوحة",
     "plateSource": "اختر مصدر اللوحة",
@@ -541,8 +571,8 @@
     "notificationMessageAr": "أدخل رسالة الإشعار (عربي)",
     "createdBy": "أدخل اسم المنشئ",
     "selectInspectors": "اختر المفتشين",
-    "score" : "أدخل النتيجة"
-
+    "score": "أدخل النتيجة",
+    "searchPlaceholder": "بحث..."
   },
   "dashboard": {
     "totalInspectors": "إجمالي المفتشين",
@@ -604,7 +634,8 @@
     "ActiveCriteria": "المعايير النشطة",
     "TotalCampaigns": "إجمالي الحملات",
     "ActiveCampaigns": "الحملات النشطة",
-    "DraftCampaigns": "الحملات المسودة"
+    "DraftCampaigns": "الحملات المسودة",
+    "TotalAttendance": "إجمالي سجلات الحضور"
   },
   "validation": {
     "required": "يرجى إدخال {{field}}",
