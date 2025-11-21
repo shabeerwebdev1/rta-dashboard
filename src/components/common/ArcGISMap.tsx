@@ -3,8 +3,11 @@ import Map from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView";
 import Graphic from "@arcgis/core/Graphic";
 import Point from "@arcgis/core/geometry/Point";
+import Polyline from "@arcgis/core/geometry/Polyline";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import PictureMarkerSymbol from "@arcgis/core/symbols/PictureMarkerSymbol";
+import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
+import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 import Extent from "@arcgis/core/geometry/Extent";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import { Dropdown, Menu } from "antd";
@@ -24,6 +27,17 @@ export type Inspector = {
   zone?: string;
 };
 
+// ✅ Path and Fine Location types
+export type InspectorPath = Array<{ lat: number; lng: number; timestamp: string }>;
+export type FineLocation = {
+  id: string;
+  lat: number;
+  lng: number;
+  fineAmount: number;
+  timestamp: string;
+  plateNumber: string;
+};
+
 interface ArcGISMapProps {
   inspectors: Inspector[];
   center?: [number, number];
@@ -32,6 +46,11 @@ interface ArcGISMapProps {
   onInspectorClick?: (inspector: Inspector) => void;
   onlyInspector?: Inspector | null;
   clickable?: boolean;
+  // ✅ Path and fine locations props
+  inspectorPath?: InspectorPath;
+  fineLocations?: FineLocation[];
+  showPath?: boolean;
+  showFineLocations?: boolean;
 }
 
 const featureServiceUrls = [
@@ -48,6 +67,10 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   onInspectorClick,
   onlyInspector = null,
   clickable = true,
+  inspectorPath = [],
+  fineLocations = [],
+  showPath = true,
+  showFineLocations = true,
 }) => {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<__esri.MapView | null>(null);
@@ -83,7 +106,6 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       return fl;
     });
 
-    // watch but do not auto-zoom to full extent
     view.when(() => {
       featureLayersRef.current.forEach((fl) => {
         fl.when().catch((e) => console.warn("[ArcGISMap] feature layer load failed:", e));
@@ -127,10 +149,134 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
 
     const toDraw = onlyInspector ? [onlyInspector] : inspectors;
 
-    toDraw.forEach((inspector) => {
+    console.log("=== ArcGIS Map Rendering Debug ===");
+    console.log("Inspector Path:", inspectorPath);
+    console.log("Fine Locations:", fineLocations);
+    console.log("Show Path:", showPath);
+    console.log("Show Fine Locations:", showFineLocations);
+
+    // ✅ 1. Draw Inspector Path (Polyline) - FIXED FORMAT
+    if (showPath && inspectorPath && inspectorPath.length > 1) {
+      console.log("Drawing inspector path with", inspectorPath.length, "points");
+
+      // ✅ CRITICAL FIX: ArcGIS expects paths as [[[lng, lat], [lng, lat], ...]]
+      const pathCoordinates = inspectorPath.map((point) => [point.lng, point.lat]);
+
+      console.log("Path coordinates:", pathCoordinates);
+
+      const polyline = new Polyline({
+        paths: [pathCoordinates], // ✅ Wrapped in array for paths
+        spatialReference: { wkid: 4326 },
+      });
+
+      console.log("Polyline created:", polyline);
+      console.log("Polyline paths:", polyline.paths);
+
+      const pathSymbol = new SimpleLineSymbol({
+        color: [0, 112, 255, 0.8], // Blue line
+        width: 4,
+        style: "solid",
+      });
+
+      const pathGraphic = new Graphic({
+        geometry: polyline,
+        symbol: pathSymbol,
+        attributes: { type: "path" },
+      });
+
+      view.graphics.add(pathGraphic);
+      console.log("Path graphic added to view");
+
+      // Add small markers for each point in the path
+      inspectorPath.forEach((pathPoint, index) => {
+        const point = new Point({
+          longitude: pathPoint.lng,
+          latitude: pathPoint.lat,
+          spatialReference: { wkid: 4326 },
+        });
+
+        const markerSymbol = new SimpleMarkerSymbol({
+          color: index === 0 ? [0, 255, 0, 0.9] : [0, 112, 255, 0.7], // Green for start, blue for others
+          size: index === 0 ? 12 : 8,
+          outline: {
+            color: [255, 255, 255],
+            width: 2,
+          },
+        });
+
+        const markerGraphic = new Graphic({
+          geometry: point,
+          symbol: markerSymbol,
+          attributes: {
+            timestamp: pathPoint.timestamp,
+            type: index === 0 ? "start" : "pathPoint",
+          },
+          popupTemplate: {
+            title: index === 0 ? "Start Point" : `Path Point ${index}`,
+            content: `<b>Time:</b> ${pathPoint.timestamp}`,
+          },
+        });
+
+        view.graphics.add(markerGraphic);
+      });
+
+      console.log("Path markers added");
+    } else {
+      console.log("Not drawing path - conditions not met:", {
+        showPath,
+        hasPath: !!inspectorPath,
+        pathLength: inspectorPath?.length,
+      });
+    }
+
+    // ✅ 2. Draw Fine Locations (Red markers)
+    if (showFineLocations && fineLocations && fineLocations.length > 0) {
+      console.log("Drawing", fineLocations.length, "fine locations");
+
+      fineLocations.forEach((fine, index) => {
+        const point = new Point({
+          longitude: fine.lng,
+          latitude: fine.lat,
+          spatialReference: { wkid: 4326 },
+        });
+
+        const fineSymbol = new PictureMarkerSymbol({
+          url: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png",
+          width: "32px",
+          height: "32px",
+        });
+
+        const fineGraphic = new Graphic({
+          geometry: point,
+          symbol: fineSymbol,
+          attributes: { fine, type: "fine" },
+          popupTemplate: {
+            title: `Fine: ${fine.plateNumber}`,
+            content: `
+              <b>Amount:</b> ${fine.fineAmount} AED<br>
+              <b>Time:</b> ${fine.timestamp}<br>
+              <b>Plate:</b> ${fine.plateNumber}
+            `,
+          },
+        });
+
+        view.graphics.add(fineGraphic);
+        console.log(`Fine location ${index + 1} added`);
+      });
+    } else {
+      console.log("Not drawing fines - conditions not met:", {
+        showFineLocations,
+        hasFines: !!fineLocations,
+        finesCount: fineLocations?.length,
+      });
+    }
+
+    // ✅ 3. Draw Inspectors (Main markers)
+    toDraw.forEach((inspector, index) => {
       const point = new Point({
         longitude: inspector.lng,
         latitude: inspector.lat,
+        spatialReference: { wkid: 4326 },
       });
 
       const symbol =
@@ -149,61 +295,77 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       const graphic = new Graphic({
         geometry: point,
         symbol,
-        attributes: { inspector },
+        attributes: { inspector, type: "inspector" },
+        popupTemplate: {
+          title: inspector.name,
+          content: `
+            <b>Status:</b> ${inspector.status}<br>
+            <b>Zone:</b> ${inspector.zone || "N/A"}
+          `,
+        },
       });
 
       view.graphics.add(graphic);
+      console.log(`Inspector ${index + 1} added:`, inspector.name);
     });
 
-    // when a single inspector is shown, zoom out a bit more than before
+    console.log("Total graphics in view:", view.graphics.length);
+
+    // ✅ 4. Auto-zoom to fit all content
     if (onlyInspector) {
       const lng = onlyInspector.lng;
       const lat = onlyInspector.lat;
-      const SINGLE_ZOOM = 13; // reduced number -> more zoomed out
+      const SINGLE_ZOOM = 13;
       view
         .goTo({ center: [lng, lat], zoom: SINGLE_ZOOM }, { duration: 600 })
         .catch((e) => console.warn("goTo single inspector failed:", e));
     } else {
-      if (inspectors.length > 1) {
-        const lngs = inspectors.map((i) => i.lng);
-        const lats = inspectors.map((i) => i.lat);
+      // Calculate extent based on all points (inspectors, path, fines)
+      const allPoints: Array<{ lng: number; lat: number }> = [];
+
+      // Add inspector positions
+      inspectors.forEach((i) => allPoints.push({ lng: i.lng, lat: i.lat }));
+
+      // Add path points
+      if (inspectorPath && inspectorPath.length > 0) {
+        inspectorPath.forEach((p) => allPoints.push({ lng: p.lng, lat: p.lat }));
+      }
+
+      // Add fine locations
+      if (fineLocations && fineLocations.length > 0) {
+        fineLocations.forEach((f) => allPoints.push({ lng: f.lng, lat: f.lat }));
+      }
+
+      console.log("Total points for extent calculation:", allPoints.length);
+
+      if (allPoints.length > 1) {
+        const lngs = allPoints.map((p) => p.lng);
+        const lats = allPoints.map((p) => p.lat);
         const minLng = Math.min(...lngs);
         const maxLng = Math.max(...lngs);
         const minLat = Math.min(...lats);
         const maxLat = Math.max(...lats);
 
-        const lngPadding = (maxLng - minLng) * 0.35 || 0.02;
-        const latPadding = (maxLat - minLat) * 0.35 || 0.02;
+        const lngPadding = (maxLng - minLng) * 0.2 || 0.01;
+        const latPadding = (maxLat - minLat) * 0.2 || 0.01;
 
-        const xmin = minLng - lngPadding;
-        const xmax = maxLng + lngPadding;
-        const ymin = minLat - latPadding;
-        const ymax = maxLat + latPadding;
+        const extent = new Extent({
+          xmin: minLng - lngPadding,
+          ymin: minLat - latPadding,
+          xmax: maxLng + lngPadding,
+          ymax: maxLat + latPadding,
+          spatialReference: { wkid: 4326 },
+        });
 
-        const spanX = Math.abs(xmax - xmin);
-        const spanY = Math.abs(ymax - ymin);
-        if (spanX > 0 && spanY > 0 && spanX <= 30 && spanY <= 30) {
-          const extent = new Extent({
-            xmin,
-            ymin,
-            xmax,
-            ymax,
-            spatialReference: { wkid: 4326 },
-          });
-          view.goTo({ target: extent }, { duration: 600 }).catch(() => {
-            view.goTo({ center, zoom }).catch(() => {});
-          });
-        } else {
+        view.goTo({ target: extent }, { duration: 800 }).catch(() => {
           view.goTo({ center, zoom }).catch(() => {});
-        }
-      } else if (inspectors.length === 1) {
-        const only = inspectors[0];
-        view.goTo({ center: [only.lng, only.lat], zoom: 13 }).catch(() => {});
+        });
       } else {
         view.goTo({ center, zoom }).catch(() => {});
       }
     }
 
+    // ✅ 5. Handle click events
     let clickHandle: any = null;
     if (clickable && onInspectorClick) {
       try {
@@ -222,7 +384,18 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     return () => {
       if (clickHandle && typeof clickHandle.remove === "function") clickHandle.remove();
     };
-  }, [inspectors, onlyInspector, clickable, onInspectorClick, center, zoom]);
+  }, [
+    inspectors,
+    onlyInspector,
+    clickable,
+    onInspectorClick,
+    center,
+    zoom,
+    inspectorPath,
+    fineLocations,
+    showPath,
+    showFineLocations,
+  ]);
 
   const menu = (
     <Menu

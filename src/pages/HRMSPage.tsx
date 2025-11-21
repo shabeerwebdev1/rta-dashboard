@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, DatePicker, Spin, Tag } from "antd";
-import { PlusOutlined, DownloadOutlined, EditOutlined, SearchOutlined, EyeOutlined } from "@ant-design/icons";
+import { PlusOutlined, DownloadOutlined, EyeOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
@@ -85,15 +85,6 @@ const HRMSPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
-  // ========== RTK Query Hooks (COMMENTED OUT) ==========
-  // const { data, isLoading, isFetching } = useGetHRMSAttendanceQuery(apiParams, {
-  //   refetchOnMountOrArgChange: true,
-  // });
-  // const [addAttendance, { isLoading: isAddingAttendance }] = useAddHRMSAttendanceMutation();
-  // const [triggerGetLookups] = useLazyGetLookupsQuery();
-  // const [triggerGetSupervisors, { data: supervisorsData, isLoading: isLoadingSupervisors }] =
-  //   useLazyGetSupervisorsQuery();
-
   // ========== MOCK DATA INSTEAD ==========
   const data = MOCK_INSPECTORS_DATA;
   const isLoading = false;
@@ -117,23 +108,6 @@ const HRMSPage: React.FC = () => {
 
   // State to maintain the rows data for downloading
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
-
-  // ========== Fetch lookup data (COMMENTED OUT) ==========
-  // useEffect(() => {
-  //   fetchLookupData();
-  // }, [i18n.language]);
-
-  // const fetchLookupData = async () => {
-  //   setIsLoadingLookups(true);
-  //   try {
-  //     const result = await triggerGetLookups([900]).unwrap();
-  //     setLookupOptions(result);
-  //   } catch (error) {
-  //     notification.error({ data: { en_Msg: "Failed to load dropdown options" } }, "Load Failed");
-  //   } finally {
-  //     setIsLoadingLookups(false);
-  //   }
-  // };
 
   // ========== MOCK FETCH INSTEAD ==========
   useEffect(() => {
@@ -233,9 +207,19 @@ const HRMSPage: React.FC = () => {
     [t],
   );
 
+  // ✅ FIX: Find the complete record from MOCK_INSPECTORS_DATA
   const handleView = (record: any) => {
-    setViewRecord(record);
-    setIsDrawerOpen(true);
+    // Find the full record with path and fine data
+    const fullRecord = MOCK_INSPECTORS_DATA.find((item) => item.id === record.id);
+    if (fullRecord) {
+      console.log("Opening drawer with full record:", fullRecord);
+      setViewRecord(fullRecord);
+      setIsDrawerOpen(true);
+    } else {
+      console.warn("Record not found in mock data");
+      setViewRecord(record);
+      setIsDrawerOpen(true);
+    }
   };
 
   const handleShare = () => {
@@ -649,7 +633,7 @@ const HRMSPage: React.FC = () => {
         </Spin>
       </Modal>
 
-      {/* ✅ View Drawer */}
+      {/* ✅ View Modal */}
       {viewRecord && (
         <HRMSViewDrawer
           open={isDrawerOpen}

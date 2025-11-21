@@ -25,9 +25,19 @@ export interface InspectorAttendanceDTO {
   finesIssued?: number;
   towingRequests?: number;
   leaveRequested?: number;
+  // ✅ NEW: Inspector path and fine locations
+  inspectorPath?: Array<{ lat: number; lng: number; timestamp: string }>;
+  fineLocations?: Array<{
+    id: string;
+    lat: number;
+    lng: number;
+    fineAmount: number;
+    timestamp: string;
+    plateNumber: string;
+  }>;
 }
 
-// Mock Data with enhanced details
+// Mock Data with enhanced details including paths and fine locations
 export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
   {
     id: "ATT-2025-001",
@@ -40,8 +50,8 @@ export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
     checkOutTime: "05:00 PM",
     status: "Present",
     location: {
-      lat: 12.9716,
-      lng: 77.5946,
+      lat: 25.1972,
+      lng: 55.2743,
       zone: "Zone A",
     },
     email: "ahmed.hassan@example.com",
@@ -51,6 +61,43 @@ export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
     finesIssued: 5,
     towingRequests: 2,
     leaveRequested: 0,
+    // ✅ Inspector Path (movement throughout the day)
+    inspectorPath: [
+      { lat: 25.1972, lng: 55.2743, timestamp: "08:00 AM" },
+      { lat: 25.1985, lng: 55.2755, timestamp: "09:30 AM" },
+      { lat: 25.2001, lng: 55.277, timestamp: "11:00 AM" },
+      { lat: 25.202, lng: 55.28, timestamp: "12:30 PM" },
+      { lat: 25.2035, lng: 55.282, timestamp: "02:00 PM" },
+      { lat: 25.205, lng: 55.285, timestamp: "03:30 PM" },
+      { lat: 25.2065, lng: 55.287, timestamp: "05:00 PM" },
+    ],
+    // ✅ Fine Locations (where fines were issued)
+    fineLocations: [
+      {
+        id: "FINE-001",
+        lat: 25.199,
+        lng: 55.276,
+        fineAmount: 500,
+        timestamp: "09:45 AM",
+        plateNumber: "ABC-1234",
+      },
+      {
+        id: "FINE-002",
+        lat: 25.2015,
+        lng: 55.2785,
+        fineAmount: 300,
+        timestamp: "11:30 AM",
+        plateNumber: "XYZ-5678",
+      },
+      {
+        id: "FINE-003",
+        lat: 25.204,
+        lng: 55.2835,
+        fineAmount: 400,
+        timestamp: "02:45 PM",
+        plateNumber: "DEF-9012",
+      },
+    ],
   },
   {
     id: "ATT-2025-002",
@@ -63,8 +110,8 @@ export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
     checkOutTime: "05:15 PM",
     status: "Present",
     location: {
-      lat: 12.98,
-      lng: 77.6,
+      lat: 25.18,
+      lng: 55.26,
       zone: "Zone B",
     },
     email: "fatima.khan@example.com",
@@ -74,6 +121,31 @@ export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
     finesIssued: 4,
     towingRequests: 1,
     leaveRequested: 0,
+    inspectorPath: [
+      { lat: 25.18, lng: 55.26, timestamp: "08:15 AM" },
+      { lat: 25.182, lng: 55.262, timestamp: "10:00 AM" },
+      { lat: 25.185, lng: 55.265, timestamp: "12:00 PM" },
+      { lat: 25.188, lng: 55.268, timestamp: "02:00 PM" },
+      { lat: 25.19, lng: 55.27, timestamp: "04:00 PM" },
+    ],
+    fineLocations: [
+      {
+        id: "FINE-004",
+        lat: 25.1825,
+        lng: 55.2635,
+        fineAmount: 600,
+        timestamp: "10:30 AM",
+        plateNumber: "LMN-3456",
+      },
+      {
+        id: "FINE-005",
+        lat: 25.187,
+        lng: 55.267,
+        fineAmount: 350,
+        timestamp: "01:15 PM",
+        plateNumber: "PQR-7890",
+      },
+    ],
   },
   {
     id: "ATT-2025-003",
@@ -86,8 +158,8 @@ export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
     checkOutTime: "",
     status: "Absent",
     location: {
-      lat: 12.95,
-      lng: 77.58,
+      lat: 25.15,
+      lng: 55.25,
       zone: "Zone C",
     },
     email: "omar.abdullah@example.com",
@@ -97,75 +169,8 @@ export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
     finesIssued: 0,
     towingRequests: 0,
     leaveRequested: 1,
-  },
-  {
-    id: "ATT-2025-004",
-    inspectorId: 104,
-    inspectorName: "Layla Ibrahim",
-    inspectorNameAr: "ليلى إبراهيم",
-    supervisorName: "Sara Ahmed",
-    date: "2025-11-19",
-    checkInTime: "08:00 AM",
-    checkOutTime: "12:00 PM",
-    status: "Leave",
-    location: {
-      lat: 12.965,
-      lng: 77.592,
-      zone: "Zone A",
-    },
-    email: "layla.ibrahim@example.com",
-    mobile: "+971504567890",
-    shift: "Morning Shift (8:00 AM - 4:00 PM)",
-    obstacles: 0,
-    finesIssued: 0,
-    towingRequests: 0,
-    leaveRequested: 1,
-  },
-  {
-    id: "ATT-2025-005",
-    inspectorId: 105,
-    inspectorName: "Yusuf Rahman",
-    inspectorNameAr: "يوسف رحمن",
-    supervisorName: "Mohammed Ali",
-    date: "2025-11-19",
-    checkInTime: "08:30 AM",
-    checkOutTime: "05:30 PM",
-    status: "Present",
-    location: {
-      lat: 12.975,
-      lng: 77.605,
-      zone: "Zone B",
-    },
-    email: "yusuf.rahman@example.com",
-    mobile: "+971505678901",
-    shift: "Morning Shift (8:00 AM - 4:00 PM)",
-    obstacles: 4,
-    finesIssued: 6,
-    towingRequests: 3,
-    leaveRequested: 0,
-  },
-  {
-    id: "ATT-2025-006",
-    inspectorId: 106,
-    inspectorName: "Aisha Mohammed",
-    inspectorNameAr: "عائشة محمد",
-    supervisorName: "Sara Ahmed",
-    date: "2025-11-18",
-    checkInTime: "08:00 AM",
-    checkOutTime: "05:00 PM",
-    status: "Present",
-    location: {
-      lat: 12.96,
-      lng: 77.585,
-      zone: "Zone C",
-    },
-    email: "aisha.mohammed@example.com",
-    mobile: "+971506789012",
-    shift: "Morning Shift (8:00 AM - 4:00 PM)",
-    obstacles: 1,
-    finesIssued: 3,
-    towingRequests: 0,
-    leaveRequested: 0,
+    inspectorPath: [],
+    fineLocations: [],
   },
 ];
 
