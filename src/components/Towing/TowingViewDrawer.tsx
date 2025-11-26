@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, Descriptions, Tag, Button, Space, App, Input, Typography, Image, Empty, Spin } from "antd";
+import { Drawer, Descriptions, Tag, Button, Space, App, Input, Typography, Image, Empty, Spin, Modal } from "antd";
 import {
   useUpdateTowingStatusMutation,
   useGetInspectionAttachmentsQuery,
@@ -101,36 +101,17 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
     status?.toLowerCase() === "approved" || status?.toLowerCase() === "rejected";
 
   return (
-    <Drawer
+    <Modal
       open={open}
-      width={500}
-      onClose={onClose}
+      width={1200}
+      onCancel={onClose}
+      centered
       title={t("form.towingDetails")}
-      placement={isRtl ? "left" : "right"}
-      bodyStyle={{ overflowY: "auto", height: "calc(100vh - 64px)" }}
+      footer={null}
+      //placement={isRtl ? "left" : "right"}
     >
       {record ? (
         <>
-          {/* Details */}
-          <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label={t("form.plateNumber")}>{record.plateNumber}</Descriptions.Item>
-            <Descriptions.Item label={t("form.vehicleName")}>{record.vehicleBrand}</Descriptions.Item>
-            <Descriptions.Item label={t("form.vehicleColor")}>{record.vehicleColor}</Descriptions.Item>
-            <Descriptions.Item label={t("form.vehicleOwnerName")}>{record.vehicleOwnerName}</Descriptions.Item>
-            <Descriptions.Item label={t("form.vehicleOwnerMobile")}>{record.vehicleOwnerMobile}</Descriptions.Item>
-            <Descriptions.Item label={t("form.vehicleOwnerEmail")}>{record.vehicleOwnerEmail}</Descriptions.Item>
-            <Descriptions.Item label={t("form.manufacturerYear")}>{record.manufacturerYear}</Descriptions.Item>
-            <Descriptions.Item label={t("form.towingDate")}>
-              {new Date(record.entityDateTime).toLocaleDateString()}
-            </Descriptions.Item>
-            <Descriptions.Item label={t("form.status")}>
-              <Tag color={getStatusColor(currentStatus)}>{currentStatus}</Tag>
-            </Descriptions.Item>
-            {record.lastReviewComments && (
-              <Descriptions.Item label={t("form.lastReviewComments")}>{record.lastReviewComments}</Descriptions.Item>
-            )}
-          </Descriptions>
-
           {/* Map */}
           <h4 style={{ marginTop: 16 }}>{t("form.location")}</h4>
           {record.latitude && record.longitude ? (
@@ -155,6 +136,26 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
           ) : (
             <Empty description="No Location Data Available" />
           )}
+
+          {/* Details */}
+          <Descriptions style={{ marginTop: 20 }} bordered column={1} size="small">
+            <Descriptions.Item label={t("form.plateNumber")}>{record.plateNumber}</Descriptions.Item>
+            <Descriptions.Item label={t("form.vehicleName")}>{record.vehicleBrand}</Descriptions.Item>
+            <Descriptions.Item label={t("form.vehicleColor")}>{record.vehicleColor}</Descriptions.Item>
+            <Descriptions.Item label={t("form.vehicleOwnerName")}>{record.vehicleOwnerName}</Descriptions.Item>
+            <Descriptions.Item label={t("form.vehicleOwnerMobile")}>{record.vehicleOwnerMobile}</Descriptions.Item>
+            <Descriptions.Item label={t("form.vehicleOwnerEmail")}>{record.vehicleOwnerEmail}</Descriptions.Item>
+            <Descriptions.Item label={t("form.manufacturerYear")}>{record.manufacturerYear}</Descriptions.Item>
+            <Descriptions.Item label={t("form.towingDate")}>
+              {new Date(record.entityDateTime).toLocaleDateString()}
+            </Descriptions.Item>
+            <Descriptions.Item label={t("form.status")}>
+              <Tag color={getStatusColor(currentStatus)}>{currentStatus}</Tag>
+            </Descriptions.Item>
+            {record.lastReviewComments && (
+              <Descriptions.Item label={t("form.lastReviewComments")}>{record.lastReviewComments}</Descriptions.Item>
+            )}
+          </Descriptions>
 
           {/* Photos */}
           <Title level={5} style={{ marginTop: 16, marginBottom: 12 }}>
@@ -210,7 +211,7 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
       ) : (
         <Empty description={t("common.noData")} />
       )}
-    </Drawer>
+    </Modal>
   );
 };
 

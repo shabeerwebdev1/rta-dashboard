@@ -62,6 +62,8 @@ const TowingPage: React.FC = () => {
       Approved: <Tag color="green">{t("status.approved")}</Tag>,
       Rejected: <Tag color="red">{t("status.rejected")}</Tag>,
       cancelled: <Tag color="orange">{t("status.cancelled")}</Tag>,
+      inProgress: <Tag color="cyan">{t("status.inProgress")}</Tag>,
+      completed: <Tag color="purple">{t("status.completed")}</Tag>,
     };
     return statusMap;
   }, [t]);
@@ -125,6 +127,8 @@ const TowingPage: React.FC = () => {
                   Approved: t("status.approved"),
                   Rejected: t("status.rejected"),
                   cancelled: t("status.cancelled"),
+                  inProgress: t("status.inProgress"),
+                  completed: t("status.completed"),
                 };
                 value = statusMap[value] || value;
                 break;
@@ -299,6 +303,8 @@ const TowingPage: React.FC = () => {
               { text: t("status.rejected"), value: "Rejected" },
               { text: t("status.pending"), value: "pending" },
               { text: t("status.cancelled"), value: "cancelled" },
+              { text: t("status.inProgress"), value: "inProgress" },
+              { text: t("status.completed"), value: "completed" },
             ],
           }}
         />
