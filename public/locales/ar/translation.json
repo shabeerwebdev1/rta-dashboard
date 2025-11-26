@@ -87,7 +87,8 @@
       "team-evaluation": "تقييم الفريق",
       "criteria": "المعايير والأوزان",
       "proactive-campaigns": "الحملات الاستباقية",
-      "hrms": "سجلات الحضور والانصراف"
+      "hrms": "سجلات الحضور والانصراف",
+      "shiftplanning": "تخطيط النوبات"
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",
@@ -394,7 +395,7 @@
     "upcomingShifts": "تفاصيل الورديات القادمة",
     "MapLegend": "أسطورة الخريطة",
     "StartPoint": "نقطة البداية",
-    "InspectorPath" : "مسار المفتش",
+    "InspectorPath": "مسار المفتش",
     "FineLocations": "مواقع الغرامات",
     "CurrentLocation": "الموقع الحالي"
   },
@@ -470,7 +471,10 @@
     "inProgress": "قيد التنفيذ",
     "filterByDate": "التصفية حسب التاريخ:",
     "startDate": "تاريخ البدء",
-    "endDate": "تاريخ الانتهاء"
+    "endDate": "تاريخ الانتهاء",
+    "all": "الكل",
+    "next": "التالي",
+    "previous": "السابق"
   },
   "entity": {
     "plate": "لوحة",
@@ -655,5 +659,41 @@
     "disputes": "تقرير المنازعات",
     "monthlyLeave": "تقرير الإجازات الشهرية",
     "leaveRequest": "تقرير طلبات الإجازة"
+  },
+  "shiftPlanning": {
+    "title": "إنشاء خطة الورديات",
+    "planDate": "تاريخ الخطة",
+    "plan": "تخطيط",
+    "selectPlanDate": "يرجى تحديد تاريخ الخطة",
+    "planLoaded": "تم تحميل خطة الورديات",
+    "planLoadFailed": "فشل تحميل الخطة",
+    "apiError": "خطأ في API",
+    "dayNumber": "يوم {{number}}",
+    "day": "اليوم",
+    "noShift": "لا توجد وردية",
+    "weekOff": "إجازة أسبوعية",
+    "leave": "إجازة",
+    "selectZoneArea": "يرجى اختيار المنطقة والمنطقة الفرعية",
+    "shiftFilter": "تصفية الورديات",
+    "selectShifts": "اختر الورديات",
+    "previousBatch": "الدفعة السابقة",
+    "publishedBy": "نشر بواسطة",
+    "publish": "نشر",
+    "inspectorWise": "حسب المفتش",
+    "selectInspector": "اختر المفتش",
+    "weekView": "عرض الأسبوع",
+    "monthView": "عرض الشهر",
+    "allView": "عرض الكل",
+    "totalDays": "إجمالي الأيام",
+    "weeks": "أسابيع",
+    "days": "أسابيع",
+    "page": "صفحة"
+  },
+  "shifts": {
+    "earlyMorning": "الصباح الباكر",
+    "morning": "الصباح",
+    "evening": "المساء",
+    "lateEvening": "آخر المساء",
+    "afternoon": "بعد الظهر"
   }
 }

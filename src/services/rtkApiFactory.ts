@@ -527,6 +527,15 @@ export const dynamicApi = createApi({
         },
       }),
     }),
+
+    // Shift Plan
+    getShiftPlan: builder.mutation({
+      query: (body) => ({
+        url: "/api/ShiftPlanMaster/Plan",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
 
@@ -630,4 +639,7 @@ export const {
 
   // Reports
   useGetHtmlReportMutation,
+
+  // Shift Plan
+  useGetShiftPlanMutation,
 } = dynamicApi;

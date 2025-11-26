@@ -14,6 +14,7 @@ import {
   List,
   Row,
   Col,
+  Alert,
 } from "antd";
 import {
   format,
@@ -25,14 +26,13 @@ import {
   getYear,
   getMonth,
   isSameMonth,
+  isBefore,
+  startOfDay,
 } from "date-fns";
-import {
-  DragOutlined,
-  CalendarOutlined,
-  UnorderedListOutlined,
-  TableOutlined,
-  EditOutlined,
-} from "@ant-design/icons";
+import { DragOutlined, CalendarOutlined, UnorderedListOutlined, TableOutlined, EditOutlined } from "@ant-design/icons";
+import { usePage } from "../contexts/PageContext";
+import { AdhocShiftPlanConfig } from "../config/pageConfigs/adhocShiftPlanConfig";
+import { useTranslation } from "react-i18next";
 
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
@@ -327,12 +327,24 @@ function getDayNamesForMonth(year: number, monthIndex: number) {
   }));
 }
 
+// Disable past dates for date picker
+const disabledDate = (current: any) => {
+  return current && isBefore(current, startOfDay(new Date()));
+};
+
 export default function AdhocShiftPlan() {
+  const { setPageTitle } = usePage();
+  const { i18n, t } = useTranslation();
+  const config = AdhocShiftPlanConfig;
+
+  // Set page title from config
+  useEffect(() => {
+    setPageTitle(t(config.title));
+  }, [setPageTitle, t, config.title, i18n.language]);
+
   // --- view state
   const [activeTab, setActiveTab] = useState("1");
-  const [viewMode, setViewMode] = useState<"table" | "list" | "calendar">(
-    "table"
-  );
+  const [viewMode, setViewMode] = useState<"table" | "list" | "calendar">("table");
 
   // data state
   const [rows, setRows] = useState(initialData);
@@ -340,9 +352,7 @@ export default function AdhocShiftPlan() {
   // top controls
   // Default selectedInspector to first inspector so calendar initially shows only 1 inspector's data
   const defaultInspector = initialData[0]?.inspector;
-  const [selectedInspector, setSelectedInspector] = useState<string | undefined>(
-    defaultInspector
-  );
+  const [selectedInspector, setSelectedInspector] = useState<string | undefined>(defaultInspector);
   const [dateRange, setDateRange] = useState<any[]>([]);
 
   // calendar header state (month & year selectors inside Calendar only)
@@ -350,10 +360,7 @@ export default function AdhocShiftPlan() {
   const [calYear, setCalYear] = useState(getYear(today));
   const [calMonthIdx, setCalMonthIdx] = useState(getMonth(today));
 
-  const dayNames = useMemo(
-    () => getDayNamesForMonth(calYear, calMonthIdx),
-    [calYear, calMonthIdx]
-  );
+  const dayNames = useMemo(() => getDayNamesForMonth(calYear, calMonthIdx), [calYear, calMonthIdx]);
 
   // --- drag selection (table) ---
   const [isSelecting, setIsSelecting] = useState(false);
@@ -371,8 +378,10 @@ export default function AdhocShiftPlan() {
   const [editingData, setEditingData] = useState<any>(null);
   const [form] = Form.useForm();
   // extra state for table tabs
-const [tableTab, setTableTab] = useState("monthly");
+  const [tableTab, setTableTab] = useState("monthly");
 
+  // State for tracking if editing WO or Leave
+  const [isEditingSpecial, setIsEditingSpecial] = useState<"WO" | "LV" | null>(null);
 
   useEffect(() => {
     const handleUp = () => {
@@ -397,7 +406,7 @@ const [tableTab, setTableTab] = useState("monthly");
   }, [isSelecting, calIsSelecting, calSelStart, calSelEnd]);
 
   // cell coloring (accessible for dark mode)
-  const getCellStyle = (value: string, dayIndex?: number, isSun?: boolean) => {
+  const getCellStyle = (value: string, dayIndex?: number) => {
     let style: React.CSSProperties = {
       color: "#111",
       backgroundColor: "#fff",
@@ -407,17 +416,8 @@ const [tableTab, setTableTab] = useState("monthly");
     else if (value === "WO") style = { backgroundColor: "#fa8c16", color: "#fff", fontWeight: 600 };
     else if (value?.startsWith("Z")) style = { backgroundColor: "#e6f4ff", color: "#0958d9", fontWeight: 500 };
 
-    if (isSun) {
-      style = { ...style, outline: "2px solid #b7eb8f" };
-    }
-
     // selection band (table)
-    if (
-      selectionStart !== null &&
-      selectionEnd !== null &&
-      dayIndex !== undefined &&
-      selectedRowKey !== null
-    ) {
+    if (selectionStart !== null && selectionEnd !== null && dayIndex !== undefined && selectedRowKey !== null) {
       const s = Math.min(selectionStart, selectionEnd);
       const e = Math.max(selectionStart, selectionEnd);
       if (dayIndex >= s && dayIndex <= e) {
@@ -426,8 +426,6 @@ const [tableTab, setTableTab] = useState("monthly");
     }
     return style;
   };
-
-  
 
   const handleMouseDown = (row: any, dayIndex: number) => {
     setIsSelecting(true);
@@ -447,6 +445,11 @@ const [tableTab, setTableTab] = useState("monthly");
     const zone = value?.includes("-") ? value.split("-")[0] : undefined;
     const area = value?.includes("-") ? value.split("-")[1] : undefined;
 
+    // Check if editing WO or Leave
+    const isWO = value === "WO";
+    const isLV = value === "LV";
+    setIsEditingSpecial(isWO ? "WO" : isLV ? "LV" : null);
+
     setEditingData({ ...row, zone, area, dayStart: startDayIndex + 1, dayEnd: (endDayIndex ?? startDayIndex) + 1 });
     form.setFieldsValue({
       inspector: row.inspector,
@@ -458,12 +461,7 @@ const [tableTab, setTableTab] = useState("monthly");
   };
 
   const handleMouseUp = (row: any) => {
-    if (
-      isSelecting &&
-      selectionStart !== null &&
-      selectionEnd !== null &&
-      selectedRowKey === row.key
-    ) {
+    if (isSelecting && selectionStart !== null && selectionEnd !== null && selectedRowKey === row.key) {
       setIsSelecting(false);
       const startDay = Math.min(selectionStart, selectionEnd);
       const endDay = Math.max(selectionStart, selectionEnd);
@@ -492,8 +490,26 @@ const [tableTab, setTableTab] = useState("monthly");
     // find inspector row by calSelectedInspector (or default first)
     const inspName = calSelectedInspector || defaultInspector;
     const row = rows.find((r) => r.inspector === inspName) || rows[0];
-    setEditingData({ ...row, dayStart: s + 1, dayEnd: e + 1, zone: row.days[s]?.split("-")[0], area: row.days[s]?.split("-")[1] });
-    form.setFieldsValue({ inspector: row.inspector, shift: row.shift, zone: row.days[s]?.split("-")[0], area: row.days[s]?.split("-")[1] });
+
+    const value = row.days[s];
+    // Check if editing WO or Leave
+    const isWO = value === "WO";
+    const isLV = value === "LV";
+    setIsEditingSpecial(isWO ? "WO" : isLV ? "LV" : null);
+
+    setEditingData({
+      ...row,
+      dayStart: s + 1,
+      dayEnd: e + 1,
+      zone: row.days[s]?.split("-")[0],
+      area: row.days[s]?.split("-")[1],
+    });
+    form.setFieldsValue({
+      inspector: row.inspector,
+      shift: row.shift,
+      zone: row.days[s]?.split("-")[0],
+      area: row.days[s]?.split("-")[1],
+    });
     setIsModalOpen(true);
   };
 
@@ -520,7 +536,7 @@ const [tableTab, setTableTab] = useState("monthly");
                 updated.days[i] = `${values.zone}-${values.area}`;
               }
               return updated;
-            })
+            }),
           );
         }
 
@@ -530,6 +546,7 @@ const [tableTab, setTableTab] = useState("monthly");
         setSelectedRowKey(null);
         setCalSelStart(null);
         setCalSelEnd(null);
+        setIsEditingSpecial(null);
       })
       .catch(() => {});
   };
@@ -554,9 +571,7 @@ const [tableTab, setTableTab] = useState("monthly");
                 <b>Inspector:</b> {row.inspector}
               </p>
               <p style={{ marginBottom: 4 }}>
-                <b>Date:</b> {day.dayOfMonth} {monthNameByIndex(calMonthIdx)} ({
-                  day.dayOfWeek
-                })
+                <b>Date:</b> {day.dayOfMonth} {monthNameByIndex(calMonthIdx)} ({day.dayOfWeek})
               </p>
               <p style={{ marginBottom: 4 }}>
                 <b>Shift:</b> {row.shift}
@@ -567,12 +582,7 @@ const [tableTab, setTableTab] = useState("monthly");
               <p style={{ marginBottom: 8 }}>
                 <b>Area:</b> {zoneMapping[value.split("-")[1]] || value.split("-")[1]}
               </p>
-              <Button
-                type="link"
-                size="small"
-                icon={<EditOutlined />}
-                onClick={() => openEditForSelection(row, i)}
-              >
+              <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEditForSelection(row, i)}>
                 Edit
               </Button>
             </div>
@@ -614,9 +624,7 @@ const [tableTab, setTableTab] = useState("monthly");
       key: "inspector",
       fixed: "left" as const,
       width: 160,
-      filters: [
-        ...new Set(rows.map((d) => d.inspector)),
-      ].map((x) => ({ text: x as string, value: x })),
+      filters: [...new Set(rows.map((d) => d.inspector))].map((x) => ({ text: x as string, value: x })),
       onFilter: (value: any, record: any) => record.inspector === value,
       sorter: (a: any, b: any) => a.inspector.localeCompare(b.inspector),
     },
@@ -626,9 +634,7 @@ const [tableTab, setTableTab] = useState("monthly");
       key: "month",
       fixed: "left" as const,
       width: 120,
-      filters: [
-        ...new Set(rows.map((d) => d.month)),
-      ].map((x) => ({ text: x as string, value: x })),
+      filters: [...new Set(rows.map((d) => d.month))].map((x) => ({ text: x as string, value: x })),
       onFilter: (value: any, record: any) => record.month === value,
       sorter: (a: any, b: any) => a.month.localeCompare(b.month),
     },
@@ -638,9 +644,7 @@ const [tableTab, setTableTab] = useState("monthly");
       key: "shift",
       fixed: "left" as const,
       width: 120,
-      filters: [
-        ...new Set(rows.map((d) => d.shift)),
-      ].map((x) => ({ text: x as string, value: x })),
+      filters: [...new Set(rows.map((d) => d.shift))].map((x) => ({ text: x as string, value: x })),
       onFilter: (value: any, record: any) => record.shift === value,
       sorter: (a: any, b: any) => a.shift.localeCompare(b.shift),
     },
@@ -657,10 +661,7 @@ const [tableTab, setTableTab] = useState("monthly");
   // Top controls (spec 3): only View buttons + Inspector + DateRange + Plan button
   // Inspector dropdown should be hidden in List view (spec 4)
 
-  const inspectorOptions = useMemo(
-    () => Array.from(new Set(rows.map((r) => r.inspector))),
-    [rows]
-  );
+  const inspectorOptions = useMemo(() => Array.from(new Set(rows.map((r) => r.inspector))), [rows]);
 
   const handlePlan = () => {
     // Hook up to your API later
@@ -709,7 +710,11 @@ const [tableTab, setTableTab] = useState("monthly");
     // If the calendar selection is active we want to highlight cells in the selected range
     const selStart = calSelStart;
     const selEnd = calSelEnd;
-    const inSel = selStart !== null && selEnd !== null && dayIndex >= Math.min(selStart, selEnd) && dayIndex <= Math.max(selStart, selEnd);
+    const inSel =
+      selStart !== null &&
+      selEnd !== null &&
+      dayIndex >= Math.min(selStart, selEnd) &&
+      dayIndex <= Math.max(selStart, selEnd);
 
     const cell = (
       <div
@@ -723,8 +728,8 @@ const [tableTab, setTableTab] = useState("monthly");
             v === "LV"
               ? { background: "#ff4d4f", color: "#fff" }
               : v === "WO"
-              ? { background: "#fa8c16", color: "#fff" }
-              : { background: "#e6f4ff", color: "#0958d9" };
+                ? { background: "#fa8c16", color: "#fff" }
+                : { background: "#e6f4ff", color: "#0958d9" };
           return (
             <div
               key={i}
@@ -744,9 +749,7 @@ const [tableTab, setTableTab] = useState("monthly");
             </div>
           );
         })}
-        {assignments.length > 3 && (
-          <div style={{ fontSize: 11, opacity: 0.75 }}>+{assignments.length - 3} more</div>
-        )}
+        {assignments.length > 3 && <div style={{ fontSize: 11, opacity: 0.75 }}>+{assignments.length - 3} more</div>}
       </div>
     );
 
@@ -837,14 +840,21 @@ const [tableTab, setTableTab] = useState("monthly");
                 placeholder="Select Inspector"
                 style={{ width: 220 }}
                 value={selectedInspector}
-                onChange={(v) => { setSelectedInspector(v); setCalSelectedInspector(v); }}
+                onChange={(v) => {
+                  setSelectedInspector(v);
+                  setCalSelectedInspector(v);
+                }}
                 options={inspectorOptions.map((x) => ({ label: x, value: x }))}
               />
             </Col>
           )}
 
           <Col>
-            <RangePicker onChange={(val) => setDateRange(val as any)} />
+            <DatePicker.RangePicker
+              disabledDate={disabledDate}
+              onChange={(val) => setDateRange(val ? [val] : [])}
+              format="DD-MM-YYYY"
+            />
           </Col>
 
           <Col>
@@ -946,8 +956,7 @@ const [tableTab, setTableTab] = useState("monthly");
                       </div>
                       <div
                         style={{
-                          color:
-                            d.value === "LV" ? "#a8071a" : d.value === "WO" ? "#d46b08" : "#0958d9",
+                          color: d.value === "LV" ? "#a8071a" : d.value === "WO" ? "#d46b08" : "#0958d9",
                           fontWeight: 600,
                           fontSize: 12,
                         }}
@@ -965,10 +974,14 @@ const [tableTab, setTableTab] = useState("monthly");
 
       {viewMode === "calendar" && (
         <Card
-          title={<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>Shift Calendar – {monthNameByIndex(calMonthIdx)} {calYear}</div>
-            <div style={{ fontWeight: 600 }}>{calSelectedInspector}</div>
-          </div>}
+          title={
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                Shift Calendar – {monthNameByIndex(calMonthIdx)} {calYear}
+              </div>
+              <div style={{ fontWeight: 600 }}>{calSelectedInspector}</div>
+            </div>
+          }
           bordered
         >
           <Calendar
@@ -983,17 +996,40 @@ const [tableTab, setTableTab] = useState("monthly");
         title="Edit Shift Details"
         open={isModalOpen}
         onOk={handleModalOk}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={() => {
+          setIsModalOpen(false);
+          setIsEditingSpecial(null);
+        }}
         okText="Save Changes"
         cancelText="Cancel"
         width={600}
       >
+        {/* Show alert when editing WO or Leave */}
+        {isEditingSpecial && (
+          <Alert
+            message={
+              isEditingSpecial === "WO"
+                ? "You are editing Week Off (WO) assignment"
+                : "You are editing Leave (LV) assignment"
+            }
+            description={
+              isEditingSpecial === "WO"
+                ? "Changing this will assign a zone and area instead of marking it as Week Off."
+                : "Changing this will assign a zone and area instead of marking it as Leave."
+            }
+            type="error"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
+
         <Form form={form} layout="vertical">
-          <Form.Item name="inspector" label="Inspector" rules={[{ required: true, message: "Please select inspector" }]}>
-            <Select
-              options={inspectorOptions.map((x) => ({ label: x, value: x }))}
-              placeholder="Select inspector"
-            />
+          <Form.Item
+            name="inspector"
+            label="Inspector"
+            rules={[{ required: true, message: "Please select inspector" }]}
+          >
+            <Select options={inspectorOptions.map((x) => ({ label: x, value: x }))} placeholder="Select inspector" />
           </Form.Item>
 
           <Form.Item name="shift" label="Shift" rules={[{ required: true, message: "Please select a shift" }]}>

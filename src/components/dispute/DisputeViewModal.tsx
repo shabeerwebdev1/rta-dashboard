@@ -32,7 +32,7 @@ import {
   useGetInspectionAttachmentsQuery,
   getMobileFileUrl,
 } from "../../services/rtkApiFactory";
-import { Image, Space } from "antd";
+import { Image, Space, theme } from "antd";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../common/ArcGISMap";
 import { useAuth } from "../../contexts/AuthContext";
@@ -52,6 +52,7 @@ interface DisputeViewModalProps {
 
 const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disputeId, onStatusUpdate }) => {
   const { t, i18n } = useTranslation();
+  const { token } = theme.useToken();
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const [form] = Form.useForm();
@@ -391,7 +392,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                   <Card
                     title={t("form.disputedetails")}
                     size="small"
-                    headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                    headStyle={{ background: token.colorBgContainer, fontWeight: 600 }}
                     style={{ marginBottom: 16 }}
                   >
                     <Row gutter={[0, 12]}>
@@ -465,7 +466,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     <Card
                       title={t("form.vehicleDetails")}
                       size="small"
-                      headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                      headStyle={{ background: token.colorBgContainer, fontWeight: 600 }}
                       style={{ marginBottom: 16 }}
                     >
                       <Row gutter={[0, 12]}>
@@ -530,7 +531,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                 title={t("form.finedetails")}
                 size="small"
                 style={{ borderRadius: 12, marginBottom: 16 }}
-                headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                headStyle={{ background: token.colorBgContainer, fontWeight: 600 }}
               >
                 {dispute.fineDetails ? (
                   <Row gutter={16}>
@@ -576,7 +577,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     title={t("common.location")}
                     size="small"
                     style={{ borderRadius: 12, marginBottom: 16 }}
-                    headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                    headStyle={{ background: token.colorBgContainer, fontWeight: 600 }}
                   >
                     {dispute?.lat && dispute?.lng ? (
                       <ArcGISMap
@@ -608,7 +609,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     title={t("form.AttachedPhotos")}
                     size="small"
                     style={{ borderRadius: 12, marginBottom: 16 }}
-                    headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                    headStyle={{ background: token.colorBgContainer, fontWeight: 600 }}
                   >
                     {isLoadingAttachments ? (
                       <Spin />
@@ -641,13 +642,13 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                 size="small"
                 style={{
                   borderRadius: 12,
-                  background: "#f0f7ff",
+                  background: token.colorBgContainer,
                   marginBottom: 16,
                   height: 760,
                   overflow: "hidden",
                 }}
                 headStyle={{
-                  background: "#e6f2ff",
+                  background: token.colorBgContainer,
                   fontWeight: 600,
                   color: "#1d4ed8",
                 }}
@@ -672,69 +673,55 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
 
                       return (
                         <Timeline.Item
-                          dot={<ClockCircleOutlined style={{ color: "#3b82f6" }} />}
+                          dot={<ClockCircleOutlined style={{ color: token.colorPrimary }} />}
                           color="blue"
                           key={idx}
                         >
                           <div
                             style={{
-                              background: "#fff",
-                              border: "1px solid #d9d9d9",
+                              background: token.colorBgElevated,
+                              border: `1px solid ${token.colorBorder}`,
                               borderRadius: 8,
                               padding: "10px 14px",
                               marginBottom: 8,
                             }}
                           >
-                            {/* Tag */}
-                            {/* <div style={{ marginBottom: 6 }}>
-                              <Tag color={tagColor}>{actionLabel}</Tag>
-                            </div> */}
-
-                            {/* Action Field */}
                             <div style={{ fontSize: "12px", marginBottom: 4 }}>
-                              <Text strong style={{ color: "#000" }}>
-                                {t("form.action")}:{" "}
+                              <Text strong style={{ color: token.colorText }}>
+                                {t("form.action")}:
                               </Text>
                               <Tag color={tagColor}>{actionLabel}</Tag>
                             </div>
 
-                            {/* Assigned To or Approved/Rejected By */}
-                            {isAssigned ? (
-                              <div style={{ fontSize: "12px", marginBottom: 4 }}>
-                                <Text strong style={{ color: "#000" }}>
-                                  {t("form.assignedTo")}:{" "}
-                                </Text>
-                                <Text style={{ color: "#6b7280" }}>
-                                  {review.assignedTo ? getSupervisorName(review.assignedTo) : t("common.unknown")}
-                                </Text>
-                              </div>
-                            ) : (
-                              <div style={{ fontSize: "12px", marginBottom: 4 }}>
-                                <Text strong style={{ color: "#000" }}>
-                                  {t("form.reviewedBy")}:{" "}
-                                </Text>
-                                <Text style={{ color: "#6b7280" }}>
-                                  {review.reviewedBy ? getSupervisorName(review.reviewedBy) : t("common.unknown")}
-                                </Text>
-                              </div>
-                            )}
-
-                            {/* Comments */}
                             <div style={{ fontSize: "12px", marginBottom: 4 }}>
-                              <Text strong style={{ color: "#000" }}>
-                                {t("form.comments")}:{" "}
+                              <Text strong style={{ color: token.colorText }}>
+                                {isAssigned ? t("form.assignedTo") : t("form.reviewedBy")}:
                               </Text>
-                              <Text style={{ color: "#6b7280" }}>
+                              <Text style={{ color: token.colorTextSecondary }}>
+                                {isAssigned
+                                  ? review.assignedTo
+                                    ? getSupervisorName(review.assignedTo)
+                                    : t("common.unknown")
+                                  : review.reviewedBy
+                                    ? getSupervisorName(review.reviewedBy)
+                                    : t("common.unknown")}
+                              </Text>
+                            </div>
+
+                            <div style={{ fontSize: "12px", marginBottom: 4 }}>
+                              <Text strong style={{ color: token.colorText }}>
+                                {t("form.comments")}:
+                              </Text>
+                              <Text style={{ color: token.colorTextSecondary }}>
                                 {review.review_Comments || t("common.noComments")}
                               </Text>
                             </div>
 
-                            {/* Date */}
                             <div style={{ fontSize: "12px" }}>
-                              <Text strong style={{ color: "#000" }}>
-                                {t("form.date")}:{" "}
+                              <Text strong style={{ color: token.colorText }}>
+                                {t("form.date")}:
                               </Text>
-                              <Text style={{ color: "#6b7280" }}>
+                              <Text style={{ color: token.colorTextSecondary }}>
                                 {review.action_DateTime ? formatDateTime(review.action_DateTime) : t("common.noDate")}
                               </Text>
                             </div>

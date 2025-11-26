@@ -172,7 +172,7 @@ const ReportsPage: React.FC = () => {
 
     const pdfUrl = URL.createObjectURL(blob);
     blobUrlsRef.current.push(pdfUrl);
-    setPreviewReportUrl(`${pdfUrl}#toolbar=0`);
+    setPreviewReportUrl(`${pdfUrl}#toolbar=0&zoom=80`);
     lastPreviewValuesRef.current = values;
     lastPreviewReportKeyRef.current = selectedReport;
   };

@@ -83,7 +83,8 @@
       "team-evaluation": "Team Evaluation",
       "criteria": "Criteria & Weights",
       "proactive-campaigns": "Proactive Campaigns",
-      "hrms": "HRMS Attendance"
+      "hrms": "HRMS Attendance",
+      "shiftplanning": "Create Shift Plan"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",
@@ -389,7 +390,7 @@
     "upcomingShifts": "Upcoming Shift Details",
     "MapLegend": "Map Legend",
     "StartPoint": "Start Point",
-    "InspectorPath" : "Inspector Path",
+    "InspectorPath": "Inspector Path",
     "FineLocations": "Fine Locations",
     "CurrentLocation": "Current Location"
   },
@@ -469,7 +470,10 @@
     "inProgress": "In Progress",
     "filterByDate": "Filter by Date:",
     "startDate": "Start Date",
-    "endDate": "End Date"
+    "endDate": "End Date",
+    "all": "All",
+    "next": "Next",
+    "previous": "Previous"
   },
   "entity": {
     "plate": "Plate",
@@ -654,5 +658,41 @@
     "disputes": "Disputes Report",
     "monthlyLeave": "Monthly Leave Report",
     "leaveRequest": "Leave Request Report"
+  },
+  "shiftPlanning": {
+    "title": "Create Shift Plan",
+    "planDate": "Plan Date",
+    "plan": "Plan",
+    "selectPlanDate": "Please select plan date",
+    "planLoaded": "Shift Plan Loaded",
+    "planLoadFailed": "Failed to load plan",
+    "apiError": "API error",
+    "dayNumber": "Day {{number}}",
+    "day": "Day",
+    "noShift": "No Shift",
+    "weekOff": "Week Off",
+    "leave": "Leave",
+    "selectZoneArea": "Please select both Zone and Area",
+    "shiftFilter": "Shift Filter",
+    "selectShifts": "Select Shifts",
+    "previousBatch": "previous batch",
+    "publishedBy": "Published by",
+    "publish": "Publish",
+    "inspectorWise": "Inspector Wise",
+    "selectInspector": "Select Inspector",
+    "weekView": "Week View",
+    "monthView": "Month View",
+    "allView": "View All",
+    "totalDays": "Total Days",
+    "weeks": "Weeks",
+    "days": "Days",
+    "page": "Page"
+  },
+  "shifts": {
+    "earlyMorning": "Early Morning",
+    "morning": "Morning",
+    "evening": "Evening",
+    "lateEvening": "Late Evening",
+    "afternoon": "After Noon"
   }
 }

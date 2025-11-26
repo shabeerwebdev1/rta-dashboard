@@ -55,7 +55,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
   onViewAttachments,
 }) => {
   const {
-    token: { borderRadius },
+    token: { borderRadius, colorBgContainer },
   } = theme.useToken();
 
   const { t, i18n } = useTranslation();
@@ -286,7 +286,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                 <Card
                   title={t("form.finedetails")}
                   size="small"
-                  headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                  headStyle={{ background: colorBgContainer, fontWeight: 600 }}
                   style={{ marginBottom: 16, borderRadius: 12 }}
                 >
                   <Row gutter={[0, 12]}>
@@ -389,7 +389,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                       </span>
                     }
                     size="small"
-                    headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                    headStyle={{ background:colorBgContainer, fontWeight: 600 }}
                     style={{ marginBottom: 16, borderRadius: 12 }}
                   >
                     {/* Vehicle Plate at the top of Vehicle Details */}
@@ -439,7 +439,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
               title={t("form.violationDetails")}
               size="small"
               style={{ marginBottom: 16, borderRadius: 12 }}
-              headStyle={{ background: "#fafafa", fontWeight: 600 }}
+              headStyle={{ background: colorBgContainer, fontWeight: 600 }}
             >
               {violationDetails?.length === 0 ? (
                 <Empty description={t("form.Noviolationdetailsavailable")} />
@@ -454,7 +454,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                           alignItems: "center",
                           border: "1px solid #e8e8e8",
                           padding: "8px 12px",
-                          background: "#fff",
+                          background: colorBgContainer,
                           marginBottom: "5px",
                           borderRadius: borderRadius,
                         }}
@@ -481,7 +481,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                 title={t("form.approvalActions")}
                 size="small"
                 style={{ marginBottom: 16, borderRadius: 12 }}
-                headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                headStyle={{ background: colorBgContainer, fontWeight: 600 }}
               >
                 <Form
                   form={form}
@@ -529,7 +529,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                   title={t("form.FineLocation")}
                   size="small"
                   style={{ borderRadius: 12, marginBottom: 16 }}
-                  headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                  headStyle={{ background: colorBgContainer, fontWeight: 600 }}
                 >
                   {mappedFine.latitude && mappedFine.longitude ? (
                     <ArcGISMap
@@ -562,7 +562,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                   title={t("form.AttachedPhotos")}
                   size="small"
                   style={{ borderRadius: 12, marginBottom: 16 }}
-                  headStyle={{ background: "#fafafa", fontWeight: 600 }}
+                  headStyle={{ background: colorBgContainer, fontWeight: 600 }}
                 >
                   <Spin spinning={isLoadingAttachments}>
                     {attachments.length > 0 ? (
