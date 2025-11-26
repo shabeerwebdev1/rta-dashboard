@@ -397,7 +397,11 @@
     "StartPoint": "نقطة البداية",
     "InspectorPath": "مسار المفتش",
     "FineLocations": "مواقع الغرامات",
-    "CurrentLocation": "الموقع الحالي"
+    "CurrentLocation": "الموقع الحالي",
+    "pickLocationOnMap" : "اختر الموقع على الخريطة",
+    "locationOnMap" : "الموقع على الخريطة"
+
+
   },
   "common": {
     "action": "إجراء",
@@ -506,7 +510,9 @@
     "assigned": "مُعين",
     "present": "حاضر",
     "absent": "غائب",
-    "leave": "إجازة"
+    "leave": "إجازة",
+    "inProgress": "قيد التنفيذ",
+    "completed": "مكتمل"
   },
   "placeholders": {
     "plateNumber": "أدخل رقم اللوحة",

@@ -392,7 +392,9 @@
     "StartPoint": "Start Point",
     "InspectorPath": "Inspector Path",
     "FineLocations": "Fine Locations",
-    "CurrentLocation": "Current Location"
+    "CurrentLocation": "Current Location",
+    "pickLocationOnMap" : "Pick Location on Map",
+    "locationOnMap" : "Location on Map"
   },
   "common": {
     "action": "Action",
@@ -505,7 +507,9 @@
     "assigned": "Assigned",
     "present": "Present",
     "absent": "Absent",
-    "leave": "Leave"
+    "leave": "Leave",
+    "inProgress": "In Progress",
+    "completed": "Completed"
   },
   "placeholders": {
     "plateNumber": "Enter the plate number",

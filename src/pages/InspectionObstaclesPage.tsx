@@ -18,6 +18,7 @@ import {
   Spin,
   Tag,
   Image,
+  message,
 } from "antd";
 import { PlusOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
@@ -42,8 +43,33 @@ import DataTableWrapper from "../components/common/DataTableWrapper";
 import InspectionObstaclesViewDrawer from "../components/inspectionobstacle/InspectionObstaclesViewDrawer";
 import { usePermission } from "../hooks/usePermission";
 
+// ArcGISMap - make sure the file at this path supports onLocationPick, center, zoom, pickedLat/pickedLng
+import ArcGISMap from "../components/common/ArcGISMap";
+import { SorterResult } from "antd/es/table/interface";
+
 const { Option } = Select;
 const pageKey = "inspection-obstacles";
+
+// Area coordinates data (used to zoom & validate)
+const AREA_COORDINATES = [
+  { area: "Bur dubai", lat: 25.2146, lng: 55.3033 },
+  { area: "Business Bay", lat: 25.184242, lng: 55.27243 },
+  { area: "Sheikh Zayed Road", lat: 25.216278, lng: 55.278774 },
+  { area: "Al Quoz", lat: 25.1595803, lng: 55.2540203 },
+  { area: "Al Jaddaf", lat: 25.2218696, lng: 55.3359246 },
+  { area: "Emirates area", lat: 25.1021, lng: 55.2314 },
+  { area: "Dubai Metro", lat: 25.1783, lng: 55.3567 },
+  { area: "MBZ CITY", lat: 25.0458, lng: 55.2912 },
+  { area: "City Centre Hyper Market", lat: 25.2674, lng: 55.4129 },
+  { area: "Jumeirah Park", lat: 25.0423, lng: 55.1669 },
+  { area: "Jabel Ali", lat: 24.986503, lng: 55.09052 },
+  { area: "Emaar South", lat: 24.9577, lng: 55.1299 },
+  { area: "Emaar North", lat: 25.2891, lng: 55.3433 },
+  { area: "Deira", lat: 25.266666, lng: 55.316666 },
+  { area: "Naakhil", lat: 25.1734, lng: 55.4032 },
+];
+
+const ONE_KM = 1000; // 1 km radius validation (you selected option B)
 
 // Helper function to get label from value based on current language
 const getLabelFromValue = (value: number | string, options: any[], i18n: any) => {
@@ -54,7 +80,22 @@ const getLabelFromValue = (value: number | string, options: any[], i18n: any) =>
 
 // Helper function to filter options by category
 const filterOptionsByCategory = (options: any[], categoryId: number) => {
-  return options.filter((option) => option.categoryId === categoryId);
+  return (options || []).filter((option) => option.categoryId === categoryId);
+};
+
+// Haversine distance (meters)
+const getDistanceInMeters = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+  const R = 6371e3; // metres
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const φ1 = toRad(lat1),
+    φ2 = toRad(lat2);
+  const Δφ = toRad(lat2 - lat1);
+  const Δλ = toRad(lng2 - lng1);
+
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
 };
 
 const InspectionObstaclesPage: React.FC = () => {
@@ -100,8 +141,15 @@ const InspectionObstaclesPage: React.FC = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
 
-  //state to maintain the rows data for downlaoding
-  const [selectedRows, setSelectedRows] = useState([]);
+  // state to maintain the rows data for downloading
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+
+  // Map related states
+  const [mapCenter, setMapCenter] = useState<[number, number]>([55.2743, 25.1972]); // [lng, lat]
+  const [mapZoom, setMapZoom] = useState<number>(12);
+  const [areaCenter, setAreaCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [pickedLatitude, setPickedLatitude] = useState<number | null>(null);
+  const [pickedLongitude, setPickedLongitude] = useState<number | null>(null);
 
   const getBase64 = (file: File) =>
     new Promise<string>((resolve, reject) => {
@@ -190,17 +238,33 @@ const InspectionObstaclesPage: React.FC = () => {
     clearAll();
   };
 
-  const handleModalOpen = () => setIsModalOpen(true);
+  const handleModalOpen = () => {
+    // Reset map and picked coords when opening modal
+    setPickedLatitude(null);
+    setPickedLongitude(null);
+    setAreaCenter(null);
+    setMapCenter([55.2743, 25.1972]);
+    setMapZoom(12);
+    setIsModalOpen(true);
+  };
+
   const handleModalClose = () => {
     setIsModalOpen(false);
     form.resetFields();
+    setPickedLatitude(null);
+    setPickedLongitude(null);
+    setAreaCenter(null);
+    setMapCenter([55.2743, 25.1972]);
+    setMapZoom(12);
   };
 
   // Update the zone onChange handler to filter areas and enable the field
   const handleZoneChange = (zoneId: number) => {
-    form.setFieldsValue({ Area: undefined }); // reset Area when Zone changes
+    form.setFieldsValue({ Area: undefined, Latitude: undefined, Longitude: undefined });
+    setPickedLatitude(null);
+    setPickedLongitude(null);
+    setAreaCenter(null);
 
-    // Filter areas by zoneId
     const filteredAreas =
       allAreasData
         ?.filter((area: any) => area.zone_Id === zoneId)
@@ -212,6 +276,36 @@ const InspectionObstaclesPage: React.FC = () => {
         })) || [];
 
     setFilteredAreaOptions(filteredAreas);
+  };
+
+  // When area changes: set areaCenter, map center and zoom; clear picked coords
+  const handleAreaChange = (areaId: number) => {
+    const selectedArea = allAreasData?.find((a: any) => a.area_Id === areaId);
+    if (!selectedArea) {
+      setAreaCenter(null);
+      setMapCenter([55.2743, 25.1972]);
+      setMapZoom(12);
+      return;
+    }
+
+    const name = selectedArea.area;
+    const areaInfo = AREA_COORDINATES.find((ac) => ac.area.toLowerCase() === name.toLowerCase());
+
+    if (areaInfo) {
+      setAreaCenter({ lat: areaInfo.lat, lng: areaInfo.lng });
+      setMapCenter([areaInfo.lng, areaInfo.lat]);
+      setMapZoom(15);
+    } else {
+      // fallback center
+      setAreaCenter(null);
+      setMapCenter([55.2743, 25.1972]);
+      setMapZoom(12);
+    }
+
+    // Clear previously picked coordinates
+    setPickedLatitude(null);
+    setPickedLongitude(null);
+    form.setFieldsValue({ Latitude: undefined, Longitude: undefined });
   };
 
   const generateGuid = () =>
@@ -235,6 +329,7 @@ const InspectionObstaclesPage: React.FC = () => {
         closestPaymentDevice: values.ClosestPaymentDevice,
         comments: values.Comments || "",
         requestFrom: "",
+        // NOTE: lat/long are gathered in the form but not sent to backend yet (per requirement).
       };
 
       await addObstacle(obstaclePayload).unwrap();
@@ -412,9 +507,6 @@ const InspectionObstaclesPage: React.FC = () => {
       cancelText: t("common.cancel"),
       onOk: () => {
         try {
-          // Get the selected data from the current page data
-          //const selectedRows = platesData.filter((item: any) => selectedRowKeys.includes(item.iid));
-
           if (selectedRows.length === 0) {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
             return;
@@ -564,6 +656,73 @@ const InspectionObstaclesPage: React.FC = () => {
     };
   }, [data]);
 
+  // Map location pick handler (called by ArcGISMap when user clicks)
+  const onMapLocationPick = (lat: number, lng: number) => {
+    console.log("Map clicked at:", lat, lng);
+
+    // ❗ VALIDATION 1 — Area must be selected
+    if (!areaCenter) {
+      notification.error(
+        {
+          data: {
+            en_Msg: "Please select an area first",
+            ar_Msg: "يرجى اختيار المنطقة أولاً",
+          },
+        },
+        "Validation Error",
+      );
+
+      setPickedLatitude(null);
+      setPickedLongitude(null);
+      form.setFieldsValue({ Latitude: undefined, Longitude: undefined });
+      return;
+    }
+
+    // ❗ VALIDATION 2 — Must be within 1 km
+    const distance = getDistanceInMeters(areaCenter.lat, areaCenter.lng, lat, lng);
+    console.log("Distance:", distance);
+
+    if (distance > ONE_KM) {
+      notification.error(
+        {
+          data: {
+            en_Msg: "Please select a point within the selected area (within 1 km).",
+            ar_Msg: "يرجى اختيار نقطة داخل المنطقة المختارة (في حدود 1 كم).",
+          },
+        },
+        "Invalid Location",
+      );
+
+      setPickedLatitude(null);
+      setPickedLongitude(null);
+      form.setFieldsValue({ Latitude: undefined, Longitude: undefined });
+      return;
+    }
+
+    // ✅ VALID PICK — Save it
+    const formattedLat = parseFloat(lat.toFixed(6));
+    const formattedLng = parseFloat(lng.toFixed(6));
+
+    setPickedLatitude(formattedLat);
+    setPickedLongitude(formattedLng);
+
+    form.setFieldsValue({
+      Latitude: formattedLat,
+      Longitude: formattedLng,
+    });
+
+    // SUCCESS NOTIFICATION
+    notification.success(
+      {
+        data: {
+          en_Msg: `Location picked successfully`,
+          ar_Msg: `تم اختيار الموقع بنجاح`,
+        },
+      },
+      "Location Picked",
+    );
+  };
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <StatsDisplay statsConfig={config.statsConfig} data={platesData} metadata={metadata} loading={isLoading} />
@@ -637,7 +796,7 @@ const InspectionObstaclesPage: React.FC = () => {
         handlePaginationChange={handlePaginationChange}
         rowSelection={{
           selectedRowKeys,
-          onChange: (keys: React.Key[], selectedRows: any[]) => {
+          onChange: (keys: React.Key[], selectedRowsParam: any[]) => {
             setSelectedRowKeys(keys);
 
             setSelectedRows((prev) => {
@@ -645,7 +804,7 @@ const InspectionObstaclesPage: React.FC = () => {
               const remaining = prev.filter((p) => keys.includes(p.id));
 
               // Add newly selected rows (avoid duplicates)
-              const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+              const newSelected = selectedRowsParam.filter((r) => !remaining.some((p) => p.id === r.id));
 
               return [...remaining, ...newSelected];
             });
@@ -667,9 +826,10 @@ const InspectionObstaclesPage: React.FC = () => {
 
       <Modal
         open={isModalOpen}
+        style={{ top: 20 }}
         title={t("page.addTitle", { entity: t(config.name.singular) })}
         onCancel={handleModalClose}
-        width="720px"
+        width="750px"
         footer={[
           <Button key="reset" onClick={() => form.resetFields()}>
             {t("common.reset")}
@@ -690,6 +850,7 @@ const InspectionObstaclesPage: React.FC = () => {
         <Spin spinning={isLoadingLookups || isLoadingZones || isLoadingAllAreas}>
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
             <Row gutter={24}>
+              {/* ZONE */}
               <Col span={12}>
                 <Form.Item
                   name="Zone"
@@ -699,16 +860,15 @@ const InspectionObstaclesPage: React.FC = () => {
                   <Select
                     placeholder={t("placeholders.zone")}
                     loading={isLoadingZones}
-                    options={zoneOptions.map((opt) => ({
-                      label: opt.label,
-                      value: opt.value,
-                    }))}
+                    options={zoneOptions.map((opt) => ({ label: opt.label, value: opt.value }))}
                     showSearch
                     filterOption={(input, option) => (option?.label ?? "").toLowerCase().includes(input.toLowerCase())}
                     onChange={handleZoneChange}
                   />
                 </Form.Item>
               </Col>
+
+              {/* AREA */}
               <Col span={12}>
                 <Form.Item
                   name="Area"
@@ -720,29 +880,68 @@ const InspectionObstaclesPage: React.FC = () => {
                     loading={isLoadingAllAreas}
                     options={filteredAreaOptions}
                     showSearch
-                    filterOption={(input, option) => (option?.label ?? "").toLowerCase().includes(input.toLowerCase())}
                     disabled={!form.getFieldValue("Zone")}
+                    onChange={(val) => handleAreaChange(val as number)}
                   />
                 </Form.Item>
               </Col>
+
+              {/* MAP SECTION */}
+              <Col span={24}>
+                <Form.Item label={t("form.pickLocationOnMap")}>
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "260px",
+                      borderRadius: 10,
+                      border: "1px solid #e5e5e5",
+                      overflow: "hidden",
+                      marginBottom: 10,
+                    }}
+                  >
+                    <ArcGISMap
+                      inspectors={[]}
+                      center={mapCenter}
+                      zoom={mapZoom}
+                      height="260px"
+                      clickable={true}
+                      onLocationPick={onMapLocationPick}
+                      pickedLat={pickedLatitude}
+                      pickedLng={pickedLongitude}
+                      showPath={false}
+                      showFineLocations={false}
+                    />
+                  </div>
+                </Form.Item>
+              </Col>
+
+              {/* LAT / LNG */}
+              <Col span={12}>
+                <Form.Item name="Latitude" label={t("form.latitude")}>
+                  <Input readOnly placeholder={t("placeholders.latitude")} value={pickedLatitude ?? ""} />
+                </Form.Item>
+              </Col>
+
+              <Col span={12}>
+                <Form.Item name="Longitude" label={t("form.longitude")}>
+                  <Input readOnly placeholder={t("placeholders.longitude")} value={pickedLongitude ?? ""} />
+                </Form.Item>
+              </Col>
+
+              {/* SOURCE */}
               <Col span={12}>
                 <Form.Item
                   name="SourceOfObstacle"
                   label={t("form.sourceOfObstacle")}
-                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.sourceOfObstacle") }) }]}
+                  rules={[
+                    { required: true, message: t("validation.selectRequired", { field: t("form.sourceOfObstacle") }) },
+                  ]}
                 >
-                  <Select
-                    placeholder={t("placeholders.sourceOfObstacle")}
-                    showSearch
-                    optionFilterProp="label"
-                    filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
-                    options={sourceOptions.map((option) => ({
-                      label: option.label,
-                      value: option.value,
-                    }))}
-                  />
+                  <Select placeholder={t("placeholders.sourceOfObstacle")} options={sourceOptions} showSearch />
                 </Form.Item>
               </Col>
+
+              {/* CLOSEST PD */}
               <Col span={12}>
                 <Form.Item
                   name="ClosestPaymentDevice"
@@ -752,6 +951,8 @@ const InspectionObstaclesPage: React.FC = () => {
                   <Input placeholder={t("placeholders.closestPaymentDevice")} maxLength={20} />
                 </Form.Item>
               </Col>
+
+              {/* PHOTO */}
               <Col span={24}>
                 <Form.Item
                   name="Photo"
@@ -794,9 +995,11 @@ const InspectionObstaclesPage: React.FC = () => {
                   />
                 )}
               </Col>
+
+              {/* COMMENTS */}
               <Col span={24}>
                 <Form.Item name="Comments" label={t("form.comments")}>
-                  <Input.TextArea placeholder={t("placeholders.comments")} maxLength={4000} />
+                  <Input.TextArea placeholder={t("placeholders.comments")} rows={2} />
                 </Form.Item>
               </Col>
             </Row>
@@ -815,7 +1018,7 @@ const InspectionObstaclesPage: React.FC = () => {
           config={config}
           onShare={handleShare}
           onStatusChange={() => {
-            // This will trigger a refetch of the data
+            // This will trigger a refetch of the data if drawer triggers it
           }}
           zoneOptions={zoneOptions}
           sourceOptions={sourceOptions}

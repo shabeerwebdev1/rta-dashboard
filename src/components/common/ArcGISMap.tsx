@@ -51,6 +51,10 @@ interface ArcGISMapProps {
   fineLocations?: FineLocation[];
   showPath?: boolean;
   showFineLocations?: boolean;
+  // ✅ NEW: Location picking props
+  onLocationPick?: (lat: number, lng: number) => void;
+  pickedLat?: number | null;
+  pickedLng?: number | null;
 }
 
 const featureServiceUrls = [
@@ -71,11 +75,16 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   fineLocations = [],
   showPath = true,
   showFineLocations = true,
+  // ✅ NEW: Location picking props
+  onLocationPick,
+  pickedLat = null,
+  pickedLng = null,
 }) => {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<__esri.MapView | null>(null);
   const featureLayersRef = useRef<__esri.FeatureLayer[]>([]);
   const [basemap, setBasemap] = useState("streets-navigation-vector");
+  const locationMarkerRef = useRef<__esri.Graphic | null>(null);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -133,6 +142,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         viewRef.current = null;
       }
       featureLayersRef.current = [];
+      locationMarkerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -141,12 +151,89 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     if (viewRef.current) viewRef.current.map.basemap = basemap as any;
   }, [basemap]);
 
+  // ✅ NEW: Handle location picking when map is clicked
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+  
+    const clickHandle = view.on("click", (event: any) => {
+      const { latitude, longitude } = event.mapPoint;
+  
+      // Send picked location up to parent
+      if (onLocationPick) {
+        onLocationPick(latitude, longitude);
+      }
+  
+      // Handle inspector click if exists
+      if (onInspectorClick) {
+        view.hitTest(event).then((response: any) => {
+          const g = response.results?.[0]?.graphic;
+          const inspector = g?.attributes?.inspector;
+          if (inspector) onInspectorClick(inspector);
+        });
+      }
+    });
+  
+    return () => clickHandle.remove();
+  }, [onLocationPick, onInspectorClick]);
+  
+  
+
+  // ✅ NEW: Handle picked location marker
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
 
-    view.graphics.removeAll();
+    // Remove previous location marker
+    if (locationMarkerRef.current) {
+      view.graphics.remove(locationMarkerRef.current);
+      locationMarkerRef.current = null;
+    }
 
+    // Add new marker if coordinates are provided
+    if (pickedLat !== null && pickedLng !== null) {
+      const point = new Point({
+        longitude: pickedLng,
+        latitude: pickedLat,
+        spatialReference: { wkid: 4326 },
+      });
+
+      const markerSymbol = new SimpleMarkerSymbol({
+        color: [255, 0, 0], // Red color
+        size: 12,
+        outline: {
+          color: [255, 255, 255],
+          width: 2,
+        },
+      });
+
+      const marker = new Graphic({
+        geometry: point,
+        symbol: markerSymbol,
+      });
+
+      view.graphics.add(marker);
+      locationMarkerRef.current = marker;
+
+      // Center map on the picked location
+      view
+        .goTo({
+          center: [pickedLng, pickedLat],
+          zoom: 16,
+        })
+        .catch(console.warn);
+    }
+  }, [pickedLat, pickedLng]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+
+    view.graphics.forEach((g) => {
+      if (g !== locationMarkerRef.current) {
+        view.graphics.remove(g);
+      }
+    });
     const toDraw = onlyInspector ? [onlyInspector] : inspectors;
 
     console.log("=== ArcGIS Map Rendering Debug ===");
@@ -285,8 +372,8 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       }
 
       const point = new Point({
-        longitude: avatarLng,  // ✅ Use calculated position
-        latitude: avatarLat,   // ✅ Use calculated position
+        longitude: avatarLng, // ✅ Use calculated position
+        latitude: avatarLat, // ✅ Use calculated position
         spatialReference: { wkid: 4326 },
       });
 
@@ -338,14 +425,14 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       toDraw.forEach((inspector) => {
         let lng = inspector.lng;
         let lat = inspector.lat;
-        
+
         // Use the same logic as above for consistent positioning
         if (showPath && inspectorPath && inspectorPath.length > 0) {
           const lastPathPoint = inspectorPath[inspectorPath.length - 1];
           lng = lastPathPoint.lng;
           lat = lastPathPoint.lat;
         }
-        
+
         allPoints.push({ lng, lat });
       });
 
@@ -388,7 +475,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       }
     }
 
-    // ✅ 5. Handle click events
+    // ✅ 5. Handle inspector click events (separate from location picking)
     let clickHandle: any = null;
     if (clickable && onInspectorClick) {
       try {
