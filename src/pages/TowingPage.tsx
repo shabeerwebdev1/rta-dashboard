@@ -47,11 +47,15 @@ const TowingPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
-  //state to maintain the rows data for downlaoding
+  //state to maintain the rows data for downloading
   const [selectedRows, setSelectedRows] = useState([]);
 
-  // Fetch towing data from API
-  const { data, isFetching } = useGetTowingDetailsQuery(apiParams);
+  // ✅ FIX: Fetch towing data from API with proper caching control
+  const { data, isFetching } = useGetTowingDetailsQuery(apiParams, {
+    refetchOnMountOrArgChange: false, // Prevent refetch on mount if data exists
+    refetchOnFocus: false, // Prevent refetch when window regains focus
+    refetchOnReconnect: false, // Prevent refetch on network reconnect
+  });
 
   const apiData = data?.data || [];
   const total = data?.total || 0;
@@ -102,8 +106,6 @@ const TowingPage: React.FC = () => {
       okText: t("common.ok"),
       cancelText: t("common.cancel"),
       onOk: () => {
-        //const selectedData = apiData.filter((item: any) => selectedRowKeys.includes(item.inspectionGUID)) || [];
-
         // Format data to match UI table display
         const formattedData = selectedRows.map((item: any, index: number) => {
           const csvRow: any = {};
@@ -285,10 +287,12 @@ const TowingPage: React.FC = () => {
 
               setSelectedRows((prev) => {
                 // Remove rows that are no longer selected
-                const remaining = prev.filter((p) => keys.includes(p.id));
+                const remaining = prev.filter((p: any) => keys.includes(p.inspectionGUID));
 
                 // Add newly selected rows (avoid duplicates)
-                const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+                const newSelected = selectedRows.filter(
+                  (r) => !remaining.some((p: any) => p.inspectionGUID === r.inspectionGUID),
+                );
 
                 return [...remaining, ...newSelected];
               });

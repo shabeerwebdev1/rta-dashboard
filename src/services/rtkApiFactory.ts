@@ -486,6 +486,13 @@ export const dynamicApi = createApi({
       invalidatesTags: ["Towing"],
     }),
 
+    //Towing Evidence
+    getTowingEvidence: builder.query({
+      query: (params) => ({ url: "/api/Towing/TowingEvidence", params }),
+      transformResponse: transformListResponse,
+      providesTags: ["Towing"],
+    }),
+
     // Parkonic Location
     getParkonicsLocation: builder.query({
       query: (params) => ({ url: "/api/ParkonicsLocation", params }),
@@ -630,6 +637,7 @@ export const {
   // Towing Approvals
   useGetTowingDetailsQuery,
   useUpdateTowingStatusMutation,
+  useGetTowingEvidenceQuery,
 
   // Parkonic Location
   useGetParkonicsLocationQuery,

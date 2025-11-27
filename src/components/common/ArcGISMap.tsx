@@ -23,7 +23,7 @@ export type Inspector = {
   status: string;
   statusAr: string;
   details?: { zone: string; lastCheckIn: string };
-  markerType?: "default" | "google-pin";
+  markerType?: "default" | "google-pin" | "start" | "end";
   zone?: string;
 };
 
@@ -55,6 +55,10 @@ interface ArcGISMapProps {
   onLocationPick?: (lat: number, lng: number) => void;
   pickedLat?: number | null;
   pickedLng?: number | null;
+  // ✅ NEW: Towing route props
+  showTowingRoute?: boolean;
+  towingStartPoint?: { lat: number; lng: number };
+  towingEndPoint?: { lat: number; lng: number };
 }
 
 const featureServiceUrls = [
@@ -79,6 +83,10 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   onLocationPick,
   pickedLat = null,
   pickedLng = null,
+  // ✅ NEW: Towing route props
+  showTowingRoute = false,
+  towingStartPoint,
+  towingEndPoint,
 }) => {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<__esri.MapView | null>(null);
@@ -155,15 +163,15 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
-  
+
     const clickHandle = view.on("click", (event: any) => {
       const { latitude, longitude } = event.mapPoint;
-  
+
       // Send picked location up to parent
       if (onLocationPick) {
         onLocationPick(latitude, longitude);
       }
-  
+
       // Handle inspector click if exists
       if (onInspectorClick) {
         view.hitTest(event).then((response: any) => {
@@ -173,11 +181,9 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         });
       }
     });
-  
+
     return () => clickHandle.remove();
   }, [onLocationPick, onInspectorClick]);
-  
-  
 
   // ✅ NEW: Handle picked location marker
   useEffect(() => {
@@ -241,6 +247,9 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     console.log("Fine Locations:", fineLocations);
     console.log("Show Path:", showPath);
     console.log("Show Fine Locations:", showFineLocations);
+    console.log("Show Towing Route:", showTowingRoute);
+    console.log("Towing Start:", towingStartPoint);
+    console.log("Towing End:", towingEndPoint);
 
     // ✅ 1. Draw Inspector Path (Polyline) - FIXED FORMAT
     if (showPath && inspectorPath && inspectorPath.length > 1) {
@@ -358,7 +367,91 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       });
     }
 
-    // ✅ 3. Draw Inspectors (Main markers) - AVATAR AT END POINT
+    // ✅ 3. Draw Towing Route (Start → End) with line and markers
+    if (showTowingRoute && towingStartPoint && towingEndPoint) {
+      console.log("Drawing towing route");
+
+      // Draw route line (orange dashed line)
+      const routeLine = new Polyline({
+        paths: [
+          [
+            [towingStartPoint.lng, towingStartPoint.lat],
+            [towingEndPoint.lng, towingEndPoint.lat],
+          ],
+        ],
+        spatialReference: { wkid: 4326 },
+      });
+
+      const routeSymbol = new SimpleLineSymbol({
+        color: [255, 140, 0, 0.8], // Orange line for towing route
+        width: 5,
+        style: "dash",
+      });
+
+      const routeGraphic = new Graphic({
+        geometry: routeLine,
+        symbol: routeSymbol,
+        attributes: { type: "towingRoute" },
+      });
+
+      view.graphics.add(routeGraphic);
+      console.log("Towing route line added");
+
+      // Draw start marker (green)
+      const startPoint = new Point({
+        longitude: towingStartPoint.lng,
+        latitude: towingStartPoint.lat,
+        spatialReference: { wkid: 4326 },
+      });
+
+      const startSymbol = new SimpleMarkerSymbol({
+        color: [0, 255, 0, 0.9],
+        size: 18,
+        outline: { color: [255, 255, 255], width: 3 },
+      });
+
+      const startGraphic = new Graphic({
+        geometry: startPoint,
+        symbol: startSymbol,
+        attributes: { type: "towingStart" },
+        popupTemplate: {
+          title: "Towing Start",
+          content: "Vehicle pickup location",
+        },
+      });
+
+      view.graphics.add(startGraphic);
+      console.log("Towing start marker added");
+
+      // Draw end marker (red)
+      const endPoint = new Point({
+        longitude: towingEndPoint.lng,
+        latitude: towingEndPoint.lat,
+        spatialReference: { wkid: 4326 },
+      });
+
+      const endSymbol = new SimpleMarkerSymbol({
+        color: [255, 0, 0, 0.9],
+        size: 18,
+        outline: { color: [255, 255, 255], width: 3 },
+      });
+
+      const endGraphic = new Graphic({
+        geometry: endPoint,
+        symbol: endSymbol,
+        attributes: { type: "towingEnd" },
+        popupTemplate: {
+          title: "Towing End",
+          content: "Vehicle drop-off location",
+        },
+      });
+
+      view.graphics.add(endGraphic);
+      console.log("Towing end marker added");
+      console.log("Towing route completed");
+    }
+
+    // ✅ 4. Draw Inspectors (Main markers) - AVATAR AT END POINT
     toDraw.forEach((inspector, index) => {
       // ✅ CRITICAL FIX: Use last path point as avatar position if path exists
       let avatarLng = inspector.lng;
@@ -377,18 +470,34 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         spatialReference: { wkid: 4326 },
       });
 
-      const symbol =
-        inspector.markerType === "google-pin"
-          ? new PictureMarkerSymbol({
-              url: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png",
-              width: "32px",
-              height: "32px",
-            })
-          : new PictureMarkerSymbol({
-              url: "/images/Inspector.png",
-              width: "40px",
-              height: "40px",
-            });
+      let symbol;
+
+      // ✅ Handle different marker types
+      if (inspector.markerType === "google-pin") {
+        symbol = new PictureMarkerSymbol({
+          url: "https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png",
+          width: "32px",
+          height: "32px",
+        });
+      } else if (inspector.markerType === "start") {
+        symbol = new SimpleMarkerSymbol({
+          color: [0, 255, 0, 0.9],
+          size: 18,
+          outline: { color: [255, 255, 255], width: 3 },
+        });
+      } else if (inspector.markerType === "end") {
+        symbol = new SimpleMarkerSymbol({
+          color: [255, 0, 0, 0.9],
+          size: 18,
+          outline: { color: [255, 255, 255], width: 3 },
+        });
+      } else {
+        symbol = new PictureMarkerSymbol({
+          url: "/images/Inspector.png",
+          width: "40px",
+          height: "40px",
+        });
+      }
 
       const graphic = new Graphic({
         geometry: point,
@@ -409,7 +518,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
 
     console.log("Total graphics in view:", view.graphics.length);
 
-    // ✅ 4. Auto-zoom to fit all content
+    // ✅ 5. Auto-zoom to fit all content
     if (onlyInspector) {
       const lng = onlyInspector.lng;
       const lat = onlyInspector.lat;
@@ -418,7 +527,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         .goTo({ center: [lng, lat], zoom: SINGLE_ZOOM }, { duration: 600 })
         .catch((e) => console.warn("goTo single inspector failed:", e));
     } else {
-      // Calculate extent based on all points (inspectors, path, fines)
+      // Calculate extent based on all points (inspectors, path, fines, towing route)
       const allPoints: Array<{ lng: number; lat: number }> = [];
 
       // Add inspector positions (using updated avatar positions)
@@ -444,6 +553,12 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       // Add fine locations
       if (fineLocations && fineLocations.length > 0) {
         fineLocations.forEach((f) => allPoints.push({ lng: f.lng, lat: f.lat }));
+      }
+
+      // ✅ Add towing route points
+      if (showTowingRoute && towingStartPoint && towingEndPoint) {
+        allPoints.push({ lng: towingStartPoint.lng, lat: towingStartPoint.lat });
+        allPoints.push({ lng: towingEndPoint.lng, lat: towingEndPoint.lat });
       }
 
       console.log("Total points for extent calculation:", allPoints.length);
@@ -475,7 +590,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       }
     }
 
-    // ✅ 5. Handle inspector click events (separate from location picking)
+    // ✅ 6. Handle inspector click events (separate from location picking)
     let clickHandle: any = null;
     if (clickable && onInspectorClick) {
       try {
@@ -505,6 +620,9 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     fineLocations,
     showPath,
     showFineLocations,
+    showTowingRoute,
+    towingStartPoint,
+    towingEndPoint,
   ]);
 
   const menu = (

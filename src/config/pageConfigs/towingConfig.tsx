@@ -30,7 +30,6 @@ export const mapTowingStatus = (statusString: string): TowingStatus => {
   }
 };
 
-
 const statusMap: Record<string, { text: string; color: string }> = {
   [TowingStatus.Pending]: { text: "Pending", color: "blue" },
   [TowingStatus.Approved]: { text: "Approved", color: "green" },
@@ -142,7 +141,6 @@ export const towingConfig: PageConfig = {
         filterable: true,
         render: (status: string) => {
           const statusEnum = mapTowingStatus(status);
-          console.log("Rendering status:", status, "Mapped enum:", statusEnum);
 
           const { text, color } = statusMap[statusEnum] || { text: "Unknown", color: "default" };
           return <Tag color={color}>{text}</Tag>;

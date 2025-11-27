@@ -4,13 +4,25 @@ import {
   useUpdateTowingStatusMutation,
   useGetInspectionAttachmentsQuery,
   getMobileFileUrl,
+  useGetTowingEvidenceQuery,
+  getFileUrl,
 } from "../../services/rtkApiFactory";
 import { useTranslation } from "react-i18next";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../common/ArcGISMap";
 import { useAppNotification } from "../../utils/notificationManager";
+import dayjs from "dayjs";
 
 const { Title } = Typography;
+
+export enum TowingStatus {
+  Pending = "PENDING",
+  Approved = "APPROVED",
+  Rejected = "REJECTED",
+  Cancelled = "CANCELLED",
+  InProgress = "IN_TOWING",
+  Completed = "COMPLETED",
+}
 
 interface TowingViewDrawerProps {
   open: boolean;
@@ -24,81 +36,86 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
   const [updateTowingStatus, { isLoading }] = useUpdateTowingStatusMutation();
 
   const [comments, setComments] = useState<string>("");
-  const [currentStatus, setCurrentStatus] = useState<string>("0"); // default PENDING
+  const [currentStatus, setCurrentStatus] = useState<string>(TowingStatus.Pending);
+
+  // Normalize backend status
+  useEffect(() => {
+    if (record) {
+      setCurrentStatus(record.towing_Status?.toUpperCase() || TowingStatus.Pending);
+      setComments("");
+    }
+  }, [record]);
+
+  // Check if status is COMPLETED
+  const isCompleted = currentStatus === TowingStatus.Completed;
+
+  // ✅ CONDITIONAL QUERY - Only fetch evidence when status is COMPLETED
+  const { data: evidenceData, isLoading: isEvidenceLoading } = useGetTowingEvidenceQuery(
+    isCompleted && record?.inspectionGUID ? { towingId: record.inspectionGUID } : skipToken,
+  );
 
   // Attachments API
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
     record ? { inspectionGUID: record.inspectionGUID, entityCode: "parking-towing" } : skipToken,
   );
 
-  // Normalize backend status
+  // ✅ DEBUG - Log evidence data when it loads
   useEffect(() => {
-    if (record) {
-      setCurrentStatus(String(record.towing_Status ?? "0")); // default to PENDING (0)
-      setComments("");
+    if (isCompleted && evidenceData) {
+      console.log("=== Towing Evidence Data ===");
+      console.log("Evidence:", evidenceData);
+      console.log("Start Point:", { lat: evidenceData.data?.startLat, lng: evidenceData.data?.startLng });
+      console.log("End Point:", { lat: evidenceData.data?.endLat, lng: evidenceData.data?.endLng });
     }
-  }, [record]);
+  }, [evidenceData, isCompleted]);
 
   // Map status → color
-  const getStatusColor = (status: string | number) => {
-    const s = String(status).toUpperCase();
+  const getStatusColor = (status: string) => {
+    const s = status.toUpperCase();
 
     switch (s) {
-      case "1":
-      case "APPROVED":
+      case TowingStatus.Approved:
         return "green";
-      case "2":
-      case "REJECTED":
+      case TowingStatus.Rejected:
         return "red";
-      case "3":
-      case "CANCELLED":
+      case TowingStatus.Cancelled:
         return "orange";
-      case "4":
-      case "IN_TOWING":
+      case TowingStatus.InProgress:
         return "cyan";
-      case "5":
-      case "COMPLETED":
+      case TowingStatus.Completed:
         return "purple";
-      case "0":
-      case "PENDING":
+      case TowingStatus.Pending:
       default:
         return "blue";
     }
   };
 
   // Map status → readable label
-  const getStatusLabel = (status: string | number) => {
-    const s = String(status).toUpperCase();
+  const getStatusLabel = (status: string) => {
+    const s = status.toUpperCase();
 
     switch (s) {
-      case "1":
-      case "APPROVED":
+      case TowingStatus.Approved:
         return t("status.approved");
-      case "2":
-      case "REJECTED":
+      case TowingStatus.Rejected:
         return t("status.rejected");
-      case "3":
-      case "CANCELLED":
+      case TowingStatus.Cancelled:
         return t("status.cancelled");
-      case "4":
+      case TowingStatus.InProgress:
         return t("status.inProgress");
-      case "IN_TOWING":
-        return t("status.inProgress");
-      case "5":
-      case "COMPLETED":
+      case TowingStatus.Completed:
         return t("status.completed");
-      case "0":
-      case "PENDING":
+      case TowingStatus.Pending:
       default:
         return t("status.pending");
     }
   };
 
   // ONLY pending allows approve/reject
-  const isPending = (status: string | number) => Number(status) === 0;
+  const isPending = currentStatus === TowingStatus.Pending;
 
   // Update status action
-  const handleUpdateStatus = async (towing_status: number, statusLabel: string) => {
+  const handleUpdateStatus = async (towing_status: TowingStatus, statusLabel: string) => {
     const inspectionGUID = record?.inspectionGUID;
 
     if (!inspectionGUID) {
@@ -134,7 +151,7 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
         lastReviewComments: comments.trim(),
       }).unwrap();
 
-      setCurrentStatus(String(towing_status));
+      setCurrentStatus(towing_status);
       notification.success(res, `Towing ${statusLabel.toLowerCase()} successfully`);
       onClose();
     } catch (err: any) {
@@ -142,30 +159,84 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
     }
   };
 
+  // ✅ Parse towing documents
+  const towingDocuments = React.useMemo(() => {
+    if (!evidenceData?.data?.towingDocuments) return [];
+
+    return evidenceData.data.towingDocuments
+      .split("; ")
+      .map((path: string) => path.trim())
+      .filter((path: string) => path.length > 0);
+  }, [evidenceData]);
+
+  // ✅ FIX: Prepare map center and towing points properly
+  const mapCenter = React.useMemo(() => {
+    if (isCompleted && evidenceData?.data?.startLng && evidenceData?.data?.startLat) {
+      return [evidenceData.data.startLng, evidenceData.data.startLat] as [number, number];
+    }
+    if (record?.longitude && record?.latitude) {
+      return [record.longitude, record.latitude] as [number, number];
+    }
+    return [55.2743, 25.1972] as [number, number]; // Default Dubai
+  }, [isCompleted, evidenceData, record]);
+
+  const towingStart = React.useMemo(() => {
+    if (isCompleted && evidenceData?.data?.startLat && evidenceData?.data?.startLng) {
+      return {
+        lat: evidenceData.data.startLat,
+        lng: evidenceData.data.startLng,
+      };
+    }
+    return undefined;
+  }, [isCompleted, evidenceData]);
+
+  const towingEnd = React.useMemo(() => {
+    if (isCompleted && evidenceData?.data?.endLat && evidenceData?.data?.endLng) {
+      return {
+        lat: evidenceData.data.endLat,
+        lng: evidenceData.data.endLng,
+      };
+    }
+    return undefined;
+  }, [isCompleted, evidenceData]);
+
+  console.log("=== Map Props Debug ===");
+  console.log("Is Completed:", isCompleted);
+  console.log("Map Center:", mapCenter);
+  console.log("Towing Start:", towingStart);
+  console.log("Towing End:", towingEnd);
+  console.log("Show Towing Route:", isCompleted && !!towingStart && !!towingEnd);
+
   return (
     <Modal open={open} width={1200} onCancel={onClose} centered title={t("form.towingDetails")} footer={null}>
       {record ? (
         <>
-          {/* Map */}
+          {/* Map - Shows initial location or towing route if completed */}
           <h4 style={{ marginTop: 16 }}>{t("form.location")}</h4>
           {record.latitude && record.longitude ? (
             <ArcGISMap
-              inspectors={[
-                {
-                  id: 1,
-                  name: "Towing Location",
-                  nameAr: "Towing Location",
-                  lat: record.latitude,
-                  lng: record.longitude,
-                  status: "Towing",
-                  statusAr: "Towing",
-                  details: { zone: "", lastCheckIn: "" },
-                  markerType: "google-pin",
-                },
-              ]}
-              center={[record.longitude, record.latitude]}
-              zoom={16}
-              height="300px"
+              inspectors={
+                !isCompleted
+                  ? [
+                      {
+                        id: 1,
+                        name: "Towing Location",
+                        nameAr: "موقع السحب",
+                        lat: record.latitude,
+                        lng: record.longitude,
+                        status: "Towing",
+                        statusAr: "السحب",
+                        markerType: "google-pin",
+                      },
+                    ]
+                  : [] // ✅ FIX: Empty array when showing towing route to avoid conflicts
+              }
+              center={mapCenter}
+              zoom={isCompleted ? 13 : 16}
+              height="400px"
+              showTowingRoute={isCompleted && !!towingStart && !!towingEnd}
+              towingStartPoint={towingStart}
+              towingEndPoint={towingEnd}
             />
           ) : (
             <Empty description={t("common.noLocation")} />
@@ -220,8 +291,69 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
             )}
           </Spin>
 
+          {/* ✅ EVIDENCE SECTION - Only when COMPLETED */}
+          {isCompleted && (
+            <>
+              <Title level={5} style={{ marginTop: 16, marginBottom: 12 }}>
+                {t("form.towingEvidence") || "Towing Evidence"}
+              </Title>
+
+              <Spin spinning={isEvidenceLoading}>
+                {evidenceData?.data ? (
+                  <>
+                    <Descriptions bordered column={2} size="small" style={{ marginBottom: 16 }}>
+                      <Descriptions.Item label={t("form.towingCompany") || "Towing Company"}>
+                        {evidenceData.data.towingCompanyName}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.driverEmiratesId") || "Driver Emirates ID"}>
+                        {evidenceData.data.towingDriverEmiratesId}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.towingVehicle") || "Towing Vehicle"}>
+                        {evidenceData.data.towingVehicleNumber}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.vehicleId") || "Vehicle ID"}>
+                        {evidenceData.data.vehicleId}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.entryTime") || "Entry Time"}>
+                        {dayjs(evidenceData.data.entryTime).format("DD-MM-YYYY HH:mm:ss")}
+                      </Descriptions.Item>
+                      <Descriptions.Item label={t("form.exitTime") || "Exit Time"}>
+                        {dayjs(evidenceData.data.exitTime).format("DD-MM-YYYY HH:mm:ss")}
+                      </Descriptions.Item>
+                    </Descriptions>
+
+                    {/* Towing Documents */}
+                    {towingDocuments.length > 0 && (
+                      <>
+                        <Title level={5} style={{ marginTop: 16, marginBottom: 12 }}>
+                          {t("form.towingDocuments") || "Towing Documents"}
+                        </Title>
+                        <Image.PreviewGroup>
+                          <Space wrap>
+                            {towingDocuments.map((docPath: string, index: number) => (
+                              <Image
+                                key={index}
+                                width={100}
+                                height={100}
+                                src={getFileUrl(docPath)}
+                                alt={`Towing Document ${index + 1}`}
+                                style={{ objectFit: "cover", borderRadius: 8 }}
+                              />
+                            ))}
+                          </Space>
+                        </Image.PreviewGroup>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
+                )}
+              </Spin>
+            </>
+          )}
+
           {/* Approval Actions — Only when PENDING */}
-          {isPending(currentStatus) && (
+          {isPending && (
             <>
               <h4 style={{ marginTop: 16 }}>{t("form.approvalActions")}</h4>
 
@@ -239,11 +371,19 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
               </div>
 
               <Space>
-                <Button type="primary" loading={isLoading} onClick={() => handleUpdateStatus(1, "Approved")}>
+                <Button
+                  type="primary"
+                  loading={isLoading}
+                  onClick={() => handleUpdateStatus(TowingStatus.Approved, "Approved")}
+                >
                   {t("form.approve")}
                 </Button>
 
-                <Button danger loading={isLoading} onClick={() => handleUpdateStatus(2, "Rejected")}>
+                <Button
+                  danger
+                  loading={isLoading}
+                  onClick={() => handleUpdateStatus(TowingStatus.Rejected, "Rejected")}
+                >
                   {t("form.reject")}
                 </Button>
               </Space>
