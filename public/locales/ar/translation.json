@@ -399,7 +399,8 @@
     "FineLocations": "مواقع الغرامات",
     "CurrentLocation": "الموقع الحالي",
     "pickLocationOnMap" : "اختر الموقع على الخريطة",
-    "locationOnMap" : "الموقع على الخريطة"
+    "locationOnMap" : "الموقع على الخريطة",
+    "obstacleLocation" : "موقع العائق"
 
 
   },

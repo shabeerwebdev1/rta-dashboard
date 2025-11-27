@@ -394,7 +394,9 @@
     "FineLocations": "Fine Locations",
     "CurrentLocation": "Current Location",
     "pickLocationOnMap" : "Pick Location on Map",
-    "locationOnMap" : "Location on Map"
+    "locationOnMap" : "Location on Map",
+    "obstacleLocation" : "Obstacle Location"
+
   },
   "common": {
     "action": "Action",

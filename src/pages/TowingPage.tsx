@@ -62,7 +62,7 @@ const TowingPage: React.FC = () => {
       Approved: <Tag color="green">{t("status.approved")}</Tag>,
       Rejected: <Tag color="red">{t("status.rejected")}</Tag>,
       cancelled: <Tag color="orange">{t("status.cancelled")}</Tag>,
-      inProgress: <Tag color="cyan">{t("status.inProgress")}</Tag>,
+      IN_TOWING: <Tag color="cyan">{t("status.inProgress")}</Tag>,
       completed: <Tag color="purple">{t("status.completed")}</Tag>,
     };
     return statusMap;
@@ -123,13 +123,14 @@ const TowingPage: React.FC = () => {
               case "towing_Status":
                 // Format status with translated labels
                 const statusMap: Record<string, string> = {
-                  pending: t("status.pending"),
-                  Approved: t("status.approved"),
-                  Rejected: t("status.rejected"),
-                  cancelled: t("status.cancelled"),
-                  inProgress: t("status.inProgress"),
-                  completed: t("status.completed"),
+                  PENDING: t("status.pending"),
+                  APPROVED: t("status.approved"),
+                  REJECTED: t("status.rejected"),
+                  CANCELLED: t("status.cancelled"),
+                  IN_TOWING: t("status.inProgress"),
+                  COMPLETED: t("status.completed"),
                 };
+
                 value = statusMap[value] || value;
                 break;
 
@@ -299,12 +300,12 @@ const TowingPage: React.FC = () => {
           state={state}
           filterOptions={{
             towing_Status: [
-              { text: t("status.approved"), value: "Approved" },
-              { text: t("status.rejected"), value: "Rejected" },
-              { text: t("status.pending"), value: "pending" },
-              { text: t("status.cancelled"), value: "cancelled" },
-              { text: t("status.inProgress"), value: "inProgress" },
-              { text: t("status.completed"), value: "completed" },
+              { text: t("status.approved"), value: "APPROVED" },
+              { text: t("status.rejected"), value: "REJECTED" },
+              { text: t("status.pending"), value: "PENDING" },
+              { text: t("status.cancelled"), value: "CANCELLED" },
+              { text: t("status.inProgress"), value: "IN_TOWING" },
+              { text: t("status.completed"), value: "COMPLETED" },
             ],
           }}
         />

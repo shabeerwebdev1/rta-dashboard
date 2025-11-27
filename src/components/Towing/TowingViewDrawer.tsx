@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, Descriptions, Tag, Button, Space, App, Input, Typography, Image, Empty, Spin, Modal } from "antd";
+import { Descriptions, Tag, Button, Space, Input, Typography, Image, Empty, Spin, Modal } from "antd";
 import {
   useUpdateTowingStatusMutation,
   useGetInspectionAttachmentsQuery,
@@ -7,7 +7,7 @@ import {
 } from "../../services/rtkApiFactory";
 import { useTranslation } from "react-i18next";
 import { skipToken } from "@reduxjs/toolkit/query";
-import ArcGISMap from "../common/ArcGISMap"; // ✅ map import
+import ArcGISMap from "../common/ArcGISMap";
 import { useAppNotification } from "../../utils/notificationManager";
 
 const { Title } = Typography;
@@ -19,27 +19,86 @@ interface TowingViewDrawerProps {
 }
 
 const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, record }) => {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.dir() === "rtl";
+  const { t } = useTranslation();
   const notification = useAppNotification();
   const [updateTowingStatus, { isLoading }] = useUpdateTowingStatusMutation();
 
   const [comments, setComments] = useState<string>("");
-  const [currentStatus, setCurrentStatus] = useState<string>("");
+  const [currentStatus, setCurrentStatus] = useState<string>("0"); // default PENDING
 
-  // ✅ Attachments API call
+  // Attachments API
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
     record ? { inspectionGUID: record.inspectionGUID, entityCode: "parking-towing" } : skipToken,
   );
 
+  // Normalize backend status
   useEffect(() => {
     if (record) {
-      setCurrentStatus(record.towing_Status || "pending");
+      setCurrentStatus(String(record.towing_Status ?? "0")); // default to PENDING (0)
       setComments("");
     }
   }, [record]);
 
-  const handleUpdateStatus = async (statusCode: number, statusLabel: string) => {
+  // Map status → color
+  const getStatusColor = (status: string | number) => {
+    const s = String(status).toUpperCase();
+
+    switch (s) {
+      case "1":
+      case "APPROVED":
+        return "green";
+      case "2":
+      case "REJECTED":
+        return "red";
+      case "3":
+      case "CANCELLED":
+        return "orange";
+      case "4":
+      case "IN_TOWING":
+        return "cyan";
+      case "5":
+      case "COMPLETED":
+        return "purple";
+      case "0":
+      case "PENDING":
+      default:
+        return "blue";
+    }
+  };
+
+  // Map status → readable label
+  const getStatusLabel = (status: string | number) => {
+    const s = String(status).toUpperCase();
+
+    switch (s) {
+      case "1":
+      case "APPROVED":
+        return t("status.approved");
+      case "2":
+      case "REJECTED":
+        return t("status.rejected");
+      case "3":
+      case "CANCELLED":
+        return t("status.cancelled");
+      case "4":
+        return t("status.inProgress");
+      case "IN_TOWING":
+        return t("status.inProgress");
+      case "5":
+      case "COMPLETED":
+        return t("status.completed");
+      case "0":
+      case "PENDING":
+      default:
+        return t("status.pending");
+    }
+  };
+
+  // ONLY pending allows approve/reject
+  const isPending = (status: string | number) => Number(status) === 0;
+
+  // Update status action
+  const handleUpdateStatus = async (towing_status: number, statusLabel: string) => {
     const inspectionGUID = record?.inspectionGUID;
 
     if (!inspectionGUID) {
@@ -71,11 +130,11 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
     try {
       const res = await updateTowingStatus({
         inspectionGUID,
-        statusCode,
+        towing_status,
         lastReviewComments: comments.trim(),
       }).unwrap();
 
-      setCurrentStatus(statusLabel);
+      setCurrentStatus(String(towing_status));
       notification.success(res, `Towing ${statusLabel.toLowerCase()} successfully`);
       onClose();
     } catch (err: any) {
@@ -83,33 +142,8 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "approved":
-        return "green";
-      case "rejected":
-        return "red";
-      case "cancelled":
-        return "orange";
-      case "pending":
-      default:
-        return "blue";
-    }
-  };
-
-  const isStatusFinal = (status: string) =>
-    status?.toLowerCase() === "approved" || status?.toLowerCase() === "rejected";
-
   return (
-    <Modal
-      open={open}
-      width={1200}
-      onCancel={onClose}
-      centered
-      title={t("form.towingDetails")}
-      footer={null}
-      //placement={isRtl ? "left" : "right"}
-    >
+    <Modal open={open} width={1200} onCancel={onClose} centered title={t("form.towingDetails")} footer={null}>
       {record ? (
         <>
           {/* Map */}
@@ -134,7 +168,7 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
               height="300px"
             />
           ) : (
-            <Empty description="No Location Data Available" />
+            <Empty description={t("common.noLocation")} />
           )}
 
           {/* Details */}
@@ -146,12 +180,15 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
             <Descriptions.Item label={t("form.vehicleOwnerMobile")}>{record.vehicleOwnerMobile}</Descriptions.Item>
             <Descriptions.Item label={t("form.vehicleOwnerEmail")}>{record.vehicleOwnerEmail}</Descriptions.Item>
             <Descriptions.Item label={t("form.manufacturerYear")}>{record.manufacturerYear}</Descriptions.Item>
+
             <Descriptions.Item label={t("form.towingDate")}>
               {new Date(record.entityDateTime).toLocaleDateString()}
             </Descriptions.Item>
+
             <Descriptions.Item label={t("form.status")}>
-              <Tag color={getStatusColor(currentStatus)}>{currentStatus}</Tag>
+              <Tag color={getStatusColor(currentStatus)}>{getStatusLabel(currentStatus)}</Tag>
             </Descriptions.Item>
+
             {record.lastReviewComments && (
               <Descriptions.Item label={t("form.lastReviewComments")}>{record.lastReviewComments}</Descriptions.Item>
             )}
@@ -161,6 +198,7 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
           <Title level={5} style={{ marginTop: 16, marginBottom: 12 }}>
             {t("form.AttachedPhotos")}
           </Title>
+
           <Spin spinning={isLoadingAttachments}>
             {attachments.length > 0 ? (
               <Image.PreviewGroup>
@@ -182,14 +220,16 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
             )}
           </Spin>
 
-          {/* Approval Actions */}
-          {!isStatusFinal(currentStatus) && (
+          {/* Approval Actions — Only when PENDING */}
+          {isPending(currentStatus) && (
             <>
               <h4 style={{ marginTop: 16 }}>{t("form.approvalActions")}</h4>
+
               <div style={{ marginBottom: 10 }}>
                 <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>
                   {t("form.reviewComments")} *
                 </label>
+
                 <Input.TextArea
                   rows={3}
                   value={comments}
@@ -197,10 +237,12 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
                   placeholder={t("placeholders.enterComments")}
                 />
               </div>
+
               <Space>
                 <Button type="primary" loading={isLoading} onClick={() => handleUpdateStatus(1, "Approved")}>
                   {t("form.approve")}
                 </Button>
+
                 <Button danger loading={isLoading} onClick={() => handleUpdateStatus(2, "Rejected")}>
                   {t("form.reject")}
                 </Button>

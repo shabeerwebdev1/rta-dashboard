@@ -11,9 +11,9 @@ import {
   getMobileFileUrl,
 } from "../../services/rtkApiFactory";
 import { skipToken } from "@reduxjs/toolkit/query";
-import ArcGISMap from "../../components/common/ArcGISMap"; // ⭐ Make sure this path is correct
+import ArcGISMap from "../../components/common/ArcGISMap";
 
-// Static area coordinates (same as your Add Modal)
+// Static area coordinates (fallback)
 const AREA_COORDINATES = [
   { area: "Bur dubai", lat: 25.2146, lng: 55.3033 },
   { area: "Business Bay", lat: 25.184242, lng: 55.27243 },
@@ -39,8 +39,6 @@ interface InspectionObstaclesViewDrawerProps {
   config: PageConfig;
   onShare: () => void;
   onStatusChange: () => void;
-
-  // Mapping props
   zoneOptions: any[];
   sourceOptions: any[];
   areaIdToNameMap: Map<number, string>;
@@ -66,16 +64,33 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
 
   const isRtl = i18n.dir() === "rtl";
 
-  // Get static area coordinates
+  // Get static area coordinates (fallback)
   const getAreaStaticLocation = (areaName: string) => {
     if (!areaName) return null;
-
     const found = AREA_COORDINATES.find((x) => x.area.toLowerCase() === areaName.toLowerCase());
-
     return found ? { lat: found.lat, lng: found.lng } : null;
   };
 
-  const staticLocation = getAreaStaticLocation(areaIdToNameMap.get(record.area) || "");
+  // Get record location - prioritize actual coordinates, fallback to static area
+  const getRecordLocation = () => {
+    if (!record) return null;
+
+    // Use actual coordinates from API if available
+    if (record.latitude && record.longitude) {
+      const lat = parseFloat(record.latitude);
+      const lng = parseFloat(record.longitude);
+
+      // Validate coordinates
+      if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+    }
+
+    // Fallback to static area coordinates
+    return getAreaStaticLocation(areaIdToNameMap.get(record.area) || "");
+  };
+
+  const recordLocation = getRecordLocation();
 
   // Load attachments safely
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
@@ -143,15 +158,16 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
           </Button>
         }
         placement={isRtl ? "left" : "right"}
+        bodyStyle={{ paddingTop: 0 }}
       >
-        {/* ===== Static Map (NO API lat/lng) ===== */}
-        {/* =================== MAP DISPLAY =================== */}
-        {staticLocation && (
-          <div style={{ marginBottom: 15 }}>
-            <Typography.Title level={5} style={{ marginBottom: 8, marginTop: 0 }}>
-              {t("form.locationOnMap")}
-            </Typography.Title>
+        {/* ===== Map with Actual Coordinates ===== */}
 
+        <Typography.Title level={5} style={{ marginBottom: 16 }}>
+          {t("form.obstacleLocation")}
+        </Typography.Title>
+
+        {recordLocation && (
+          <div style={{ marginBottom: 15 }}>
             <div
               style={{
                 width: "100%",
@@ -163,12 +179,12 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
             >
               <ArcGISMap
                 inspectors={[]}
-                center={[staticLocation.lng, staticLocation.lat]}
-                zoom={16}
+                center={[recordLocation.lng, recordLocation.lat]}
+                zoom={record.latitude && record.longitude ? 16 : 15}
                 height="260px"
                 clickable={false}
-                pickedLat={staticLocation.lat}
-                pickedLng={staticLocation.lng}
+                pickedLat={recordLocation.lat}
+                pickedLng={recordLocation.lng}
                 showPath={false}
                 showFineLocations={false}
               />
@@ -176,12 +192,11 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
           </div>
         )}
 
-        {/* =================== DETAILS =================== */}
+        {/* ===== Details ===== */}
         <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
           {displayFields.map((field) => {
             if (field.type === "action") {
               if (isRemoved) return null;
-
               return (
                 <Descriptions.Item label={t(field.title)} key={field.key}>
                   <Button icon={<DeleteOutlined />} onClick={() => handleRemoveObstacle(record.inspectionGUID)} danger>
@@ -192,7 +207,6 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
             }
 
             const rawValue = record[field.key];
-
             const displayValue = (() => {
               if (rawValue === undefined || rawValue === null) return t("common.noData");
 
@@ -221,7 +235,7 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
           })}
         </Descriptions>
 
-        {/* =================== ATTACHMENTS =================== */}
+        {/* ===== Attachments ===== */}
         <Typography.Title level={5} style={{ marginBottom: 16 }}>
           {t("form.AttachedPhotos")}
         </Typography.Title>

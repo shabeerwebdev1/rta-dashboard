@@ -329,6 +329,8 @@ const InspectionObstaclesPage: React.FC = () => {
         closestPaymentDevice: values.ClosestPaymentDevice,
         comments: values.Comments || "",
         requestFrom: "",
+        latitude: pickedLatitude, // Add this
+        longitude: pickedLongitude,
         // NOTE: lat/long are gathered in the form but not sent to backend yet (per requirement).
       };
 
@@ -917,13 +919,21 @@ const InspectionObstaclesPage: React.FC = () => {
 
               {/* LAT / LNG */}
               <Col span={12}>
-                <Form.Item name="Latitude" label={t("form.latitude")}>
+                <Form.Item
+                  name="Latitude"
+                  label={t("form.latitude")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.latitude") }) }]}
+                >
                   <Input readOnly placeholder={t("placeholders.latitude")} value={pickedLatitude ?? ""} />
                 </Form.Item>
               </Col>
 
               <Col span={12}>
-                <Form.Item name="Longitude" label={t("form.longitude")}>
+                <Form.Item
+                  name="Longitude"
+                  label={t("form.longitude")}
+                  rules={[{ required: true, message: t("validation.required", { field: t("form.longitude") }) }]}
+                >
                   <Input readOnly placeholder={t("placeholders.longitude")} value={pickedLongitude ?? ""} />
                 </Form.Item>
               </Col>

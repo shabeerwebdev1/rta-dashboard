@@ -3,34 +3,35 @@ import { PageConfig } from "../../types/config";
 import { Tag } from "antd";
 
 export enum TowingStatus {
-  Pending = 0,
-  Approved = 1,
-  Rejected = 2,
-  Cancelled = 3,
-  InProgress = 4,
-  Completed = 5,
+  Pending = "PENDING",
+  Approved = "APPROVED",
+  Rejected = "REJECTED",
+  Cancelled = "CANCELLED",
+  InProgress = "IN_TOWING",
+  Completed = "COMPLETED",
 }
 
 // Helper function to map string status to enum
 export const mapTowingStatus = (statusString: string): TowingStatus => {
-  switch (statusString?.toLowerCase()) {
-    case "approved":
+  switch (statusString?.toUpperCase()) {
+    case "APPROVED":
       return TowingStatus.Approved;
-    case "rejected":
+    case "REJECTED":
       return TowingStatus.Rejected;
-    case "cancelled":
+    case "CANCELLED":
       return TowingStatus.Cancelled;
-    case "inProgress":
+    case "IN_TOWING":
       return TowingStatus.InProgress;
-    case "completed":
+    case "COMPLETED":
       return TowingStatus.Completed;
-    case "pending":
+    case "PENDING":
     default:
       return TowingStatus.Pending;
   }
 };
 
-const statusMap: Record<number, { text: string; color: string }> = {
+
+const statusMap: Record<string, { text: string; color: string }> = {
   [TowingStatus.Pending]: { text: "Pending", color: "blue" },
   [TowingStatus.Approved]: { text: "Approved", color: "green" },
   [TowingStatus.Cancelled]: { text: "Cancelled", color: "orange" },
@@ -65,31 +66,31 @@ export const towingConfig: PageConfig = {
     {
       title: "status.approved",
       icon: <CheckCircleOutlined />,
-      value: (data) => data.filter((d) => d.towing_Status === "Approved").length,
+      value: (data) => data.filter((d) => d.towing_Status === "APPROVED").length,
       color: "#52c41a",
     },
     {
       title: "status.rejected",
       icon: <CloseCircleOutlined />,
-      value: (data) => data.filter((d) => d.towing_Status === "Rejected").length,
+      value: (data) => data.filter((d) => d.towing_Status === "REJECTED").length,
       color: "#ff4d4f",
     },
     {
       title: "status.pending",
       icon: <ClockCircleOutlined />,
-      value: (data) => data.filter((d) => d.towing_Status === "pending").length,
+      value: (data) => data.filter((d) => d.towing_Status === "PENDING").length,
       color: "#1890ff",
     },
     {
       title: "status.inProgress",
       icon: <ClockCircleOutlined />,
-      value: (data) => data.filter((d) => d.towing_Status === "inProgress").length,
+      value: (data) => data.filter((d) => d.towing_Status === "IN_TOWING").length,
       color: "cyan",
     },
     {
       title: "status.completed",
-      icon: <ClockCircleOutlined />,
-      value: (data) => data.filter((d) => d.towing_Status === "completed").length,
+      icon: <CheckCircleOutlined />,
+      value: (data) => data.filter((d) => d.towing_Status === "COMPLETED").length,
       color: "purple",
     },
   ],
@@ -141,6 +142,8 @@ export const towingConfig: PageConfig = {
         filterable: true,
         render: (status: string) => {
           const statusEnum = mapTowingStatus(status);
+          console.log("Rendering status:", status, "Mapped enum:", statusEnum);
+
           const { text, color } = statusMap[statusEnum] || { text: "Unknown", color: "default" };
           return <Tag color={color}>{text}</Tag>;
         },
