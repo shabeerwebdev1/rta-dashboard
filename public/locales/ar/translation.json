@@ -398,11 +398,16 @@
     "InspectorPath": "مسار المفتش",
     "FineLocations": "مواقع الغرامات",
     "CurrentLocation": "الموقع الحالي",
-    "pickLocationOnMap" : "اختر الموقع على الخريطة",
-    "locationOnMap" : "الموقع على الخريطة",
-    "obstacleLocation" : "موقع العائق"
-
-
+    "pickLocationOnMap": "اختر الموقع على الخريطة",
+    "locationOnMap": "الموقع على الخريطة",
+    "obstacleLocation": "موقع العائق",
+    "towingVideo": "فيديو السحب",
+    "towingEvidence" : "أدلة السحب",
+    "towingCompany": "شركة السحب",
+    "entryTime": "وقت الدخول",
+    "driverEmiratesId": "رقم هوية السائق",
+    "exitTime": "وقت الخروج",
+    "towingDocuments": "مستندات السحب"
   },
   "common": {
     "action": "إجراء",

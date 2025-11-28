@@ -349,7 +349,7 @@ const InspectionObstaclesPage: React.FC = () => {
             // Append metadata
             formData.append("InspectionGUID", inspectionGUID);
             formData.append("BatchGUID", batchGUID);
-            formData.append("EntityCode", "parking-Obstacle");
+            formData.append("EntityCode", "parking-obstacle");
             formData.append("FilePath", "/uploads/temp");
             formData.append("Description", "Uploaded via inspection obstacle form");
 

@@ -395,7 +395,14 @@
     "CurrentLocation": "Current Location",
     "pickLocationOnMap" : "Pick Location on Map",
     "locationOnMap" : "Location on Map",
-    "obstacleLocation" : "Obstacle Location"
+    "obstacleLocation" : "Obstacle Location",
+    "towingVideo" : "Towing Video",
+    "towingEvidence" : "Towing Evidence Deatils",
+    "towingCompany" : "Towing Company",
+    "entryTime" : "Entry Time",
+    "driverEmiratesId" : "Driver Emirates ID",
+    "exitTime" : "Exit Time",
+    "towingDocuments" : "Towing Documents"
 
   },
   "common": {
