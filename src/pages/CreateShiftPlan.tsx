@@ -891,13 +891,13 @@ export default function CreateShiftPlan() {
       message.error(t("shiftPlanning.selectPlanDate"));
       return;
     }
-
+  
     const scheduleEntries = buildScheduleEntriesFromEdits();
     if (scheduleEntries.length === 0) {
       message.warning(publish ? "No data to publish" : "No data to save as draft");
       return;
     }
-
+  
     const payload = {
       batch: {
         startDate: (dateRange[0] as Dayjs).toISOString(),
@@ -907,22 +907,49 @@ export default function CreateShiftPlan() {
       scheduleEntries,
       isPublished: publish,
     };
-
+  
     console.log("Publishing payload:", JSON.stringify(payload, null, 2));
-
+  
     try {
       const res = await publishShiftPlan(payload).unwrap();
+  
       notification.success(
         { data: { en_Msg: res?.en_Msg || (publish ? "Published" : "Saved as draft"), ar_Msg: res?.ar_Msg || "" } },
-        t("messages.operationSuccess"),
+        t("messages.operationSuccess")
       );
+  
+      /** --------------------------------------------------------
+       *  SUCCESS → CLEAR ALL (RESET PAGE COMPLETELY)
+       * -------------------------------------------------------- */
       setEditsMap({});
-
-      if (!publish) {
+      setRawApiData([]);
+      setTableData([]);
+      setHasValidData(false);
+      setHasDataLoaded(false);
+      setInspectorFilter("");
+      setShiftFilter([]);
+      setCurrentPage(0);
+      setActiveTab("1");
+      setViewMode("week");
+      setDateRange([]);
+      form.resetFields(); // clears the plan date form
+  
+      if (isModalOpen) {
+        setIsModalOpen(false);
+        setEditing(null);
+      }
+  
+      // regenerate default NA table
+      generateDefaultTable();
+  
+      /** Re-fetch draft when saving as draft */
+      if (!publish && typeof refetchDraft === "function") {
         refetchDraft();
       }
+  
     } catch (err: any) {
       console.error("publish/saveDraft error:", err);
+  
       if (err?.data?.en_Msg) {
         message.error(err.data.en_Msg);
       } else if (err?.data?.errors) {
@@ -933,6 +960,7 @@ export default function CreateShiftPlan() {
       }
     }
   };
+  
 
   /* JSX return - FIXED: Added contextHolder */
   return (
