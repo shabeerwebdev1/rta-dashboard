@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { serializeParams } from "../hooks/useTableParams";
@@ -543,6 +544,18 @@ export const dynamicApi = createApi({
         body,
       }),
     }),
+
+    getLastBatchDetail: builder.query({
+      query: () => "/api/ShiftPlanMaster/LastBatchDetail",
+    }),
+
+    publishShiftPlan: builder.mutation({
+      query: (payload) => ({
+        url: "/api/ShiftPlanMaster/Publish",
+        method: "PUT",
+        body: payload,
+      }),
+    }),
   }),
 });
 
@@ -650,4 +663,7 @@ export const {
 
   // Shift Plan
   useGetShiftPlanMutation,
+  useGetLastBatchDetailQuery,
+  usePublishShiftPlanMutation,  
+
 } = dynamicApi;

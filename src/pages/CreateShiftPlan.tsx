@@ -1,8 +1,8 @@
+/* Part 1 of 3 — CreateShiftPlan (imports, lookup loading, date & pagination state) */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { useState, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Table,
   Tabs,
@@ -23,7 +23,14 @@ import dayjs, { Dayjs } from "dayjs";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { ShiftPlanningConfig } from "../config/pageConfigs/shiftPlanningConfig";
-import { useGetShiftPlanMutation, useLazyGetZonesQuery, useGetAllAreasQuery } from "../services/rtkApiFactory";
+import {
+  useGetShiftPlanMutation,
+  useLazyGetZonesQuery,
+  useLazyGetAreasQuery,
+  useGetAllAreasQuery,
+  useGetLastBatchDetailQuery,
+  usePublishShiftPlanMutation,
+} from "../services/rtkApiFactory";
 import { useAppNotification } from "../utils/notificationManager";
 
 const { TabPane } = Tabs;
@@ -31,46 +38,58 @@ const { RangePicker } = DatePicker;
 
 type ViewMode = "week" | "month" | "all";
 
+// UUID generator function
+const generateUUID = (): string => {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c == "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
 export default function CreateShiftPlan() {
   const { setPageTitle } = usePage();
   const { t, i18n } = useTranslation();
   const notification = useAppNotification();
 
-  const [getShiftPlan, { isLoading }] = useGetShiftPlanMutation();
+  // RTK hooks
+  const [getShiftPlan, { isLoading: isPlanning }] = useGetShiftPlanMutation();
+  const [publishShiftPlan, { isLoading: isPublishing }] = usePublishShiftPlanMutation();
 
-  // lookup hooks
+  const { data: lastBatch } = useGetLastBatchDetailQuery();
   const [triggerGetZones] = useLazyGetZonesQuery();
+  const [triggerGetAreas] = useLazyGetAreasQuery();
   const { data: allAreasData } = useGetAllAreasQuery();
 
+  // lookups normalized
   const [zonesLookup, setZonesLookup] = useState<any[]>([]);
-  const [areasLookup, setAreasLookup] = useState<any[]>([]);
+  const [areasLookup, setAreasLookup] = useState<any[]>([]); // current filtered areas (for modal & UI)
+  const [allAreasLookup, setAllAreasLookup] = useState<any[]>([]); // full list
 
-  // main data
+  // main table & UI state
   const [rawApiData, setRawApiData] = useState<any[]>([]);
   const [tableData, setTableData] = useState<any[]>([]);
   const [form] = Form.useForm();
 
-  const [dateRange, setDateRange] = useState<Dayjs[]>([]);
+  // RangePicker supports start-only (end can be null)
+  const [dateRange, setDateRange] = useState<(Dayjs | null)[]>([]);
   const [activeTab, setActiveTab] = useState("1");
   const [inspectorFilter, setInspectorFilter] = useState("");
   const [shiftFilter, setShiftFilter] = useState<string[]>([]);
 
+  // edit modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
 
-  // NEW: View mode and pagination state
+  // view & pagination
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [currentPage, setCurrentPage] = useState(0);
 
-  // Track if we have loaded data from API to prevent reset on language change
   const [hasDataLoaded, setHasDataLoaded] = useState(false);
-
-  // Track if we have valid data to show pagination
   const [hasValidData, setHasValidData] = useState(false);
-  // Temporary start date during selection
   const [tempStart, setTempStart] = useState<Dayjs | null>(null);
 
-  // Shift mapping with translations
+  // Map shift codes to labels
   const shiftMap: Record<string, string> = useMemo(
     () => ({
       EM: t("shifts.earlyMorning"),
@@ -82,40 +101,54 @@ export default function CreateShiftPlan() {
     [t],
   );
 
-  // Set page title and initial NA table - only on mount
+  // Keep track of local edits: key = `${rowKey}_${dayIndex}`, value = { rowKey, dayIndex, zoneId, areasIds, ... }
+  // This map stores only user edits (so Publish/Save Draft sends only edited entries).
+  const [editsMap, setEditsMap] = useState<Record<string, any>>({});
+
   useEffect(() => {
     setPageTitle(t(ShiftPlanningConfig.title));
-    if (!hasDataLoaded) {
-      generateDefaultTable();
-    }
-    loadLookups();
+    if (!hasDataLoaded) generateDefaultTable();
+    loadZones();
   }, [setPageTitle, t]);
 
-  // Separate effect for language changes to update title without resetting data
   useEffect(() => {
     setPageTitle(t(ShiftPlanningConfig.title));
   }, [i18n.language, setPageTitle, t]);
 
-  // Load lookups: zones via lazy trigger, areas via useGetAllAreasQuery (auto)
-  const loadLookups = async () => {
+  // load zones (normalize)
+  const loadZones = async () => {
     try {
-      const zonesRes: any = await triggerGetZones().unwrap();
-      const zones = zonesRes?.data ? zonesRes.data : Array.isArray(zonesRes) ? zonesRes : [];
-      setZonesLookup(zones);
+      const zonesRes = await triggerGetZones().unwrap();
+      const zlist = zonesRes?.data ? zonesRes.data : Array.isArray(zonesRes) ? zonesRes : [];
+      const normalized = zlist.map((z: any) => ({
+        id: z.zoneId ?? z.zone_Id ?? z.id ?? z.zoneGUID ?? z.zoneCode ?? z.code,
+        value: z.zoneId ?? z.zone_Id ?? z.id ?? z.zoneGUID ?? z.zoneCode ?? z.code,
+        label: z.zone || z.zoneName || z.description || `${z.zoneCode ?? ""}${z.zone ? " - " + z.zone : ""}`,
+        original: z,
+      }));
+      setZonesLookup(normalized);
     } catch (err) {
-      // fail silently but log
       console.error("Failed to load zones:", err);
     }
   };
 
-  // when allAreasData arrives set area lookup
+  // normalize all areas list for label lookups
   useEffect(() => {
     if (!allAreasData) return;
-    const areas = allAreasData?.data ? allAreasData.data : Array.isArray(allAreasData) ? allAreasData : [];
-    setAreasLookup(areas);
+    const raw = allAreasData?.data ?? allAreasData ?? [];
+    const normalized = raw.map((a: any) => ({
+      id: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
+      value: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
+      label: a.area || a.areaName || a.name || String(a.areaId || a.area),
+      zoneId: a.zoneId ?? a.zone_Id ?? a.parentZoneId ?? null,
+      original: a,
+    }));
+    setAllAreasLookup(normalized);
+    // default areas lookup to full list (modal will filter on zone change)
+    setAreasLookup(normalized);
   }, [allAreasData]);
 
-  // Generate default NA table (30 days)
+  // default NA table (30 days)
   const generateDefaultTable = () => {
     const defaultDays = Array(30).fill("NA");
     setTableData([
@@ -130,7 +163,6 @@ export default function CreateShiftPlan() {
     setHasValidData(false);
   };
 
-  // Reset all filters and data when creating new plan or clearing date
   const resetAllFilters = () => {
     setInspectorFilter("");
     setShiftFilter([]);
@@ -139,43 +171,64 @@ export default function CreateShiftPlan() {
     setViewMode("week");
     setHasValidData(false);
   };
+  
 
-  // days count derived from dateRange - with 6 months maximum limit
+  const validRange = useMemo(() => dateRange.length === 2 && !!dateRange[0] && !!dateRange[1], [dateRange]);
+
   const daysCount = useMemo(() => {
-    if (dateRange.length === 2) {
-      const diff = dateRange[1].diff(dateRange[0], "day") + 1;
-      const maxDays = 6 * 30; // Approximately 6 months
-      return Math.min(Math.max(diff, 1), maxDays); // Enforce 6 months maximum
+    if (validRange) {
+      const diff = (dateRange[1] as Dayjs).diff(dateRange[0] as Dayjs, "day") + 1;
+      const maxDays = 6 * 30;
+      return Math.min(Math.max(diff, 1), maxDays);
     }
     return 30;
-  }, [dateRange]);
+  }, [dateRange, validRange]);
 
-  // NEW: Calculate pagination parameters
-  const daysPerPage = useMemo(() => {
-    if (viewMode === "week") return 7;
-    if (viewMode === "month") return 30;
-    return daysCount; // "all" mode
-  }, [viewMode, daysCount]);
+  // Auto set start date only from last batch end + 1 day
+  useEffect(() => {
+    if (!lastBatch?.data) return;
+    const lastEnd = dayjs(lastBatch.data.assignmentEndDate);
+    if (!lastEnd.isValid()) return;
+    const newStart = lastEnd.add(1, "day").startOf("day");
+    setDateRange([newStart, null]);
+    form.setFieldsValue({ planDate: [newStart, null] });
+  }, [lastBatch, form]);
 
-  const totalPages = useMemo(() => {
-    if (viewMode === "all") return 1;
-    return Math.ceil(daysCount / daysPerPage);
-  }, [daysCount, daysPerPage, viewMode]);
-
+  // pagination helpers
+  const daysPerPage = useMemo(
+    () => (viewMode === "week" ? 7 : viewMode === "month" ? 30 : daysCount),
+    [viewMode, daysCount],
+  );
+  const totalPages = useMemo(
+    () => (viewMode === "all" ? 1 : Math.ceil(daysCount / daysPerPage)),
+    [daysCount, daysPerPage, viewMode],
+  );
   const startDayIndex = currentPage * daysPerPage;
   const endDayIndex = Math.min(startDayIndex + daysPerPage, daysCount);
 
-  // Reset to page 0 when view mode changes
-  useEffect(() => {
-    setCurrentPage(0);
-  }, [viewMode]);
+  useEffect(() => setCurrentPage(0), [viewMode]);
 
-  // Day columns - now supports pagination
+  // helper label getters
+  const getZoneName = (zoneVal: any) => {
+    if (!zoneVal) return "";
+    const z = zonesLookup.find((x) => String(x.value) === String(zoneVal) || String(x.id) === String(zoneVal));
+    return z ? z.label : String(zoneVal);
+  };
+  const getAreaName = (areaVal: any) => {
+    if (!areaVal && areaVal !== 0) return "";
+    const a = allAreasLookup.find((x) => String(x.value) === String(areaVal) || String(x.id) === String(areaVal));
+    return a ? a.label : String(areaVal);
+  };
+
+  /* Part 1 ends here — Part 2 continues with columns, day rendering, openEdit/saveEdit (local) */
+  /* Part 2 of 3 — columns, day columns, converting API data to UI, render cell, openEdit */
+
+  /* Day columns generation */
   const dayColumns = useMemo(() => {
     const columnsToShow = viewMode === "all" ? daysCount : Math.min(daysPerPage, endDayIndex - startDayIndex);
 
-    if (dateRange.length === 2) {
-      const start = dateRange[0];
+    if (validRange) {
+      const start = dateRange[0] as Dayjs;
       return Array.from({ length: columnsToShow }, (_, i) => {
         const actualDayIndex = startDayIndex + i;
         const currentDate = start.add(actualDayIndex, "day");
@@ -191,13 +244,13 @@ export default function CreateShiftPlan() {
           ),
           dataIndex: ["days", actualDayIndex],
           key: `day${actualDayIndex + 1}`,
-          width: 90,
+          width: 120,
           render: (value: string, row: any) => renderDayCell(value, actualDayIndex, row),
         };
       });
     }
 
-    return Array.from({ length: columnsToShow }, (_, i) => {
+    return Array.from({ length: Math.min(columnsToShow, 30) }, (_, i) => {
       const actualDayIndex = startDayIndex + i;
       return {
         title: (
@@ -207,28 +260,26 @@ export default function CreateShiftPlan() {
         ),
         dataIndex: ["days", actualDayIndex],
         key: `day${actualDayIndex + 1}`,
-        width: 90,
+        width: 120,
         render: (value: string, row: any) => renderDayCell(value, actualDayIndex, row),
       };
     });
-  }, [dateRange, daysCount, startDayIndex, endDayIndex, viewMode, daysPerPage, t]);
+  }, [dateRange, daysCount, startDayIndex, endDayIndex, viewMode, daysPerPage, t, validRange]);
 
-  // Get unique shifts for filter
+  /* Available shifts */
   const availableShifts = useMemo(() => {
     const shifts = [...new Set(tableData.map((d) => d.shiftCode).filter(Boolean))];
-    return shifts.map((code) => ({
-      text: shiftMap[code] || code,
-      value: code,
-    }));
+    return shifts.map((code) => ({ text: shiftMap[code] || code, value: code }));
   }, [tableData, shiftMap]);
 
+  /* Table columns */
   const columns = useMemo(
     () => [
       {
         title: t("form.inspector"),
         dataIndex: "inspector",
         key: "inspector",
-        width: 180,
+        width: 220,
         fixed: "left" as const,
         filters: [...new Set(tableData.map((d) => d.inspector))].map((x) => ({ text: x, value: x })),
         onFilter: (value: any, record: any) => record.inspector === value,
@@ -246,7 +297,7 @@ export default function CreateShiftPlan() {
     [t, tableData, shiftMap, dayColumns],
   );
 
-  // PLAN button action
+  /* PLAN button handler (generate plan) */
   const handleSubmit = async () => {
     try {
       await form.validateFields();
@@ -258,7 +309,7 @@ export default function CreateShiftPlan() {
       return;
     }
 
-    if (dateRange.length !== 2) {
+    if (!validRange) {
       notification.error(
         { data: { en_Msg: t("shiftPlanning.selectPlanDate"), ar_Msg: t("shiftPlanning.selectPlanDate") } },
         t("common.error"),
@@ -267,20 +318,18 @@ export default function CreateShiftPlan() {
     }
 
     const body = {
-      startDate: dateRange[0].toISOString(),
-      endDate: dateRange[1].toISOString(),
+      startDate: (dateRange[0] as Dayjs).toISOString(),
+      endDate: (dateRange[1] as Dayjs).toISOString(),
       persist: true,
     };
 
     try {
       const res: any = await getShiftPlan(body).unwrap();
-
       if (res.successful) {
         setRawApiData(res.data || []);
         setHasDataLoaded(true);
-        setHasValidData(true); // Set valid data flag
-        resetAllFilters(); // Reset all filters when new plan is created
-
+        setHasValidData(true);
+        resetAllFilters();
         notification.success({ data: { en_Msg: res.en_Msg, ar_Msg: res.ar_Msg } }, t("messages.operationSuccess"));
       } else {
         notification.error({ data: { en_Msg: res.en_Msg, ar_Msg: res.ar_Msg } }, t("common.error"));
@@ -292,7 +341,7 @@ export default function CreateShiftPlan() {
     }
   };
 
-  // Convert API → table rows
+  /* Convert API -> table rows (use zone/area lookups to show labels) */
   useEffect(() => {
     if (!rawApiData || rawApiData.length === 0) {
       if (!dateRange.length && !hasDataLoaded) {
@@ -304,7 +353,13 @@ export default function CreateShiftPlan() {
       return;
     }
 
-    const start = dateRange[0]?.startOf("day");
+    if (!validRange) {
+      setTableData([]);
+      setHasValidData(false);
+      return;
+    }
+
+    const start = (dateRange[0] as Dayjs).startOf("day");
     const grouped: Record<string, any> = {};
 
     rawApiData.forEach((item) => {
@@ -328,56 +383,65 @@ export default function CreateShiftPlan() {
       if (item.isOff) {
         grouped[key].days[idx] = item.offType === "weekOff" ? "WO" : "LV";
       } else {
-        const zoneCode = item.zoneCode || "NA";
-        const areaCode = item.areaCode || "NA";
-        grouped[key].days[idx] = `${zoneCode}-${areaCode}`;
+        // show zoneName-areaName
+        const zoneIdRaw = item.zoneId ?? item.zone_Id ?? item.zoneGUID ?? item.zoneCode ?? "";
+        let areaRaw: any = item.areaId ?? item.area_Id ?? item.areasIds ?? item.areaGUID ?? "";
+        if (Array.isArray(areaRaw)) {
+          // keep as array
+        } else if (typeof areaRaw === "string" && areaRaw.includes(",")) {
+          areaRaw = areaRaw.split(",").map((a: string) => a.trim());
+        }
+
+        const zoneLabel = zoneIdRaw ? getZoneName(zoneIdRaw) : item.zoneCode || "NA";
+        let areaLabel = "";
+        if (Array.isArray(areaRaw)) areaLabel = areaRaw.map((aid) => getAreaName(aid)).join(",");
+        else areaLabel = getAreaName(areaRaw) || item.areaCode || "NA";
+
+        grouped[key].days[idx] = `${zoneLabel}-${areaLabel}`;
+      }
+
+      // normalized ids for editing
+      const normalizedZone = item.zoneId ?? item.zone_Id ?? item.zoneGUID ?? item.zoneCode ?? "";
+      let normalizedArea: any = item.areaId ?? item.area_Id ?? item.areasIds ?? item.areaGUID ?? "";
+      if (!Array.isArray(normalizedArea) && typeof normalizedArea === "string" && normalizedArea.includes(",")) {
+        normalizedArea = normalizedArea.split(",").map((s: string) => s.trim());
       }
 
       grouped[key]._raw[idx] = {
-        zoneId: item.zoneId || "",
-        areaId: item.areaId || "",
-        zoneCode: item.zoneCode || "NA",
-        areaCode: item.areaCode || "NA",
+        // keep original backend IDs
+        rosterId: item.rosterId,
+        shiftId: item.shiftId,
+        batchId: item.batchId,
+
+        inspectorId: item.inspectorId,
+        inspectorName: item.inspectorName,
+
+        zoneId: normalizedZone,
+        zoneCode: item.zoneCode || "",
+
+        areaId: Array.isArray(normalizedArea) ? normalizedArea[0] : normalizedArea,
+        areasIds: Array.isArray(normalizedArea) ? normalizedArea : [normalizedArea],
+        areaCode: item.areaCode || "",
+
         shiftCode: item.shiftCode || "",
+        isOff: item.isOff || false,
+        offType: item.offType || "",
       };
     });
 
-    const rows = Object.values(grouped).map((r: any) => ({
-      ...r,
-      _raw: r._raw || {},
-    }));
-
+    const rows = Object.values(grouped).map((r: any) => ({ ...r, _raw: r._raw || {} }));
     setTableData(rows);
     setHasDataLoaded(true);
-    setHasValidData(rows.length > 0); // Only set valid data if we have actual rows
-  }, [rawApiData, dateRange, daysCount]);
+    setHasValidData(rows.length > 0);
+  }, [rawApiData, dateRange, daysCount, validRange, allAreasLookup, zonesLookup]);
 
-  // Filtered table data based on shift filter
+  /* filtered data by shift */
   const filteredTableData = useMemo(() => {
     if (shiftFilter.length === 0) return tableData;
     return tableData.filter((row) => shiftFilter.includes(row.shiftCode));
   }, [tableData, shiftFilter]);
 
-  // lookup helpers
-  const getZoneName = (zoneId: string) => {
-    if (!zoneId) return t("common.noData");
-    const z = zonesLookup.find(
-      (x) => x.zoneId === zoneId || x.id === zoneId || x.zoneId?.toLowerCase() === zoneId?.toLowerCase(),
-    );
-    if (!z) return t("common.noData");
-    return z.zone || z.zoneName || z.description || z.name || t("common.noData");
-  };
-
-  const getAreaName = (areaId: string) => {
-    if (!areaId) return t("common.noData");
-    const a = areasLookup.find(
-      (x) => x.areaId === areaId || x.id === areaId || x.areaId?.toLowerCase() === areaId?.toLowerCase(),
-    );
-    if (!a) return t("common.noData");
-    return a.area || a.areaName || a.description || a.name || t("common.noData");
-  };
-
-  // cell style
+  /* cell style helper */
   const getCellStyle = (value: string) => {
     if (value === "LV") return { background: "#ffccc7", color: "#a8071a", fontWeight: 600 };
     if (value === "WO") return { background: "#fff7e6", color: "#d46b08", fontWeight: 600 };
@@ -385,18 +449,19 @@ export default function CreateShiftPlan() {
     return {};
   };
 
-  // render cell
+  /* render cell */
   const renderDayCell = (value: string, index: number, row: any) => {
     const cellRaw = (row._raw && row._raw[index]) || {};
 
-    // Detect WO / LV
     if (value === "WO") {
       return (
         <Tooltip
           title={
             <div>
-              <b>{t("form.inspector")}:</b> {row.inspector || t("common.noData")} <br />
-              <b>{t("shiftPlanning.day")}:</b> {index + 1} <br />
+              <b>{t("form.inspector")}:</b> {row.inspector}
+              <br />
+              <b>{t("shiftPlanning.day")}:</b> {index + 1}
+              <br />
               <b>{t("form.status")}:</b> {t("shiftPlanning.weekOff")}
             </div>
           }
@@ -405,14 +470,15 @@ export default function CreateShiftPlan() {
         </Tooltip>
       );
     }
-
     if (value === "LV") {
       return (
         <Tooltip
           title={
             <div>
-              <b>{t("form.inspector")}:</b> {row.inspector || t("common.noData")} <br />
-              <b>{t("shiftPlanning.day")}:</b> {index + 1} <br />
+              <b>{t("form.inspector")}:</b> {row.inspector}
+              <br />
+              <b>{t("shiftPlanning.day")}:</b> {index + 1}
+              <br />
               <b>{t("form.status")}:</b> {t("shiftPlanning.leave")}
             </div>
           }
@@ -422,14 +488,18 @@ export default function CreateShiftPlan() {
       );
     }
 
-    // --- Default cell (Zone-Area) ---
-    const zoneCode = cellRaw.zoneCode ?? t("common.noData");
-    const areaCode = cellRaw.areaCode ?? t("common.noData");
     const zoneId = cellRaw.zoneId ?? "";
     const areaId = cellRaw.areaId ?? "";
 
-    const zoneName = zoneId ? getZoneName(zoneId) : t("common.noData");
-    const areaName = areaId ? getAreaName(areaId) : t("common.noData");
+    let areaIds: string[] = [];
+    if (Array.isArray(areaId)) areaIds = areaId;
+    else if (typeof areaId === "string" && areaId.includes(","))
+      areaIds = areaId.split(",").map((a: string) => a.trim());
+    else if (areaId) areaIds = [areaId];
+
+    const zoneName = zoneId ? getZoneName(zoneId) : "";
+    const areaNames = areaIds.length ? areaIds.map((aid) => getAreaName(aid)).filter(Boolean) : [];
+    const display = zoneName || areaNames.length ? `${zoneName}-${areaNames.join(",")}` : value || t("common.noData");
 
     const shiftCode = cellRaw.shiftCode || row.shiftCode || "";
     const shiftName = shiftCode ? shiftMap[shiftCode] || shiftCode : t("common.noData");
@@ -437,9 +507,9 @@ export default function CreateShiftPlan() {
     return (
       <Tooltip
         title={
-          <div style={{ maxWidth: 300 }}>
+          <div style={{ maxWidth: 320 }}>
             <div>
-              <b>{t("form.inspector")}:</b> {row.inspector || t("common.noData")}
+              <b>{t("form.inspector")}:</b> {row.inspector}
             </div>
             <div>
               <b>{t("shiftPlanning.day")}:</b> {index + 1}
@@ -448,10 +518,10 @@ export default function CreateShiftPlan() {
               <b>{t("form.Shift")}:</b> {shiftName}
             </div>
             <div>
-              <b>{t("form.zone")}:</b> {zoneCode} — {zoneName}
+              <b>{t("form.zone")}:</b> {zoneName || t("common.noData")}
             </div>
             <div>
-              <b>{t("form.area")}:</b> {areaCode} — {areaName}
+              <b>{t("form.area")}:</b> {areaNames.length ? areaNames.join(", ") : t("common.noData")}
             </div>
             <div style={{ marginTop: 6 }}>
               <Button type="link" style={{ color: "red", padding: 0 }} onClick={() => openEdit(row, value, index)}>
@@ -461,126 +531,286 @@ export default function CreateShiftPlan() {
           </div>
         }
       >
-        <div style={{ padding: 6, textAlign: "center", borderRadius: 4, ...getCellStyle(value || "NA") }}>
-          {value || t("common.noData")}
+        <div style={{ padding: 6, textAlign: "center", borderRadius: 6, minWidth: 100, ...getCellStyle(display) }}>
+          {display}
         </div>
       </Tooltip>
     );
   };
 
-  // open modal for editing
+  /* open edit modal */
   const openEdit = (row: any, value: string, dayIndex: number) => {
     const cellRaw = (row._raw && row._raw[dayIndex]) || {};
-    const zoneId = cellRaw.zoneId || "";
-    const areaId = cellRaw.areaId || "";
-    form.setFieldsValue({ inspector: row.inspector, zone: zoneId, area: areaId });
-    setEditing({ rowKey: row.key, dayIndex });
+
+    let areaValue: any = cellRaw.areaId ?? cellRaw.areasIds ?? [];
+    if (!Array.isArray(areaValue) && typeof areaValue === "string" && areaValue) {
+      if (areaValue.includes(",")) areaValue = areaValue.split(",").map((a: string) => a.trim());
+      else areaValue = [areaValue];
+    }
+
+    const zoneValue = cellRaw.zoneId || "";
+
+    // Reset form with current values
+    form.setFieldsValue({
+      inspector: row.inspector,
+      zone: zoneValue,
+      area: areaValue,
+    });
+
+    // Load areas for the selected zone
+    (async () => {
+      if (zoneValue) {
+        try {
+          const res = await triggerGetAreas(zoneValue).unwrap();
+          const raw = res?.data ?? res ?? [];
+          const normalized = raw.map((a: any) => ({
+            id: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
+            value: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
+            label: a.area || a.areaName || a.name || String(a.areaId || a.area),
+            zoneId: a.zoneId ?? a.zone_Id ?? null,
+            original: a,
+          }));
+          setAreasLookup(normalized);
+        } catch (err) {
+          console.error("areas by zone failed:", err);
+          // Fallback: filter all areas by zone ID comparison
+          const selectedZone = zonesLookup.find(
+            (z) => String(z.value) === String(zoneValue) || String(z.id) === String(zoneValue),
+          );
+          const zoneIdToFilter = selectedZone?.value || selectedZone?.id || zoneValue;
+          setAreasLookup(allAreasLookup.filter((a) => String(a.zoneId) === String(zoneIdToFilter)));
+        }
+      } else {
+        // If no zone, show all areas
+        setAreasLookup(allAreasLookup);
+      }
+    })();
+
+    setEditing({ rowKey: row.key, dayIndex, row });
     setIsModalOpen(true);
   };
 
-  const saveEdit = async () => {
-    const zoneValue = form.getFieldValue("zone");
-    const areaValue = form.getFieldValue("area");
+  /* Part 2 ends here — Part 3 includes saveEdit (local), publish / saveDraft using RTK mutation, and JSX return */
+  /* Part 3 of 3 — saveEdit (local), publish/saveDraft using RTK mutation, and JSX return (modal + buttons) */
 
-    if (!zoneValue || !areaValue) {
-      message.warning(t("shiftPlanning.selectZoneArea"));
+  /* saveEdit: update UI locally and add edit to editsMap (only edited entries will be sent) */
+  const saveEdit = async () => {
+    try {
+      const values = await form.validateFields();
+      const zoneValue = values.zone;
+      const areaValue = values.area;
+
+      if (!zoneValue) {
+        message.warning("Select zone");
+        return;
+      }
+      if (!areaValue || areaValue.length === 0) {
+        message.warning("Select area");
+        return;
+      }
+
+      const zoneObj = zonesLookup.find((z) => String(z.value) === String(zoneValue));
+      const areaObjs = areaValue.map((id) => allAreasLookup.find((a) => String(a.value) === String(id)));
+
+      const zoneName = zoneObj?.label;
+      const areaNames = areaObjs.map((a) => a?.label).filter(Boolean);
+
+      setTableData((prev) =>
+        prev.map((row) => {
+          if (row.key !== editing?.rowKey) return row;
+
+          const updatedDays = [...row.days];
+          updatedDays[editing.dayIndex] = `${zoneName}-${areaNames.join(",")}`;
+
+          const backendRaw = row._raw[editing.dayIndex];
+
+          const newRaw = {
+            ...row._raw,
+            [editing.dayIndex]: {
+              rosterId: backendRaw.rosterId,
+              shiftId: backendRaw.shiftId,
+              batchId: backendRaw.batchId,
+
+              inspectorId: row.inspectorId,
+              inspectorName: row.inspector,
+
+              zoneId: zoneValue,
+              zoneCode: zoneObj?.original?.zoneCode || backendRaw.zoneCode,
+
+              areaId: areaValue[0],
+              areasIds: areaValue,
+              areaCode: areaObjs[0]?.original?.areaCode || backendRaw.areaCode,
+
+              shiftCode: row.shiftCode,
+            },
+          };
+
+          return { ...row, days: updatedDays, _raw: newRaw };
+        }),
+      );
+
+      const backendRaw = editing.row._raw[editing.dayIndex];
+      const editKey = `${editing.rowKey}_${editing.dayIndex}`;
+
+      setEditsMap((prev) => ({
+        ...prev,
+        [editKey]: {
+          ...backendRaw,
+          dayIndex: editing.dayIndex,
+
+          zoneId: zoneValue,
+          areasIds: areaValue,
+          areaCode: areaObjs[0]?.original?.areaCode || backendRaw.areaCode,
+        },
+      }));
+
+      setIsModalOpen(false);
+      setEditing(null);
+      message.success("Updated");
+    } catch (err) {
+      console.log("Modal validation failed:", err);
+    }
+  };
+
+  /* build scheduleEntries payload from editsMap only (user requested) */
+  const buildScheduleEntriesFromEdits = () => {
+    const entries: any[] = [];
+    const start = dateRange[0]?.startOf("day");
+    if (!start) return entries;
+
+    Object.values(editsMap).forEach((e: any) => {
+      const entryDate = start.add(e.dayIndex, "day").startOf("day").toISOString();
+
+      entries.push({
+        id: 0,
+        rosterId: e.rosterId,
+        date: entryDate,
+
+        inspectorId: e.inspectorId,
+        inspectorName: e.inspectorName,
+        inspectorNameAr: e.inspectorName,
+
+        zoneId: e.zoneId,
+        zoneCode: e.zoneCode,
+
+        areaId: e.areasIds[0],
+        areasIds: e.areasIds,
+        areaCode: e.areaCode,
+
+        shiftId: e.shiftId,
+        shiftCode: e.shiftCode,
+
+        batchId: e.batchId,
+
+        isOff: false,
+        offType: "",
+        offTypeAr: "",
+      });
+    });
+
+    return entries;
+  };
+
+  /* Publish or Save Draft click handlers */
+  /* Publish or Save Draft click handlers */
+  const handlePublishOrDraft = async (publish: boolean) => {
+    if (!dateRange || !dateRange[0] || !dateRange[1]) {
+      message.error(t("shiftPlanning.selectPlanDate"));
       return;
     }
 
-    // Find selected zone and area to get their codes
-    const selectedZone = zonesLookup.find((z) => z.zoneId === zoneValue || z.id === zoneValue);
-    const selectedArea = areasLookup.find((a) => a.areaId === areaValue || a.id === areaValue);
+    const scheduleEntries = buildScheduleEntriesFromEdits();
+    if (scheduleEntries.length === 0) {
+      message.warning(publish ? "No edits to publish" : "No edits to save as draft");
+      return;
+    }
 
-    const zoneCode = selectedZone?.zoneCode || selectedZone?.code || t("common.noData");
-    const areaCode = selectedArea?.areaCode || selectedArea?.code || t("common.noData");
+    const payload = {
+      batch: {
+        startDate: (dateRange[0] as Dayjs).toISOString(), // FIX: Use ISO format
+        endDate: (dateRange[1] as Dayjs).toISOString(), // FIX: Use ISO format
+        persist: true,
+      },
+      scheduleEntries,
+      isPublished: publish,
+    };
 
-    setTableData((old) =>
-      old.map((row) => {
-        if (row.key !== editing?.rowKey) return row;
-        const updated = [...row.days];
-        updated[editing.dayIndex] = `${zoneCode}-${areaCode}`;
-        const newRaw = { ...(row._raw || {}) };
-        newRaw[editing.dayIndex] = {
-          zoneCode: zoneCode,
-          areaCode: areaCode,
-          zoneId: zoneValue,
-          areaId: areaValue,
-        };
-        return { ...row, days: updated, _raw: newRaw };
-      }),
-    );
-    setIsModalOpen(false);
+    console.log("Publishing payload:", JSON.stringify(payload, null, 2));
+
+    try {
+      const res = await publishShiftPlan(payload).unwrap();
+      notification.success(
+        { data: { en_Msg: res?.en_Msg || (publish ? "Published" : "Saved as draft"), ar_Msg: res?.ar_Msg || "" } },
+        t("messages.operationSuccess"),
+      );
+      setEditsMap({});
+    } catch (err: any) {
+      console.error("publish/saveDraft error:", err);
+      // Show specific error message from backend if available
+      if (err?.data?.en_Msg) {
+        message.error(err.data.en_Msg);
+      } else if (err?.data?.errors) {
+        const errorMessages = Object.values(err.data.errors).flat();
+        message.error(errorMessages.join(", "));
+      } else {
+        message.error(t("common.error"));
+      }
+    }
   };
 
-  // Safe translation function with fallbacks
-  const safeT = (key: string, fallback?: string) => {
-    return t(key) || fallback || key;
-  };
-
+  /* JSX return (main UI + modal). Place this at the end of the component */
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="large">
       <Card>
         <Form form={form} layout="inline">
           <Form.Item
-            label={safeT("shiftPlanning.planDate", "Plan Date")}
+            label={t("shiftPlanning.planDate", "Plan Date")}
             name="planDate"
-            rules={[{ required: true, message: safeT("shiftPlanning.selectPlanDate", "Please select plan date") }]}
-            required={false}
+            rules={[{ required: true, message: t("shiftPlanning.selectPlanDate", "Please select plan date") }]}
           >
             <RangePicker
               value={dateRange as any}
-              onCalendarChange={(val) => {
-                // This fires on first click → captures start date
-                setTempStart(val?.[0] || null);
-              }}
+              onCalendarChange={(val) => setTempStart(val?.[0] || null)}
               onChange={(v) => {
                 setDateRange(v || []);
                 form.setFieldsValue({ planDate: v });
                 setCurrentPage(0);
-
-                // Reset filters/table
-                if (!v) {
+                if (!v || !v[0]) {
                   if (!hasDataLoaded) generateDefaultTable();
                   setRawApiData([]);
                   resetAllFilters();
                 }
-
-                // After selection completes → clear temp start
                 setTempStart(null);
               }}
               disabledDate={(current) => {
                 if (!current) return false;
-
-                // Disable past
                 if (current < dayjs().startOf("day")) return true;
-
-                // If user picked a start date while selecting
-                if (tempStart) {
-                  const maxEnd = tempStart.add(6, "month");
-                  const minEnd = tempStart; // prevent selecting dates before start
-                  return current > maxEnd || current < minEnd;
+                const start = dateRange[0];
+                if (start) {
+                  const maxEnd = (start as Dayjs).add(6, "month").endOf("day");
+                  if (current < (start as Dayjs).startOf("day")) return true;
+                  if (current > maxEnd) return true;
+                } else {
+                  const maxFromToday = dayjs().add(6, "month").endOf("day");
+                  if (current > maxFromToday) return true;
                 }
-
-                // No start selected → disable dates > 6 months from today
-                const maxRange = dayjs().add(6, "month");
-                return current > maxRange;
+                return false;
               }}
               format="DD-MM-YYYY"
-              placeholder={[safeT("placeholders.startDate", "Start Date"), safeT("placeholders.endDate", "End Date")]}
+              placeholder={[t("placeholders.startDate", "Start Date"), t("placeholders.endDate", "End Date")]}
             />
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" onClick={handleSubmit} loading={isLoading}>
-              {safeT("shiftPlanning.plan", "Plan")}
+            <Button type="primary" onClick={handleSubmit} loading={isPlanning}>
+              {t("shiftPlanning.plan", "Plan")}
             </Button>
           </Form.Item>
 
-          {/* Shift Filter */}
-          <Form.Item label={safeT("shiftPlanning.shiftFilter", "Shift Filter")}>
+          <Form.Item label={t("shiftPlanning.shiftFilter", "Shift Filter")}>
             <Select
               mode="multiple"
-              placeholder={safeT("shiftPlanning.selectShifts", "Select Shifts")}
+              placeholder={t("shiftPlanning.selectShifts", "Select Shifts")}
               style={{ minWidth: 200 }}
               value={shiftFilter}
               onChange={setShiftFilter}
@@ -595,43 +825,49 @@ export default function CreateShiftPlan() {
           </Form.Item>
 
           <Form.Item>
-            <label>{safeT("shiftPlanning.previousBatch", "previous batch")}</label>
-          </Form.Item>
-
-          <Form.Item>
-            <label>{safeT("shiftPlanning.publishedBy", "Published by")}: user name</label>
+            <div style={{ lineHeight: 1.2 }}>
+              <div style={{ fontSize: 12, color: "#888" }}>{t("shiftPlanning.previousBatch", "previous batch")}</div>
+              {lastBatch?.data ? (
+                <div style={{ marginTop: 6 }}>
+                  <div style={{ fontWeight: 600 }}>
+                    {t("shiftPlanning.publishedBy", "Published by")}: {lastBatch.data.addByName || lastBatch.data.addBy}
+                  </div>
+                  <div style={{ color: "#666", fontSize: 12 }}>
+                    {t("shiftPlanning.publishedOn", "Published On")}:{" "}
+                    {dayjs(lastBatch.data.addOn).isValid()
+                      ? dayjs(lastBatch.data.addOn).format("DD-MM-YYYY HH:mm")
+                      : "-"}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ color: "#999", marginTop: 6 }}>
+                  {t("shiftPlanning.noPreviousBatch", "No previous batch")}
+                </div>
+              )}
+            </div>
           </Form.Item>
         </Form>
       </Card>
 
-      {/* NEW: View Mode and Pagination Controls - Only show when we have valid data */}
+      {/* View / Pagination controls */}
       {hasValidData && daysCount > 7 && (
         <Card>
           <Space direction="vertical" style={{ width: "100%" }} size="middle">
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: 16,
-              }}
-            >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
                   <CalendarOutlined style={{ marginRight: 8 }} />
-                  {safeT("shiftPlanning.totalDays", "Total Days")}: {daysCount} ({Math.ceil(daysCount / 7)}{" "}
-                  {safeT("shiftPlanning.weeks", "weeks")})
+                  {t("shiftPlanning.totalDays", "Total Days")}: {daysCount} ({Math.ceil(daysCount / 7)}{" "}
+                  {t("shiftPlanning.weeks", "weeks")})
                 </div>
                 <Radio.Group value={viewMode} onChange={(e) => setViewMode(e.target.value)} buttonStyle="solid">
-                  <Radio.Button value="week">{safeT("shiftPlanning.weekView", "Week View (7 days)")}</Radio.Button>
-                  <Radio.Button value="month">{safeT("shiftPlanning.monthView", "Month View (30 days)")}</Radio.Button>
-                  <Radio.Button value="all">{safeT("shiftPlanning.allView", "All Days")}</Radio.Button>
+                  <Radio.Button value="week">{t("shiftPlanning.weekView", "Week View (7 days)")}</Radio.Button>
+                  <Radio.Button value="month">{t("shiftPlanning.monthView", "Month View (30 days)")}</Radio.Button>
+                  <Radio.Button value="all">{t("shiftPlanning.allView", "All Days")}</Radio.Button>
                 </Radio.Group>
               </div>
             </div>
 
-            {/* Pagination Controls */}
             {viewMode !== "all" && (
               <div
                 style={{
@@ -648,15 +884,15 @@ export default function CreateShiftPlan() {
                   onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                   disabled={currentPage === 0}
                 >
-                  {safeT("common.previous", "Previous")}
+                  {t("common.previous", "Previous")}
                 </Button>
 
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 16, fontWeight: 600 }}>
-                    {safeT("shiftPlanning.days", "Days")} {startDayIndex + 1} - {endDayIndex}
+                    {t("shiftPlanning.days", "Days")} {startDayIndex + 1} - {endDayIndex}
                   </div>
                   <div style={{ fontSize: 12, color: "#666" }}>
-                    {safeT("shiftPlanning.page", "Page")} {currentPage + 1} / {totalPages}
+                    {t("shiftPlanning.page", "Page")} {currentPage + 1} / {totalPages}
                   </div>
                 </div>
 
@@ -664,9 +900,8 @@ export default function CreateShiftPlan() {
                   icon={<RightOutlined />}
                   onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
                   disabled={currentPage === totalPages - 1}
-                  iconPosition="end"
                 >
-                  {safeT("common.next", "Next")}
+                  {t("common.next", "Next")}
                 </Button>
               </div>
             )}
@@ -679,22 +914,32 @@ export default function CreateShiftPlan() {
           type="card"
           activeKey={activeTab}
           onChange={setActiveTab}
-          tabBarExtraContent={<Button type="primary">{safeT("shiftPlanning.publish", "Publish")}</Button>}
+          tabBarExtraContent={
+            <Space>
+              <Button onClick={() => handlePublishOrDraft(false)} loading={isPublishing}>
+                {t("shiftPlanning.saveDraft", "Save Draft")}
+              </Button>
+              <Button type="primary" onClick={() => handlePublishOrDraft(true)} loading={isPublishing}>
+                {t("shiftPlanning.publish", "Publish")}
+              </Button>
+            </Space>
+          }
         >
-          <TabPane tab={safeT("common.all", "All")} key="1">
+          <TabPane tab={t("common.all", "All")} key="1">
             <Table
               dataSource={filteredTableData}
               columns={columns}
               bordered
-              scroll={{ x: viewMode === "all" ? daysCount * 90 + 200 : "max-content", y: 650 }}
+              scroll={{ x: viewMode === "all" ? daysCount * 120 + 300 : "max-content", y: 650 }}
               pagination={false}
+              rowKey="key"
             />
           </TabPane>
 
-          <TabPane tab={safeT("shiftPlanning.inspectorWise", "Inspector Wise")} key="3">
+          <TabPane tab={t("shiftPlanning.inspectorWise", "Inspector Wise")} key="3">
             <Card style={{ marginBottom: 10 }}>
               <Select
-                placeholder={safeT("shiftPlanning.selectInspector", "Select Inspector")}
+                placeholder={t("shiftPlanning.selectInspector", "Select Inspector")}
                 style={{ width: 240 }}
                 allowClear
                 value={inspectorFilter}
@@ -714,69 +959,108 @@ export default function CreateShiftPlan() {
               }
               columns={columns}
               bordered
-              scroll={{ x: viewMode === "all" ? daysCount * 90 + 200 : "max-content", y: 650 }}
+              scroll={{ x: viewMode === "all" ? daysCount * 120 + 300 : "max-content", y: 650 }}
               pagination={false}
+              rowKey="key"
             />
           </TabPane>
         </Tabs>
       </Card>
 
+      {/* EDIT MODAL */}
       <Modal
-        title={safeT("common.edit", "Edit")}
+        title={t("common.edit", "Edit")}
         open={isModalOpen}
         onOk={saveEdit}
-        onCancel={() => setIsModalOpen(false)}
-        okText={safeT("common.ok", "OK")}
-        cancelText={safeT("common.cancel", "Cancel")}
+        onCancel={() => {
+          setIsModalOpen(false);
+          setEditing(null);
+        }}
+        okText={t("common.update", "Update")}
+        cancelText={t("common.cancel", "Cancel")}
+        destroyOnClose
+        width={600}
       >
-        <div style={{ padding: "20px 0" }}>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>
-              {safeT("form.inspector", "Inspector")}
-            </label>
-            <Input value={form.getFieldValue("inspector")} disabled style={{ width: "100%" }} />
-          </div>
+        <Form form={form} layout="vertical">
+          {/* INSPECTOR */}
+          <Form.Item label={t("form.inspector")} name="inspector">
+            <Input disabled />
+          </Form.Item>
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>
-              {safeT("form.zone", "Zone")} <span style={{ color: "red" }}>*</span>
-            </label>
+          {/* ZONE */}
+          <Form.Item
+            label={t("form.zone")}
+            name="zone"
+            rules={[{ required: true, message: t("shiftPlanning.selectZone") }]}
+          >
             <Select
-              placeholder={safeT("placeholders.zone", "Select zone")}
-              style={{ width: "100%" }}
-              value={form.getFieldValue("zone")}
-              onChange={(value) => form.setFieldsValue({ zone: value })}
+              placeholder={t("placeholders.zone")}
               showSearch
               optionFilterProp="children"
+              allowClear
+              onChange={async (value) => {
+                // Clear areas whenever zone changes
+                form.setFieldsValue({ area: [] });
+
+                if (!value) {
+                  setAreasLookup(allAreasLookup);
+                  return;
+                }
+
+                try {
+                  const res = await triggerGetAreas(value).unwrap();
+                  const raw = res?.data ?? res ?? [];
+
+                  const normalized = raw.map((a: any) => ({
+                    id: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
+                    value: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
+                    label: a.area || a.areaName || a.name || String(a.areaId || a.area),
+                    zoneId: a.zoneId ?? a.zone_Id ?? null,
+                    original: a,
+                  }));
+
+                  setAreasLookup(normalized);
+                } catch (err) {
+                  console.error("Failed loading areas by zone:", err);
+                  // Fallback: filter from all areas lookup
+                  const selectedZone = zonesLookup.find(
+                    (z) => String(z.value) === String(value) || String(z.id) === String(value),
+                  );
+                  const zoneIdToFilter = selectedZone?.value || selectedZone?.id || value;
+                  setAreasLookup(allAreasLookup.filter((a) => String(a.zoneId) === String(zoneIdToFilter)));
+                }
+              }}
             >
-              {zonesLookup.map((zone) => (
-                <Select.Option key={zone.zoneId || zone.id} value={zone.zoneId || zone.id}>
-                  {zone.zone || zone.zoneName || zone.description || zone.name || zone.zoneId || zone.id}
+              {zonesLookup.map((z) => (
+                <Select.Option key={z.value} value={z.value}>
+                  {z.label}
                 </Select.Option>
               ))}
             </Select>
-          </div>
+          </Form.Item>
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>
-              {safeT("form.area", "Area")} <span style={{ color: "red" }}>*</span>
-            </label>
+          {/* AREAS */}
+          <Form.Item
+            label={t("form.area")}
+            name="area"
+            rules={[{ required: true, message: t("shiftPlanning.selectArea") }]}
+          >
             <Select
-              placeholder={safeT("placeholders.area", "Select area")}
-              style={{ width: "100%" }}
-              value={form.getFieldValue("area")}
-              onChange={(value) => form.setFieldsValue({ area: value })}
+              mode="multiple"
+              placeholder={t("placeholders.area")}
               showSearch
               optionFilterProp="children"
+              allowClear
+              disabled={!form.getFieldValue("zone")}
             >
-              {areasLookup.map((area) => (
-                <Select.Option key={area.areaId || area.id} value={area.areaId || area.id}>
-                  {area.area || area.areaName || area.description || area.name || area.areaId || area.id}
+              {areasLookup.map((a) => (
+                <Select.Option key={a.value} value={a.value}>
+                  {a.label}
                 </Select.Option>
               ))}
             </Select>
-          </div>
-        </div>
+          </Form.Item>
+        </Form>
       </Modal>
     </Space>
   );
