@@ -1,8 +1,8 @@
-/* Part 1 of 3 — CreateShiftPlan (imports, lookup loading, date & pagination state) */
+/* COMPLETE CreateShiftPlan Component WITH FIXED DRAFT MODAL */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import {
   Table,
   Tabs,
@@ -30,6 +30,7 @@ import {
   useGetAllAreasQuery,
   useGetLastBatchDetailQuery,
   usePublishShiftPlanMutation,
+  useGetSavedScheduleDraftQuery,
 } from "../services/rtkApiFactory";
 import { useAppNotification } from "../utils/notificationManager";
 
@@ -52,26 +53,38 @@ export default function CreateShiftPlan() {
   const { t, i18n } = useTranslation();
   const notification = useAppNotification();
 
+  // FIXED: Properly use Modal.useModal hook
+  const [modal, contextHolder] = Modal.useModal();
+
   // RTK hooks
   const [getShiftPlan, { isLoading: isPlanning }] = useGetShiftPlanMutation();
   const [publishShiftPlan, { isLoading: isPublishing }] = usePublishShiftPlanMutation();
 
   const { data: lastBatch } = useGetLastBatchDetailQuery();
+
+  const {
+    data: savedDraft,
+    isLoading: isDraftLoading,
+    refetch: refetchDraft,
+    isSuccess: isDraftSuccess,
+  } = useGetSavedScheduleDraftQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
+
   const [triggerGetZones] = useLazyGetZonesQuery();
   const [triggerGetAreas] = useLazyGetAreasQuery();
   const { data: allAreasData } = useGetAllAreasQuery();
 
   // lookups normalized
   const [zonesLookup, setZonesLookup] = useState<any[]>([]);
-  const [areasLookup, setAreasLookup] = useState<any[]>([]); // current filtered areas (for modal & UI)
-  const [allAreasLookup, setAllAreasLookup] = useState<any[]>([]); // full list
+  const [areasLookup, setAreasLookup] = useState<any[]>([]);
+  const [allAreasLookup, setAllAreasLookup] = useState<any[]>([]);
 
   // main table & UI state
   const [rawApiData, setRawApiData] = useState<any[]>([]);
   const [tableData, setTableData] = useState<any[]>([]);
   const [form] = Form.useForm();
 
-  // RangePicker supports start-only (end can be null)
   const [dateRange, setDateRange] = useState<(Dayjs | null)[]>([]);
   const [activeTab, setActiveTab] = useState("1");
   const [inspectorFilter, setInspectorFilter] = useState("");
@@ -89,6 +102,9 @@ export default function CreateShiftPlan() {
   const [hasValidData, setHasValidData] = useState(false);
   const [tempStart, setTempStart] = useState<Dayjs | null>(null);
 
+  const draftPromptShownRef = useRef(false);
+  const [isLoadedFromDraft, setIsLoadedFromDraft] = useState(false);
+
   // Map shift codes to labels
   const shiftMap: Record<string, string> = useMemo(
     () => ({
@@ -101,8 +117,6 @@ export default function CreateShiftPlan() {
     [t],
   );
 
-  // Keep track of local edits: key = `${rowKey}_${dayIndex}`, value = { rowKey, dayIndex, zoneId, areasIds, ... }
-  // This map stores only user edits (so Publish/Save Draft sends only edited entries).
   const [editsMap, setEditsMap] = useState<Record<string, any>>({});
 
   useEffect(() => {
@@ -114,6 +128,99 @@ export default function CreateShiftPlan() {
   useEffect(() => {
     setPageTitle(t(ShiftPlanningConfig.title));
   }, [i18n.language, setPageTitle, t]);
+
+  // FIXED: Draft prompt with proper modal usage
+  useEffect(() => {
+    console.log("Draft useEffect triggered");
+    console.log("isDraftLoading:", isDraftLoading);
+    console.log("isDraftSuccess:", isDraftSuccess);
+    console.log("savedDraft:", savedDraft);
+    console.log("draftPromptShownRef.current:", draftPromptShownRef.current);
+
+    if (isDraftLoading) {
+      console.log("Draft is still loading, waiting...");
+      return;
+    }
+
+    if (!isDraftSuccess) {
+      console.log("Draft query not successful yet");
+      return;
+    }
+
+    if (draftPromptShownRef.current) {
+      console.log("Draft prompt already shown, skipping");
+      return;
+    }
+
+    if (!savedDraft) {
+      console.log("No saved draft data");
+      return;
+    }
+
+    const draftData = savedDraft?.data ?? [];
+    console.log("Draft data length:", draftData.length);
+
+    if (draftData && draftData.length > 0) {
+      console.log("Showing draft confirmation modal");
+      draftPromptShownRef.current = true;
+
+      modal.confirm({
+        title: t("shiftPlanning.loadDraftTitle", "Load Saved Draft?"),
+        content: t(
+          "shiftPlanning.loadDraftMessage",
+          `A saved draft with ${draftData.length} entries was found. Would you like to load it?`,
+        ),
+        okText: t("common.yes", "Yes"),
+        cancelText: t("common.no", "No"),
+        onOk() {
+          console.log("User chose to load draft");
+          loadDraftData(draftData);
+        },
+        onCancel() {
+          console.log("User declined to load draft");
+        },
+      });
+    } else {
+      console.log("Draft data is empty, not showing prompt");
+    }
+  }, [isDraftLoading, isDraftSuccess, savedDraft, t, modal]);
+
+  // Function to load draft data
+  const loadDraftData = (draftData: any[]) => {
+    console.log("Loading draft data:", draftData.length, "entries");
+
+    if (!draftData || draftData.length === 0) return;
+
+    const dates = draftData.map((item) => dayjs(item.date)).filter((d) => d.isValid());
+    if (dates.length === 0) {
+      console.log("No valid dates in draft data");
+      return;
+    }
+
+    const minDate = dates.reduce((min, d) => (d.isBefore(min) ? d : min), dates[0]);
+    const maxDate = dates.reduce((max, d) => (d.isAfter(max) ? d : max), dates[0]);
+
+    console.log("Draft date range:", minDate.format("YYYY-MM-DD"), "to", maxDate.format("YYYY-MM-DD"));
+
+    setDateRange([minDate, maxDate]);
+    form.setFieldsValue({ planDate: [minDate, maxDate] });
+
+    setRawApiData(draftData);
+    setHasDataLoaded(true);
+    setHasValidData(true);
+    setIsLoadedFromDraft(true);
+    resetAllFilters();
+
+    notification.success(
+      {
+        data: {
+          en_Msg: `Draft loaded successfully with ${draftData.length} entries`,
+          ar_Msg: `تم تحميل المسودة بنجاح مع ${draftData.length} إدخالات`,
+        },
+      },
+      t("messages.operationSuccess"),
+    );
+  };
 
   // load zones (normalize)
   const loadZones = async () => {
@@ -144,7 +251,6 @@ export default function CreateShiftPlan() {
       original: a,
     }));
     setAllAreasLookup(normalized);
-    // default areas lookup to full list (modal will filter on zone change)
     setAreasLookup(normalized);
   }, [allAreasData]);
 
@@ -169,9 +275,7 @@ export default function CreateShiftPlan() {
     setActiveTab("1");
     setCurrentPage(0);
     setViewMode("week");
-    setHasValidData(false);
   };
-  
 
   const validRange = useMemo(() => dateRange.length === 2 && !!dateRange[0] && !!dateRange[1], [dateRange]);
 
@@ -214,14 +318,12 @@ export default function CreateShiftPlan() {
     const z = zonesLookup.find((x) => String(x.value) === String(zoneVal) || String(x.id) === String(zoneVal));
     return z ? z.label : String(zoneVal);
   };
+
   const getAreaName = (areaVal: any) => {
     if (!areaVal && areaVal !== 0) return "";
     const a = allAreasLookup.find((x) => String(x.value) === String(areaVal) || String(x.id) === String(areaVal));
     return a ? a.label : String(areaVal);
   };
-
-  /* Part 1 ends here — Part 2 continues with columns, day rendering, openEdit/saveEdit (local) */
-  /* Part 2 of 3 — columns, day columns, converting API data to UI, render cell, openEdit */
 
   /* Day columns generation */
   const dayColumns = useMemo(() => {
@@ -297,6 +399,50 @@ export default function CreateShiftPlan() {
     [t, tableData, shiftMap, dayColumns],
   );
 
+  // Auto-save as draft after generating plan
+  const autoSaveDraft = async (planData: any[]) => {
+    if (!planData || planData.length === 0) return;
+    if (!validRange) return;
+
+    const scheduleEntries = planData.map((item) => ({
+      id: 0,
+      rosterId: item.rosterId || "00000000-0000-0000-0000-000000000000",
+      date: item.date,
+      inspectorId: item.inspectorId,
+      inspectorName: item.inspectorName,
+      inspectorNameAr: item.inspectorName,
+      zoneId: item.zoneId ?? item.zone_Id ?? "",
+      zoneCode: item.zoneCode || "",
+      areaId: Array.isArray(item.areasIds) ? item.areasIds[0] : item.areaId,
+      areasIds: Array.isArray(item.areasIds) ? item.areasIds : item.areaId ? [item.areaId] : [],
+      areaCode: item.areaCode || "",
+      shiftId: item.shiftId || "00000000-0000-0000-0000-000000000000",
+      shiftCode: item.shiftCode || "",
+      batchId: item.batchId || "00000000-0000-0000-0000-000000000000",
+      isOff: item.isOff || false,
+      offType: item.offType || "",
+      offTypeAr: item.offTypeAr || "",
+    }));
+
+    const payload = {
+      batch: {
+        startDate: (dateRange[0] as Dayjs).toISOString(),
+        endDate: (dateRange[1] as Dayjs).toISOString(),
+        persist: true,
+      },
+      scheduleEntries,
+      isPublished: false,
+    };
+
+    try {
+      const res = await publishShiftPlan(payload).unwrap();
+      console.log("Auto-saved as draft:", res);
+      refetchDraft();
+    } catch (err: any) {
+      console.error("Auto-save draft failed:", err);
+    }
+  };
+
   /* PLAN button handler (generate plan) */
   const handleSubmit = async () => {
     try {
@@ -329,8 +475,11 @@ export default function CreateShiftPlan() {
         setRawApiData(res.data || []);
         setHasDataLoaded(true);
         setHasValidData(true);
+        setIsLoadedFromDraft(false);
         resetAllFilters();
         notification.success({ data: { en_Msg: res.en_Msg, ar_Msg: res.ar_Msg } }, t("messages.operationSuccess"));
+
+        await autoSaveDraft(res.data || []);
       } else {
         notification.error({ data: { en_Msg: res.en_Msg, ar_Msg: res.ar_Msg } }, t("common.error"));
         setHasValidData(false);
@@ -341,7 +490,7 @@ export default function CreateShiftPlan() {
     }
   };
 
-  /* Convert API -> table rows (use zone/area lookups to show labels) */
+  /* Convert API -> table rows (properly handle areasIds array) */
   useEffect(() => {
     if (!rawApiData || rawApiData.length === 0) {
       if (!dateRange.length && !hasDataLoaded) {
@@ -383,46 +532,48 @@ export default function CreateShiftPlan() {
       if (item.isOff) {
         grouped[key].days[idx] = item.offType === "weekOff" ? "WO" : "LV";
       } else {
-        // show zoneName-areaName
         const zoneIdRaw = item.zoneId ?? item.zone_Id ?? item.zoneGUID ?? item.zoneCode ?? "";
-        let areaRaw: any = item.areaId ?? item.area_Id ?? item.areasIds ?? item.areaGUID ?? "";
+        let areaRaw: any = item.areasIds ?? item.areaId ?? item.area_Id ?? item.areaGUID ?? "";
+
+        let areasArray: any[] = [];
         if (Array.isArray(areaRaw)) {
-          // keep as array
+          areasArray = areaRaw;
         } else if (typeof areaRaw === "string" && areaRaw.includes(",")) {
-          areaRaw = areaRaw.split(",").map((a: string) => a.trim());
+          areasArray = areaRaw.split(",").map((a: string) => a.trim());
+        } else if (areaRaw) {
+          areasArray = [areaRaw];
         }
 
         const zoneLabel = zoneIdRaw ? getZoneName(zoneIdRaw) : item.zoneCode || "NA";
-        let areaLabel = "";
-        if (Array.isArray(areaRaw)) areaLabel = areaRaw.map((aid) => getAreaName(aid)).join(",");
-        else areaLabel = getAreaName(areaRaw) || item.areaCode || "NA";
+        const areaLabels = areasArray.map((aid) => getAreaName(aid)).filter(Boolean);
+        const areaLabel = areaLabels.length ? areaLabels.join(", ") : item.areaCode || "NA";
 
         grouped[key].days[idx] = `${zoneLabel}-${areaLabel}`;
       }
 
-      // normalized ids for editing
       const normalizedZone = item.zoneId ?? item.zone_Id ?? item.zoneGUID ?? item.zoneCode ?? "";
-      let normalizedArea: any = item.areaId ?? item.area_Id ?? item.areasIds ?? item.areaGUID ?? "";
-      if (!Array.isArray(normalizedArea) && typeof normalizedArea === "string" && normalizedArea.includes(",")) {
-        normalizedArea = normalizedArea.split(",").map((s: string) => s.trim());
+      let normalizedAreas: any = item.areasIds ?? item.areaId ?? item.area_Id ?? item.areaGUID ?? "";
+
+      let normalizedAreasArray: any[] = [];
+      if (Array.isArray(normalizedAreas)) {
+        normalizedAreasArray = normalizedAreas;
+      } else if (typeof normalizedAreas === "string" && normalizedAreas.includes(",")) {
+        normalizedAreasArray = normalizedAreas.split(",").map((s: string) => s.trim());
+      } else if (normalizedAreas) {
+        normalizedAreasArray = [normalizedAreas];
       }
 
       grouped[key]._raw[idx] = {
-        // keep original backend IDs
         rosterId: item.rosterId,
         shiftId: item.shiftId,
         batchId: item.batchId,
-
         inspectorId: item.inspectorId,
         inspectorName: item.inspectorName,
-
         zoneId: normalizedZone,
         zoneCode: item.zoneCode || "",
-
-        areaId: Array.isArray(normalizedArea) ? normalizedArea[0] : normalizedArea,
-        areasIds: Array.isArray(normalizedArea) ? normalizedArea : [normalizedArea],
+        areasIds: normalizedAreasArray,
+        areaId: normalizedAreasArray[0] || "",
         areaCode: item.areaCode || "",
-
         shiftCode: item.shiftCode || "",
         isOff: item.isOff || false,
         offType: item.offType || "",
@@ -449,7 +600,7 @@ export default function CreateShiftPlan() {
     return {};
   };
 
-  /* render cell */
+  /* render cell with proper multi-area handling */
   const renderDayCell = (value: string, index: number, row: any) => {
     const cellRaw = (row._raw && row._raw[index]) || {};
 
@@ -470,6 +621,7 @@ export default function CreateShiftPlan() {
         </Tooltip>
       );
     }
+
     if (value === "LV") {
       return (
         <Tooltip
@@ -489,17 +641,21 @@ export default function CreateShiftPlan() {
     }
 
     const zoneId = cellRaw.zoneId ?? "";
-    const areaId = cellRaw.areaId ?? "";
 
     let areaIds: string[] = [];
-    if (Array.isArray(areaId)) areaIds = areaId;
-    else if (typeof areaId === "string" && areaId.includes(","))
-      areaIds = areaId.split(",").map((a: string) => a.trim());
-    else if (areaId) areaIds = [areaId];
+    if (Array.isArray(cellRaw.areasIds)) {
+      areaIds = cellRaw.areasIds;
+    } else if (cellRaw.areasIds && typeof cellRaw.areasIds === "string") {
+      areaIds = cellRaw.areasIds.includes(",")
+        ? cellRaw.areasIds.split(",").map((a: string) => a.trim())
+        : [cellRaw.areasIds];
+    } else if (cellRaw.areaId) {
+      areaIds = Array.isArray(cellRaw.areaId) ? cellRaw.areaId : [cellRaw.areaId];
+    }
 
     const zoneName = zoneId ? getZoneName(zoneId) : "";
     const areaNames = areaIds.length ? areaIds.map((aid) => getAreaName(aid)).filter(Boolean) : [];
-    const display = zoneName || areaNames.length ? `${zoneName}-${areaNames.join(",")}` : value || t("common.noData");
+    const display = zoneName || areaNames.length ? `${zoneName}-${areaNames.join(", ")}` : value || t("common.noData");
 
     const shiftCode = cellRaw.shiftCode || row.shiftCode || "";
     const shiftName = shiftCode ? shiftMap[shiftCode] || shiftCode : t("common.noData");
@@ -538,26 +694,29 @@ export default function CreateShiftPlan() {
     );
   };
 
-  /* open edit modal */
+  /* open edit modal with ALL areas selected */
   const openEdit = (row: any, value: string, dayIndex: number) => {
     const cellRaw = (row._raw && row._raw[dayIndex]) || {};
 
-    let areaValue: any = cellRaw.areaId ?? cellRaw.areasIds ?? [];
-    if (!Array.isArray(areaValue) && typeof areaValue === "string" && areaValue) {
-      if (areaValue.includes(",")) areaValue = areaValue.split(",").map((a: string) => a.trim());
-      else areaValue = [areaValue];
+    let areaValue: any[] = [];
+    if (Array.isArray(cellRaw.areasIds)) {
+      areaValue = cellRaw.areasIds;
+    } else if (cellRaw.areasIds && typeof cellRaw.areasIds === "string") {
+      areaValue = cellRaw.areasIds.includes(",")
+        ? cellRaw.areasIds.split(",").map((a: string) => a.trim())
+        : [cellRaw.areasIds];
+    } else if (cellRaw.areaId) {
+      areaValue = Array.isArray(cellRaw.areaId) ? cellRaw.areaId : [cellRaw.areaId];
     }
 
     const zoneValue = cellRaw.zoneId || "";
 
-    // Reset form with current values
     form.setFieldsValue({
       inspector: row.inspector,
       zone: zoneValue,
       area: areaValue,
     });
 
-    // Load areas for the selected zone
     (async () => {
       if (zoneValue) {
         try {
@@ -573,7 +732,6 @@ export default function CreateShiftPlan() {
           setAreasLookup(normalized);
         } catch (err) {
           console.error("areas by zone failed:", err);
-          // Fallback: filter all areas by zone ID comparison
           const selectedZone = zonesLookup.find(
             (z) => String(z.value) === String(zoneValue) || String(z.id) === String(zoneValue),
           );
@@ -581,7 +739,6 @@ export default function CreateShiftPlan() {
           setAreasLookup(allAreasLookup.filter((a) => String(a.zoneId) === String(zoneIdToFilter)));
         }
       } else {
-        // If no zone, show all areas
         setAreasLookup(allAreasLookup);
       }
     })();
@@ -590,10 +747,7 @@ export default function CreateShiftPlan() {
     setIsModalOpen(true);
   };
 
-  /* Part 2 ends here — Part 3 includes saveEdit (local), publish / saveDraft using RTK mutation, and JSX return */
-  /* Part 3 of 3 — saveEdit (local), publish/saveDraft using RTK mutation, and JSX return (modal + buttons) */
-
-  /* saveEdit: update UI locally and add edit to editsMap (only edited entries will be sent) */
+  /* saveEdit with proper multi-area handling */
   const saveEdit = async () => {
     try {
       const values = await form.validateFields();
@@ -610,17 +764,19 @@ export default function CreateShiftPlan() {
       }
 
       const zoneObj = zonesLookup.find((z) => String(z.value) === String(zoneValue));
-      const areaObjs = areaValue.map((id) => allAreasLookup.find((a) => String(a.value) === String(id)));
+      const areaObjs = areaValue
+        .map((id: any) => allAreasLookup.find((a) => String(a.value) === String(id)))
+        .filter(Boolean);
 
       const zoneName = zoneObj?.label;
-      const areaNames = areaObjs.map((a) => a?.label).filter(Boolean);
+      const areaNames = areaObjs.map((a: any) => a?.label).filter(Boolean);
 
       setTableData((prev) =>
         prev.map((row) => {
           if (row.key !== editing?.rowKey) return row;
 
           const updatedDays = [...row.days];
-          updatedDays[editing.dayIndex] = `${zoneName}-${areaNames.join(",")}`;
+          updatedDays[editing.dayIndex] = `${zoneName}-${areaNames.join(", ")}`;
 
           const backendRaw = row._raw[editing.dayIndex];
 
@@ -630,17 +786,13 @@ export default function CreateShiftPlan() {
               rosterId: backendRaw.rosterId,
               shiftId: backendRaw.shiftId,
               batchId: backendRaw.batchId,
-
               inspectorId: row.inspectorId,
               inspectorName: row.inspector,
-
               zoneId: zoneValue,
               zoneCode: zoneObj?.original?.zoneCode || backendRaw.zoneCode,
-
-              areaId: areaValue[0],
               areasIds: areaValue,
+              areaId: areaValue[0],
               areaCode: areaObjs[0]?.original?.areaCode || backendRaw.areaCode,
-
               shiftCode: row.shiftCode,
             },
           };
@@ -657,7 +809,6 @@ export default function CreateShiftPlan() {
         [editKey]: {
           ...backendRaw,
           dayIndex: editing.dayIndex,
-
           zoneId: zoneValue,
           areasIds: areaValue,
           areaCode: areaObjs[0]?.original?.areaCode || backendRaw.areaCode,
@@ -672,47 +823,69 @@ export default function CreateShiftPlan() {
     }
   };
 
-  /* build scheduleEntries payload from editsMap only (user requested) */
+  /* Build scheduleEntries from ALL data or edits */
   const buildScheduleEntriesFromEdits = () => {
     const entries: any[] = [];
     const start = dateRange[0]?.startOf("day");
     if (!start) return entries;
 
-    Object.values(editsMap).forEach((e: any) => {
-      const entryDate = start.add(e.dayIndex, "day").startOf("day").toISOString();
+    if (Object.keys(editsMap).length === 0 && hasValidData) {
+      tableData.forEach((row) => {
+        Object.keys(row._raw || {}).forEach((dayIdx) => {
+          const e = row._raw[dayIdx];
+          const entryDate = start.add(Number(dayIdx), "day").startOf("day").toISOString();
 
-      entries.push({
-        id: 0,
-        rosterId: e.rosterId,
-        date: entryDate,
-
-        inspectorId: e.inspectorId,
-        inspectorName: e.inspectorName,
-        inspectorNameAr: e.inspectorName,
-
-        zoneId: e.zoneId,
-        zoneCode: e.zoneCode,
-
-        areaId: e.areasIds[0],
-        areasIds: e.areasIds,
-        areaCode: e.areaCode,
-
-        shiftId: e.shiftId,
-        shiftCode: e.shiftCode,
-
-        batchId: e.batchId,
-
-        isOff: false,
-        offType: "",
-        offTypeAr: "",
+          entries.push({
+            id: 0,
+            rosterId: e.rosterId,
+            date: entryDate,
+            inspectorId: e.inspectorId,
+            inspectorName: e.inspectorName,
+            inspectorNameAr: e.inspectorName,
+            zoneId: e.zoneId,
+            zoneCode: e.zoneCode,
+            areaId: e.areasIds[0],
+            areasIds: e.areasIds,
+            areaCode: e.areaCode,
+            shiftId: e.shiftId,
+            shiftCode: e.shiftCode,
+            batchId: e.batchId,
+            isOff: e.isOff || false,
+            offType: e.offType || "",
+            offTypeAr: e.offTypeAr || "",
+          });
+        });
       });
-    });
+    } else {
+      Object.values(editsMap).forEach((e: any) => {
+        const entryDate = start.add(e.dayIndex, "day").startOf("day").toISOString();
+
+        entries.push({
+          id: 0,
+          rosterId: e.rosterId,
+          date: entryDate,
+          inspectorId: e.inspectorId,
+          inspectorName: e.inspectorName,
+          inspectorNameAr: e.inspectorName,
+          zoneId: e.zoneId,
+          zoneCode: e.zoneCode,
+          areaId: e.areasIds[0],
+          areasIds: e.areasIds,
+          areaCode: e.areaCode,
+          shiftId: e.shiftId,
+          shiftCode: e.shiftCode,
+          batchId: e.batchId,
+          isOff: false,
+          offType: "",
+          offTypeAr: "",
+        });
+      });
+    }
 
     return entries;
   };
 
-  /* Publish or Save Draft click handlers */
-  /* Publish or Save Draft click handlers */
+  /* Publish or Save Draft handlers */
   const handlePublishOrDraft = async (publish: boolean) => {
     if (!dateRange || !dateRange[0] || !dateRange[1]) {
       message.error(t("shiftPlanning.selectPlanDate"));
@@ -721,14 +894,14 @@ export default function CreateShiftPlan() {
 
     const scheduleEntries = buildScheduleEntriesFromEdits();
     if (scheduleEntries.length === 0) {
-      message.warning(publish ? "No edits to publish" : "No edits to save as draft");
+      message.warning(publish ? "No data to publish" : "No data to save as draft");
       return;
     }
 
     const payload = {
       batch: {
-        startDate: (dateRange[0] as Dayjs).toISOString(), // FIX: Use ISO format
-        endDate: (dateRange[1] as Dayjs).toISOString(), // FIX: Use ISO format
+        startDate: (dateRange[0] as Dayjs).toISOString(),
+        endDate: (dateRange[1] as Dayjs).toISOString(),
         persist: true,
       },
       scheduleEntries,
@@ -744,9 +917,12 @@ export default function CreateShiftPlan() {
         t("messages.operationSuccess"),
       );
       setEditsMap({});
+
+      if (!publish) {
+        refetchDraft();
+      }
     } catch (err: any) {
       console.error("publish/saveDraft error:", err);
-      // Show specific error message from backend if available
       if (err?.data?.en_Msg) {
         message.error(err.data.en_Msg);
       } else if (err?.data?.errors) {
@@ -758,310 +934,309 @@ export default function CreateShiftPlan() {
     }
   };
 
-  /* JSX return (main UI + modal). Place this at the end of the component */
+  /* JSX return - FIXED: Added contextHolder */
   return (
-    <Space direction="vertical" style={{ width: "100%" }} size="large">
-      <Card>
-        <Form form={form} layout="inline">
-          <Form.Item
-            label={t("shiftPlanning.planDate", "Plan Date")}
-            name="planDate"
-            rules={[{ required: true, message: t("shiftPlanning.selectPlanDate", "Please select plan date") }]}
-          >
-            <RangePicker
-              value={dateRange as any}
-              onCalendarChange={(val) => setTempStart(val?.[0] || null)}
-              onChange={(v) => {
-                setDateRange(v || []);
-                form.setFieldsValue({ planDate: v });
-                setCurrentPage(0);
-                if (!v || !v[0]) {
-                  if (!hasDataLoaded) generateDefaultTable();
-                  setRawApiData([]);
-                  resetAllFilters();
-                }
-                setTempStart(null);
-              }}
-              disabledDate={(current) => {
-                if (!current) return false;
-                if (current < dayjs().startOf("day")) return true;
-                const start = dateRange[0];
-                if (start) {
-                  const maxEnd = (start as Dayjs).add(6, "month").endOf("day");
-                  if (current < (start as Dayjs).startOf("day")) return true;
-                  if (current > maxEnd) return true;
-                } else {
-                  const maxFromToday = dayjs().add(6, "month").endOf("day");
-                  if (current > maxFromToday) return true;
-                }
-                return false;
-              }}
-              format="DD-MM-YYYY"
-              placeholder={[t("placeholders.startDate", "Start Date"), t("placeholders.endDate", "End Date")]}
-            />
-          </Form.Item>
+    <>
+      {/* CRITICAL FIX: Render context holder for modal to work */}
+      {contextHolder}
 
-          <Form.Item>
-            <Button type="primary" onClick={handleSubmit} loading={isPlanning}>
-              {t("shiftPlanning.plan", "Plan")}
-            </Button>
-          </Form.Item>
-
-          <Form.Item label={t("shiftPlanning.shiftFilter", "Shift Filter")}>
-            <Select
-              mode="multiple"
-              placeholder={t("shiftPlanning.selectShifts", "Select Shifts")}
-              style={{ minWidth: 200 }}
-              value={shiftFilter}
-              onChange={setShiftFilter}
-              allowClear
-            >
-              {availableShifts.map((shift) => (
-                <Select.Option key={shift.value} value={shift.value}>
-                  {shift.text}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item>
-            <div style={{ lineHeight: 1.2 }}>
-              <div style={{ fontSize: 12, color: "#888" }}>{t("shiftPlanning.previousBatch", "previous batch")}</div>
-              {lastBatch?.data ? (
-                <div style={{ marginTop: 6 }}>
-                  <div style={{ fontWeight: 600 }}>
-                    {t("shiftPlanning.publishedBy", "Published by")}: {lastBatch.data.addByName || lastBatch.data.addBy}
-                  </div>
-                  <div style={{ color: "#666", fontSize: 12 }}>
-                    {t("shiftPlanning.publishedOn", "Published On")}:{" "}
-                    {dayjs(lastBatch.data.addOn).isValid()
-                      ? dayjs(lastBatch.data.addOn).format("DD-MM-YYYY HH:mm")
-                      : "-"}
-                  </div>
-                </div>
-              ) : (
-                <div style={{ color: "#999", marginTop: 6 }}>
-                  {t("shiftPlanning.noPreviousBatch", "No previous batch")}
-                </div>
-              )}
-            </div>
-          </Form.Item>
-        </Form>
-      </Card>
-
-      {/* View / Pagination controls */}
-      {hasValidData && daysCount > 7 && (
+      <Space direction="vertical" style={{ width: "100%" }} size="large">
         <Card>
-          <Space direction="vertical" style={{ width: "100%" }} size="middle">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
-                  <CalendarOutlined style={{ marginRight: 8 }} />
-                  {t("shiftPlanning.totalDays", "Total Days")}: {daysCount} ({Math.ceil(daysCount / 7)}{" "}
-                  {t("shiftPlanning.weeks", "weeks")})
-                </div>
-                <Radio.Group value={viewMode} onChange={(e) => setViewMode(e.target.value)} buttonStyle="solid">
-                  <Radio.Button value="week">{t("shiftPlanning.weekView", "Week View (7 days)")}</Radio.Button>
-                  <Radio.Button value="month">{t("shiftPlanning.monthView", "Month View (30 days)")}</Radio.Button>
-                  <Radio.Button value="all">{t("shiftPlanning.allView", "All Days")}</Radio.Button>
-                </Radio.Group>
-              </div>
-            </div>
-
-            {viewMode !== "all" && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "12px 16px",
-                  background: "#f5f5f5",
-                  borderRadius: 8,
+          <Form form={form} layout="inline">
+            <Form.Item
+              label={t("shiftPlanning.planDate", "Plan Date")}
+              name="planDate"
+              rules={[{ required: true, message: t("shiftPlanning.selectPlanDate", "Please select plan date") }]}
+            >
+              <RangePicker
+                value={dateRange as any}
+                onCalendarChange={(val) => setTempStart(val?.[0] || null)}
+                onChange={(v) => {
+                  setDateRange(v || []);
+                  form.setFieldsValue({ planDate: v });
+                  setCurrentPage(0);
+                  if (!v || !v[0]) {
+                    if (!hasDataLoaded) generateDefaultTable();
+                    setRawApiData([]);
+                    resetAllFilters();
+                  }
+                  setTempStart(null);
                 }}
-              >
-                <Button
-                  icon={<LeftOutlined />}
-                  onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                  disabled={currentPage === 0}
-                >
-                  {t("common.previous", "Previous")}
-                </Button>
+                disabledDate={(current) => {
+                  if (!current) return false;
+                  if (current < dayjs().startOf("day")) return true;
+                  const start = dateRange[0];
+                  if (start) {
+                    const maxEnd = (start as Dayjs).add(6, "month").endOf("day");
+                    if (current < (start as Dayjs).startOf("day")) return true;
+                    if (current > maxEnd) return true;
+                  } else {
+                    const maxFromToday = dayjs().add(6, "month").endOf("day");
+                    if (current > maxFromToday) return true;
+                  }
+                  return false;
+                }}
+                format="DD-MM-YYYY"
+                placeholder={[t("placeholders.startDate", "Start Date"), t("placeholders.endDate", "End Date")]}
+              />
+            </Form.Item>
 
-                <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 16, fontWeight: 600 }}>
-                    {t("shiftPlanning.days", "Days")} {startDayIndex + 1} - {endDayIndex}
-                  </div>
-                  <div style={{ fontSize: 12, color: "#666" }}>
-                    {t("shiftPlanning.page", "Page")} {currentPage + 1} / {totalPages}
-                  </div>
-                </div>
-
-                <Button
-                  icon={<RightOutlined />}
-                  onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-                  disabled={currentPage === totalPages - 1}
-                >
-                  {t("common.next", "Next")}
-                </Button>
-              </div>
-            )}
-          </Space>
-        </Card>
-      )}
-
-      <Card bordered>
-        <Tabs
-          type="card"
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          tabBarExtraContent={
-            <Space>
-              <Button onClick={() => handlePublishOrDraft(false)} loading={isPublishing}>
-                {t("shiftPlanning.saveDraft", "Save Draft")}
+            <Form.Item>
+              <Button type="primary" onClick={handleSubmit} loading={isPlanning}>
+                {t("shiftPlanning.plan", "Plan")}
               </Button>
-              <Button type="primary" onClick={() => handlePublishOrDraft(true)} loading={isPublishing}>
-                {t("shiftPlanning.publish", "Publish")}
-              </Button>
-            </Space>
-          }
-        >
-          <TabPane tab={t("common.all", "All")} key="1">
-            <Table
-              dataSource={filteredTableData}
-              columns={columns}
-              bordered
-              scroll={{ x: viewMode === "all" ? daysCount * 120 + 300 : "max-content", y: 650 }}
-              pagination={false}
-              rowKey="key"
-            />
-          </TabPane>
+            </Form.Item>
 
-          <TabPane tab={t("shiftPlanning.inspectorWise", "Inspector Wise")} key="3">
-            <Card style={{ marginBottom: 10 }}>
+            <Form.Item label={t("shiftPlanning.shiftFilter", "Shift Filter")}>
               <Select
-                placeholder={t("shiftPlanning.selectInspector", "Select Inspector")}
-                style={{ width: 240 }}
+                mode="multiple"
+                placeholder={t("shiftPlanning.selectShifts", "Select Shifts")}
+                style={{ minWidth: 200 }}
+                value={shiftFilter}
+                onChange={setShiftFilter}
                 allowClear
-                value={inspectorFilter}
-                onChange={setInspectorFilter}
               >
-                {[...new Set(filteredTableData.map((d) => d.inspector))].map((insp) => (
-                  <Select.Option key={insp} value={insp}>
-                    {insp}
+                {availableShifts.map((shift) => (
+                  <Select.Option key={shift.value} value={shift.value}>
+                    {shift.text}
                   </Select.Option>
                 ))}
               </Select>
-            </Card>
+            </Form.Item>
 
-            <Table
-              dataSource={
-                inspectorFilter ? filteredTableData.filter((d) => d.inspector === inspectorFilter) : filteredTableData
-              }
-              columns={columns}
-              bordered
-              scroll={{ x: viewMode === "all" ? daysCount * 120 + 300 : "max-content", y: 650 }}
-              pagination={false}
-              rowKey="key"
-            />
-          </TabPane>
-        </Tabs>
-      </Card>
+            <Form.Item>
+              <div style={{ lineHeight: 1.2 }}>
+                <div style={{ fontSize: 12, color: "#888" }}>{t("shiftPlanning.previousBatch", "previous batch")}</div>
+                {lastBatch?.data ? (
+                  <div style={{ marginTop: 6 }}>
+                    <div style={{ fontWeight: 600 }}>
+                      {t("shiftPlanning.publishedBy", "Published by")}:{" "}
+                      {lastBatch.data.addByName || lastBatch.data.addBy}
+                    </div>
+                    <div style={{ color: "#666", fontSize: 12 }}>
+                      {t("shiftPlanning.publishedOn", "Published On")}:{" "}
+                      {dayjs(lastBatch.data.addOn).isValid()
+                        ? dayjs(lastBatch.data.addOn).format("DD-MM-YYYY HH:mm")
+                        : "-"}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ color: "#999", marginTop: 6 }}>
+                    {t("shiftPlanning.noPreviousBatch", "No previous batch")}
+                  </div>
+                )}
+              </div>
+            </Form.Item>
+          </Form>
+        </Card>
 
-      {/* EDIT MODAL */}
-      <Modal
-        title={t("common.edit", "Edit")}
-        open={isModalOpen}
-        onOk={saveEdit}
-        onCancel={() => {
-          setIsModalOpen(false);
-          setEditing(null);
-        }}
-        okText={t("common.update", "Update")}
-        cancelText={t("common.cancel", "Cancel")}
-        destroyOnClose
-        width={600}
-      >
-        <Form form={form} layout="vertical">
-          {/* INSPECTOR */}
-          <Form.Item label={t("form.inspector")} name="inspector">
-            <Input disabled />
-          </Form.Item>
+        {hasValidData && daysCount > 7 && (
+          <Card>
+            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8 }}>
+                    <CalendarOutlined style={{ marginRight: 8 }} />
+                    {t("shiftPlanning.totalDays", "Total Days")}: {daysCount} ({Math.ceil(daysCount / 7)}{" "}
+                    {t("shiftPlanning.weeks", "weeks")})
+                  </div>
+                  <Radio.Group value={viewMode} onChange={(e) => setViewMode(e.target.value)} buttonStyle="solid">
+                    <Radio.Button value="week">{t("shiftPlanning.weekView", "Week View (7 days)")}</Radio.Button>
+                    <Radio.Button value="month">{t("shiftPlanning.monthView", "Month View (30 days)")}</Radio.Button>
+                    <Radio.Button value="all">{t("shiftPlanning.allView", "All Days")}</Radio.Button>
+                  </Radio.Group>
+                </div>
+              </div>
 
-          {/* ZONE */}
-          <Form.Item
-            label={t("form.zone")}
-            name="zone"
-            rules={[{ required: true, message: t("shiftPlanning.selectZone") }]}
+              {viewMode !== "all" && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "12px 16px",
+                    background: "#f5f5f5",
+                    borderRadius: 8,
+                  }}
+                >
+                  <Button
+                    icon={<LeftOutlined />}
+                    onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                    disabled={currentPage === 0}
+                  >
+                    {t("common.previous", "Previous")}
+                  </Button>
+
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 16, fontWeight: 600 }}>
+                      {t("shiftPlanning.days", "Days")} {startDayIndex + 1} - {endDayIndex}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#666" }}>
+                      {t("shiftPlanning.page", "Page")} {currentPage + 1} / {totalPages}
+                    </div>
+                  </div>
+
+                  <Button
+                    icon={<RightOutlined />}
+                    onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                    disabled={currentPage === totalPages - 1}
+                  >
+                    {t("common.next", "Next")}
+                  </Button>
+                </div>
+              )}
+            </Space>
+          </Card>
+        )}
+
+        <Card bordered>
+          <Tabs
+            type="card"
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            tabBarExtraContent={
+              <Space>
+                <Button onClick={() => handlePublishOrDraft(false)} loading={isPublishing}>
+                  {t("shiftPlanning.saveDraft", "Save Draft")}
+                </Button>
+                <Button type="primary" onClick={() => handlePublishOrDraft(true)} loading={isPublishing}>
+                  {t("shiftPlanning.publish", "Publish")}
+                </Button>
+              </Space>
+            }
           >
-            <Select
-              placeholder={t("placeholders.zone")}
-              showSearch
-              optionFilterProp="children"
-              allowClear
-              onChange={async (value) => {
-                // Clear areas whenever zone changes
-                form.setFieldsValue({ area: [] });
+            <TabPane tab={t("common.all", "All")} key="1">
+              <Table
+                dataSource={filteredTableData}
+                columns={columns}
+                bordered
+                scroll={{ x: viewMode === "all" ? daysCount * 120 + 300 : "max-content", y: 650 }}
+                pagination={false}
+                rowKey="key"
+              />
+            </TabPane>
 
-                if (!value) {
-                  setAreasLookup(allAreasLookup);
-                  return;
+            <TabPane tab={t("shiftPlanning.inspectorWise", "Inspector Wise")} key="3">
+              <Card style={{ marginBottom: 10 }}>
+                <Select
+                  placeholder={t("shiftPlanning.selectInspector", "Select Inspector")}
+                  style={{ width: 240 }}
+                  allowClear
+                  value={inspectorFilter}
+                  onChange={setInspectorFilter}
+                >
+                  {[...new Set(filteredTableData.map((d) => d.inspector))].map((insp) => (
+                    <Select.Option key={insp} value={insp}>
+                      {insp}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Card>
+
+              <Table
+                dataSource={
+                  inspectorFilter ? filteredTableData.filter((d) => d.inspector === inspectorFilter) : filteredTableData
                 }
+                columns={columns}
+                bordered
+                scroll={{ x: viewMode === "all" ? daysCount * 120 + 300 : "max-content", y: 650 }}
+                pagination={false}
+                rowKey="key"
+              />
+            </TabPane>
+          </Tabs>
+        </Card>
 
-                try {
-                  const res = await triggerGetAreas(value).unwrap();
-                  const raw = res?.data ?? res ?? [];
+        <Modal
+          title={t("common.edit", "Edit")}
+          open={isModalOpen}
+          onOk={saveEdit}
+          onCancel={() => {
+            setIsModalOpen(false);
+            setEditing(null);
+          }}
+          okText={t("common.update", "Update")}
+          cancelText={t("common.cancel", "Cancel")}
+          destroyOnClose
+          width={600}
+        >
+          <Form form={form} layout="vertical">
+            <Form.Item label={t("form.inspector")} name="inspector">
+              <Input disabled />
+            </Form.Item>
 
-                  const normalized = raw.map((a: any) => ({
-                    id: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
-                    value: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
-                    label: a.area || a.areaName || a.name || String(a.areaId || a.area),
-                    zoneId: a.zoneId ?? a.zone_Id ?? null,
-                    original: a,
-                  }));
-
-                  setAreasLookup(normalized);
-                } catch (err) {
-                  console.error("Failed loading areas by zone:", err);
-                  // Fallback: filter from all areas lookup
-                  const selectedZone = zonesLookup.find(
-                    (z) => String(z.value) === String(value) || String(z.id) === String(value),
-                  );
-                  const zoneIdToFilter = selectedZone?.value || selectedZone?.id || value;
-                  setAreasLookup(allAreasLookup.filter((a) => String(a.zoneId) === String(zoneIdToFilter)));
-                }
-              }}
+            <Form.Item
+              label={t("form.zone")}
+              name="zone"
+              rules={[{ required: true, message: t("shiftPlanning.selectZone") }]}
             >
-              {zonesLookup.map((z) => (
-                <Select.Option key={z.value} value={z.value}>
-                  {z.label}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+              <Select
+                placeholder={t("placeholders.zone")}
+                showSearch
+                optionFilterProp="children"
+                allowClear
+                onChange={async (value) => {
+                  form.setFieldsValue({ area: [] });
 
-          {/* AREAS */}
-          <Form.Item
-            label={t("form.area")}
-            name="area"
-            rules={[{ required: true, message: t("shiftPlanning.selectArea") }]}
-          >
-            <Select
-              mode="multiple"
-              placeholder={t("placeholders.area")}
-              showSearch
-              optionFilterProp="children"
-              allowClear
-              disabled={!form.getFieldValue("zone")}
+                  if (!value) {
+                    setAreasLookup(allAreasLookup);
+                    return;
+                  }
+
+                  try {
+                    const res = await triggerGetAreas(value).unwrap();
+                    const raw = res?.data ?? res ?? [];
+
+                    const normalized = raw.map((a: any) => ({
+                      id: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
+                      value: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
+                      label: a.area || a.areaName || a.name || String(a.areaId || a.area),
+                      zoneId: a.zoneId ?? a.zone_Id ?? null,
+                      original: a,
+                    }));
+
+                    setAreasLookup(normalized);
+                  } catch (err) {
+                    console.error("Failed loading areas by zone:", err);
+                    const selectedZone = zonesLookup.find(
+                      (z) => String(z.value) === String(value) || String(z.id) === String(value),
+                    );
+                    const zoneIdToFilter = selectedZone?.value || selectedZone?.id || value;
+                    setAreasLookup(allAreasLookup.filter((a) => String(a.zoneId) === String(zoneIdToFilter)));
+                  }
+                }}
+              >
+                {zonesLookup.map((z) => (
+                  <Select.Option key={z.value} value={z.value}>
+                    {z.label}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              label={t("form.area")}
+              name="area"
+              rules={[{ required: true, message: t("shiftPlanning.selectArea") }]}
             >
-              {areasLookup.map((a) => (
-                <Select.Option key={a.value} value={a.value}>
-                  {a.label}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
-    </Space>
+              <Select
+                mode="multiple"
+                placeholder={t("placeholders.area")}
+                showSearch
+                optionFilterProp="children"
+                allowClear
+                disabled={!form.getFieldValue("zone")}
+              >
+                {areasLookup.map((a) => (
+                  <Select.Option key={a.value} value={a.value}>
+                    {a.label}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Space>
+    </>
   );
 }

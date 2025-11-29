@@ -549,6 +549,13 @@ export const dynamicApi = createApi({
       query: () => "/api/ShiftPlanMaster/LastBatchDetail",
     }),
 
+    getSavedScheduleDraft: builder.query({
+      query: () => ({
+        url: "/api/ShiftPlanMaster/GetSavedScheduleDraft",
+        method: "GET",
+      }),
+    }),
+
     publishShiftPlan: builder.mutation({
       query: (payload) => ({
         url: "/api/ShiftPlanMaster/Publish",
@@ -663,7 +670,7 @@ export const {
 
   // Shift Plan
   useGetShiftPlanMutation,
+  useGetSavedScheduleDraftQuery,
   useGetLastBatchDetailQuery,
-  usePublishShiftPlanMutation,  
-
+  usePublishShiftPlanMutation,
 } = dynamicApi;
