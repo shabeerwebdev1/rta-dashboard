@@ -252,6 +252,30 @@ export const dynamicApi = createApi({
       invalidatesTags: ["Dispute"],
     }),
 
+    //Inpection Shifts
+    getInspectionShifts: builder.query({
+      query: () => ({
+        url: "/api/Inspection/Shifts",
+      }),
+    }),
+
+    //Adhoc shift plan
+    getAdhocShifts: builder.query({
+      query: (body) => ({
+        url: "/api/ShiftPlanMaster/GetAdhocShifts",
+        method: "POST",
+        body,
+      }),
+    }),
+
+    publishAdhoc: builder.mutation({
+      query: (body) => ({
+        url: "/api/ShiftPlanMaster/PublishAdhoc",
+        method: "PUT",
+        body,
+      }),
+    }),
+
     // Search Endpoints
     searchPermits: builder.query({
       query: (params) => ({ url: "/api/Permit/search", params }),
@@ -596,6 +620,9 @@ export const {
   useUpdatePledgeMutation,
   useDeletePledgeMutation,
 
+  //Inspection shifts
+  useGetInspectionShiftsQuery,
+
   // Inspection Obstacles
   useGetInspectionObstaclesQuery,
   useLazyGetInspectionObstacleByIdQuery,
@@ -607,6 +634,10 @@ export const {
   useSearchFinesQuery,
   useUpdateFineCancelStatusMutation,
   useSearchTradeQuery,
+
+  //Adhoc new
+  useLazyGetAdhocShiftsQuery,
+  usePublishAdhocMutation,
 
   //Inspection Violation
   useGetViolationDetailsQuery,

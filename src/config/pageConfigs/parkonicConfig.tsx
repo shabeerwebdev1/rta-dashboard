@@ -34,7 +34,7 @@ export const parkonicPageConfig: PageConfig = {
       { key: "plateNumber", title: "form.vehicleNumber", type: "string", sortable: true },
       {
         key: "reviewStatus",
-        title: "form.reviewStatus",
+        title: "form.status",
         type: "custom",
         sortable: true,
         filterable: true,
@@ -48,8 +48,9 @@ export const parkonicPageConfig: PageConfig = {
           return <Tag color={color}>{text}</Tag>;
         },
       },
-      { key: "entryDateTime", title: "form.entryDateTime", type: "date", sortable: true },
-      { key: "exitDateTime", title: "form.exitDateTime", type: "date", sortable: true },
+      { key: "entryDateTime", title: "form.vehicleEntryDateTime", type: "date", sortable: true },
+      { key: "exitDateTime", title: "form.vehicleExitDateTime", type: "date", sortable: true },
+      { key: "modifiedBy", title: "form.updatedBy", type: "date", sortable: true },
     ],
     viewRecord: true,
   },

@@ -69,7 +69,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       permission: "WebDashboard",
     },
     {
-      key:FULL_PATHS.HRMS,
+      key: FULL_PATHS.HRMS,
       icon: <BookOutlined />,
       labelText: t("sidebar.hrms"),
       permission: "WebDashboard",
@@ -188,7 +188,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
     {
       key: "team-assessment-group",
       icon: <UsergroupAddOutlined />,
-      labelText: t("sidebar.traningAndEvaluation"),
+      labelText: t("sidebar.teamEvaluation"),
       children: [
         {
           key: FULL_PATHS.CRITERIA,
@@ -199,15 +199,15 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         {
           key: FULL_PATHS.TEAM_EVALUATION,
           icon: <UsergroupAddOutlined />,
-          labelText: t("sidebar.teamEvaluation"),
+          labelText: t("sidebar.evaluate"),
           permission: "CallIntegration",
         },
-        {
-          key: FULL_PATHS.TEAM_TRAINING,
-          icon: <UsergroupAddOutlined />,
-          labelText: t("sidebar.training"),
-          permission: "CallIntegration",
-        },
+        // {
+        //   key: FULL_PATHS.TEAM_TRAINING,
+        //   icon: <UsergroupAddOutlined />,
+        //   labelText: t("sidebar.training"),
+        //   permission: "CallIntegration",
+        // },
       ],
     },
     // Reports as parent with filtered reports based on language

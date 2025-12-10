@@ -1,6 +1,7 @@
 // SupervisorManagement.tsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Space, Select, Checkbox, Button, Spin, Pagination } from "antd";
+import { Space, Select, Checkbox, Button, Spin, Pagination, Input } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import { SupervisorManagemnetConfig } from "../config/pageConfigs/SupervisorManagementConfig";
 import { useTranslation } from "react-i18next";
 import {
@@ -11,6 +12,9 @@ import {
 } from "../services/rtkApiFactory";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import { useAppNotification } from "../utils/notificationManager";
+
+const { Option } = Select;
+const { Search } = Input;
 
 interface SupervisorData {
   key: string;
@@ -54,24 +58,24 @@ interface ActiveShiftData {
   addOn: string;
 }
 
-const { Option } = Select;
-
 function SupervisorManagement() {
-  const [data, setData] = useState<SupervisorData[]>([]);
-  const [isLoadingZones, setIsLoadingZones] = useState(false);
-  const [zones, setZones] = useState<Zone[]>([]);
-  const [triggerGetZones] = useLazyGetZonesQuery();
-  const [triggerGetShifts] = useLazyGetShiftsQuery();
   const { t, i18n } = useTranslation();
+  const notification = useAppNotification();
+
+  const [data, setData] = useState<SupervisorData[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [isLoadingZones, setIsLoadingZones] = useState(false);
   const [isLoadingShifts, setIsLoadingShifts] = useState(false);
+  const [zones, setZones] = useState<Zone[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [updatingRowKey, setUpdatingRowKey] = useState<string | null>(null);
 
-  const notification = useAppNotification();
+  const [triggerGetZones] = useLazyGetZonesQuery();
+  const [triggerGetShifts] = useLazyGetShiftsQuery();
 
-  //  pagination states
+  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
 
   const {
     data: activeShiftsResponse,
@@ -79,18 +83,14 @@ function SupervisorManagement() {
     refetch: refetchActiveShifts,
   } = useGetActiveShiftsQuery();
 
-  const [updateShiftManagement, { isLoading: isUpdating }] =
-    useUpdateShiftManagementMutation();
+  const [updateShiftManagement, { isLoading: isUpdating }] = useUpdateShiftManagementMutation();
 
   useEffect(() => {
     fetchZonesData();
     fetchShiftsData();
   }, [i18n.language]);
 
-  const availableShiftIds = useMemo(
-    () => shifts.map((shift) => shift.shiftTypeGUID),
-    [shifts]
-  );
+  const availableShiftIds = useMemo(() => shifts.map((shift) => shift.shiftTypeGUID), [shifts]);
 
   useEffect(() => {
     if (activeShiftsResponse) {
@@ -101,8 +101,7 @@ function SupervisorManagement() {
       const transformedData: SupervisorData[] = activeShiftsData
         .filter((item: ActiveShiftData) => item.roleCode === "PARSUP")
         .map((item: ActiveShiftData, index: number) => {
-          const isValidShift =
-            item.shiftId && availableShiftIds.includes(item.shiftId);
+          const isValidShift = item.shiftId && availableShiftIds.includes(item.shiftId);
           const zoneIds = item.zoneIds?.map((id) => id.toString()) || [];
 
           return {
@@ -110,9 +109,7 @@ function SupervisorManagement() {
             SupervisorName: item.employeeName,
             zone: zoneIds,
             shift: isValidShift ? item.shiftId : undefined,
-            weekOffs: item.wO_Days
-              ? item.wO_Days.split(",").map((d) => parseInt(d))
-              : [],
+            weekOffs: item.wO_Days ? item.wO_Days.split(",").map((d) => parseInt(d)) : [],
             role: item.role,
             employeeId: item.employeeId,
             uswMcode: item.uswMcode,
@@ -124,6 +121,38 @@ function SupervisorManagement() {
     }
   }, [activeShiftsResponse, availableShiftIds]);
 
+  // ===== Search & Filter Logic =====
+  const filteredData = useMemo(() => {
+    if (!searchTerm.trim()) return data;
+
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return data.filter(
+      (item) =>
+        item.SupervisorName.toLowerCase().includes(lowerSearchTerm) ||
+        item.employeeId.toLowerCase().includes(lowerSearchTerm) ||
+        item.uswMcode.toLowerCase().includes(lowerSearchTerm),
+    );
+  }, [data, searchTerm]);
+
+  // ===== Pagination Logic =====
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    return filteredData.slice(start, end);
+  }, [filteredData, currentPage, pageSize]);
+
+  const handlePageChange = (page: number, size?: number) => {
+    setCurrentPage(page);
+    if (size) setPageSize(size);
+  };
+
+  // Handle search input change
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  // === Fetch functions ===
   const fetchZonesData = async () => {
     setIsLoadingZones(true);
     try {
@@ -148,6 +177,7 @@ function SupervisorManagement() {
     }
   };
 
+  // === Options ===
   const zoneOptions = useMemo(
     () =>
       zones.map((zone) => ({
@@ -155,21 +185,17 @@ function SupervisorManagement() {
         label: `${zone.zoneCode}-${zone.zone}`,
         original: zone,
       })),
-    [zones, i18n.language]
+    [zones, i18n.language],
   );
 
   const shiftOptions = useMemo(
     () =>
       shifts.map((shift) => ({
         value: shift.shiftTypeGUID,
-        label: `${shift.shiftTypeCode} - ${
-          i18n.language === "ar"
-            ? shift.shiftTypeNameAr
-            : shift.shiftTypeNameEn
-        }`,
+        label: `${shift.shiftTypeCode} - ${i18n.language === "ar" ? shift.shiftTypeNameAr : shift.shiftTypeNameEn}`,
         original: shift,
       })),
-    [shifts, i18n.language]
+    [shifts, i18n.language],
   );
 
   const weekDayOptions = useMemo(
@@ -178,38 +204,23 @@ function SupervisorManagement() {
         label: t(d.label),
         value: parseInt(d.value),
       })),
-    [i18n.language, t]
+    [i18n.language, t],
   );
 
+  // === Handlers ===
   const handleZoneChange = (value: string[], record: SupervisorData) => {
-    setData((prev) =>
-      prev.map((item) =>
-        item.key === record.key ? { ...item, zone: value } : item
-      )
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, zone: value } : item)));
   };
 
   const handleShiftChange = (value: string, record: SupervisorData) => {
-    setData((prev) =>
-      prev.map((item) =>
-        item.key === record.key ? { ...item, shift: value } : item
-      )
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, shift: value } : item)));
   };
 
   const handleWeekOffChange = (checkedValues: number[], record: SupervisorData) => {
-    setData((prev) =>
-      prev.map((item) =>
-        item.key === record.key ? { ...item, weekOffs: checkedValues } : item
-      )
-    );
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, weekOffs: checkedValues } : item)));
   };
 
-  const handlePageChange = (page: number, size?: number) => {
-    setCurrentPage(page);
-    if (size) setPageSize(size);
-  };
-
+  // === Update Handler ===
   const handleUpdate = async (record: SupervisorData) => {
     try {
       setUpdatingRowKey(record.key);
@@ -228,22 +239,17 @@ function SupervisorManagement() {
 
       await updateShiftManagement(updateData).unwrap();
 
-      notification.success(
-        t("Update successful"),
-        t("Supervisor data has been updated successfully.")
-      );
+      notification.success(t("Update successful"), t("Supervisor data has been updated successfully."));
 
       refetchActiveShifts();
     } catch {
-      notification.error(
-        t("Update failed"),
-        t("Failed to update supervisor data. Please try again.")
-      );
+      notification.error(t("Update failed"), t("Failed to update supervisor data. Please try again."));
     } finally {
       setUpdatingRowKey(null);
     }
   };
 
+  // === Columns with custom render ===
   const tableColumns = useMemo(() => {
     return SupervisorManagemnetConfig.tableConfig.columns.map((col: any) => {
       if (col.key === "zone") {
@@ -297,9 +303,7 @@ function SupervisorManagement() {
             <Checkbox.Group
               options={weekDayOptions}
               value={record.weekOffs}
-              onChange={(vals) =>
-                handleWeekOffChange(vals as number[], record)
-              }
+              onChange={(vals) => handleWeekOffChange(vals as number[], record)}
               style={{ display: "flex", flexDirection: "column", gap: 4 }}
             />
           ),
@@ -309,13 +313,11 @@ function SupervisorManagement() {
       if (col.key === "Actions") {
         return {
           ...col,
+          fixed: "right",
+          width: 120,
           render: (_: any, record: SupervisorData) => (
             <Space>
-              <Button
-                type="primary"
-                onClick={() => handleUpdate(record)}
-                loading={updatingRowKey === record.key}
-              >
+              <Button type="primary" onClick={() => handleUpdate(record)} loading={updatingRowKey === record.key}>
                 {t("common.update")}
               </Button>
             </Space>
@@ -325,30 +327,34 @@ function SupervisorManagement() {
 
       return { ...col, dataIndex: col.key };
     });
-  }, [
-    zones,
-    shifts,
-    data,
-    isLoadingZones,
-    isLoadingShifts,
-    isUpdating,
-    weekDayOptions,
-    t,
-  ]);
-
-  // ✅ slice data for pagination
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    const end = start + pageSize;
-    return data.slice(start, end);
-  }, [data, currentPage, pageSize]);
+  }, [zones, shifts, data, isLoadingZones, isLoadingShifts, updatingRowKey, weekDayOptions, t]);
 
   return (
-    <Spin
-      spinning={
-        isLoadingActiveShifts || isLoadingZones || isLoadingShifts || isUpdating
-      }
-    >
+    <Spin spinning={isLoadingActiveShifts || isLoadingZones || isLoadingShifts || isUpdating}>
+      {/* Search Bar */}
+      <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Search
+          placeholder={t("placeholders.searchSupervisor") || "Search by supervisor name or employee ID"}
+          allowClear
+          enterButton={<SearchOutlined />}
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+          onSearch={handleSearch}
+          style={{ width: 400 }}
+          size="large"
+        />
+        <div style={{ color: "#666", fontSize: 14 }}>
+          {filteredData.length > 0 ? (
+            <>
+              {t("common.showing") || "Showing"} <strong>{filteredData.length}</strong> {t("common.of") || "of"}{" "}
+              <strong>{data.length}</strong> {t("common.supervisors") || "supervisors"}
+            </>
+          ) : (
+            <span style={{ color: "#ff4d4f" }}>{t("common.noResults") || "No supervisors found"}</span>
+          )}
+        </div>
+      </div>
+
       <DataTableWrapper
         pageConfig={{
           ...SupervisorManagemnetConfig,
@@ -357,31 +363,31 @@ function SupervisorManagement() {
             columns: tableColumns,
           },
         }}
-        data={paginatedData} //  use sliced data
-        total={data.length}
+        data={paginatedData}
+        total={filteredData.length}
         isLoading={isLoadingActiveShifts}
         handleTableChange={() => {}}
         handlePaginationChange={() => {}}
         tableSize="middle"
         state={{ columnFilters: {} }}
-        showPagination={false} //  keep false
+        showPagination={false}
         rowKey={(record: SupervisorData) => record.key}
+        scroll={{ x: "max-content" }}
       />
 
-      {/*  Fresh Pagination */}
+      {/* Custom Pagination */}
       <div style={{ marginTop: 16, textAlign: "right" }}>
-             <Pagination
-               current={currentPage}
-               pageSize={pageSize}
-               total={data.length}
-               onChange={handlePageChange}
-              
-               showSizeChanger={{showSearch: false }}
-               pageSizeOptions={["5", "10", "20", "50"]}
-               showQuickJumper={false}
-               showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
-             />
-           </div>
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={filteredData.length}
+          onChange={handlePageChange}
+          showSizeChanger
+          pageSizeOptions={["5", "10", "20", "50"]}
+          showQuickJumper={false}
+          showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}
+        />
+      </div>
     </Spin>
   );
 }

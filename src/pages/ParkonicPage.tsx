@@ -153,6 +153,7 @@ const ParkonicPage: React.FC = () => {
                 style={{ width: 450 }}
                 allowClear
               />
+              <span>{t("common.filterByEnteyDate")}</span>
               <DatePicker.RangePicker
                 value={state.dateRange}
                 format={"DD-MM-YYYY"}

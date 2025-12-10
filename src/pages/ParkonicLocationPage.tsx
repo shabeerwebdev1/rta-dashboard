@@ -233,6 +233,7 @@ const ParkonicLocationPage: React.FC = () => {
       key: "assign",
       label: t("common.assign"),
       icon: <UserSwitchOutlined />,
+      disabled: record.isUpdatedBack,
       onClick: () => handleAssign(record),
     }, // {
     //   key: "edit",
@@ -283,13 +284,13 @@ const ParkonicLocationPage: React.FC = () => {
                 style={{ width: 450 }}
                 allowClear
               />
-              <span>{t("common.filterByaddedon")}</span>
+              {/* <span>{t("common.filterByaddedon")}</span>
               <DatePicker.RangePicker
                 value={state.dateRange}
                 format={"DD-MM-YYYY"}
                 placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
-              />
+              /> */}
             </Space>
           </Col>
           <Col>

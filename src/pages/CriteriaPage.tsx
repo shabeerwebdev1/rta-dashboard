@@ -2,22 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  Space,
-  Card,
-  Input,
-  Button,
-  Modal,
-  Form,
-  Row,
-  Col,
-  Select,
-  App,
-  Tag,
-  Switch,
-  message,
-  Descriptions,
-} from "antd";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Tag, Switch, message, theme } from "antd";
 import { PlusOutlined, EyeOutlined, EditOutlined, FileTextOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
@@ -26,12 +11,14 @@ import { criteriaConfig, staticCriteriaData } from "../config/pageConfigs/criter
 import CriteriaViewDrawer from "../components/Criteria/CriteriaViewDrawer";
 
 const { Option } = Select;
+const { useToken } = theme;
 
 const CriteriaPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const [form] = Form.useForm();
+  const { token } = useToken();
 
   // Data state (static only)
   const [criteria, setCriteria] = useState<any[]>(staticCriteriaData);
@@ -108,6 +95,7 @@ const CriteriaPage: React.FC = () => {
       });
     } else {
       form.resetFields();
+      form.setFieldsValue({ isActive: true });
     }
   };
 
@@ -139,8 +127,6 @@ const CriteriaPage: React.FC = () => {
     setViewRecord(record);
     setIsViewOpen(true);
   };
-
-  // Note: DELETE is intentionally NOT provided per requirement
 
   // table columns rendering (simple html table)
   const tableColumns = [
@@ -206,9 +192,18 @@ const CriteriaPage: React.FC = () => {
       <Card>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
-            <tr style={{ backgroundColor: "#fafafa" }}>
+            <tr style={{ backgroundColor: token.colorFillAlter }}>
               {tableColumns.map((col) => (
-                <th key={col.key} style={{ padding: 12, textAlign: "left", borderBottom: "1px solid #eee" }}>
+                <th
+                  key={col.key}
+                  style={{
+                    padding: 12,
+                    textAlign: "left",
+                    borderBottom: `1px solid ${token.colorBorderSecondary}`,
+                    color: token.colorText,
+                    fontWeight: 600,
+                  }}
+                >
                   {col.title}
                 </th>
               ))}
@@ -217,24 +212,24 @@ const CriteriaPage: React.FC = () => {
 
           <tbody>
             {filtered.map((row) => (
-              <tr key={row.id}>
-                <td style={{ padding: 12, borderBottom: "1px solid #f0f0f0" }}>{row.descriptionEn}</td>
-                <td style={{ padding: 12, borderBottom: "1px solid #f0f0f0" }}>{row.descriptionAr}</td>
-                <td style={{ padding: 12, borderBottom: "1px solid #f0f0f0" }}>
+              <tr key={row.id} style={{ borderBottom: `1px solid ${token.colorBorderSecondary}` }}>
+                <td style={{ padding: 12, color: token.colorText }}>{row.descriptionEn}</td>
+                <td style={{ padding: 12, color: token.colorText }}>{row.descriptionAr}</td>
+                <td style={{ padding: 12 }}>
                   <Tag>{getLabel(row.objectiveType, "objectiveTypes")}</Tag>
                 </td>
-                <td style={{ padding: 12, borderBottom: "1px solid #f0f0f0" }}>
+                <td style={{ padding: 12, color: token.colorText }}>
                   <strong>{row.weight}%</strong>
                 </td>
-                <td style={{ padding: 12, borderBottom: "1px solid #f0f0f0" }}>{row.ratingScale}</td>
-                <td style={{ padding: 12, borderBottom: "1px solid #f0f0f0" }}>
+                <td style={{ padding: 12, color: token.colorText }}>{getLabel(row.ratingScale, "ratingScales")}</td>
+                <td style={{ padding: 12 }}>
                   {row.isActive ? (
                     <Tag color="green">{t("common.active")}</Tag>
                   ) : (
                     <Tag color="red">{t("common.inactive")}</Tag>
                   )}
                 </td>
-                <td style={{ padding: 12, borderBottom: "1px solid #f0f0f0" }}>
+                <td style={{ padding: 12 }}>
                   <Space>
                     <Button icon={<EyeOutlined />} size="small" onClick={() => handleView(row)}>
                       {t("common.view")}
@@ -251,8 +246,8 @@ const CriteriaPage: React.FC = () => {
 
         {filtered.length === 0 && (
           <div style={{ textAlign: "center", padding: 30 }}>
-            <FileTextOutlined style={{ fontSize: 36, color: "#bbb" }} />
-            <p>{t("common.noData")}</p>
+            <FileTextOutlined style={{ fontSize: 36, color: token.colorTextDisabled }} />
+            <p style={{ color: token.colorTextSecondary }}>{t("common.noData")}</p>
           </div>
         )}
       </Card>
@@ -288,7 +283,7 @@ const CriteriaPage: React.FC = () => {
 
             <Col span={12}>
               <Form.Item name="weight" label={t("form.weight")} rules={[{ required: true }]}>
-                <Input type="number" min={0} max={100} />
+                <Input type="number" min={0} max={100} placeholder="0-100" />
               </Form.Item>
             </Col>
 
@@ -298,6 +293,18 @@ const CriteriaPage: React.FC = () => {
                   {lookups.objectiveTypes?.map((ot: any) => (
                     <Option key={ot.value} value={ot.value}>
                       {i18n.language === "ar" ? ot.labelAr : ot.labelEn}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item name="ratingScale" label={t("form.ratingScale")} rules={[{ required: true }]}>
+                <Select placeholder={t("placeholders.selectRatingScale")}>
+                  {lookups.ratingScales?.map((rs: any) => (
+                    <Option key={rs.value} value={rs.value}>
+                      {i18n.language === "ar" ? rs.labelAr : rs.labelEn}
                     </Option>
                   ))}
                 </Select>

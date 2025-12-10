@@ -40,6 +40,7 @@ import {
 } from "../services/rtkApiFactory";
 import { useTranslation } from "react-i18next";
 import ArcGISMap, { Inspector as ArcInspector } from "../components/common/ArcGISMap";
+import ApproveRejectController from "../components/common/ApproveRejectController";
 
 const { Text } = Typography;
 

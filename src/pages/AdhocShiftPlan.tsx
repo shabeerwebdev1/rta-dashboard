@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Table,
   Tabs,
@@ -15,6 +15,8 @@ import {
   Row,
   Col,
   Alert,
+  message,
+  Spin,
 } from "antd";
 import {
   format,
@@ -29,276 +31,40 @@ import {
   isBefore,
   startOfDay,
 } from "date-fns";
-import { DragOutlined, CalendarOutlined, UnorderedListOutlined, TableOutlined, EditOutlined } from "@ant-design/icons";
+import { CalendarOutlined, UnorderedListOutlined, TableOutlined, EditOutlined } from "@ant-design/icons";
+import dayjs, { Dayjs } from "dayjs";
 import { usePage } from "../contexts/PageContext";
 import { AdhocShiftPlanConfig } from "../config/pageConfigs/adhocShiftPlanConfig";
 import { useTranslation } from "react-i18next";
+import {
+  useLazyGetAdhocShiftsQuery,
+  usePublishAdhocMutation,
+  useLazyGetZonesQuery,
+  useLazyGetAreasQuery,
+  useGetAllAreasQuery,
+  useGetInspectionShiftsQuery,
+} from "../services/rtkApiFactory";
+import { useAppNotification } from "../utils/notificationManager";
 
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 
-// Zone & Area mapping
-const zoneMapping: Record<string, string> = {
-  Z1: "Zone 1",
-  Z2: "Zone 2",
-  A1: "Gandhi Nagar",
-  A2: "MG Road",
-  A3: "Brigade Road",
-  A4: "Koramangala",
-  A5: "Indiranagar",
-  A6: "Whitefield",
-  A7: "HSR Layout",
-  A8: "BTM Layout",
-  A9: "Electronic City",
-  A10: "Jayanagar",
-  A11: "Bannerghatta",
-  A12: "KR Puram",
-  A13: "Yelahanka",
-  A14: "Hebbal",
-  A15: "Marathahalli",
-  A16: "Vijayanagar",
-  A17: "Basavanagudi",
-  A18: "Rajajinagar",
-  A19: "Ulsoor",
-  A20: "Shivajinagar",
-  A21: "Domlur",
-  A22: "Banashankari",
-  A23: "Malleswaram",
-  A24: "Sadashivanagar",
-  A25: "Frazer Town",
-  A26: "Lingarajapuram",
-  A27: "Cooke Town",
-  A28: "Kengeri",
-  A29: "Nagawara",
-  A30: "Peenya",
-  A31: "Chickpet",
-};
+interface ShiftType {
+  shiftTypeGUID: string;
+  shiftTypeGroupGUID: string;
+  shiftTypeCode: string;
+  shiftTypeNameEn: string;
+  shiftTypeNameAr: string;
+  shiftTimeFrom: string;
+  shiftTimeTo: string;
+  breakFromTime: string;
+  breakToTime: string;
+  isActive: boolean;
+  colorCode: string;
+  fontColor: string;
+}
 
-// --- Sample data (moved into state so edits can be saved locally) ---
-const initialData = [
-  {
-    key: 1,
-    slno: 1,
-    inspector: "Inspector 1",
-    inspectorId: "INS001",
-    month: "August",
-    shift: "Morning",
-    days: [
-      "Z1-A1",
-      "Z1-A2",
-      "LV",
-      "WO",
-      "Z1-A3",
-      "Z1-A4",
-      "Z1-A5",
-      "Z1-A6",
-      "Z1-A7",
-      "Z1-A8",
-      "Z1-A9",
-      "Z1-A10",
-      "LV",
-      "WO",
-      "Z1-A11",
-      "Z1-A12",
-      "Z1-A13",
-      "Z1-A14",
-      "Z1-A15",
-      "Z1-A16",
-      "Z1-A17",
-      "Z1-A18",
-      "LV",
-      "WO",
-      "Z1-A19",
-      "Z1-A20",
-      "Z1-A21",
-      "Z1-A22",
-      "Z1-A23",
-      "Z1-A24",
-      "Z1-A25",
-    ],
-  },
-  {
-    key: 2,
-    slno: 2,
-    inspector: "Inspector 2",
-    inspectorId: "INS002",
-    month: "August",
-    shift: "Morning",
-    days: [
-      "Z1-A4",
-      "Z1-A3",
-      "WO",
-      "Z1-A5",
-      "Z1-A6",
-      "Z1-A7",
-      "Z1-A8",
-      "LV",
-      "WO",
-      "Z1-A9",
-      "Z1-A10",
-      "Z1-A11",
-      "Z1-A12",
-      "Z1-A13",
-      "LV",
-      "WO",
-      "Z1-A14",
-      "Z1-A15",
-      "Z1-A16",
-      "Z1-A17",
-      "Z1-A18",
-      "Z1-A19",
-      "Z1-A20",
-      "LV",
-      "WO",
-      "Z1-A21",
-      "Z1-A22",
-      "Z1-A23",
-      "Z1-A24",
-      "Z1-A25",
-      "Z1-A1",
-    ],
-  },
-  {
-    key: 3,
-    slno: 3,
-    inspector: "Inspector 3",
-    inspectorId: "INS003",
-    month: "August",
-    shift: "Afternoon",
-    days: [
-      "Z1-A3",
-      "Z1-A4",
-      "Z1-A5",
-      "Z1-A6",
-      "LV",
-      "WO",
-      "Z1-A7",
-      "Z1-A8",
-      "Z1-A9",
-      "Z1-A10",
-      "Z1-A11",
-      "LV",
-      "WO",
-      "Z1-A12",
-      "Z1-A13",
-      "Z1-A14",
-      "Z1-A15",
-      "Z1-A16",
-      "LV",
-      "WO",
-      "Z1-A17",
-      "Z1-A18",
-      "Z1-A19",
-      "Z1-A20",
-      "Z1-A21",
-      "Z1-A22",
-      "LV",
-      "WO",
-      "Z1-A23",
-      "Z1-A24",
-      "Z1-A25",
-    ],
-  },
-  {
-    key: 4,
-    slno: 4,
-    inspector: "Inspector 4",
-    inspectorId: "INS004",
-    month: "September",
-    shift: "Morning",
-    days: [
-      "Z2-A1",
-      "Z2-A2",
-      "LV",
-      "WO",
-      "Z2-A3",
-      "Z2-A4",
-      "Z2-A5",
-      "Z2-A6",
-      "Z2-A7",
-      "Z2-A8",
-      "Z2-A9",
-      "Z2-A10",
-      "LV",
-      "WO",
-      "Z2-A11",
-      "Z2-A12",
-      "Z2-A13",
-      "Z2-A14",
-      "Z2-A15",
-      "Z2-A16",
-      "Z2-A17",
-      "Z2-A18",
-      "LV",
-      "WO",
-      "Z2-A19",
-      "Z2-A20",
-      "Z2-A21",
-      "Z2-A22",
-      "Z2-A23",
-      "Z2-A24",
-      "Z2-A25",
-    ],
-  },
-  {
-    key: 5,
-    slno: 5,
-    inspector: "Inspector 5",
-    inspectorId: "INS005",
-    month: "September",
-    shift: "Night",
-    days: [
-      "Z2-A4",
-      "Z2-A3",
-      "WO",
-      "Z2-A5",
-      "Z2-A6",
-      "Z2-A7",
-      "Z2-A8",
-      "LV",
-      "WO",
-      "Z2-A9",
-      "Z2-A10",
-      "Z2-A11",
-      "Z2-A12",
-      "Z2-A13",
-      "LV",
-      "WO",
-      "Z2-A14",
-      "Z2-A15",
-      "Z2-A16",
-      "Z2-A17",
-      "Z2-A18",
-      "Z2-A19",
-      "Z2-A20",
-      "LV",
-      "WO",
-      "Z2-A21",
-      "Z2-A22",
-      "Z2-A23",
-      "Z2-A24",
-      "Z2-A25",
-      "Z2-A1",
-    ],
-  },
-];
-
-// helpers
-const monthIndexByName: Record<string, number> = {
-  January: 0,
-  February: 1,
-  March: 2,
-  April: 3,
-  May: 4,
-  June: 5,
-  July: 6,
-  August: 7,
-  September: 8,
-  October: 9,
-  November: 10,
-  December: 11,
-};
-
+// Helpers
 const monthNameByIndex = (i: number) =>
   [
     "January",
@@ -315,7 +81,7 @@ const monthNameByIndex = (i: number) =>
     "December",
   ][i];
 
-function getDayNamesForMonth(year: number, monthIndex: number) {
+const getDayNamesForMonth = (year: number, monthIndex: number) => {
   const start = startOfMonth(new Date(year, monthIndex, 1));
   const end = endOfMonth(start);
   const days = eachDayOfInterval({ start, end });
@@ -325,63 +91,315 @@ function getDayNamesForMonth(year: number, monthIndex: number) {
     isSunday: isSunday(d),
     fullDate: d,
   }));
-}
-
-// Disable past dates for date picker
-const disabledDate = (current: any) => {
-  return current && isBefore(current, startOfDay(new Date()));
 };
+
+const toLocalISOString = (date: Date) => {
+  const tzOffsetMin = -date.getTimezoneOffset();
+  const sign = tzOffsetMin >= 0 ? "+" : "-";
+  const absOffset = Math.abs(tzOffsetMin);
+  const offsetHours = String(Math.floor(absOffset / 60)).padStart(2, "0");
+  const offsetMinutes = String(absOffset % 60).padStart(2, "0");
+
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  const hh = String(date.getHours()).padStart(2, "0");
+  const min = String(date.getMinutes()).padStart(2, "0");
+  const sec = String(date.getSeconds()).padStart(2, "0");
+
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}:${sec}${sign}${offsetHours}:${offsetMinutes}`;
+};
+
+const disabledDate = (current: any) => current && isBefore(current, startOfDay(new Date()));
 
 export default function AdhocShiftPlan() {
   const { setPageTitle } = usePage();
   const { i18n, t } = useTranslation();
   const config = AdhocShiftPlanConfig;
+  const notification = useAppNotification();
 
-  // Set page title from config
   useEffect(() => {
     setPageTitle(t(config.title));
   }, [setPageTitle, t, config.title, i18n.language]);
 
-  // --- view state
+  // RTK Query hooks
+  const [getAdhocShifts, { isLoading: isLoadingShifts }] = useLazyGetAdhocShiftsQuery();
+  const [publishAdhoc, { isLoading: isPublishing }] = usePublishAdhocMutation();
+  const [triggerGetZones] = useLazyGetZonesQuery();
+  const [triggerGetAreas] = useLazyGetAreasQuery();
+  const { data: allAreasData } = useGetAllAreasQuery();
+  const { data: shiftsResponse, isLoading: isShiftsLoading } = useGetInspectionShiftsQuery();
+
+  const [loadingLocal, setLoadingLocal] = useState(false);
+  const [zonesLookup, setZonesLookup] = useState<any[]>([]);
+  const [areasLookup, setAreasLookup] = useState<any[]>([]);
+  const [allAreasLookup, setAllAreasLookup] = useState<any[]>([]);
+  const [shiftsLookup, setShiftsLookup] = useState<ShiftType[]>([]);
+
+  // **NEW: Track modified entries for PUT request**
+  const [modifiedEntries, setModifiedEntries] = useState<Set<string>>(new Set());
+
+  const shiftsMap = useMemo(() => {
+    const map: Record<string, ShiftType> = {};
+    shiftsLookup.forEach((shift) => {
+      map[shift.shiftTypeGUID] = shift;
+    });
+    return map;
+  }, [shiftsLookup]);
+
   const [activeTab, setActiveTab] = useState("1");
   const [viewMode, setViewMode] = useState<"table" | "list" | "calendar">("table");
+  const [rows, setRows] = useState<any[]>([]);
+  const [rawApiData, setRawApiData] = useState<any[]>([]);
+  const [selectedInspector, setSelectedInspector] = useState<string | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<[Dayjs | null, Dayjs | null]>([null, null]);
+  const [hasPlanned, setHasPlanned] = useState(false);
 
-  // data state
-  const [rows, setRows] = useState(initialData);
-
-  // top controls
-  // Default selectedInspector to first inspector so calendar initially shows only 1 inspector's data
-  const defaultInspector = initialData[0]?.inspector;
-  const [selectedInspector, setSelectedInspector] = useState<string | undefined>(defaultInspector);
-  const [dateRange, setDateRange] = useState<any[]>([]);
-
-  // calendar header state (month & year selectors inside Calendar only)
   const today = new Date();
   const [calYear, setCalYear] = useState(getYear(today));
   const [calMonthIdx, setCalMonthIdx] = useState(getMonth(today));
 
   const dayNames = useMemo(() => getDayNamesForMonth(calYear, calMonthIdx), [calYear, calMonthIdx]);
 
-  // --- drag selection (table) ---
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<number | null>(null);
   const [selectionEnd, setSelectionEnd] = useState<number | null>(null);
   const [selectedRowKey, setSelectedRowKey] = useState<number | null>(null);
 
-  // --- calendar drag selection ---
   const [calIsSelecting, setCalIsSelecting] = useState(false);
   const [calSelStart, setCalSelStart] = useState<number | null>(null);
   const [calSelEnd, setCalSelEnd] = useState<number | null>(null);
-  const [calSelectedInspector, setCalSelectedInspector] = useState<string | undefined>(defaultInspector);
+  const [calSelectedInspector, setCalSelectedInspector] = useState<string | undefined>(undefined);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingData, setEditingData] = useState<any>(null);
   const [form] = Form.useForm();
-  // extra state for table tabs
-  const [tableTab, setTableTab] = useState("monthly");
-
-  // State for tracking if editing WO or Leave
   const [isEditingSpecial, setIsEditingSpecial] = useState<"WO" | "LV" | null>(null);
+
+  // Load shifts data
+  useEffect(() => {
+    if (shiftsResponse?.successful && shiftsResponse?.data && Array.isArray(shiftsResponse.data)) {
+      const activeShifts = shiftsResponse.data.filter((shift: ShiftType) => shift.isActive);
+      setShiftsLookup(activeShifts);
+    }
+  }, [shiftsResponse]);
+
+  // Load zones
+  useEffect(() => {
+    const loadZones = async () => {
+      try {
+        const zonesRes = await triggerGetZones().unwrap();
+        const zlist = zonesRes?.data ? zonesRes.data : Array.isArray(zonesRes) ? zonesRes : [];
+        const normalized = zlist.map((z: any) => ({
+          id: z.zoneId ?? z.zone_Id ?? z.id ?? z.zoneGUID ?? z.zoneCode ?? z.code,
+          value: z.zoneId ?? z.zone_Id ?? z.id ?? z.zoneGUID ?? z.zoneCode ?? z.code,
+          label: z.zone || z.zoneName || z.description || `${z.zoneCode ?? ""}${z.zone ? " - " + z.zone : ""}`,
+          original: z,
+        }));
+        setZonesLookup(normalized);
+      } catch (err) {
+        console.error("Failed to load zones", err);
+      }
+    };
+    loadZones();
+  }, [triggerGetZones]);
+
+  // Load all areas
+  useEffect(() => {
+    if (!allAreasData) return;
+    const raw = allAreasData?.data ?? allAreasData ?? [];
+    const normalized = raw.map((a: any) => ({
+      id: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
+      value: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
+      label: a.area || a.areaName || a.name || String(a.areaId || a.area),
+      zoneId: a.zoneId ?? a.zone_Id ?? a.parentZoneId ?? null,
+      original: a,
+    }));
+    setAllAreasLookup(normalized);
+    setAreasLookup(normalized);
+  }, [allAreasData]);
+
+  // Helper functions (refactored)
+  const getLookupLabel = useMemo(
+    () => (lookup: any[], value: any) => {
+      if (!value && value !== 0) return "";
+      const item = lookup.find((x) => String(x.value) === String(value) || String(x.id) === String(value));
+      return item ? item.label : String(value);
+    },
+    [],
+  );
+
+  const getZoneName = useMemo(
+    () => (zoneVal: any) => getLookupLabel(zonesLookup, zoneVal),
+    [zonesLookup, getLookupLabel],
+  );
+  const getAreaName = useMemo(
+    () => (areaVal: any) => getLookupLabel(allAreasLookup, areaVal),
+    [allAreasLookup, getLookupLabel],
+  );
+
+  const getShiftInfoByGUID = useMemo(
+    () =>
+      (shiftGUID: string): ShiftType | null => {
+        if (!shiftGUID) return null;
+        return shiftsMap[shiftGUID] || null;
+      },
+    [shiftsMap],
+  );
+
+  // Process API data into table rows
+  const processApiDataToRows = useMemo(
+    () => (data: any[]) => {
+      if (!data || data.length === 0) {
+        setRows([]);
+        return;
+      }
+
+      if (!dateRange[0] || !dateRange[1]) return;
+
+      const start = dayjs((dateRange[0] as Dayjs).startOf("day").toDate());
+      const end = dayjs((dateRange[1] as Dayjs).startOf("day").toDate());
+      const totalDays = end.diff(start, "day") + 1;
+
+      const grouped: Record<string, any> = {};
+
+      data.forEach((item) => {
+        const parsed = item.date ? new Date(item.date) : null;
+        if (!parsed || isNaN(parsed.getTime())) return;
+        const localStart = startOfDay(parsed);
+        const date = dayjs(localStart);
+        const dayIndex = date.diff(start, "day");
+
+        if (dayIndex < 0 || dayIndex >= totalDays) return;
+
+        const key = `${item.inspectorId}-${item.shiftId}`;
+
+        if (!grouped[key]) {
+          const shiftInfo = getShiftInfoByGUID(item.shiftId);
+          grouped[key] = {
+            key,
+            inspector: item.inspectorName,
+            inspectorId: item.inspectorId,
+            month: monthNameByIndex(date.month()),
+            shift: shiftInfo
+              ? i18n.language === "ar"
+                ? shiftInfo.shiftTypeNameAr
+                : shiftInfo.shiftTypeNameEn
+              : item.shiftCode,
+            shiftId: item.shiftId,
+            days: Array(totalDays).fill("NA"),
+            _raw: {},
+          };
+        }
+
+        if (item.isOff) {
+          grouped[key].days[dayIndex] = item.offType === "weekOff" ? "WO" : "LV";
+        } else {
+          const zoneLabel = item.zoneId ? getZoneName(item.zoneId) : item.zoneCode || "NA";
+          let areaLabels: string[] = [];
+
+          if (item.areasIds && Array.isArray(item.areasIds)) {
+            areaLabels = item.areasIds.map((aid: string) => getAreaName(aid)).filter(Boolean);
+          } else if (item.areaId) {
+            areaLabels = [getAreaName(item.areaId)];
+          }
+
+          const areaLabel = areaLabels.length ? areaLabels.join(", ") : item.areaCode || "NA";
+          grouped[key].days[dayIndex] = `${zoneLabel}-${areaLabel}`;
+        }
+
+        // **FIX 1: Preserve original date field**
+        grouped[key]._raw[dayIndex] = {
+          rosterId: item.rosterId,
+          shiftId: item.shiftId,
+          batchId: item.batchId,
+          inspectorId: item.inspectorId,
+          inspectorName: item.inspectorName,
+          zoneId: item.zoneId,
+          zoneCode: item.zoneCode || "",
+          areasIds: item.areasIds || (item.areaId ? [item.areaId] : []),
+          areaId: item.areaId || (item.areasIds && item.areasIds[0]) || "",
+          areaCode: item.areaCode || "",
+          shiftCode: item.shiftCode || "",
+          isOff: item.isOff || false,
+          offType: item.offType || "",
+          offTypeAr: item.offTypeAr || "",
+          date: item.date, // **Preserve original date**
+        };
+      });
+
+      const rowsArray = Object.values(grouped).map((r: any, index) => ({
+        ...r,
+        slno: index + 1,
+        key: r.key || `row-${index}`,
+      }));
+
+      setRows(rowsArray);
+
+      if (rowsArray.length > 0 && !selectedInspector) {
+        const firstInspector = rowsArray[0].inspector;
+        setSelectedInspector(firstInspector);
+        setCalSelectedInspector(firstInspector);
+      }
+    },
+    [dateRange, getShiftInfoByGUID, getZoneName, getAreaName, i18n.language, selectedInspector],
+  );
+
+  // Handle Plan button click
+  const handlePlan = async () => {
+    if (!dateRange[0] || !dateRange[1]) {
+      message.error(t("adhocShiftPlan.selectDateRange", "Please select date range"));
+      return;
+    }
+
+    setLoadingLocal(true);
+    try {
+      const startDateLocal = toLocalISOString((dateRange[0] as Dayjs).startOf("day").toDate());
+      const endDateLocal = toLocalISOString((dateRange[1] as Dayjs).startOf("day").toDate());
+
+      const payload = { startDate: startDateLocal, endDate: endDateLocal, persist: true };
+      const result = await getAdhocShifts(payload).unwrap();
+
+      if (result.successful && result.data) {
+        setRawApiData(result.data);
+        processApiDataToRows(result.data);
+        setHasPlanned(true);
+        setModifiedEntries(new Set()); // **Reset modified entries**
+        notification.success(
+          {
+            data: {
+              en_Msg: result.en_Msg || "Shift plan loaded successfully",
+              ar_Msg: result.ar_Msg || "تم تحميل خطة الورديات بنجاح",
+            },
+          },
+          t("messages.operationSuccess"),
+        );
+      } else {
+        notification.error(
+          {
+            data: {
+              en_Msg: result.en_Msg || "Failed to load shift plan",
+              ar_Msg: result.ar_Msg || "فشل تحميل خطة الورديات",
+            },
+          },
+          t("common.error"),
+        );
+      }
+    } catch (error: any) {
+      console.error("Error fetching adhoc shifts:", error);
+      notification.error(
+        {
+          data: {
+            en_Msg: error?.data?.en_Msg || "An error occurred",
+            ar_Msg: error?.data?.ar_Msg || "حدث خطأ",
+          },
+        },
+        t("common.error"),
+      );
+    } finally {
+      setLoadingLocal(false);
+    }
+  };
 
   useEffect(() => {
     const handleUp = () => {
@@ -393,7 +411,6 @@ export default function AdhocShiftPlan() {
       }
       if (calIsSelecting) {
         setCalIsSelecting(false);
-        // open modal for calendar selection if we have a valid range
         if (calSelStart !== null && calSelEnd !== null) {
           openCalendarEdit(calSelStart, calSelEnd);
         }
@@ -405,18 +422,16 @@ export default function AdhocShiftPlan() {
     return () => document.removeEventListener("mouseup", handleUp);
   }, [isSelecting, calIsSelecting, calSelStart, calSelEnd]);
 
-  // cell coloring (accessible for dark mode)
-  const getCellStyle = (value: string, dayIndex?: number) => {
-    let style: React.CSSProperties = {
-      color: "#111",
-      backgroundColor: "#fff",
-    };
+  // Cell styling (refactored)
+  const getCellStyle = (value: string, dayIndex?: number, isSunday?: boolean) => {
+    let style: React.CSSProperties = { color: "#111", backgroundColor: "#fff" };
 
     if (value === "LV") style = { backgroundColor: "#ff4d4f", color: "#fff", fontWeight: 600 };
     else if (value === "WO") style = { backgroundColor: "#fa8c16", color: "#fff", fontWeight: 600 };
-    else if (value?.startsWith("Z")) style = { backgroundColor: "#e6f4ff", color: "#0958d9", fontWeight: 500 };
+    else if (value?.includes("-")) style = { backgroundColor: "#e6f4ff", color: "#0958d9", fontWeight: 500 };
 
-    // selection band (table)
+    if (isSunday) style = { ...style, borderLeft: "3px solid #cf1322" };
+
     if (selectionStart !== null && selectionEnd !== null && dayIndex !== undefined && selectedRowKey !== null) {
       const s = Math.min(selectionStart, selectionEnd);
       const e = Math.max(selectionStart, selectionEnd);
@@ -435,27 +450,29 @@ export default function AdhocShiftPlan() {
   };
 
   const handleMouseEnter = (row: any, dayIndex: number) => {
-    if (isSelecting && selectedRowKey === row.key) {
-      setSelectionEnd(dayIndex);
-    }
+    if (isSelecting && selectedRowKey === row.key) setSelectionEnd(dayIndex);
   };
 
   const openEditForSelection = (row: any, startDayIndex: number, endDayIndex?: number) => {
     const value = row.days[startDayIndex];
-    const zone = value?.includes("-") ? value.split("-")[0] : undefined;
-    const area = value?.includes("-") ? value.split("-")[1] : undefined;
+    const rawData = row._raw?.[startDayIndex];
 
-    // Check if editing WO or Leave
     const isWO = value === "WO";
     const isLV = value === "LV";
     setIsEditingSpecial(isWO ? "WO" : isLV ? "LV" : null);
 
-    setEditingData({ ...row, zone, area, dayStart: startDayIndex + 1, dayEnd: (endDayIndex ?? startDayIndex) + 1 });
+    setEditingData({
+      ...row,
+      zone: rawData?.zoneId || undefined,
+      area: rawData?.areasIds || [],
+      dayStart: startDayIndex + 1,
+      dayEnd: (endDayIndex ?? startDayIndex) + 1,
+    });
     form.setFieldsValue({
       inspector: row.inspector,
-      shift: row.shift,
-      zone,
-      area,
+      shift: row.shiftId,
+      zone: rawData?.zoneId,
+      area: rawData?.areasIds || [],
     });
     setIsModalOpen(true);
   };
@@ -472,27 +489,28 @@ export default function AdhocShiftPlan() {
     }
   };
 
-  // calendar drag handlers
+  // Calendar drag handlers
   const calHandleMouseDown = (idx: number) => {
     setCalIsSelecting(true);
     setCalSelStart(idx);
     setCalSelEnd(idx);
   };
+
   const calHandleMouseEnter = (idx: number) => {
-    if (calIsSelecting) {
-      setCalSelEnd(idx);
-    }
+    if (calIsSelecting) setCalSelEnd(idx);
   };
 
   const openCalendarEdit = (startIdx: number, endIdx: number) => {
     const s = Math.min(startIdx, endIdx);
     const e = Math.max(startIdx, endIdx);
-    // find inspector row by calSelectedInspector (or default first)
-    const inspName = calSelectedInspector || defaultInspector;
+    const inspName = calSelectedInspector || (rows[0]?.inspector ?? "");
     const row = rows.find((r) => r.inspector === inspName) || rows[0];
 
+    if (!row) return;
+
     const value = row.days[s];
-    // Check if editing WO or Leave
+    const rawData = row._raw?.[s];
+
     const isWO = value === "WO";
     const isLV = value === "LV";
     setIsEditingSpecial(isWO ? "WO" : isLV ? "LV" : null);
@@ -501,57 +519,220 @@ export default function AdhocShiftPlan() {
       ...row,
       dayStart: s + 1,
       dayEnd: e + 1,
-      zone: row.days[s]?.split("-")[0],
-      area: row.days[s]?.split("-")[1],
+      zone: rawData?.zoneId,
+      area: rawData?.areasIds || [],
     });
+
     form.setFieldsValue({
       inspector: row.inspector,
-      shift: row.shift,
-      zone: row.days[s]?.split("-")[0],
-      area: row.days[s]?.split("-")[1],
+      shift: row.shiftId,
+      zone: rawData?.zoneId,
+      area: rawData?.areasIds || [],
     });
     setIsModalOpen(true);
   };
 
-  // modal save
-  const handleModalOk = () => {
-    form
-      .validateFields()
-      .then((values) => {
-        // if editingData has dayStart/dayEnd apply changes
-        if (editingData && editingData.dayStart && editingData.dayEnd) {
-          const startIdx = editingData.dayStart - 1;
-          const endIdx = editingData.dayEnd - 1;
+  // **FIX 1 & 2: Modal save - Preserve date and track modifications**
+  const handleModalOk = async () => {
+    try {
+      const values = await form.validateFields();
 
-          setRows((prev) =>
-            prev.map((r) => {
-              if (r.inspector !== values.inspector && r.key !== editingData.key) return r;
-              // if modal was opened from table, match by key; if from calendar, match by inspector
-              const match = editingData.key ? r.key === editingData.key : r.inspector === values.inspector;
-              if (!match) return r;
-              const updated = { ...r } as any;
-              updated.inspector = values.inspector;
-              updated.shift = values.shift;
-              for (let i = startIdx; i <= endIdx; i++) {
-                updated.days[i] = `${values.zone}-${values.area}`;
-              }
-              return updated;
-            }),
-          );
-        }
+      if (editingData && editingData.dayStart && editingData.dayEnd) {
+        const startIdx = editingData.dayStart - 1;
+        const endIdx = editingData.dayEnd - 1;
 
-        setIsModalOpen(false);
-        setSelectionStart(null);
-        setSelectionEnd(null);
-        setSelectedRowKey(null);
-        setCalSelStart(null);
-        setCalSelEnd(null);
-        setIsEditingSpecial(null);
-      })
-      .catch(() => {});
+        const zoneObj = zonesLookup.find((z) => String(z.value) === String(values.zone));
+        const areaObjs = values.area
+          .map((id: any) => allAreasLookup.find((a) => String(a.value) === String(id)))
+          .filter(Boolean);
+
+        const zoneName = zoneObj?.label || values.zone;
+        const areaNames = areaObjs.map((a: any) => a?.label).filter(Boolean);
+
+        setRows((prev) =>
+          prev.map((r) => {
+            const match = editingData.key ? r.key === editingData.key : r.inspector === values.inspector;
+            if (!match) return r;
+
+            const updated = { ...r };
+
+            for (let i = startIdx; i <= endIdx; i++) {
+              updated.days[i] = `${zoneName}-${areaNames.join(", ")}`;
+
+              // **FIX 1: Preserve date when updating**
+              const originalRaw = updated._raw[i] || {};
+              updated._raw[i] = {
+                ...originalRaw,
+                zoneId: values.zone,
+                zoneCode: zoneObj?.original?.zoneCode || originalRaw.zoneCode || "",
+                areasIds: values.area,
+                areaId: values.area[0],
+                areaCode: areaObjs[0]?.original?.areaCode || originalRaw.areaCode || "",
+                isOff: false,
+                offType: "",
+                // **Preserve original date field**
+                date: originalRaw.date,
+              };
+
+              // **FIX 2: Track this entry as modified**
+              const entryKey = `${r.inspectorId}-${i}`;
+              setModifiedEntries((prev) => new Set(prev).add(entryKey));
+            }
+            return updated;
+          }),
+        );
+
+        message.success(t("common.updateSuccess", "Updated successfully"));
+      }
+
+      setIsModalOpen(false);
+      setSelectionStart(null);
+      setSelectionEnd(null);
+      setSelectedRowKey(null);
+      setCalSelStart(null);
+      setCalSelEnd(null);
+      setIsEditingSpecial(null);
+    } catch (error) {
+      console.error("Validation failed:", error);
+    }
   };
 
-  // dynamic table columns based on current calendar month
+  // **FIX 2: Build schedule entries - Only send modified entries**
+  const buildScheduleEntries = () => {
+    const entries: any[] = [];
+
+    if (!dateRange[0]) return entries;
+
+    const start = dayjs((dateRange[0] as Dayjs).startOf("day").toDate());
+
+    rows.forEach((row) => {
+      const raw = row._raw || {};
+      Object.keys(raw).forEach((dayIdxStr) => {
+        const dayIdx = parseInt(dayIdxStr, 10);
+        if (Number.isNaN(dayIdx)) return;
+
+        const rawEntry = raw[dayIdxStr];
+        if (!rawEntry || !rawEntry.inspectorId) return;
+
+        // **Check if this entry was modified**
+        const entryKey = `${row.inspectorId}-${dayIdx}`;
+        if (!modifiedEntries.has(entryKey)) return; // **Skip unmodified entries**
+
+        // **Use preserved date or calculate from start date**
+        const entryDate = rawEntry.date || toLocalISOString(start.add(dayIdx, "day").toDate());
+
+        entries.push({
+          id: rawEntry.id || 0,
+          rosterId: rawEntry.rosterId || "00000000-0000-0000-0000-000000000000",
+          date: entryDate,
+          inspectorId: rawEntry.inspectorId,
+          inspectorName: rawEntry.inspectorName,
+          inspectorNameAr: rawEntry.inspectorName,
+          zoneId: rawEntry.zoneId || "00000000-0000-0000-0000-000000000000",
+          areaId: rawEntry.areaId || "00000000-0000-0000-0000-000000000000",
+          areasIds: rawEntry.areasIds || [],
+          shiftId: rawEntry.shiftId || "00000000-0000-0000-0000-000000000000",
+          batchId: rawEntry.batchId || "00000000-0000-0000-0000-000000000000",
+          zoneCode: rawEntry.zoneCode || "",
+          areaCode: rawEntry.areaCode || "",
+          shiftCode: rawEntry.shiftCode || "",
+          isOff: rawEntry.isOff || false,
+          offType: rawEntry.offType || "",
+          offTypeAr: rawEntry.offTypeAr || "",
+        });
+      });
+    });
+
+    return entries;
+  };
+
+  // Handle publish
+  const handlePublish = async () => {
+    if (!dateRange[0] || !dateRange[1]) {
+      message.error(t("adhocShiftPlan.selectDateRange", "Please select date range"));
+      return;
+    }
+
+    if (rows.length === 0) {
+      message.warning(t("adhocShiftPlan.noDataToPublish", "No data to publish"));
+      return;
+    }
+
+    // **Check if there are modifications**
+    if (modifiedEntries.size === 0) {
+      message.warning("No changes to publish");
+      return;
+    }
+
+    setLoadingLocal(true);
+    try {
+      const scheduleEntries = buildScheduleEntries(); // **Only modified entries**
+
+      const batchStart = toLocalISOString((dateRange[0] as Dayjs).startOf("day").toDate());
+      const batchEnd = toLocalISOString((dateRange[1] as Dayjs).startOf("day").toDate());
+
+      const payload = {
+        batch: { startDate: batchStart, endDate: batchEnd, persist: true },
+        scheduleEntries,
+        isPublished: true,
+      };
+
+      const result = await publishAdhoc(payload).unwrap();
+
+      if (result && (result.successful === true || result.isPublished === true || result.status === "success")) {
+        notification.success(
+          {
+            data: {
+              en_Msg: result.en_Msg || "Published successfully",
+              ar_Msg: result.ar_Msg || "تم النشر بنجاح",
+            },
+          },
+          t("messages.operationSuccess"),
+        );
+
+        // Reset modified entries after successful publish
+        setModifiedEntries(new Set());
+
+        // Reload data
+        try {
+          const reloadPayload = { startDate: batchStart, endDate: batchEnd, persist: false };
+          const reloadResult = await getAdhocShifts(reloadPayload).unwrap();
+          if (reloadResult && reloadResult.successful && Array.isArray(reloadResult.data)) {
+            setRawApiData(reloadResult.data);
+            processApiDataToRows(reloadResult.data);
+            setHasPlanned(true);
+          }
+        } catch (reloadErr) {
+          console.warn("Re-fetch after publish failed:", reloadErr);
+        }
+      } else {
+        notification.error(
+          {
+            data: {
+              en_Msg: result?.en_Msg || "Failed to publish",
+              ar_Msg: result?.ar_Msg || "فشل النشر",
+            },
+          },
+          t("common.error"),
+        );
+      }
+    } catch (error: any) {
+      console.error("Publish error:", error);
+      notification.error(
+        {
+          data: {
+            en_Msg: error?.data?.en_Msg || error?.message || "An error occurred",
+            ar_Msg: error?.data?.ar_Msg || "حدث خطأ",
+          },
+        },
+        t("common.error"),
+      );
+    } finally {
+      setLoadingLocal(false);
+    }
+  };
+
+  // Dynamic table columns
   const dayColumns = dayNames.map((day, i) => ({
     title: (
       <div style={{ fontWeight: day.isSunday ? "bold" : "normal", color: day.isSunday ? "#cf1322" : "#000" }}>
@@ -562,59 +743,66 @@ export default function AdhocShiftPlan() {
     dataIndex: ["days", i],
     key: `day${i + 1}`,
     width: 80,
-    render: (value: string, row: any) => (
-      <Tooltip
-        title={
-          value?.includes("-") ? (
-            <div style={{ maxWidth: 250 }}>
-              <p style={{ marginBottom: 4 }}>
-                <b>Inspector:</b> {row.inspector}
-              </p>
-              <p style={{ marginBottom: 4 }}>
-                <b>Date:</b> {day.dayOfMonth} {monthNameByIndex(calMonthIdx)} ({day.dayOfWeek})
-              </p>
-              <p style={{ marginBottom: 4 }}>
-                <b>Shift:</b> {row.shift}
-              </p>
-              <p style={{ marginBottom: 4 }}>
-                <b>Zone:</b> {zoneMapping[value.split("-")[0]] || value.split("-")[0]}
-              </p>
-              <p style={{ marginBottom: 8 }}>
-                <b>Area:</b> {zoneMapping[value.split("-")[1]] || value.split("-")[1]}
-              </p>
-              <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEditForSelection(row, i)}>
-                Edit
-              </Button>
-            </div>
-          ) : value === "LV" ? (
-            "Leave"
-          ) : value === "WO" ? (
-            "Week Off"
-          ) : (
-            "Not Assigned"
-          )
-        }
-      >
-        <div
-          style={{
-            padding: "4px 8px",
-            textAlign: "center",
-            borderRadius: 4,
-            cursor: "pointer",
-            minHeight: 32,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            ...getCellStyle(value, i, day.isSunday),
-          }}
-          onMouseDown={() => handleMouseDown(row, i)}
-          onMouseEnter={() => handleMouseEnter(row, i)}
-          onMouseUp={() => handleMouseUp(row)}
+    render: (value: string, row: any) => {
+      const rawData = row._raw?.[i];
+
+      return (
+        <Tooltip
+          title={
+            value?.includes("-") ? (
+              <div style={{ maxWidth: 250 }}>
+                <p style={{ marginBottom: 4 }}>
+                  <b>Inspector:</b> {row.inspector}
+                </p>
+                <p style={{ marginBottom: 4 }}>
+                  <b>Date:</b> {day.dayOfMonth} {monthNameByIndex(calMonthIdx)} ({day.dayOfWeek})
+                </p>
+                <p style={{ marginBottom: 4 }}>
+                  <b>Shift:</b> {row.shift}
+                </p>
+                <p style={{ marginBottom: 4 }}>
+                  <b>Zone:</b> {rawData?.zoneId ? getZoneName(rawData.zoneId) : "NA"}
+                </p>
+                <p style={{ marginBottom: 8 }}>
+                  <b>Area:</b>{" "}
+                  {rawData?.areasIds
+                    ? rawData.areasIds.map((id: string) => getAreaName(id)).join(", ")
+                    : getAreaName(rawData?.areaId) || "NA"}
+                </p>
+                <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEditForSelection(row, i)}>
+                  Edit
+                </Button>
+              </div>
+            ) : value === "LV" ? (
+              "Leave"
+            ) : value === "WO" ? (
+              "Week Off"
+            ) : (
+              "Not Assigned"
+            )
+          }
         >
-          {value || "NA"}
-        </div>
-      </Tooltip>
-    ),
+          <div
+            style={{
+              padding: "4px 8px",
+              textAlign: "center",
+              borderRadius: 4,
+              cursor: "pointer",
+              minHeight: 32,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              ...getCellStyle(value, i, day.isSunday),
+            }}
+            onMouseDown={() => handleMouseDown(row, i)}
+            onMouseEnter={() => handleMouseEnter(row, i)}
+            onMouseUp={() => handleMouseUp(row)}
+          >
+            {value || "NA"}
+          </div>
+        </Tooltip>
+      );
+    },
   }));
 
   const columns = [
@@ -651,24 +839,10 @@ export default function AdhocShiftPlan() {
     ...dayColumns,
   ];
 
-  // table datasource filtered by inspector at top (only for table view per spec)
-  const tableData = useMemo(() => {
-    if (!selectedInspector || viewMode !== "calendar") return rows;
-    // For calendar, we will filter separately in dateCellRender; table should show all unless user filters via column.
-    return rows;
-  }, [rows, selectedInspector, viewMode]);
-
-  // Top controls (spec 3): only View buttons + Inspector + DateRange + Plan button
-  // Inspector dropdown should be hidden in List view (spec 4)
-
+  const tableData = useMemo(() => rows, [rows]);
   const inspectorOptions = useMemo(() => Array.from(new Set(rows.map((r) => r.inspector))), [rows]);
 
-  const handlePlan = () => {
-    // Hook up to your API later
-    console.log("Plan clicked", { selectedInspector, dateRange });
-  };
-
-  // List View: today -> next 10 days
+  // List View data
   const next10Days = useMemo(() => {
     const arr = [] as Date[];
     for (let i = 0; i < 10; i++) arr.push(addDays(today, i));
@@ -678,7 +852,6 @@ export default function AdhocShiftPlan() {
   const listData = useMemo(() => {
     return rows.map((ins) => {
       const days = next10Days.map((dt) => {
-        // only map if same month as current calendar month; else show NA
         let value = "NA";
         if (getYear(dt) === calYear && getMonth(dt) === calMonthIdx) {
           const index = parseInt(format(dt, "d"), 10) - 1;
@@ -692,7 +865,7 @@ export default function AdhocShiftPlan() {
     });
   }, [rows, next10Days, calMonthIdx, calYear]);
 
-  // Calendar cell renderer with inspector filtering + accessible chips + drag handlers
+  // Calendar cell renderer
   const dateCellRender = (value: any) => {
     const date: Date = value.toDate();
     if (!isSameMonth(date, new Date(calYear, calMonthIdx, 1))) return null;
@@ -707,7 +880,6 @@ export default function AdhocShiftPlan() {
       .map((r) => ({ who: r.inspector, val: r.days[dayIndex], key: r.key }))
       .filter((x) => !!x.val);
 
-    // If the calendar selection is active we want to highlight cells in the selected range
     const selStart = calSelStart;
     const selEnd = calSelEnd;
     const inSel =
@@ -716,7 +888,7 @@ export default function AdhocShiftPlan() {
       dayIndex >= Math.min(selStart, selEnd) &&
       dayIndex <= Math.max(selStart, selEnd);
 
-    const cell = (
+    return (
       <div
         style={{ padding: 4 }}
         onMouseDown={() => calHandleMouseDown(dayIndex)}
@@ -752,14 +924,12 @@ export default function AdhocShiftPlan() {
         {assignments.length > 3 && <div style={{ fontSize: 11, opacity: 0.75 }}>+{assignments.length - 3} more</div>}
       </div>
     );
-
-    return cell;
   };
 
-  // Calendar custom header: month dropdown + year dropdown (current & future only) + inspector name on right
+  // Calendar custom header
   const calendarHeaderRender = ({ value, onChange }: any) => {
     const curYear = getYear(new Date());
-    const years = Array.from({ length: 6 }).map((_, i) => curYear + i); // current + 5 years
+    const years = Array.from({ length: 6 }).map((_, i) => curYear + i);
     const months = Array.from({ length: 12 }).map((_, i) => ({ label: monthNameByIndex(i), value: i }));
 
     return (
@@ -789,12 +959,12 @@ export default function AdhocShiftPlan() {
           />
         </div>
 
-        {/* Inspector display at right of calendar header */}
         <div>
           <Select
             value={calSelectedInspector}
             onChange={(v) => setCalSelectedInspector(v)}
             options={inspectorOptions.map((x) => ({ label: x, value: x }))}
+            placeholder="Select Inspector"
             style={{ width: 220 }}
           />
         </div>
@@ -802,260 +972,351 @@ export default function AdhocShiftPlan() {
     );
   };
 
-  return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <Card style={{ marginBottom: 20 }}>
-        <Row gutter={12} align="middle">
-          <Col>
-            <Space>
-              <Button
-                type={viewMode === "table" ? "primary" : "default"}
-                icon={<TableOutlined />}
-                onClick={() => setViewMode("table")}
-              >
-                Table View
-              </Button>
-              <Button
-                type={viewMode === "list" ? "primary" : "default"}
-                icon={<UnorderedListOutlined />}
-                onClick={() => setViewMode("list")}
-              >
-                List View (Next 10 Days)
-              </Button>
-              <Button
-                type={viewMode === "calendar" ? "primary" : "default"}
-                icon={<CalendarOutlined />}
-                onClick={() => setViewMode("calendar")}
-              >
-                Calendar View
-              </Button>
-            </Space>
-          </Col>
+  // Handle zone change in modal
+  const handleZoneChange = async (zoneValue: string) => {
+    form.setFieldsValue({ area: [] });
 
-          {/* Inspector dropdown hidden in List view per spec */}
-          {viewMode !== "list" && (
+    if (!zoneValue) {
+      setAreasLookup(allAreasLookup);
+      return;
+    }
+
+    try {
+      const res = await triggerGetAreas(zoneValue).unwrap();
+      const raw = res?.data ?? res ?? [];
+
+      const normalized = raw.map((a: any) => ({
+        id: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
+        value: a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area,
+        label: a.area || a.areaName || a.name || String(a.areaId || a.area),
+        zoneId: a.zoneId ?? a.zone_Id ?? null,
+        original: a,
+      }));
+
+      setAreasLookup(normalized);
+    } catch (err) {
+      const selectedZone = zonesLookup.find(
+        (z) => String(z.value) === String(zoneValue) || String(z.id) === String(zoneValue),
+      );
+      const zoneIdToFilter = selectedZone?.value || selectedZone?.id || zoneValue;
+      setAreasLookup(allAreasLookup.filter((a) => String(a.zoneId) === String(zoneIdToFilter)));
+    }
+  };
+
+  const loadingGlobal = isShiftsLoading || isPublishing || isLoadingShifts || loadingLocal;
+
+  return (
+    <Spin spinning={loadingGlobal} tip="Loading..." size="large">
+      <Space direction="vertical" size="large" style={{ width: "100%" }}>
+        <Card style={{ marginBottom: 20 }}>
+          <Row gutter={12} align="middle">
             <Col>
-              <Select
-                allowClear
-                placeholder="Select Inspector"
-                style={{ width: 220 }}
-                value={selectedInspector}
-                onChange={(v) => {
-                  setSelectedInspector(v);
-                  setCalSelectedInspector(v);
+              <Space>
+                <Button
+                  type={viewMode === "table" ? "primary" : "default"}
+                  icon={<TableOutlined />}
+                  onClick={() => setViewMode("table")}
+                >
+                  {t("adhocShiftPlan.tableView", "Table View")}
+                </Button>
+                <Button
+                  type={viewMode === "list" ? "primary" : "default"}
+                  icon={<UnorderedListOutlined />}
+                  onClick={() => setViewMode("list")}
+                >
+                  {t("adhocShiftPlan.listView", "List View (Next 10 Days)")}
+                </Button>
+                <Button
+                  type={viewMode === "calendar" ? "primary" : "default"}
+                  icon={<CalendarOutlined />}
+                  onClick={() => setViewMode("calendar")}
+                >
+                  {t("adhocShiftPlan.calendarView", "Calendar View")}
+                </Button>
+              </Space>
+            </Col>
+
+            {viewMode !== "list" && (
+              <Col>
+                <Select
+                  allowClear
+                  placeholder={t("adhocShiftPlan.selectInspector", "Select Inspector")}
+                  style={{ width: 220 }}
+                  value={selectedInspector}
+                  onChange={(v) => {
+                    setSelectedInspector(v);
+                    setCalSelectedInspector(v);
+                  }}
+                  options={inspectorOptions.map((x) => ({ label: x, value: x }))}
+                  disabled={!hasPlanned}
+                />
+              </Col>
+            )}
+
+            <Col>
+              <RangePicker
+                disabledDate={disabledDate}
+                value={dateRange as any}
+                onChange={(val) => {
+                  setDateRange(val ? [val[0], val[1]] : [null, null]);
+                  setHasPlanned(false);
+                  setRows([]);
                 }}
-                options={inspectorOptions.map((x) => ({ label: x, value: x }))}
+                format="DD-MM-YYYY"
               />
             </Col>
-          )}
 
-          <Col>
-            <DatePicker.RangePicker
-              disabledDate={disabledDate}
-              onChange={(val) => setDateRange(val ? [val] : [])}
-              format="DD-MM-YYYY"
-            />
-          </Col>
+            <Col>
+              <Button
+                type="primary"
+                onClick={handlePlan}
+                disabled={!dateRange[0] || !dateRange[1]}
+                loading={isLoadingShifts || loadingLocal}
+              >
+                {t("form.replan", "Plan")}
+              </Button>
+            </Col>
 
-          <Col>
-            <Button type="primary" onClick={handlePlan}>
-              Plan
-            </Button>
-          </Col>
-        </Row>
-      </Card>
-
-      {/* Legend card above calendar */}
-      {viewMode === "calendar" && (
-        <Card size="small" style={{ width: 420 }}>
-          <Space>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <div style={{ width: 14, height: 14, background: "#ff4d4f", borderRadius: 3 }} />
-              <div>Leave (LV)</div>
-            </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <div style={{ width: 14, height: 14, background: "#fa8c16", borderRadius: 3 }} />
-              <div>Week Off (WO)</div>
-            </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <div style={{ width: 14, height: 14, background: "#e6f4ff", borderRadius: 3 }} />
-              <div>Assigned (Z-A)</div>
-            </div>
-          </Space>
-        </Card>
-      )}
-
-      {viewMode === "table" && (
-        <Card bordered>
-          <Tabs
-            type="card"
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            tabBarExtraContent={<Button type="primary">Publish</Button>}
-          >
-            <TabPane tab="Monthly" key="1">
-              <Table
-                dataSource={tableData}
-                columns={columns}
-                // keep Inspector/Month/Shift columns fixed; days scroll horizontally
-                scroll={{ x: Math.max(1200, 200 + dayNames.length * 90), y: 700 }}
-                bordered
-                pagination={false}
-                rowKey="key"
-              />
-            </TabPane>
-            <TabPane tab="Inspector Wise" key="2">
-              <Table
-                dataSource={selectedInspector ? rows.filter((d) => d.inspector === selectedInspector) : []}
-                columns={columns}
-                scroll={{ x: Math.max(1200, 200 + dayNames.length * 90), y: 700 }}
-                bordered
-                pagination={false}
-                rowKey="key"
-              />
-            </TabPane>
-            <TabPane tab="All" key="3">
-              <Table
-                dataSource={rows}
-                columns={columns}
-                scroll={{ x: Math.max(1200, 200 + dayNames.length * 90), y: 700 }}
-                bordered
-                pagination={false}
-                rowKey="key"
-              />
-            </TabPane>
-          </Tabs>
-        </Card>
-      )}
-
-      {viewMode === "list" && (
-        <Card title="Next 10 Days" bordered>
-          <List
-            itemLayout="vertical"
-            dataSource={listData}
-            renderItem={(item) => (
-              <List.Item>
-                <div style={{ marginBottom: 8, fontWeight: 600 }}>
-                  {item.inspector} ({item.inspectorId}) – {item.shift} Shift
-                </div>
-                <Space wrap>
-                  {item.days.map((d, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        padding: 8,
-                        border: "1px solid #d9d9d9",
-                        borderRadius: 6,
-                        width: 90,
-                        textAlign: "center",
-                        background: d.value === "LV" ? "#ffccc7" : d.value === "WO" ? "#ffe7ba" : "#fff",
-                      }}
-                    >
-                      <div>
-                        {d.day} ({d.dayOfWeek})
-                      </div>
-                      <div
-                        style={{
-                          color: d.value === "LV" ? "#a8071a" : d.value === "WO" ? "#d46b08" : "#0958d9",
-                          fontWeight: 600,
-                          fontSize: 12,
-                        }}
-                      >
-                        {d.value}
-                      </div>
-                    </div>
-                  ))}
-                </Space>
-              </List.Item>
+            {hasPlanned && rows.length > 0 && (
+              <Col>
+                <Button
+                  type="primary"
+                  onClick={handlePublish}
+                  loading={isPublishing || loadingLocal}
+                  style={{ background: "#52c41a" }}
+                  disabled={modifiedEntries.size === 0}
+                >
+                  {t("adhocShiftPlan.publish", "Publish")} {modifiedEntries.size > 0 && `(${modifiedEntries.size})`}
+                </Button>
+              </Col>
             )}
-          />
+          </Row>
         </Card>
-      )}
 
-      {viewMode === "calendar" && (
-        <Card
-          title={
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                Shift Calendar – {monthNameByIndex(calMonthIdx)} {calYear}
+        {viewMode === "calendar" && hasPlanned && (
+          <Card size="small" style={{ width: 420 }}>
+            <Space>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div style={{ width: 14, height: 14, background: "#ff4d4f", borderRadius: 3 }} />
+                <div>{t("adhocShiftPlan.leave", "Leave (LV)")}</div>
               </div>
-              <div style={{ fontWeight: 600 }}>{calSelectedInspector}</div>
-            </div>
-          }
-          bordered
-        >
-          <Calendar
-            headerRender={calendarHeaderRender}
-            dateCellRender={dateCellRender}
-            style={{ border: "1px solid #d9d9d9", borderRadius: 6 }}
-          />
-        </Card>
-      )}
-
-      <Modal
-        title="Edit Shift Details"
-        open={isModalOpen}
-        onOk={handleModalOk}
-        onCancel={() => {
-          setIsModalOpen(false);
-          setIsEditingSpecial(null);
-        }}
-        okText="Save Changes"
-        cancelText="Cancel"
-        width={600}
-      >
-        {/* Show alert when editing WO or Leave */}
-        {isEditingSpecial && (
-          <Alert
-            message={
-              isEditingSpecial === "WO"
-                ? "You are editing Week Off (WO) assignment"
-                : "You are editing Leave (LV) assignment"
-            }
-            description={
-              isEditingSpecial === "WO"
-                ? "Changing this will assign a zone and area instead of marking it as Week Off."
-                : "Changing this will assign a zone and area instead of marking it as Leave."
-            }
-            type="error"
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div style={{ width: 14, height: 14, background: "#fa8c16", borderRadius: 3 }} />
+                <div>{t("adhocShiftPlan.weekOff", "Week Off (WO)")}</div>
+              </div>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div style={{ width: 14, height: 14, background: "#e6f4ff", borderRadius: 3 }} />
+                <div>{t("adhocShiftPlan.assigned", "Assigned (Z-A)")}</div>
+              </div>
+            </Space>
+          </Card>
         )}
 
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="inspector"
-            label="Inspector"
-            rules={[{ required: true, message: "Please select inspector" }]}
-          >
-            <Select options={inspectorOptions.map((x) => ({ label: x, value: x }))} placeholder="Select inspector" />
-          </Form.Item>
-
-          <Form.Item name="shift" label="Shift" rules={[{ required: true, message: "Please select a shift" }]}>
-            <Select>
-              <Select.Option value="Morning">Morning</Select.Option>
-              <Select.Option value="Afternoon">Afternoon</Select.Option>
-              <Select.Option value="Night">Night</Select.Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item name="zone" label="Zone" rules={[{ required: true, message: "Please select a zone" }]}>
-            <Select>
-              <Select.Option value="Z1">Zone 1</Select.Option>
-              <Select.Option value="Z2">Zone 2</Select.Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item name="area" label="Area" rules={[{ required: true, message: "Please select an area" }]}>
-            <Select
-              options={Object.entries(zoneMapping)
-                .filter(([k]) => k.startsWith("A"))
-                .map(([value, label]) => ({ value, label }))}
+        {!hasPlanned && rows.length === 0 && (
+          <Card>
+            <Alert
+              message={t("adhocShiftPlan.noData", "No Data")}
+              description={t(
+                "adhocShiftPlan.selectDateAndPlan",
+                "Please select a date range and click Plan to load shift data",
+              )}
+              type="info"
+              showIcon
             />
-          </Form.Item>
-        </Form>
-      </Modal>
-    </Space>
+          </Card>
+        )}
+
+        {viewMode === "table" && rows.length > 0 && hasPlanned && (
+          <Card bordered>
+            <Tabs type="card" activeKey={activeTab} onChange={setActiveTab}>
+              <TabPane tab={t("adhocShiftPlan.monthly", "Monthly")} key="1">
+                <Table
+                  dataSource={tableData}
+                  columns={columns}
+                  scroll={{ x: Math.max(1200, 200 + dayNames.length * 90), y: 700 }}
+                  bordered
+                  pagination={false}
+                  rowKey="key"
+                />
+              </TabPane>
+              <TabPane tab={t("adhocShiftPlan.inspectorWise", "Inspector Wise")} key="2">
+                <Table
+                  dataSource={selectedInspector ? rows.filter((d) => d.inspector === selectedInspector) : []}
+                  columns={columns}
+                  scroll={{ x: Math.max(1200, 200 + dayNames.length * 90), y: 700 }}
+                  bordered
+                  pagination={false}
+                  rowKey="key"
+                />
+              </TabPane>
+              <TabPane tab={t("adhocShiftPlan.all", "All")} key="3">
+                <Table
+                  dataSource={rows}
+                  columns={columns}
+                  scroll={{ x: Math.max(1200, 200 + dayNames.length * 90), y: 700 }}
+                  bordered
+                  pagination={false}
+                  rowKey="key"
+                />
+              </TabPane>
+            </Tabs>
+          </Card>
+        )}
+
+        {viewMode === "list" && rows.length > 0 && hasPlanned && (
+          <Card title={t("adhocShiftPlan.next10Days", "Next 10 Days")} bordered>
+            <List
+              itemLayout="vertical"
+              dataSource={listData}
+              renderItem={(item) => (
+                <List.Item>
+                  <div style={{ marginBottom: 8, fontWeight: 600 }}>
+                    {item.inspector} ({item.inspectorId}) – {item.shift} {t("adhocShiftPlan.shift", "Shift")}
+                  </div>
+                  <Space wrap>
+                    {item.days.map((d, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: 8,
+                          border: "1px solid #d9d9d9",
+                          borderRadius: 6,
+                          width: 90,
+                          textAlign: "center",
+                          background: d.value === "LV" ? "#ffccc7" : d.value === "WO" ? "#ffe7ba" : "#fff",
+                        }}
+                      >
+                        <div>
+                          {d.day} ({d.dayOfWeek})
+                        </div>
+                        <div
+                          style={{
+                            color: d.value === "LV" ? "#a8071a" : d.value === "WO" ? "#d46b08" : "#0958d9",
+                            fontWeight: 600,
+                            fontSize: 12,
+                          }}
+                        >
+                          {d.value}
+                        </div>
+                      </div>
+                    ))}
+                  </Space>
+                </List.Item>
+              )}
+            />
+          </Card>
+        )}
+
+        {viewMode === "calendar" && rows.length > 0 && hasPlanned && (
+          <Card
+            title={
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  {t("adhocShiftPlan.shiftCalendar", "Shift Calendar")} – {monthNameByIndex(calMonthIdx)} {calYear}
+                </div>
+                <div style={{ fontWeight: 600 }}>{calSelectedInspector}</div>
+              </div>
+            }
+            bordered
+          >
+            <Calendar
+              headerRender={calendarHeaderRender}
+              dateCellRender={dateCellRender}
+              style={{ border: "1px solid #d9d9d9", borderRadius: 6 }}
+            />
+          </Card>
+        )}
+
+        <Modal
+          title={t("adhocShiftPlan.editShiftDetails", "Edit Shift Details")}
+          open={isModalOpen}
+          onOk={handleModalOk}
+          onCancel={() => {
+            setIsModalOpen(false);
+            setIsEditingSpecial(null);
+          }}
+          okText={t("adhocShiftPlan.saveChanges", "Save Changes")}
+          cancelText={t("common.cancel", "Cancel")}
+          width={600}
+        >
+          {isEditingSpecial && (
+            <Alert
+              message={
+                isEditingSpecial === "WO"
+                  ? t("adhocShiftPlan.editingWeekOff", "You are editing Week Off (WO) assignment")
+                  : t("adhocShiftPlan.editingLeave", "You are editing Leave (LV) assignment")
+              }
+              description={
+                isEditingSpecial === "WO"
+                  ? t(
+                      "adhocShiftPlan.weekOffWarning",
+                      "Changing this will assign a zone and area instead of marking it as Week Off.",
+                    )
+                  : t(
+                      "adhocShiftPlan.leaveWarning",
+                      "Changing this will assign a zone and area instead of marking it as Leave.",
+                    )
+              }
+              type="error"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+          )}
+
+          <Form form={form} layout="vertical">
+            <Form.Item
+              name="inspector"
+              label={t("form.inspector", "Inspector")}
+              rules={[{ required: true, message: t("adhocShiftPlan.selectInspectorMsg", "Please select inspector") }]}
+            >
+              <Select
+                options={inspectorOptions.map((x) => ({ label: x, value: x }))}
+                placeholder={t("adhocShiftPlan.selectInspector", "Select inspector")}
+                disabled
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="shift"
+              label={t("form.shift", "Shift")}
+              rules={[{ required: true, message: t("adhocShiftPlan.selectShiftMsg", "Please select a shift") }]}
+            >
+              <Select disabled>
+                {shiftsLookup.map((shift) => (
+                  <Select.Option key={shift.shiftTypeGUID} value={shift.shiftTypeGUID}>
+                    {i18n.language === "ar" ? shift.shiftTypeNameAr : shift.shiftTypeNameEn}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+
+            <Form.Item
+              name="zone"
+              label={t("form.zone", "Zone")}
+              rules={[{ required: true, message: t("adhocShiftPlan.selectZoneMsg", "Please select a zone") }]}
+            >
+              <Select
+                placeholder={t("adhocShiftPlan.selectZone", "Select zone")}
+                onChange={handleZoneChange}
+                options={zonesLookup.map((z) => ({ label: z.label, value: z.value }))}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="area"
+              label={t("form.area", "Area")}
+              rules={[{ required: true, message: t("adhocShiftPlan.selectAreaMsg", "Please select an area") }]}
+            >
+              <Select
+                mode="multiple"
+                placeholder={t("adhocShiftPlan.selectArea", "Select area")}
+                options={areasLookup.map((a) => ({ label: a.label, value: a.value }))}
+                disabled={!form.getFieldValue("zone")}
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Space>
+    </Spin>
   );
 }

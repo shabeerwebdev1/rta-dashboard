@@ -21,30 +21,34 @@ export const parkonicLocationPageConfig: PageConfig = {
   },
   tableConfig: {
     columns: [
+      { key: "id", title: "form.id", type: "string" },
       { key: "parkonics_Location_Id", title: "form.parkonicslocationId", type: "string" },
-      {
-        key: "parkingName",
-        title: "form.parkingName",
-        type: "custom" as const,
-        render: (_text: any, record: any) => {
-          const getCurrentLanguage = () => {
-            const storedLang = localStorage.getItem("i18nextLng");
-            if (storedLang) return storedLang;
-            if (document.documentElement.dir === "rtl") return "ar";
-            if (document.body.classList.contains("rtl")) return "ar";
-            return "en";
-          };
+      // {
+      //   key: "parkingName",
+      //   title: "form.parkingName",
+      //   type: "custom" as const,
+      //   render: (_text: any, record: any) => {
+      //     const getCurrentLanguage = () => {
+      //       const storedLang = localStorage.getItem("i18nextLng");
+      //       if (storedLang) return storedLang;
+      //       if (document.documentElement.dir === "rtl") return "ar";
+      //       if (document.body.classList.contains("rtl")) return "ar";
+      //       return "en";
+      //     };
 
-          const language = getCurrentLanguage();
-          const isArabic = language.startsWith("ar");
+      //     const language = getCurrentLanguage();
+      //     const isArabic = language.startsWith("ar");
 
-          return isArabic
-            ? record?.parking_Name_Ar || record?.parking_Name_En || "No Data"
-            : record?.parking_Name_En || record?.parking_Name_Ar || "No Data";
-        },
-      },
-
+      //     return isArabic
+      //       ? record?.parking_Name_Ar || record?.parking_Name_En || "No Data"
+      //       : record?.parking_Name_En || record?.parking_Name_Ar || "No Data";
+      //   },
+      // },
+      { key: "parking_Name_En", title: "form.parkingNameEn", type: "string" },
+      { key: "parking_Name_Ar", title: "form.parkingNameAr", type: "string" },
       { key: "created_At", title: "form.addedOn", dataIndex: "long", type: "string", sortable: true },
+      { key: "updated_By", title: "form.approvedBy", type: "string" },
+      { key: "isUpdatedBack", title: "form.isApproved", type: "string" },
     ],
     viewRecord: true,
   },

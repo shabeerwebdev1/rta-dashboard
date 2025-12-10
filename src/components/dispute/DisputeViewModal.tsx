@@ -417,13 +417,13 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
 
                       {/* FIXED: Display dispute reason with label instead of value */}
                       <Col span={10}>
-                        <Text strong>{t("form.reason")}:</Text>
+                        <Text strong>{t("form.violationCategory")}:</Text>
                       </Col>
                       <Col span={14}>{getDisputeReasonLabel(dispute.disputeMainReason || dispute.dispute_Reason)}</Col>
 
                       {/* FIXED: Display dispute sub-reason with label instead of value */}
                       <Col span={10}>
-                        <Text strong>{t("form.subreason")}:</Text>
+                        <Text strong>{t("form.violationSubcategory")}:</Text>
                       </Col>
                       <Col span={14}>
                         {getDisputeSubReasonLabel(dispute.disputeSubReason || dispute.dispute_SubReason)}

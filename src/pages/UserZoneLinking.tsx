@@ -1,6 +1,7 @@
 // UserZoneLinking.tsx
 import React, { useEffect, useState, useMemo } from "react";
-import { Space, Select, Checkbox, Spin, Button, Pagination } from "antd";
+import { Space, Select, Checkbox, Spin, Button, Pagination, Input } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import { UserZoneLinkingConfig } from "../config/pageConfigs/userZoneLinkingConfig";
 import { useTranslation } from "react-i18next";
 import {
@@ -14,6 +15,7 @@ import DataTableWrapper from "../components/common/DataTableWrapper";
 import { useAppNotification } from "../utils/notificationManager";
 
 const { Option } = Select;
+const { Search } = Input;
 
 interface InspectorData {
   key: string;
@@ -71,6 +73,8 @@ function UserZoneLinking() {
   const notification = useAppNotification();
 
   const [data, setData] = useState<InspectorData[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
   const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [triggerGetZones] = useLazyGetZonesQuery();
   const [triggerGetShifts] = useLazyGetShiftsQuery();
@@ -90,7 +94,7 @@ function UserZoneLinking() {
   const [zones, setZones] = useState<Zone[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
 
-  // pagination states
+  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -145,6 +149,7 @@ function UserZoneLinking() {
             weekOffs: weekOffNumbers,
             assignmentType: assignmentTypes,
             role: item.role,
+            roleGUID: item.roleGUID,
             employeeId: item.employeeId,
             uswMcode: item.uswMcode,
             isActive: item.isActive,
@@ -155,15 +160,34 @@ function UserZoneLinking() {
     }
   }, [activeShiftsResponse, availableShiftIds]);
 
+  // ===== Search & Filter Logic =====
+  const filteredData = useMemo(() => {
+    if (!searchTerm.trim()) return data;
+
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return data.filter(
+      (item) =>
+        item.InspectorName.toLowerCase().includes(lowerSearchTerm) ||
+        item.employeeId.toLowerCase().includes(lowerSearchTerm) ||
+        item.uswMcode.toLowerCase().includes(lowerSearchTerm),
+    );
+  }, [data, searchTerm]);
+
   // ===== Pagination Logic =====
   const paginatedData = useMemo(() => {
     const startIdx = (currentPage - 1) * pageSize;
-    return data.slice(startIdx, startIdx + pageSize);
-  }, [data, currentPage, pageSize]);
+    return filteredData.slice(startIdx, startIdx + pageSize);
+  }, [filteredData, currentPage, pageSize]);
 
   const handlePageChange = (page: number, size?: number) => {
     setCurrentPage(page);
     if (size) setPageSize(size);
+  };
+
+  // Handle search input change
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page when searching
   };
 
   // === Fetch functions ===
@@ -403,6 +427,30 @@ function UserZoneLinking() {
 
   return (
     <Spin spinning={isLoadingActiveShifts || isLoadingLookups || isLoadingZones || isLoadingShifts || isUpdating}>
+      {/* Search Bar */}
+      <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Search
+          placeholder={t("placeholders.searchInspector") || "Search by inspector name or employee ID"}
+          allowClear
+          enterButton={<SearchOutlined />}
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+          onSearch={handleSearch}
+          style={{ width: 400 }}
+          size="large"
+        />
+        <div style={{ color: "#666", fontSize: 14 }}>
+          {filteredData.length > 0 ? (
+            <>
+              {t("common.showing") || "Showing"} <strong>{filteredData.length}</strong> {t("common.of") || "of"}{" "}
+              <strong>{data.length}</strong> {t("common.inspectors") || "inspectors"}
+            </>
+          ) : (
+            <span style={{ color: "#ff4d4f" }}>{t("common.noResults") || "No inspectors found"}</span>
+          )}
+        </div>
+      </div>
+
       <DataTableWrapper
         pageConfig={{
           ...UserZoneLinkingConfig,
@@ -412,7 +460,7 @@ function UserZoneLinking() {
           },
         }}
         data={paginatedData}
-        total={data.length}
+        total={filteredData.length}
         isLoading={isLoadingActiveShifts}
         handleTableChange={() => {}}
         handlePaginationChange={() => {}}
@@ -428,9 +476,9 @@ function UserZoneLinking() {
         <Pagination
           current={currentPage}
           pageSize={pageSize}
-          total={data.length}
+          total={filteredData.length}
           onChange={handlePageChange}
-          showSizeChanger={{ showSearch: false }}
+          showSizeChanger
           pageSizeOptions={["5", "10", "20", "50"]}
           showQuickJumper={false}
           showTotal={(total, range) => `${range[0]}-${range[1]} of ${total} items`}

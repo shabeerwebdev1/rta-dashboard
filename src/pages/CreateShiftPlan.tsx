@@ -1,4 +1,3 @@
-/* COMPLETE CreateShiftPlan Component WITH FIXED DRAFT MODAL */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
@@ -17,9 +16,11 @@ import {
   message,
   Input,
   Radio,
+  Tag,
 } from "antd";
 import { LeftOutlined, RightOutlined, CalendarOutlined } from "@ant-design/icons";
 import dayjs, { Dayjs } from "dayjs";
+import utc from "dayjs/plugin/utc";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { ShiftPlanningConfig } from "../config/pageConfigs/shiftPlanningConfig";
@@ -31,15 +32,33 @@ import {
   useGetLastBatchDetailQuery,
   usePublishShiftPlanMutation,
   useGetSavedScheduleDraftQuery,
+  useGetInspectionShiftsQuery,
 } from "../services/rtkApiFactory";
 import { useAppNotification } from "../utils/notificationManager";
+
+// Enable UTC plugin
+dayjs.extend(utc);
 
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 
 type ViewMode = "week" | "month" | "all";
 
-// UUID generator function
+interface ShiftType {
+  shiftTypeGUID: string;
+  shiftTypeGroupGUID: string;
+  shiftTypeCode: string;
+  shiftTypeNameEn: string;
+  shiftTypeNameAr: string;
+  shiftTimeFrom: string;
+  shiftTimeTo: string;
+  breakFromTime: string;
+  breakToTime: string;
+  isActive: boolean;
+  colorCode: string;
+  fontColor: string;
+}
+
 const generateUUID = (): string => {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
     const r = (Math.random() * 16) | 0;
@@ -48,12 +67,17 @@ const generateUUID = (): string => {
   });
 };
 
+// Helper function to convert date to UTC ISO string at start of day
+const toUTCStartOfDay = (date: Dayjs | string): string => {
+  const d = dayjs(date);
+  return dayjs.utc(`${d.format("YYYY-MM-DD")}T00:00:00.000Z`).toISOString();
+};
+
 export default function CreateShiftPlan() {
   const { setPageTitle } = usePage();
   const { t, i18n } = useTranslation();
   const notification = useAppNotification();
 
-  // FIXED: Properly use Modal.useModal hook
   const [modal, contextHolder] = Modal.useModal();
 
   // RTK hooks
@@ -75,12 +99,25 @@ export default function CreateShiftPlan() {
   const [triggerGetAreas] = useLazyGetAreasQuery();
   const { data: allAreasData } = useGetAllAreasQuery();
 
-  // lookups normalized
+  // Use the query hook to get shifts
+  const { data: shiftsResponse, isLoading: isShiftsLoading, isError: isShiftsError } = useGetInspectionShiftsQuery();
+
+  // Lookups normalized
   const [zonesLookup, setZonesLookup] = useState<any[]>([]);
   const [areasLookup, setAreasLookup] = useState<any[]>([]);
   const [allAreasLookup, setAllAreasLookup] = useState<any[]>([]);
+  const [shiftsLookup, setShiftsLookup] = useState<ShiftType[]>([]);
 
-  // main table & UI state
+  // Create a map for quick shift lookup by GUID
+  const shiftsMap = useMemo(() => {
+    const map: Record<string, ShiftType> = {};
+    shiftsLookup.forEach((shift) => {
+      map[shift.shiftTypeGUID] = shift;
+    });
+    return map;
+  }, [shiftsLookup]);
+
+  // Main table & UI state
   const [rawApiData, setRawApiData] = useState<any[]>([]);
   const [tableData, setTableData] = useState<any[]>([]);
   const [form] = Form.useForm();
@@ -90,11 +127,11 @@ export default function CreateShiftPlan() {
   const [inspectorFilter, setInspectorFilter] = useState("");
   const [shiftFilter, setShiftFilter] = useState<string[]>([]);
 
-  // edit modal
+  // Edit modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
 
-  // view & pagination
+  // View & pagination
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [currentPage, setCurrentPage] = useState(0);
 
@@ -105,17 +142,27 @@ export default function CreateShiftPlan() {
   const draftPromptShownRef = useRef(false);
   const [isLoadedFromDraft, setIsLoadedFromDraft] = useState(false);
 
-  // Map shift codes to labels
-  const shiftMap: Record<string, string> = useMemo(
-    () => ({
-      EM: t("shifts.earlyMorning"),
-      M: t("shifts.morning"),
-      E: t("shifts.evening"),
-      LE: t("shifts.lateEvening"),
-      AN: t("shifts.afternoon"),
-    }),
-    [t],
-  );
+  // Process shifts data when it changes
+  useEffect(() => {
+    if (shiftsResponse?.successful && shiftsResponse?.data && Array.isArray(shiftsResponse.data)) {
+      const activeShifts = shiftsResponse.data.filter((shift: ShiftType) => shift.isActive);
+      setShiftsLookup(activeShifts);
+      console.log("Loaded shifts:", activeShifts);
+    } else if (isShiftsError) {
+      message.error(t("shiftPlanning.failedToLoadShifts", "Failed to load shifts"));
+    }
+  }, [shiftsResponse, isShiftsError, t]);
+
+  // Dynamic shift map from API (by code)
+  const shiftCodeMap: Record<string, string> = useMemo(() => {
+    const map: Record<string, string> = {};
+    shiftsLookup.forEach((shift) => {
+      if (shift.shiftTypeCode) {
+        map[shift.shiftTypeCode] = i18n.language === "ar" ? shift.shiftTypeNameAr : shift.shiftTypeNameEn;
+      }
+    });
+    return map;
+  }, [shiftsLookup, i18n.language]);
 
   const [editsMap, setEditsMap] = useState<Record<string, any>>({});
 
@@ -129,39 +176,16 @@ export default function CreateShiftPlan() {
     setPageTitle(t(ShiftPlanningConfig.title));
   }, [i18n.language, setPageTitle, t]);
 
-  // FIXED: Draft prompt with proper modal usage
+  // Draft prompt with proper modal usage
   useEffect(() => {
-    console.log("Draft useEffect triggered");
-    console.log("isDraftLoading:", isDraftLoading);
-    console.log("isDraftSuccess:", isDraftSuccess);
-    console.log("savedDraft:", savedDraft);
-    console.log("draftPromptShownRef.current:", draftPromptShownRef.current);
-
-    if (isDraftLoading) {
-      console.log("Draft is still loading, waiting...");
-      return;
-    }
-
-    if (!isDraftSuccess) {
-      console.log("Draft query not successful yet");
-      return;
-    }
-
-    if (draftPromptShownRef.current) {
-      console.log("Draft prompt already shown, skipping");
-      return;
-    }
-
-    if (!savedDraft) {
-      console.log("No saved draft data");
-      return;
-    }
+    if (isDraftLoading) return;
+    if (!isDraftSuccess) return;
+    if (draftPromptShownRef.current) return;
+    if (!savedDraft) return;
 
     const draftData = savedDraft?.data ?? [];
-    console.log("Draft data length:", draftData.length);
 
     if (draftData && draftData.length > 0) {
-      console.log("Showing draft confirmation modal");
       draftPromptShownRef.current = true;
 
       modal.confirm({
@@ -173,34 +197,24 @@ export default function CreateShiftPlan() {
         okText: t("common.yes", "Yes"),
         cancelText: t("common.no", "No"),
         onOk() {
-          console.log("User chose to load draft");
           loadDraftData(draftData);
         },
         onCancel() {
-          console.log("User declined to load draft");
+          // User declined
         },
       });
-    } else {
-      console.log("Draft data is empty, not showing prompt");
     }
   }, [isDraftLoading, isDraftSuccess, savedDraft, t, modal]);
 
   // Function to load draft data
   const loadDraftData = (draftData: any[]) => {
-    console.log("Loading draft data:", draftData.length, "entries");
-
     if (!draftData || draftData.length === 0) return;
 
     const dates = draftData.map((item) => dayjs(item.date)).filter((d) => d.isValid());
-    if (dates.length === 0) {
-      console.log("No valid dates in draft data");
-      return;
-    }
+    if (dates.length === 0) return;
 
     const minDate = dates.reduce((min, d) => (d.isBefore(min) ? d : min), dates[0]);
     const maxDate = dates.reduce((max, d) => (d.isAfter(max) ? d : max), dates[0]);
-
-    console.log("Draft date range:", minDate.format("YYYY-MM-DD"), "to", maxDate.format("YYYY-MM-DD"));
 
     setDateRange([minDate, maxDate]);
     form.setFieldsValue({ planDate: [minDate, maxDate] });
@@ -222,7 +236,7 @@ export default function CreateShiftPlan() {
     );
   };
 
-  // load zones (normalize)
+  // Load zones (normalize)
   const loadZones = async () => {
     try {
       const zonesRes = await triggerGetZones().unwrap();
@@ -235,11 +249,11 @@ export default function CreateShiftPlan() {
       }));
       setZonesLookup(normalized);
     } catch (err) {
-      console.error("Failed to load zones:", err);
+      // Silent fail
     }
   };
 
-  // normalize all areas list for label lookups
+  // Normalize all areas list for label lookups
   useEffect(() => {
     if (!allAreasData) return;
     const raw = allAreasData?.data ?? allAreasData ?? [];
@@ -254,7 +268,7 @@ export default function CreateShiftPlan() {
     setAreasLookup(normalized);
   }, [allAreasData]);
 
-  // default NA table (30 days)
+  // Default NA table (30 days)
   const generateDefaultTable = () => {
     const defaultDays = Array(30).fill("NA");
     setTableData([
@@ -262,7 +276,7 @@ export default function CreateShiftPlan() {
         key: "default-row",
         inspector: "",
         inspectorId: "",
-        shiftCode: "",
+        shiftId: "",
         days: defaultDays,
       },
     ]);
@@ -298,7 +312,7 @@ export default function CreateShiftPlan() {
     form.setFieldsValue({ planDate: [newStart, null] });
   }, [lastBatch, form]);
 
-  // pagination helpers
+  // Pagination helpers
   const daysPerPage = useMemo(
     () => (viewMode === "week" ? 7 : viewMode === "month" ? 30 : daysCount),
     [viewMode, daysCount],
@@ -312,7 +326,7 @@ export default function CreateShiftPlan() {
 
   useEffect(() => setCurrentPage(0), [viewMode]);
 
-  // helper label getters
+  // Helper label getters
   const getZoneName = (zoneVal: any) => {
     if (!zoneVal) return "";
     const z = zonesLookup.find((x) => String(x.value) === String(zoneVal) || String(x.id) === String(zoneVal));
@@ -323,6 +337,18 @@ export default function CreateShiftPlan() {
     if (!areaVal && areaVal !== 0) return "";
     const a = allAreasLookup.find((x) => String(x.value) === String(areaVal) || String(x.id) === String(areaVal));
     return a ? a.label : String(areaVal);
+  };
+
+  // Get shift info by GUID (shiftId from API)
+  const getShiftInfoByGUID = (shiftGUID: string): ShiftType | null => {
+    if (!shiftGUID) return null;
+    return shiftsMap[shiftGUID] || null;
+  };
+
+  // Get shift info by code (for backwards compatibility)
+  const getShiftInfoByCode = (shiftCode: string): ShiftType | null => {
+    if (!shiftCode) return null;
+    return shiftsLookup.find((s) => s.shiftTypeCode === shiftCode) || null;
   };
 
   /* Day columns generation */
@@ -366,13 +392,19 @@ export default function CreateShiftPlan() {
         render: (value: string, row: any) => renderDayCell(value, actualDayIndex, row),
       };
     });
-  }, [dateRange, daysCount, startDayIndex, endDayIndex, viewMode, daysPerPage, t, validRange]);
+  }, [dateRange, daysCount, startDayIndex, endDayIndex, viewMode, daysPerPage, t, validRange, shiftsLookup]);
 
-  /* Available shifts */
+  /* Available shifts - use GUID for filtering */
   const availableShifts = useMemo(() => {
-    const shifts = [...new Set(tableData.map((d) => d.shiftCode).filter(Boolean))];
-    return shifts.map((code) => ({ text: shiftMap[code] || code, value: code }));
-  }, [tableData, shiftMap]);
+    const shiftIds = [...new Set(tableData.map((d) => d.shiftId).filter(Boolean))];
+    return shiftIds.map((guid) => {
+      const shiftInfo = getShiftInfoByGUID(guid);
+      return {
+        text: shiftInfo ? (i18n.language === "ar" ? shiftInfo.shiftTypeNameAr : shiftInfo.shiftTypeNameEn) : guid,
+        value: guid,
+      };
+    });
+  }, [tableData, shiftsMap, i18n.language]);
 
   /* Table columns */
   const columns = useMemo(
@@ -385,18 +417,33 @@ export default function CreateShiftPlan() {
         fixed: "left" as const,
         filters: [...new Set(tableData.map((d) => d.inspector))].map((x) => ({ text: x, value: x })),
         onFilter: (value: any, record: any) => record.inspector === value,
-        render: (text: string, record: any) => (
-          <div>
-            <div style={{ fontWeight: 600 }}>{text || t("common.noData")}</div>
-            <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>
-              {record.shiftCode ? shiftMap[record.shiftCode] || record.shiftCode : t("shiftPlanning.noShift")}
+        render: (text: string, record: any) => {
+          const shiftInfo = getShiftInfoByGUID(record.shiftId);
+          return (
+            <div>
+              <div style={{ fontWeight: 600 }}>{text || t("common.noData")}</div>
+              {shiftInfo ? (
+                <Tag
+                  color={shiftInfo.colorCode || "blue"}
+                  style={{
+                    color: shiftInfo.fontColor || "#fff",
+                    marginTop: 4,
+                    fontSize: 11,
+                    fontWeight: 500,
+                  }}
+                >
+                  {i18n.language === "ar" ? shiftInfo.shiftTypeNameAr : shiftInfo.shiftTypeNameEn}
+                </Tag>
+              ) : (
+                <div style={{ fontSize: 12, color: "#666", marginTop: 2 }}>{t("shiftPlanning.noShift")}</div>
+              )}
             </div>
-          </div>
-        ),
+          );
+        },
       },
       ...dayColumns,
     ],
-    [t, tableData, shiftMap, dayColumns],
+    [t, tableData, dayColumns, shiftsMap, i18n.language],
   );
 
   // Auto-save as draft after generating plan
@@ -407,7 +454,7 @@ export default function CreateShiftPlan() {
     const scheduleEntries = planData.map((item) => ({
       id: 0,
       rosterId: item.rosterId || "00000000-0000-0000-0000-000000000000",
-      date: item.date,
+      date: toUTCStartOfDay(item.date),
       inspectorId: item.inspectorId,
       inspectorName: item.inspectorName,
       inspectorNameAr: item.inspectorName,
@@ -426,8 +473,8 @@ export default function CreateShiftPlan() {
 
     const payload = {
       batch: {
-        startDate: (dateRange[0] as Dayjs).toISOString(),
-        endDate: (dateRange[1] as Dayjs).toISOString(),
+        startDate: toUTCStartOfDay(dateRange[0] as Dayjs),
+        endDate: toUTCStartOfDay(dateRange[1] as Dayjs),
         persist: true,
       },
       scheduleEntries,
@@ -435,11 +482,10 @@ export default function CreateShiftPlan() {
     };
 
     try {
-      const res = await publishShiftPlan(payload).unwrap();
-      console.log("Auto-saved as draft:", res);
+      await publishShiftPlan(payload).unwrap();
       refetchDraft();
     } catch (err: any) {
-      console.error("Auto-save draft failed:", err);
+      // Silent fail for auto-save
     }
   };
 
@@ -464,14 +510,17 @@ export default function CreateShiftPlan() {
     }
 
     const body = {
-      startDate: (dateRange[0] as Dayjs).toISOString(),
-      endDate: (dateRange[1] as Dayjs).toISOString(),
+      startDate: toUTCStartOfDay(dateRange[0] as Dayjs),
+      endDate: toUTCStartOfDay(dateRange[1] as Dayjs),
       persist: true,
     };
+
+    console.log("Sending payload:", body);
 
     try {
       const res: any = await getShiftPlan(body).unwrap();
       if (res.successful) {
+        console.log("Plan data received:", res.data);
         setRawApiData(res.data || []);
         setHasDataLoaded(true);
         setHasValidData(true);
@@ -490,7 +539,7 @@ export default function CreateShiftPlan() {
     }
   };
 
-  /* Convert API -> table rows (properly handle areasIds array) */
+  /* Convert API -> table rows - USE SHIFTID NOT SHIFTCODE */
   useEffect(() => {
     if (!rawApiData || rawApiData.length === 0) {
       if (!dateRange.length && !hasDataLoaded) {
@@ -516,14 +565,15 @@ export default function CreateShiftPlan() {
       const idx = start ? d.diff(start, "day") : d.date() - 1;
       if (idx < 0 || idx >= daysCount) return;
 
-      const key = item.inspectorId || `${item.inspectorName}-${item.date}-${idx}`;
+      // Use inspectorId + shiftId as key to group rows
+      const key = `${item.inspectorId}-${item.shiftId}`;
 
       if (!grouped[key]) {
         grouped[key] = {
           key,
           inspector: item.inspectorName,
           inspectorId: item.inspectorId,
-          shiftCode: item.shiftCode || "",
+          shiftId: item.shiftId, // Store shiftId instead of shiftCode
           days: Array(daysCount).fill("NA"),
           _raw: {},
         };
@@ -581,18 +631,19 @@ export default function CreateShiftPlan() {
     });
 
     const rows = Object.values(grouped).map((r: any) => ({ ...r, _raw: r._raw || {} }));
+    console.log("Table rows created:", rows);
     setTableData(rows);
     setHasDataLoaded(true);
     setHasValidData(rows.length > 0);
   }, [rawApiData, dateRange, daysCount, validRange, allAreasLookup, zonesLookup]);
 
-  /* filtered data by shift */
+  /* Filtered data by shift - use shiftId */
   const filteredTableData = useMemo(() => {
     if (shiftFilter.length === 0) return tableData;
-    return tableData.filter((row) => shiftFilter.includes(row.shiftCode));
+    return tableData.filter((row) => shiftFilter.includes(row.shiftId));
   }, [tableData, shiftFilter]);
 
-  /* cell style helper */
+  /* Cell style helper */
   const getCellStyle = (value: string) => {
     if (value === "LV") return { background: "#ffccc7", color: "#a8071a", fontWeight: 600 };
     if (value === "WO") return { background: "#fff7e6", color: "#d46b08", fontWeight: 600 };
@@ -600,7 +651,7 @@ export default function CreateShiftPlan() {
     return {};
   };
 
-  /* render cell with proper multi-area handling */
+  /* Render cell with proper multi-area handling */
   const renderDayCell = (value: string, index: number, row: any) => {
     const cellRaw = (row._raw && row._raw[index]) || {};
 
@@ -657,8 +708,13 @@ export default function CreateShiftPlan() {
     const areaNames = areaIds.length ? areaIds.map((aid) => getAreaName(aid)).filter(Boolean) : [];
     const display = zoneName || areaNames.length ? `${zoneName}-${areaNames.join(", ")}` : value || t("common.noData");
 
-    const shiftCode = cellRaw.shiftCode || row.shiftCode || "";
-    const shiftName = shiftCode ? shiftMap[shiftCode] || shiftCode : t("common.noData");
+    const shiftGUID = cellRaw.shiftId || row.shiftId || "";
+    const shiftInfo = getShiftInfoByGUID(shiftGUID);
+    const shiftName = shiftInfo
+      ? i18n.language === "ar"
+        ? shiftInfo.shiftTypeNameAr
+        : shiftInfo.shiftTypeNameEn
+      : t("common.noData");
 
     return (
       <Tooltip
@@ -673,6 +729,11 @@ export default function CreateShiftPlan() {
             <div>
               <b>{t("form.Shift")}:</b> {shiftName}
             </div>
+            {shiftInfo && (
+              <div style={{ fontSize: 11, color: "#ddd", marginTop: 2 }}>
+                {dayjs(shiftInfo.shiftTimeFrom).format("HH:mm")} - {dayjs(shiftInfo.shiftTimeTo).format("HH:mm")}
+              </div>
+            )}
             <div>
               <b>{t("form.zone")}:</b> {zoneName || t("common.noData")}
             </div>
@@ -680,7 +741,7 @@ export default function CreateShiftPlan() {
               <b>{t("form.area")}:</b> {areaNames.length ? areaNames.join(", ") : t("common.noData")}
             </div>
             <div style={{ marginTop: 6 }}>
-              <Button type="link" style={{ color: "red", padding: 0 }} onClick={() => openEdit(row, value, index)}>
+              <Button type="link" style={{ color: "#ff4d4f", padding: 0 }} onClick={() => openEdit(row, value, index)}>
                 {t("common.edit")}
               </Button>
             </div>
@@ -694,7 +755,7 @@ export default function CreateShiftPlan() {
     );
   };
 
-  /* open edit modal with ALL areas selected */
+  /* Open edit modal with ALL areas selected */
   const openEdit = (row: any, value: string, dayIndex: number) => {
     const cellRaw = (row._raw && row._raw[dayIndex]) || {};
 
@@ -731,7 +792,6 @@ export default function CreateShiftPlan() {
           }));
           setAreasLookup(normalized);
         } catch (err) {
-          console.error("areas by zone failed:", err);
           const selectedZone = zonesLookup.find(
             (z) => String(z.value) === String(zoneValue) || String(z.id) === String(zoneValue),
           );
@@ -793,7 +853,7 @@ export default function CreateShiftPlan() {
               areasIds: areaValue,
               areaId: areaValue[0],
               areaCode: areaObjs[0]?.original?.areaCode || backendRaw.areaCode,
-              shiftCode: row.shiftCode,
+              shiftCode: backendRaw.shiftCode,
             },
           };
 
@@ -819,7 +879,7 @@ export default function CreateShiftPlan() {
       setEditing(null);
       message.success("Updated");
     } catch (err) {
-      console.log("Modal validation failed:", err);
+      // Validation failed
     }
   };
 
@@ -833,12 +893,12 @@ export default function CreateShiftPlan() {
       tableData.forEach((row) => {
         Object.keys(row._raw || {}).forEach((dayIdx) => {
           const e = row._raw[dayIdx];
-          const entryDate = start.add(Number(dayIdx), "day").startOf("day").toISOString();
+          const entryDate = start.add(Number(dayIdx), "day");
 
           entries.push({
             id: 0,
             rosterId: e.rosterId,
-            date: entryDate,
+            date: toUTCStartOfDay(entryDate),
             inspectorId: e.inspectorId,
             inspectorName: e.inspectorName,
             inspectorNameAr: e.inspectorName,
@@ -858,12 +918,12 @@ export default function CreateShiftPlan() {
       });
     } else {
       Object.values(editsMap).forEach((e: any) => {
-        const entryDate = start.add(e.dayIndex, "day").startOf("day").toISOString();
+        const entryDate = start.add(e.dayIndex, "day");
 
         entries.push({
           id: 0,
           rosterId: e.rosterId,
-          date: entryDate,
+          date: toUTCStartOfDay(entryDate),
           inspectorId: e.inspectorId,
           inspectorName: e.inspectorName,
           inspectorNameAr: e.inspectorName,
@@ -891,36 +951,33 @@ export default function CreateShiftPlan() {
       message.error(t("shiftPlanning.selectPlanDate"));
       return;
     }
-  
+
     const scheduleEntries = buildScheduleEntriesFromEdits();
     if (scheduleEntries.length === 0) {
       message.warning(publish ? "No data to publish" : "No data to save as draft");
       return;
     }
-  
+
     const payload = {
       batch: {
-        startDate: (dateRange[0] as Dayjs).toISOString(),
-        endDate: (dateRange[1] as Dayjs).toISOString(),
+        startDate: toUTCStartOfDay(dateRange[0] as Dayjs),
+        endDate: toUTCStartOfDay(dateRange[1] as Dayjs),
         persist: true,
       },
       scheduleEntries,
       isPublished: publish,
     };
-  
-    console.log("Publishing payload:", JSON.stringify(payload, null, 2));
-  
+
+    console.log("Publishing payload:", payload);
+
     try {
       const res = await publishShiftPlan(payload).unwrap();
-  
+
       notification.success(
         { data: { en_Msg: res?.en_Msg || (publish ? "Published" : "Saved as draft"), ar_Msg: res?.ar_Msg || "" } },
-        t("messages.operationSuccess")
+        t("messages.operationSuccess"),
       );
-  
-      /** --------------------------------------------------------
-       *  SUCCESS → CLEAR ALL (RESET PAGE COMPLETELY)
-       * -------------------------------------------------------- */
+
       setEditsMap({});
       setRawApiData([]);
       setTableData([]);
@@ -932,24 +989,19 @@ export default function CreateShiftPlan() {
       setActiveTab("1");
       setViewMode("week");
       setDateRange([]);
-      form.resetFields(); // clears the plan date form
-  
+      form.resetFields();
+
       if (isModalOpen) {
         setIsModalOpen(false);
         setEditing(null);
       }
-  
-      // regenerate default NA table
+
       generateDefaultTable();
-  
-      /** Re-fetch draft when saving as draft */
+
       if (!publish && typeof refetchDraft === "function") {
         refetchDraft();
       }
-  
     } catch (err: any) {
-      console.error("publish/saveDraft error:", err);
-  
       if (err?.data?.en_Msg) {
         message.error(err.data.en_Msg);
       } else if (err?.data?.errors) {
@@ -960,12 +1012,10 @@ export default function CreateShiftPlan() {
       }
     }
   };
-  
 
-  /* JSX return - FIXED: Added contextHolder */
+  /* JSX return */
   return (
     <>
-      {/* CRITICAL FIX: Render context holder for modal to work */}
       {contextHolder}
 
       <Space direction="vertical" style={{ width: "100%" }} size="large">
@@ -1023,6 +1073,7 @@ export default function CreateShiftPlan() {
                 value={shiftFilter}
                 onChange={setShiftFilter}
                 allowClear
+                loading={isShiftsLoading}
               >
                 {availableShifts.map((shift) => (
                   <Select.Option key={shift.value} value={shift.value}>
@@ -1225,7 +1276,6 @@ export default function CreateShiftPlan() {
 
                     setAreasLookup(normalized);
                   } catch (err) {
-                    console.error("Failed loading areas by zone:", err);
                     const selectedZone = zonesLookup.find(
                       (z) => String(z.value) === String(value) || String(z.id) === String(value),
                     );
