@@ -40,6 +40,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
           reviewStatus: record.reviewStatus ?? 2,
           rejectionReason: record.rejectionReason || "",
           entryDateTime: record.actualDateTime,
+          exitDateTime: record.endDateTime,
           originalRecord: record,
         }
       : null;
@@ -154,10 +155,10 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                       </Col>
                       <Col span={14}>{dayjs(mappedRecord.entryDateTime).format("DD-MM-YYYY")}</Col>
 
-                      {/* <Col span={10}>
-                        <Text strong>{t("form.vehicelExitDate&Time")}:</Text>
+                      <Col span={10}>
+                        <Text strong>{t("form.vehicleExitDateTime")}:</Text>
                       </Col>
-                      <Col span={14}>{dayjs(mappedRecord.entryDateTime).format("DD-MM-YYYY")}</Col> */}
+                      <Col span={14}>{dayjs(mappedRecord.entryDateTime).format("DD-MM-YYYY")}</Col>
                     </Row>
                   </Card>
                 </Col>
