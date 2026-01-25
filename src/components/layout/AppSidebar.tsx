@@ -129,12 +129,6 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       labelText: t("sidebar.inspections"),
       children: [
         {
-          key: FULL_PATHS.PARKONIC,
-          icon: <PushpinOutlined />,
-          labelText: t("sidebar.parkonic"),
-          permission: "Parkonic",
-        },
-        {
           key: FULL_PATHS.FINES,
           icon: <CarFilled />,
           labelText: t("sidebar.Vehicle"),
@@ -159,6 +153,12 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       icon: <WarningOutlined />,
       labelText: t("sidebar.fines"),
       children: [
+        {
+          key: FULL_PATHS.PARKONIC,
+          icon: <PushpinOutlined />,
+          labelText: t("sidebar.parkonic"),
+          permission: "Parkonic",
+        },
         {
           key: FULL_PATHS.FINES_VEHICLES,
           icon: <CarFilled />,
@@ -246,12 +246,18 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           labelText: t("sidebar.shiftmanagement"),
           permission: "ShiftManagement",
         },
-        {
-          key: FULL_PATHS.SHIFT_PLAN,
-          icon: <AuditOutlined />,
-          labelText: t("sidebar.shiftplan"),
-          permission: "ShiftManagement",
-        },
+        // {
+        //   key: FULL_PATHS.SHIFT_PLAN,
+        //   icon: <AuditOutlined />,
+        //   labelText: t("sidebar.shiftplan"),
+        //   permission: "ShiftManagement",
+        // },
+        // {
+        //   key: FULL_PATHS.DND_SHIFT_MANAGEMENT,
+        //   icon: <AuditOutlined />,
+        //   labelText: t("sidebar.dndShiftManagement"),
+        //   permission: "ShiftManagement",
+        // },
       ],
     },
   ];

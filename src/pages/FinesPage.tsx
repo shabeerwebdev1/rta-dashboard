@@ -66,10 +66,6 @@ const FinesPage: React.FC = () => {
   //state to maintain the rows data for downlaoding
   const [selectedRows, setSelectedRows] = useState([]);
 
-  const { data, isLoading, isFetching } = useSearchFinesQuery(apiParams, {
-    refetchOnMountOrArgChange: true,
-  });
-
   const [triggerGetLookups] = useLazyGetLookupsQuery();
 
   const fineStatusColorMap: Record<number, string> = {
@@ -113,6 +109,43 @@ const FinesPage: React.FC = () => {
       })),
     [lookupOptions, i18n.language],
   );
+
+  // ✅ Filtered options excluding 13001 for dropdown
+  const inspectionCategoryFilterOptions = useMemo(
+    () =>
+      filterOptionsByCategory(lookupOptions, 1300)
+        .filter((option) => option.value !== 13001 && option.id !== 13001)
+        .map((option) => ({
+          ...option,
+          label: i18n.language === "ar" ? option.labelAr || option.label : option.labelEn || option.label,
+        })),
+    [lookupOptions, i18n.language],
+  );
+
+  // ✅ Enhanced API params with orFilters to exclude inspectionCategory = 13001
+  const enhancedApiParams = useMemo(() => {
+    const params = { ...apiParams };
+
+    // Get all category values except 13001
+    const allowedCategories = inspectionCategoryFilterOptions.map((opt) => opt.value || opt.id);
+
+    // Only add the filter if we have lookup data loaded
+    if (allowedCategories.length > 0) {
+      // If user hasn't filtered inspectionCategory, apply our exclusion filter
+      if (!state.columnFilters?.inspectionCategory || state.columnFilters.inspectionCategory.length === 0) {
+        params.orFilters = {
+          ...params.orFilters,
+          inspectionCategory: allowedCategories,
+        };
+      }
+    }
+
+    return params;
+  }, [apiParams, inspectionCategoryFilterOptions, state.columnFilters]);
+
+  const { data, isLoading, isFetching } = useSearchFinesQuery(enhancedApiParams, {
+    refetchOnMountOrArgChange: true,
+  });
 
   useEffect(() => {
     setPageTitle(t(config.title));
@@ -305,8 +338,14 @@ const FinesPage: React.FC = () => {
         if (column.key === "inspectionCategory") {
           return {
             ...column,
+            // ✅ Override filters to exclude 13001 from dropdown
+            filters: inspectionCategoryFilterOptions.map((opt) => ({
+              text: opt.label,
+              value: opt.value || opt.id,
+            })),
             render: (value: any) => {
               if (value == null || value === "") return t("common.noData");
+              // ✅ Use FULL inspectionCategoryOptions for rendering labels
               return getLabelFromValue(value, inspectionCategoryOptions, i18n);
             },
           };
@@ -339,8 +378,21 @@ const FinesPage: React.FC = () => {
         return column;
       }),
     }),
-    [config.tableConfig, inspectionTypeOptions, inspectionCategoryOptions, i18n, t, lookupOptions],
+    [
+      config.tableConfig,
+      inspectionTypeOptions,
+      inspectionCategoryOptions,
+      inspectionCategoryFilterOptions,
+      i18n,
+      t,
+      lookupOptions,
+    ],
   );
+
+  // ✅ Modified lookupOptions to exclude 13001 from DataTableWrapper filters
+  const modifiedLookupOptions = useMemo(() => {
+    return lookupOptions.filter((opt) => !(opt.categoryId === 1300 && (opt.value === 13001 || opt.id === 13001)));
+  }, [lookupOptions]);
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -412,9 +464,9 @@ const FinesPage: React.FC = () => {
         rowKey={config.tableConfig.rowKey}
         actionMenuItems={actionMenuItems}
         state={state}
-        lookupOptions={lookupOptions}
+        lookupOptions={modifiedLookupOptions} // ✅ Use modified lookup options
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
-        columnLookupMap={{ inspectionType: 1700 }}
+        columnLookupMap={{ inspectionType: 1700, inspectionCategory: 1300 }}
       />
 
       <FinesViewDrawer

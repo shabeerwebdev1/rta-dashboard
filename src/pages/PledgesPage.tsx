@@ -137,6 +137,43 @@ const PledgesPage: React.FC = () => {
   //state to maintain the rows data for downlaoding
   const [selectedRows, setSelectedRows] = useState([]);
 
+  // Hardcoded violation categories (to be replaced with API call later)
+  const violationCategoryOptions = useMemo(
+    () => [
+      {
+        value: 6001,
+        labelEn: "Parking Violation",
+        labelAr: "مخالفة وقوف",
+        label: i18n.language === "ar" ? "مخالفة وقوف" : "Parking Violation",
+      },
+      {
+        value: 6002,
+        labelEn: "Speed Violation",
+        labelAr: "مخالفة سرعة",
+        label: i18n.language === "ar" ? "مخالفة سرعة" : "Speed Violation",
+      },
+      {
+        value: 6003,
+        labelEn: "Traffic Light Violation",
+        labelAr: "مخالفة إشارة مرور",
+        label: i18n.language === "ar" ? "مخالفة إشارة مرور" : "Traffic Light Violation",
+      },
+      {
+        value: 6004,
+        labelEn: "Lane Violation",
+        labelAr: "مخالفة مسار",
+        label: i18n.language === "ar" ? "مخالفة مسار" : "Lane Violation",
+      },
+      {
+        value: 6005,
+        labelEn: "Renewal",
+        labelAr: "تجديد",
+        label: i18n.language === "ar" ? "تجديد" : "Renewal",
+      },
+    ],
+    [i18n.language],
+  );
+
   const getBase64 = (file: File) =>
     new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -279,15 +316,19 @@ const PledgesPage: React.FC = () => {
         pledgeType: record.pledgeType,
         tradeLicenseNumber: record.tradeLicenseNumber,
         businessName: record.businessName,
+        businessEmail: record.businessEmail,
+        toSendEmail: record.toSendEmail,
+        violationCategory_Id: record.violationCategory_Id || 6005, // Default to Renewal
         remarks: record.remarks,
         document: fileList,
         dateRange: dateRange,
         pledgeStatus: currentStatus,
       });
     } else {
-      // For add mode, set pledgeStatus to active (5001) by default
+      // For add mode, set defaults
       form.setFieldsValue({
         pledgeStatus: 5001,
+        violationCategory_Id: 6005, // Default to Renewal (6005)
       });
     }
   };
@@ -309,10 +350,13 @@ const PledgesPage: React.FC = () => {
       PledgeType: values.pledgeType,
       TradeLicenseNumber: values.tradeLicenseNumber,
       BusinessName: values.businessName,
+      BusinessEmail: values.businessEmail,
+      ToSendEmail: values.toSendEmail,
+      ViolationCategory_Id: values.violationCategory_Id,
       Remarks: values.remarks,
       DocumentUploaded: false,
-      PledgeStatus: values.pledgeStatus, // Send the status directly
-      IsActive: values.pledgeStatus === 5002 ? false : true, // Map 5002 to inactive
+      PledgeStatus: values.pledgeStatus,
+      IsActive: values.pledgeStatus === 5002 ? false : true,
       // Add date fields with proper formatting
       PledgeDate: startDate ? startDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]") : null,
       PledgeEndDate: endDate ? endDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]") : null,
@@ -395,7 +439,7 @@ const PledgesPage: React.FC = () => {
   };
 
   const handleView = (record: any) => {
-    setViewRecord(record); // ✅ use row data directly
+    setViewRecord(record);
     setIsDrawerOpen(true);
   };
 
@@ -430,7 +474,6 @@ const PledgesPage: React.FC = () => {
           );
         });
     } else {
-      // Fallback for insecure context or unsupported browsers
       const textArea = document.createElement("textarea");
       textArea.value = shareUrl;
       document.body.appendChild(textArea);
@@ -461,13 +504,11 @@ const PledgesPage: React.FC = () => {
     }
   };
 
-  // ✅ FIXED: Enhanced function to transform data for CSV export with proper headers
   const transformDataForCSV = (data: any[]) => {
     return data.map((item, index: number) => {
       const csvRecord: Record<string, unknown> = {};
       csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
 
-      // Only include fields that are visible in the UI table
       config.tableConfig.columns.forEach((column) => {
         if (column.key === "pledgeType") {
           csvRecord[t("form.pledgeType")] = getLabelFromValue(item.pledgeType, pledgeTypeOptions, i18n);
@@ -482,20 +523,17 @@ const PledgesPage: React.FC = () => {
         } else if (column.key === "remarks") {
           csvRecord[t("form.remarks")] = item.remarks || "";
         } else if (column.key === "pledgeStatus") {
-          // Use the actual pledgeStatus from backend or calculate it
           const status = item.pledgeStatus || determinePledgeStatus(item);
           csvRecord[t("form.status")] = getLabelFromValue(status, pledgeStatusOptions, i18n);
         } else if (column.key === "createdDate") {
           csvRecord[t("form.createdDate")] = item.createdDate ? dayjs(item.createdDate).format("DD-MM-YYYY") : "";
         }
-        // Skip any other fields that are not in the table config
       });
 
       return csvRecord;
     });
   };
 
-  // ✅ FIXED: Get CSV filename based on current language
   const getCsvFilename = () => {
     if (i18n.language === "ar") {
       return `التعهدات.csv`;
@@ -522,13 +560,8 @@ const PledgesPage: React.FC = () => {
             return;
           }
 
-          // ✅ FIXED: Transform the data to match UI display
           const transformedData = transformDataForCSV(selectedRows);
-
-          // ✅ FIXED: Get filename based on current language
           const filename = getCsvFilename();
-
-          // ✅ FIXED: Export to CSV using your common component
           exportToCsv(transformedData, filename);
 
           notification.success(
@@ -549,7 +582,6 @@ const PledgesPage: React.FC = () => {
     [t, config.tableConfig.columns, i18n.language],
   );
 
-  // Enhanced table config with render functions for dropdown values and status
   const enhancedTableConfig = useMemo(
     () => ({
       ...config.tableConfig,
@@ -569,7 +601,6 @@ const PledgesPage: React.FC = () => {
               return recordStatus === value;
             },
             render: (value: any, record: any) => {
-              // Use the actual pledgeStatus from backend or calculate it
               const status = record.pledgeStatus || determinePledgeStatus(record);
               const label = getLabelFromValue(status, pledgeStatusOptions, i18n);
 
@@ -583,7 +614,7 @@ const PledgesPage: React.FC = () => {
                 return <Tag color="red">{label}</Tag>;
               }
 
-              return <Tag>{label}</Tag>; // fallback
+              return <Tag>{label}</Tag>;
             },
           };
         }
@@ -624,7 +655,6 @@ const PledgesPage: React.FC = () => {
     if (!data) return [];
     const rawData = Array.isArray(data) ? data : data.data || [];
 
-    // Enhance data with calculated pledgeStatus if not provided by backend
     return rawData.map((item) => ({
       ...item,
       pledgeStatus: item.pledgeStatus || determinePledgeStatus(item),
@@ -703,7 +733,7 @@ const PledgesPage: React.FC = () => {
 
       <DataTableWrapper
         pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
-        data={platesData} // Use the enhanced array
+        data={platesData}
         total={totalCount}
         isLoading={isLoading || isFetching || isDeleting}
         apiParams={apiParams}
@@ -766,8 +796,8 @@ const PledgesPage: React.FC = () => {
                   <Select
                     placeholder={t("placeholders.pledgeType")}
                     loading={isLoadingLookups}
-                    showSearch // 👈 enables search input
-                    optionFilterProp="label" // 👈 tells Select to filter by the label
+                    showSearch
+                    optionFilterProp="label"
                     filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
                     options={pledgeTypeOptions.map((option) => ({
                       label: option.label,
@@ -785,7 +815,6 @@ const PledgesPage: React.FC = () => {
                   ]}
                 >
                   <Input.Group compact>
-                    {/* Input field */}
                     <Form.Item
                       name="tradeLicenseNumber"
                       noStyle
@@ -794,14 +823,12 @@ const PledgesPage: React.FC = () => {
                           validator: (_, value) => {
                             if (!value) return Promise.resolve();
 
-                            // Check for digits only
                             if (!/^[0-9]+$/.test(value)) {
                               return Promise.reject(
                                 new Error(t("validation.onlyNumbers", { field: t("form.tradeLicenseNumber") })),
                               );
                             }
 
-                            // Check for minimum length
                             if (value.length < 6) {
                               return Promise.reject(
                                 new Error(
@@ -827,7 +854,6 @@ const PledgesPage: React.FC = () => {
                       />
                     </Form.Item>
 
-                    {/* Button */}
                     <Button
                       type="primary"
                       size="large"
@@ -837,7 +863,6 @@ const PledgesPage: React.FC = () => {
                         try {
                           const licenseNo = form.getFieldValue("tradeLicenseNumber");
                           if (!licenseNo) {
-                            // Trigger validation if the field is empty
                             form.validateFields(["tradeLicenseNumber"]);
                             return;
                           }
@@ -876,6 +901,72 @@ const PledgesPage: React.FC = () => {
                 </Form.Item>
               </Col>
 
+              {/* Business Email Field */}
+              <Col span={12}>
+                <Form.Item
+                  name="businessEmail"
+                  label={t("form.businessEmail") || "Business Email"}
+                  rules={[
+                    {
+                      required: true,
+                      message: t("validation.required", { field: t("form.businessEmail") || "Business Email" }),
+                    },
+                    { type: "email", message: t("validation.invalidEmail") || "Please enter a valid email address" },
+                  ]}
+                >
+                  <Input type="email" placeholder={t("placeholders.businessEmail") || "Enter business email"} />
+                </Form.Item>
+              </Col>
+
+              {/* To-send Email Field */}
+              <Col span={12}>
+                <Form.Item
+                  name="toSendEmail"
+                  label={t("form.toSendEmail") || "To-send Email"}
+                  rules={[
+                    {
+                      required: true,
+                      message: t("validation.required", { field: t("form.toSendEmail") || "To-send Email" }),
+                    },
+                    { type: "email", message: t("validation.invalidEmail") || "Please enter a valid email address" },
+                  ]}
+                >
+                  <Input
+                    type="email"
+                    placeholder={t("placeholders.toSendEmail") || "Enter email to send notifications"}
+                  />
+                </Form.Item>
+              </Col>
+
+              {/* Violation Category Field */}
+              <Col span={12}>
+                <Form.Item
+                  name="violationCategory_Id"
+                  label={t("form.violationCategory") || "Violation Category"}
+                  rules={[
+                    {
+                      required: true,
+                      message: t("validation.selectRequired", {
+                        field: t("form.violationCategory") || "Violation Category",
+                      }),
+                    },
+                  ]}
+                >
+                  <Select
+                    showSearch
+                    placeholder={t("placeholders.violationCategory") || "Select violation category"}
+                    optionFilterProp="label"
+                    filterOption={(input, option) =>
+                      (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                    }
+                    options={violationCategoryOptions.map((option) => ({
+                      label: option.label,
+                      value: option.value,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+
               {modalMode === "edit" && (
                 <Col span={12}>
                   <Form.Item
@@ -890,12 +981,10 @@ const PledgesPage: React.FC = () => {
                       filterOption={(input, option) =>
                         (option?.label as string).toLowerCase().includes(input.toLowerCase())
                       }
-                      // 👇 Dynamically build options - allow only 5001 and 5002 for editing
                       options={(() => {
                         const currentStatus = form.getFieldValue("pledgeStatus");
                         const baseOptions = pledgeStatusOptions.filter((opt) => [5001, 5002].includes(opt.value));
 
-                        // If current status is 5003 (expired), include it for display only
                         if (currentStatus === 5003) {
                           const expiredOption = pledgeStatusOptions.find((opt) => opt.value === 5003);
                           if (expiredOption) {
@@ -908,14 +997,13 @@ const PledgesPage: React.FC = () => {
                           value: option.value,
                         }));
                       })()}
-                      // 👇 Disable select when expired (5003)
                       disabled={form.getFieldValue("pledgeStatus") === 5003}
                     />
                   </Form.Item>
                 </Col>
               )}
 
-              <Col span={12}>
+              <Col span={24}>
                 <Form.Item
                   name="dateRange"
                   label={t("form.Validity")}

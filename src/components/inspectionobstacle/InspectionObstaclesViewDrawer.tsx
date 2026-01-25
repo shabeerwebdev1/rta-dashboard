@@ -112,7 +112,7 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
     { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "text" },
     { key: "closestPaymentDevice", title: "form.closestPD", type: "text" },
     { key: "comments", title: "form.comments", type: "text" },
-    { key: "removeAction", title: "common.remove obstacle", type: "action" },
+    { key: "removeAction", title: "common.resolveObstacle", type: "action" },
   ];
 
   const handleRemoveObstacle = (obstacleCode: string) => {
@@ -200,7 +200,7 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
               return (
                 <Descriptions.Item label={t(field.title)} key={field.key}>
                   <Button icon={<DeleteOutlined />} onClick={() => handleRemoveObstacle(record.inspectionGUID)} danger>
-                    {t("common.remove")}
+                    {t("common.resolve")}
                   </Button>
                 </Descriptions.Item>
               );

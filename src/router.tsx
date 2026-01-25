@@ -6,6 +6,7 @@ import ProtectedRoute from "./components/layout/ProtectedRoute";
 import { PATHS, FULL_PATHS } from "./constants/paths";
 import GeneralSearchPage from "./pages/GeneralSearchPage";
 import TeamEvaluationPage from "./pages/TeamEvaluationPage";
+import DndShiftManagement from "./pages/DndShiftManagement";
 
 // Lazy-loaded Pages
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -63,7 +64,8 @@ const AppRoutes = () => (
             <ProtectedRoute>
               <HRMSPage />
             </ProtectedRoute>
-          }/>
+          }
+        />
         <Route
           path={PATHS.PERMITS}
           element={
@@ -166,6 +168,14 @@ const AppRoutes = () => (
           element={
             <ProtectedRoute>
               <ShiftManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={PATHS.DND_SHIFT_MANAGEMENT}
+          element={
+            <ProtectedRoute>
+              <DndShiftManagement />
             </ProtectedRoute>
           }
         />

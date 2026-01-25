@@ -480,6 +480,7 @@ export default function CreateShiftPlan() {
       scheduleEntries,
       isPublished: false,
     };
+    console.log({ payload });
 
     try {
       await publishShiftPlan(payload).unwrap();

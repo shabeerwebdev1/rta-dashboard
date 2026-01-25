@@ -1,5 +1,5 @@
 import type { PageConfig } from "../../types/config";
-import { SearchOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, CloseCircleOutlined, SearchOutlined } from "@ant-design/icons";
 
 export const inspectionObstacleConfig: PageConfig = {
   key: "inspection-obstacles",
@@ -22,6 +22,18 @@ export const inspectionObstacleConfig: PageConfig = {
       title: "stats.TotalObstacles",
       icon: <SearchOutlined />,
       value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
+    },
+    {
+      title: "stats.activeObstacles",
+      icon: <CheckCircleOutlined />,
+      value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
+      color: "#52c41a",
+    },
+    {
+      title: "stats.resolvedObstacles",
+      icon: <CloseCircleOutlined />,
+      value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
+      color: "#faad14",
     },
   ],
 

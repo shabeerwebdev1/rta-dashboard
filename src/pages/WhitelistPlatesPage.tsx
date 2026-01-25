@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, DatePicker, App, Spin, Tag } from "antd";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, DatePicker, App, Spin, Tag, Tabs } from "antd";
 import {
   PlusOutlined,
   EyeOutlined,
@@ -86,6 +86,7 @@ const WhitelistPlatesPage: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("plate");
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
@@ -99,10 +100,47 @@ const WhitelistPlatesPage: React.FC = () => {
   //state to maintain the rows data for downlaoding
   const [selectedRows, setSelectedRows] = useState([]);
 
+  // Hardcoded violation categories (to be replaced with API call later)
+  const violationCategoryOptions = useMemo(
+    () => [
+      {
+        value: 6001,
+        labelEn: "Parking Violation",
+        labelAr: "مخالفة وقوف",
+        label: i18n.language === "ar" ? "مخالفة وقوف" : "Parking Violation",
+      },
+      {
+        value: 6002,
+        labelEn: "Speed Violation",
+        labelAr: "مخالفة سرعة",
+        label: i18n.language === "ar" ? "مخالفة سرعة" : "Speed Violation",
+      },
+      {
+        value: 6003,
+        labelEn: "Traffic Light Violation",
+        labelAr: "مخالفة إشارة مرور",
+        label: i18n.language === "ar" ? "مخالفة إشارة مرور" : "Traffic Light Violation",
+      },
+      {
+        value: 6004,
+        labelEn: "Lane Violation",
+        labelAr: "مخالفة مسار",
+        label: i18n.language === "ar" ? "مخالفة مسار" : "Lane Violation",
+      },
+      {
+        value: 6005,
+        labelEn: "No Entry Violation",
+        labelAr: "مخالفة دخول ممنوع",
+        label: i18n.language === "ar" ? "مخالفة دخول ممنوع" : "No Entry Violation",
+      },
+    ],
+    [i18n.language],
+  );
+
   // Fetch lookup data when modal opens or language changes
   useEffect(() => {
     fetchLookupData();
-  }, [i18n.language]); // 👈 Refetch when language changes
+  }, [i18n.language]);
 
   const fetchLookupData = async () => {
     setIsLoadingLookups(true);
@@ -110,9 +148,7 @@ const WhitelistPlatesPage: React.FC = () => {
       const result = await triggerGetLookups([100, 200, 300, 400, 500]).unwrap();
       setLookupOptions(result);
     } catch (error) {
-      // Try to read backend error message
       const backendError = error?.data?.en_Msg || "Failed to load dropdown options";
-
       notification.error({ data: { en_Msg: backendError } }, "Load Failed");
     } finally {
       setIsLoadingLookups(false);
@@ -181,7 +217,7 @@ const WhitelistPlatesPage: React.FC = () => {
 
   useEffect(() => {
     setPageTitle(t(config.title));
-  }, [setPageTitle, t, config.title, i18n.language]); // 👈 Update title when language changes
+  }, [setPageTitle, t, config.title, i18n.language]);
 
   useEffect(() => {
     setGlobalSearch(state.searchKey, debouncedSearchValue);
@@ -203,6 +239,7 @@ const WhitelistPlatesPage: React.FC = () => {
     setModalMode(mode);
     setSelectedRecord(record || null);
     setIsModalOpen(true);
+    setActiveTab("plate"); // Reset to first tab
     if (mode === "edit" && record) {
       form.setFieldsValue({
         ...record,
@@ -214,6 +251,7 @@ const WhitelistPlatesPage: React.FC = () => {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedRecord(null);
+    setActiveTab("plate");
     form.resetFields();
   };
 
@@ -224,6 +262,8 @@ const WhitelistPlatesPage: React.FC = () => {
       fromDate: dateRange[0].format("YYYY-MM-DD"),
       toDate: dateRange[1].format("YYYY-MM-DD"),
       plateStatus_Id: modalMode === "add" ? 5001 : rest.plateStatus_Id,
+      // Add plate type based on active tab
+      entryType: activeTab === "plate" ? "PLATE" : "TL",
     };
 
     try {
@@ -251,7 +291,6 @@ const WhitelistPlatesPage: React.FC = () => {
     params.set("viewRecord", viewRecord.id);
     const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 
-    // ✅ Try Clipboard API, fallback to execCommand
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard
         .writeText(shareUrl)
@@ -278,7 +317,6 @@ const WhitelistPlatesPage: React.FC = () => {
           );
         });
     } else {
-      // 🔙 Fallback for HTTP / unsupported browsers
       const textArea = document.createElement("textarea");
       textArea.value = shareUrl;
       document.body.appendChild(textArea);
@@ -331,21 +369,18 @@ const WhitelistPlatesPage: React.FC = () => {
           csvRecord[t("form.exemptionReason")] =
             getLabelFromValue(item.exemptionReason_ID, exemptionReasons, i18n) || "";
         } else if (column.key === "isByLaw") {
-          // Convert true/false to Yes/No
           csvRecord[t("form.isByLaw")] = item.isByLaw ? t("common.yes") : t("common.no");
         } else if (column.key === "fromDate") {
           csvRecord[t("form.fromDate")] = item.fromDate ? dayjs(item.fromDate).format("DD-MM-YYYY") : "";
         } else if (column.key === "toDate") {
           csvRecord[t("form.toDate")] = item.toDate ? dayjs(item.toDate).format("DD-MM-YYYY") : "";
         }
-        // Skip any other fields that are not in the table config
       });
 
       return csvRecord;
     });
   };
 
-  // Get CSV filename based on current language
   const getCsvFilename = () => {
     if (i18n.language === "ar") {
       return `قائمة_اللوحات_البيضاء.csv`;
@@ -367,21 +402,13 @@ const WhitelistPlatesPage: React.FC = () => {
       cancelText: t("common.cancel"),
       onOk: () => {
         try {
-          // Get the selected data from the current page data
-          //const selectedRows = platesData.filter((item: any) => selectedRowKeys.includes(item.iid));
-
           if (selectedRows.length === 0) {
             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
             return;
           }
 
-          // Transform the data to match UI display
           const transformedData = transformDataForCSV(selectedRows);
-
-          // Get filename based on current language
           const filename = getCsvFilename();
-
-          // Export to CSV using your common component
           exportToCsv(transformedData, filename);
 
           notification.success(
@@ -402,7 +429,6 @@ const WhitelistPlatesPage: React.FC = () => {
     [t, config.tableConfig.columns, i18n.language],
   );
 
-  // Enhanced table config with render functions for numeric values
   const enhancedTableConfig = useMemo(
     () => ({
       ...config.tableConfig,
@@ -441,7 +467,7 @@ const WhitelistPlatesPage: React.FC = () => {
                 return <Tag color="red">{label}</Tag>;
               }
 
-              return <Tag>{label}</Tag>; // fallback
+              return <Tag>{label}</Tag>;
             },
           };
         }
@@ -514,6 +540,319 @@ const WhitelistPlatesPage: React.FC = () => {
     };
   }, [data]);
 
+  // Tab items configuration
+  const tabItems = [
+    {
+      key: "plate",
+      label: t("tabs.addNewPlate") || "Add New Plate",
+      children: (
+        <Row gutter={24}>
+          <Col span={12}>
+            <Form.Item
+              name="plateNumber"
+              label={t("form.Number")}
+              rules={[
+                { required: true, message: t("validation.required", { field: t("form.Number") }) },
+                {
+                  pattern: /^[0-9]+$/,
+                  message: t("validation.onlyNumbers", { field: t("form.Number") }),
+                },
+              ]}
+              validateFirst
+            >
+              <Input placeholder={t("placeholders.plateNumber")} maxLength={5} />
+            </Form.Item>
+          </Col>
+
+          <Col span={12}>
+            <Form.Item
+              name="plateSource_Id"
+              label={t("form.Source")}
+              rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.Source") }) }]}
+            >
+              <Select
+                showSearch
+                placeholder={t("placeholders.plateSource")}
+                optionFilterProp="label"
+                filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                options={plateSourceOptions.map((option) => ({
+                  label: option.label,
+                  value: option.value,
+                }))}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col span={12}>
+            <Form.Item
+              name="plateType_Id"
+              label={t("form.Type")}
+              rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.Type") }) }]}
+            >
+              <Select
+                showSearch
+                placeholder={t("placeholders.plateType")}
+                optionFilterProp="label"
+                filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                options={plateTypeOptions.map((option) => ({
+                  label: option.label,
+                  value: option.value,
+                }))}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col span={12}>
+            <Form.Item
+              name="plateColor_Id"
+              label={t("form.Color")}
+              rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.Color") }) }]}
+            >
+              <Select
+                showSearch
+                placeholder={t("placeholders.plateColor")}
+                optionFilterProp="label"
+                filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                options={plateColorOptions.map((option) => ({
+                  label: option.label,
+                  value: option.value,
+                }))}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              name="violationCategory_Id"
+              label={t("form.violationCategory") || "Violation Category"}
+              rules={[
+                { required: true, message: t("validation.selectRequired", { field: t("form.violationCategory") }) },
+              ]}
+            >
+              <Select
+                showSearch
+                placeholder={t("placeholders.violationCategory") || "Select violation category"}
+                optionFilterProp="label"
+                filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                options={violationCategoryOptions.map((option) => ({
+                  label: option.label,
+                  value: option.value,
+                }))}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              name="dateRange"
+              label={t("form.dateRange")}
+              rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.dateRange") }) }]}
+            >
+              <DatePicker.RangePicker
+                style={{ width: "100%" }}
+                format={"DD-MM-YYYY"}
+                disabledDate={(d) => d && d < dayjs().startOf("day")}
+                placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col span={12}>
+            <Form.Item
+              name="exemptionReason_ID"
+              label={t("form.exemptionReason")}
+              rules={[
+                { required: true, message: t("validation.selectRequired", { field: t("form.exemptionReason") }) },
+              ]}
+            >
+              <Select
+                showSearch
+                placeholder={t("placeholders.exemptionReason")}
+                optionFilterProp="label"
+                filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                options={exemptionReasons.map((option) => ({
+                  label: option.label,
+                  value: option.value,
+                }))}
+              />
+            </Form.Item>
+          </Col>
+
+          {modalMode === "edit" && (
+            <Col span={12}>
+              <Form.Item
+                name="plateStatus_Id"
+                label={t("form.status")}
+                rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.status") }) }]}
+              >
+                <Select
+                  showSearch
+                  placeholder={t("placeholders.status")}
+                  optionFilterProp="label"
+                  filterOption={(input, option) =>
+                    (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                  }
+                  options={(() => {
+                    const statusId = form.getFieldValue("plateStatus_Id");
+                    const baseOptions = plateStatusOptions.filter((opt) => [5001, 5002].includes(opt.value));
+
+                    if (statusId === 5003) {
+                      const expiredOption = plateStatusOptions.find((opt) => opt.value === 5003);
+                      if (expiredOption) {
+                        baseOptions.push(expiredOption);
+                      }
+                    }
+
+                    return baseOptions.map((option) => ({
+                      label: option.label,
+                      value: option.value,
+                    }));
+                  })()}
+                  disabled={form.getFieldValue("plateStatus_Id") === 5003}
+                />
+              </Form.Item>
+            </Col>
+          )}
+
+          <Col span={12}>
+            <Form.Item
+              name="isByLaw"
+              label={t("form.isByLaw")}
+              rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.isByLaw") }) }]}
+            >
+              <Select
+                showSearch
+                placeholder={t("placeholders.isByLaw")}
+                optionFilterProp="label"
+                filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                options={[
+                  { label: t("common.true"), value: true },
+                  { label: t("common.false"), value: false },
+                ]}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+      ),
+    },
+    {
+      key: "tl",
+      label: t("tabs.addNewTL") || "Add New TL",
+      children: (
+        <Row gutter={24}>
+          <Col span={12}>
+            <Form.Item
+              name="violationCategory_Id"
+              label={t("form.violationCategory") || "Violation Category"}
+              rules={[
+                { required: true, message: t("validation.selectRequired", { field: t("form.violationCategory") }) },
+              ]}
+            >
+              <Select
+                showSearch
+                placeholder={t("placeholders.violationCategory") || "Select violation category"}
+                optionFilterProp="label"
+                filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                options={violationCategoryOptions.map((option) => ({
+                  label: option.label,
+                  value: option.value,
+                }))}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              name="dateRange"
+              label={t("form.dateRange")}
+              rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.dateRange") }) }]}
+            >
+              <DatePicker.RangePicker
+                style={{ width: "100%" }}
+                format={"DD-MM-YYYY"}
+                disabledDate={(d) => d && d < dayjs().startOf("day")}
+                placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
+              />
+            </Form.Item>
+          </Col>
+
+          <Col span={12}>
+            <Form.Item
+              name="exemptionReason_ID"
+              label={t("form.exemptionReason")}
+              rules={[
+                { required: true, message: t("validation.selectRequired", { field: t("form.exemptionReason") }) },
+              ]}
+            >
+              <Select
+                showSearch
+                placeholder={t("placeholders.exemptionReason")}
+                optionFilterProp="label"
+                filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                options={exemptionReasons.map((option) => ({
+                  label: option.label,
+                  value: option.value,
+                }))}
+              />
+            </Form.Item>
+          </Col>
+
+          {modalMode === "edit" && (
+            <Col span={12}>
+              <Form.Item
+                name="plateStatus_Id"
+                label={t("form.status")}
+                rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.status") }) }]}
+              >
+                <Select
+                  showSearch
+                  placeholder={t("placeholders.status")}
+                  optionFilterProp="label"
+                  filterOption={(input, option) =>
+                    (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                  }
+                  options={(() => {
+                    const statusId = form.getFieldValue("plateStatus_Id");
+                    const baseOptions = plateStatusOptions.filter((opt) => [5001, 5002].includes(opt.value));
+
+                    if (statusId === 5003) {
+                      const expiredOption = plateStatusOptions.find((opt) => opt.value === 5003);
+                      if (expiredOption) {
+                        baseOptions.push(expiredOption);
+                      }
+                    }
+
+                    return baseOptions.map((option) => ({
+                      label: option.label,
+                      value: option.value,
+                    }));
+                  })()}
+                  disabled={form.getFieldValue("plateStatus_Id") === 5003}
+                />
+              </Form.Item>
+            </Col>
+          )}
+
+          <Col span={12}>
+            <Form.Item
+              name="isByLaw"
+              label={t("form.isByLaw")}
+              rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.isByLaw") }) }]}
+            >
+              <Select
+                showSearch
+                placeholder={t("placeholders.isByLaw")}
+                optionFilterProp="label"
+                filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
+                options={[
+                  { label: t("common.true"), value: true },
+                  { label: t("common.false"), value: false },
+                ]}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+      ),
+    },
+  ];
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <StatsDisplay statsConfig={config.statsConfig} data={platesData} metadata={metadata} loading={isLoading} />
@@ -567,7 +906,7 @@ const WhitelistPlatesPage: React.FC = () => {
 
       <DataTableWrapper
         pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
-        data={platesData} // Use the extracted array
+        data={platesData}
         total={totalCount}
         isLoading={isLoading || isFetching}
         apiParams={apiParams}
@@ -579,12 +918,8 @@ const WhitelistPlatesPage: React.FC = () => {
             setSelectedRowKeys(keys);
 
             setSelectedRows((prev) => {
-              // Remove rows that are no longer selected
               const remaining = prev.filter((p) => keys.includes(p.id));
-
-              // Add newly selected rows (avoid duplicates)
               const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
-
               return [...remaining, ...newSelected];
             });
           },
@@ -598,7 +933,7 @@ const WhitelistPlatesPage: React.FC = () => {
 
       <Modal
         open={isModalOpen}
-        title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
+        //title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
         onCancel={handleModalClose}
         width="720px"
         footer={[
@@ -615,185 +950,7 @@ const WhitelistPlatesPage: React.FC = () => {
       >
         <Spin spinning={isLoadingLookups}>
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-            <Row gutter={24}>
-              <Col span={12}>
-                <Form.Item
-                  name="plateNumber"
-                  label={t("form.Number")}
-                  rules={[
-                    { required: true, message: t("validation.required", { field: t("form.Number") }) },
-
-                    {
-                      pattern: /^[0-9]+$/,
-                      message: t("validation.onlyNumbers", { field: t("form.Number") }),
-                    },
-                  ]}
-                  validateFirst
-                >
-                  <Input placeholder={t("placeholders.plateNumber")} maxLength={5} />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item
-                  name="plateSource_Id"
-                  label={t("form.Source")}
-                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.Source") }) }]}
-                >
-                  <Select
-                    showSearch
-                    placeholder={t("placeholders.plateSource")}
-                    optionFilterProp="label"
-                    filterOption={(input, option) =>
-                      (option?.label as string).toLowerCase().includes(input.toLowerCase())
-                    }
-                    options={plateSourceOptions.map((option) => ({
-                      label: option.label,
-                      value: option.value,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item
-                  name="plateType_Id"
-                  label={t("form.Type")}
-                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.Type") }) }]}
-                >
-                  <Select
-                    showSearch
-                    placeholder={t("placeholders.plateType")}
-                    optionFilterProp="label"
-                    filterOption={(input, option) =>
-                      (option?.label as string).toLowerCase().includes(input.toLowerCase())
-                    }
-                    options={plateTypeOptions.map((option) => ({
-                      label: option.label,
-                      value: option.value,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item
-                  name="plateColor_Id"
-                  label={t("form.Color")}
-                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.Color") }) }]}
-                >
-                  <Select
-                    showSearch
-                    placeholder={t("placeholders.plateColor")}
-                    optionFilterProp="label"
-                    filterOption={(input, option) =>
-                      (option?.label as string).toLowerCase().includes(input.toLowerCase())
-                    }
-                    options={plateColorOptions.map((option) => ({
-                      label: option.label,
-                      value: option.value,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
-
-              <Col span={24}>
-                <Form.Item
-                  name="dateRange"
-                  label={t("form.dateRange")}
-                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.dateRange") }) }]}
-                >
-                  <DatePicker.RangePicker
-                    style={{ width: "100%" }}
-                    format={"DD-MM-YYYY"}
-                    disabledDate={(d) => d && d < dayjs().startOf("day")}
-                    placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
-                  />
-                </Form.Item>
-              </Col>
-
-              <Col span={12}>
-                <Form.Item
-                  name="exemptionReason_ID"
-                  label={t("form.exemptionReason")}
-                  rules={[
-                    { required: true, message: t("validation.selectRequired", { field: t("form.exemptionReason") }) },
-                  ]}
-                >
-                  <Select
-                    showSearch
-                    placeholder={t("placeholders.exemptionReason")}
-                    optionFilterProp="label"
-                    filterOption={(input, option) =>
-                      (option?.label as string).toLowerCase().includes(input.toLowerCase())
-                    }
-                    options={exemptionReasons.map((option) => ({
-                      label: option.label,
-                      value: option.value,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
-              {modalMode === "edit" && (
-                <Col span={12}>
-                  <Form.Item
-                    name="plateStatus_Id"
-                    label={t("form.status")}
-                    rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.status") }) }]}
-                  >
-                    <Select
-                      showSearch
-                      placeholder={t("placeholders.status")}
-                      optionFilterProp="label"
-                      filterOption={(input, option) =>
-                        (option?.label as string).toLowerCase().includes(input.toLowerCase())
-                      }
-                      // 👇 Dynamically build options
-                      options={(() => {
-                        const statusId = form.getFieldValue("plateStatus_Id");
-                        const baseOptions = plateStatusOptions.filter((opt) => [5001, 5002].includes(opt.value));
-
-                        // If current status is 5003 (expired), include it for display only
-                        if (statusId === 5003) {
-                          const expiredOption = plateStatusOptions.find((opt) => opt.value === 5003);
-                          if (expiredOption) {
-                            baseOptions.push(expiredOption);
-                          }
-                        }
-
-                        return baseOptions.map((option) => ({
-                          label: option.label,
-                          value: option.value,
-                        }));
-                      })()}
-                      // 👇 Optional: disable select when expired
-                      disabled={form.getFieldValue("plateStatus_Id") === 5003}
-                    />
-                  </Form.Item>
-                </Col>
-              )}
-
-              <Col span={12}>
-                <Form.Item
-                  name="isByLaw"
-                  label={t("form.isByLaw")}
-                  rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.isByLaw") }) }]}
-                >
-                  <Select
-                    showSearch
-                    placeholder={t("placeholders.isByLaw")}
-                    optionFilterProp="label"
-                    filterOption={(input, option) =>
-                      (option?.label as string).toLowerCase().includes(input.toLowerCase())
-                    }
-                    options={[
-                      { label: t("common.true"), value: true },
-                      { label: t("common.false"), value: false },
-                    ]}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
+            <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
           </Form>
         </Spin>
       </Modal>

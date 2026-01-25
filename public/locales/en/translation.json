@@ -9,6 +9,7 @@
     "fines": "Fines",
     "parkonic": "Parkonic",
     "hrms": "HRMS",
+    "dndShiftManagement": "Dnd Shift Management",
     "dispute": "Disputes",
     "towing": "Towing",
     "analytics": "Analytics & Insights",
@@ -49,7 +50,9 @@
     "inspectors": "Inspectors",
     "supervisors": "Supervisors",
     "carPlate": "Car Plate",
-    "tradeLicense": "Trade License"
+    "tradeLicense": "Trade License",
+    "addNewPlate": "Add New Plate",
+    "addNewTL": "Add New Trade License"
   },
   "info": {
     "basicDetails": "Basic Details",
@@ -152,6 +155,9 @@
     "Source": "Source",
     "Type": "Type",
     "Color": "Color",
+    "rejectionReason": "Rejection Reason",
+    "businessEmail": "Business Email",
+    "toSendEmail": "To Send Email",
     "tradeLicenseNumber": "Trade License Number",
     "tradeLicense_EN_Name": "Trade License Name (EN)",
     "tradeLicense_AR_Name": "Trade License Name (AR)",
@@ -463,6 +469,8 @@
     "descending": "Desc",
     "clearAll": "Clear All",
     "remove obstacle": "Remove Obstacle",
+    "resolveObstacle": "Resolve Obstacle",
+    "resolve": "Resolve",
     "remove": "Remove",
     "true": "True",
     "false": "False",
@@ -544,6 +552,10 @@
   },
   "placeholders": {
     "plateNumber": "Enter the plate number",
+    "businessEmail": "Enter the business email",
+    "toSendEmail": "Enter email to send",
+    "rejectionReason": "Enter the reason for rejection",
+    "violationCategory": "Select the violation category",
     "plateSource": "Select the plate source",
     "plateType": "Select the plate type",
     "searchInspector": "Search inspector",
@@ -643,6 +655,8 @@
   },
   "stats": {
     "totalFines": "Total Fines",
+    "activeObstacles": "Active Obstacles",
+    "resolvedObstacles": "Resolved Obstacles",
     "paidFines": "Paid Fines",
     "unpaidFines": "Unpaid Fines",
     "TotalInspections": "Total Inspections",

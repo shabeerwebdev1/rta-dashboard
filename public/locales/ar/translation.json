@@ -6,6 +6,7 @@
     "pledges": "إدارة التعهدات",
     "permits": "التصاريح",
     "evaluate": "التقييم",
+    "dndShiftManagement": "إدارة نوبات DnD",
     "fines": "إدارة الغرامات",
     "parkonic": "إدارة باركونيك",
     "hrms": "إدارة الموارد البشرية",
@@ -53,7 +54,9 @@
     "inspectors": "المفتشون",
     "supervisors": "المشرفون",
     "carPlate": "لوحة السيارة",
-    "tradeLicense": "الرخصة التجارية"
+    "tradeLicense": "الرخصة التجارية",
+    "addNewPlate": "إضافة لوحة جديدة",
+    "addNewTL": "إضافة رخصة تجارية جديدة"
   },
   "info": {
     "basicDetails": "التفاصيل الأساسية",
@@ -153,8 +156,11 @@
   },
   "form": {
     "Number": "الرقم",
+    "rejectionReason": "سبب الرفض",
     "Source": "المصدر",
     "Type": "النوع",
+    "businessEmail": "البريد الإلكتروني للعمل",
+    "toSendEmail": "لإرسال البريد الإلكتروني",
     "Color": "اللون",
     "tradeLicenseNumber": "رقم الرخصة التجارية",
     "tradeLicense_EN_Name": "اسم الرخصة (إنجليزي)",
@@ -466,6 +472,8 @@
     "true": "صحيح",
     "false": "خاطئ",
     "remove obstacle": "إزالة العائق",
+    "resolveObstacle": "حل العائق",
+    "resolve": "حل",
     "remove": "إزالة",
     "compactView": "عرض مضغوط",
     "standardView": "عرض قياسي",
@@ -546,6 +554,10 @@
   "placeholders": {
     "plateNumber": "أدخل رقم اللوحة",
     "plateSource": "اختر مصدر اللوحة",
+    "toSendEmail": "هل تريد إرسال البريد الإلكتروني؟",
+    "businessEmail": "أدخل البريد الإلكتروني للعمل",
+    "violationCategory": "اختر فئة الانتهاك",
+    "rejectionReason": "أدخل سبب الرفض",
     "searchInspector": " ابحث عن اسم المفتش",
     "searchSupervisor": "ابحث عن اسم المشرف",
     "plateType": "اختر نوع اللوحة",
@@ -644,6 +656,8 @@
   },
   "stats": {
     "totalFines": "إجمالي الغرامات",
+    "activeObstacles": "المعوقات النشطة",
+    "resolvedObstacles": "المعوقات المحلولة",
     "TotalReports": "إجمالي التقارير",
     "ArabicReports": "التقارير العربية",
     "paidFines": "الغرامات المدفوعة",

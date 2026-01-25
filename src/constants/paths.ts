@@ -27,6 +27,7 @@ export const PATHS = {
   TOWING: "towing",
   ADHOCSHIFTPLAN: "adhocshiftplan",
   SHIFT_MANAGEMENT: "shift-management",
+  DND_SHIFT_MANAGEMENT: "dnd-shift-management",
   FINES_VEHICLES: "vehicles",
   FINES_PARKINGS: "parkings",
 
@@ -38,9 +39,8 @@ export const PATHS = {
   FINES_INSPECTIONS: "fines-inspections",
   SHIFT_PLAN: "shift-plan",
   CRITERIA: "criteria",
-  PROACTIVECAMPAIGN : "proactive-campaign",
-  HRMS:"hrms",
-
+  PROACTIVECAMPAIGN: "proactive-campaign",
+  HRMS: "hrms",
 };
 
 export const FULL_PATHS = {
@@ -50,7 +50,7 @@ export const FULL_PATHS = {
   SPLASH: "/splash",
   PERMITS: "/permits",
   GENERAL: "/general",
-  HRMS:"/hrms",
+  HRMS: "/hrms",
 
   // --- Whitelist section ---
   WHITELIST: "/whitelist",
@@ -84,6 +84,7 @@ export const FULL_PATHS = {
   ROLE_MANAGEMENT: "/role-management",
   PARKONIC_LOCATION: "/parkonic-location",
   SHIFT_PLAN: "/shift-plan",
+  DND_SHIFT_MANAGEMENT: "/dnd-shift-management",
   CRITERIA: "/criteria",
-  PROACTIVECAMPAIGN : "/proactive-campaign",
+  PROACTIVECAMPAIGN: "/proactive-campaign",
 };
