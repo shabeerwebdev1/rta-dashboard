@@ -140,7 +140,12 @@ const ParkonicPage: React.FC = () => {
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <StatsDisplay statsConfig={config.statsConfig} data={data?.data || []} loading={isLoading} />
+      <StatsDisplay
+        statsConfig={config.statsConfig}
+        data={data?.data || []}
+        metadata={{ total: data?.total }}
+        loading={isLoading}
+      />
       <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
         <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
           <Col>
@@ -153,7 +158,7 @@ const ParkonicPage: React.FC = () => {
                 style={{ width: 450 }}
                 allowClear
               />
-              <span>{t("common.filterByEnteyDate")}</span>
+              <span>{t("common.filterByEntryDate")}</span>
               <DatePicker.RangePicker
                 value={state.dateRange}
                 format={"DD-MM-YYYY"}

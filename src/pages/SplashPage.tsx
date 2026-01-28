@@ -5,7 +5,7 @@ import { useValidatecodeQuery } from "../services/rtkApiFactory";
 import { useAuth } from "../contexts/AuthContext";
 import { EXTERNAL_LOGIN_URL } from "../config/envConfig";
 
-const FALLBACK_CODE = "2026012248DDCC7F70E94B88BE766D97";
+const FALLBACK_CODE = "202601284BFE3972FE7C4B2FAE4DF67D";
 const SPLASH_DELAY = 1300;
 // const EXTERNAL_LOGIN_URL = "https://sso.kandaprojects.live/webapp/ui/common/login.aspx";
 

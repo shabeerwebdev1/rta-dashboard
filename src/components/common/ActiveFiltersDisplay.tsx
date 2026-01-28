@@ -100,7 +100,13 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     }
 
     // Handle status labels
-    if ((columnKey === "status" || columnKey === "dispute_Status" || columnKey === "reviewStatus") && statusLabels) {
+    if (
+      (columnKey === "status" ||
+        columnKey === "dispute_Status" ||
+        columnKey === "reviewStatus" ||
+        columnKey === "isUpdatedBack") &&
+      statusLabels
+    ) {
       return statusLabels[Number(value)] || String(value);
     }
 

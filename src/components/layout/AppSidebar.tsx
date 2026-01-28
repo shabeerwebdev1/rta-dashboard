@@ -118,7 +118,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         {
           key: FULL_PATHS.PARKONIC_LOCATION,
           icon: <EnvironmentOutlined />,
-          labelText: t("sidebar.parkonicLocation"),
+          labelText: t("sidebar.parkonicLocations"),
           permission: "ParkonicsLocation",
         },
       ],
@@ -246,18 +246,18 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           labelText: t("sidebar.shiftmanagement"),
           permission: "ShiftManagement",
         },
-        // {
-        //   key: FULL_PATHS.SHIFT_PLAN,
-        //   icon: <AuditOutlined />,
-        //   labelText: t("sidebar.shiftplan"),
-        //   permission: "ShiftManagement",
-        // },
-        // {
-        //   key: FULL_PATHS.DND_SHIFT_MANAGEMENT,
-        //   icon: <AuditOutlined />,
-        //   labelText: t("sidebar.dndShiftManagement"),
-        //   permission: "ShiftManagement",
-        // },
+        {
+          key: FULL_PATHS.SHIFT_PLAN,
+          icon: <AuditOutlined />,
+          labelText: t("sidebar.shiftplan"),
+          permission: "ShiftManagement",
+        },
+        {
+          key: FULL_PATHS.DND_SHIFT_MANAGEMENT,
+          icon: <AuditOutlined />,
+          labelText: t("sidebar.dndShiftManagement"),
+          permission: "ShiftManagement",
+        },
       ],
     },
   ];

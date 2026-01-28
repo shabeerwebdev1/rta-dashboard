@@ -2,8 +2,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Form, Row, Col, Select, App, DatePicker } from "antd";
-import { DownloadOutlined, UserSwitchOutlined } from "@ant-design/icons";
+import { Space, Card, Input, Button, Form, Row, Col, Select, App, DatePicker, Tag } from "antd";
+import { DownloadOutlined, UserAddOutlined, UserSwitchOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import dayjs from "dayjs";
@@ -21,6 +21,7 @@ import { exportToCsv } from "../utils/csvExporter";
 import { pageConfigs } from "../config/pageConfigs";
 import { parkonicLocationPageConfig } from "../config/pageConfigs/parkonicLocationConfig";
 import DataTableWrapper from "../components/common/DataTableWrapper";
+import StatsDisplay from "../components/common/StatsDisplay";
 
 const { Option } = Select;
 const pageKey = "parkonic-location";
@@ -96,7 +97,12 @@ const ParkonicLocationPage: React.FC = () => {
 
   useEffect(() => {
     setGlobalSearch(state.searchKey, debouncedSearchValue);
-  }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
+  }, [debouncedSearchValue, setGlobalSearch]);
+
+  // Sync local search value with state
+  useEffect(() => {
+    setSearchValue(state.searchValue);
+  }, [state.searchValue]);
 
   const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
     if (type === "search") {
@@ -119,12 +125,17 @@ const ParkonicLocationPage: React.FC = () => {
 
       // Parking name column (depends on current language)
       if (i18n.language === "ar") {
-        csvRecord[t("form.parkingNameArabic")] = item.parking_Name_Ar || "";
+        csvRecord[t("form.parkingNameAr")] = item.parking_Name_Ar || "";
       } else {
-        csvRecord[t("form.parkingName")] = item.parking_Name_En || "";
+        csvRecord[t("form.parkingNameEn")] = item.parking_Name_En || "";
       }
 
-      csvRecord[t("form.createdDate")] = item.created_At ? dayjs(item.created_At).format("DD-MM-YYYY") : "";
+      csvRecord[t("form.parkonicsLocationId")] = item.parkonics_Location_Id || "";
+      csvRecord[t("form.zone")] = item.zone || "";
+      csvRecord[t("form.area")] = item.area || "";
+      csvRecord[t("form.addedOn")] = item.created_At ? dayjs(item.created_At).format("DD-MM-YYYY") : "";
+      csvRecord[t("form.approvedBy")] = item.updated_By || "";
+      csvRecord[t("form.isApproved")] = item.isUpdatedBack ? t("form.approved") : t("form.pending");
 
       return csvRecord;
     });
@@ -194,18 +205,37 @@ const ParkonicLocationPage: React.FC = () => {
             render: (value: any) => (value ? dayjs(value).format("DD-MM-YYYY") : "-"),
           };
         }
+        if (column.key === "updated_At") {
+          return {
+            ...column,
+            render: (value: any) => (value ? dayjs(value).format("DD-MM-YYYY") : "-"),
+          };
+        }
+        if (column.key === "isUpdatedBack") {
+          return {
+            ...column,
+            render: (value: any) => {
+              if (value) {
+                return <Tag color="green">{t("form.approved")}</Tag>;
+              } else {
+                return <Tag color="orange">{t("form.pending")}</Tag>;
+              }
+            },
+          };
+        }
         return column;
       }),
     }),
-    [config.tableConfig],
+    [config.tableConfig, t],
   );
 
   const handleAssign = async (record: any) => {
+    // notification.success({ data: { en_Msg: t("messages.assignSuccess") } }, t("messages.assignSuccess"));
     try {
       modal.confirm({
         title: t("messages.confirmAssignTitle"),
         content: t("messages.confirmAssignContent"),
-        okText: t("common.ok"),
+        okText: t("common.approve"),
         cancelText: t("common.cancel"),
         onOk: async () => {
           const payload = {
@@ -232,20 +262,33 @@ const ParkonicLocationPage: React.FC = () => {
     {
       key: "assign",
       label: t("common.assign"),
-      icon: <UserSwitchOutlined />,
+      icon: <UserAddOutlined />,
       disabled: record.isUpdatedBack,
       onClick: () => handleAssign(record),
-    }, // {
-    //   key: "edit",
-    //   label: t("common.edit"),
-    //   icon: <EditOutlined />,
-    //   onClick: () => handleModalOpen("edit", record),
-    //   disabled: !canEdit(menuName),
-    // },
+    },
   ];
 
+  const statusLabels = useMemo(() => {
+    const statusMap: Record<number, string> = {
+      1: t("status.approved"),
+      0: t("status.pending"),
+    };
+    return statusMap;
+  }, [t]);
+
+  const handleSearchKeyChange = (newKey: string) => {
+    const currentValue = searchValue;
+    setTimeout(() => {
+      setSearchValue("");
+    }, 0);
+    if (currentValue.trim()) {
+      setGlobalSearch(state.searchKey, currentValue);
+    }
+    setGlobalSearch(newKey, "");
+  };
+
   const searchAddon = (
-    <Select value={state.searchKey} onChange={(key) => setGlobalSearch(key, state.searchValue)} style={{ width: 150 }}>
+    <Select value={state.searchKey} onChange={handleSearchKeyChange} style={{ minWidth: 150 }}>
       {config.searchConfig?.globalSearchKeys.map((key) => (
         <Option key={key} value={key}>
           {columnLabels[key]}
@@ -272,6 +315,12 @@ const ParkonicLocationPage: React.FC = () => {
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <StatsDisplay
+        statsConfig={config.statsConfig}
+        data={data?.data || []}
+        metadata={{ totalCount: data?.total || 0 }}
+        loading={isLoading}
+      />
       <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
         <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
           <Col>
@@ -298,15 +347,6 @@ const ParkonicLocationPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
-
-              {/* <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => handleModalOpen("add")}
-                disabled={!canCreate(menuName)}
-              >
-                {t("common.addNew")}
-              </Button> */}
             </Space>
           </Col>
         </Row>
@@ -315,6 +355,7 @@ const ParkonicLocationPage: React.FC = () => {
           onClearFilter={handleClearFilter}
           onClearAll={handleClearAll}
           columnLabels={columnLabels}
+          statusLabels={statusLabels}
         />
       </Card>
 
@@ -337,10 +378,15 @@ const ParkonicLocationPage: React.FC = () => {
             });
           },
         }}
+        filterOptions={{
+          isUpdatedBack: [
+            { text: t("status.approved"), value: true },
+            { text: t("status.pending"), value: false },
+          ],
+        }}
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
         state={state}
-        // ✅ ADD THIS: Explicit pagination config
         pagination={{
           current: apiParams.PageNumber,
           pageSize: apiParams.PageSize,
