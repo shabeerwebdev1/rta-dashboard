@@ -423,7 +423,9 @@
     "entryTime": "Entry Time",
     "driverEmiratesId": "Driver Emirates ID",
     "exitTime": "Exit Time",
-    "towingDocuments": "Towing Documents"
+    "towingDocuments": "Towing Documents",
+    "violationAmount": "Violation Amount",
+    "notes": "Notes"
   },
   "common": {
     "action": "Action",

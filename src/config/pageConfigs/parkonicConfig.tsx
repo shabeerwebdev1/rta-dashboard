@@ -145,18 +145,24 @@ export const parkonicPageConfig: PageConfig = {
       },
 
       {
-        key: "entryDateTime",
+        key: "startDateTime",
         title: "form.vehicleEntry",
         type: "string",
         sortable: true,
         render: (value) => dayjs(value).format("DD-MM-YYYY, hh:mm A"),
       },
       {
-        key: "exitDateTime",
+        key: "endDateTime",
         title: "form.vehicleExit",
         type: "string",
         sortable: true,
         render: (value) => dayjs(value).format("DD-MM-YYYY, hh:mm A"),
+      },
+      {
+        key: "violationAmount",
+        title: "form.violationAmount",
+        type: "number",
+        render: (value: number) => `${value} AED`,
       },
       {
         key: "reviewStatus",

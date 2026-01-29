@@ -429,7 +429,11 @@
     "entryTime": "وقت الدخول",
     "driverEmiratesId": "رقم هوية السائق",
     "exitTime": "وقت الخروج",
-    "towingDocuments": "مستندات السحب"
+    "towingDocuments": "مستندات السحب",
+    "violationAmount": "مبلغ الانتهاك",
+    "notes": "ملاحظات"
+
+
   },
   "common": {
     "action": "إجراء",

@@ -29,7 +29,12 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
   const [reviewParkonic, { isLoading: isSubmitting }] = useUpdateParkonicMutation();
 
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
-    record ? { inspectionGUID: record.inspectionGUID, entityCode: record.entityCode } : skipToken,
+    record
+      ? {
+          inspectionGUID: record.inspectionGUID,
+          entityCode: record.entityCode,
+        }
+      : skipToken,
   );
 
   const mappedRecord = React.useMemo(() => {
@@ -39,11 +44,23 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
           plateNumber: record.plateNumber,
           reviewStatus: record.reviewStatus ?? 2,
           rejectionReason: record.rejectionReason || "",
-          entryDateTime: record.entryDateTime,
-          exitDateTime: record.exitDateTime,
-          originalRecord: record,
+          entryDateTime: record.startDateTime,
+          exitDateTime: record.endDateTime,
         }
       : null;
+  }, [record]);
+
+  /** Violation Details (scalable for future multiple violations) */
+  const violationDetails = React.useMemo(() => {
+    if (!record) return [];
+
+    return [
+      {
+        violationNameEn: record.violationNameEn,
+        violationNameAr: record.violationNameAr,
+        totalFineAmount: record.totalFineAmount,
+      },
+    ];
   }, [record]);
 
   const [rejectionReason, setRejectionReason] = useState<string>("");
@@ -88,7 +105,6 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
     }
   };
 
-  /** ✅ Confirmation Handlers */
   const confirmApprove = () => {
     modal.confirm({
       title: t("common.confirmApproval"),
@@ -135,8 +151,8 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
             <Empty />
           ) : (
             <>
+              {/* Details */}
               <Row gutter={16}>
-                {/* Parkonic Details */}
                 <Col span={12}>
                   <Card title={t("form.parkonicdetails")} size="small">
                     <Row gutter={[0, 12]}>
@@ -163,7 +179,6 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                   </Card>
                 </Col>
 
-                {/* Vehicle Details */}
                 <Col span={12}>
                   <Card title={t("form.vehicleDetails")} size="small">
                     <Row gutter={[0, 12]}>
@@ -191,6 +206,41 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                 </Col>
               </Row>
 
+              {/* Violation Details */}
+              <Card title={t("form.violationDetails")} size="small" style={{ marginTop: 16, borderRadius: 12 }}>
+                {violationDetails.length === 0 ? (
+                  <Empty description={t("form.Noviolationdetailsavailable")} />
+                ) : (
+                  violationDetails.map((value, index) => (
+                    <Row
+                      key={index}
+                      style={{
+                        alignItems: "center",
+                        border: "1px solid #e8e8e8",
+                        padding: "8px 12px",
+                        marginBottom: 6,
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Col flex="1">
+                        <Text strong>{i18n.language === "ar" ? value.violationNameAr : value.violationNameEn}</Text>
+                      </Col>
+                      <Col>
+                        <Text strong>{t("form.amount")}:</Text>
+                      </Col>
+                      <Col style={{ marginLeft: 8 }}>
+                        <Text strong>{value.totalFineAmount} AED</Text>
+                      </Col>
+                    </Row>
+                  ))
+                )}
+              </Card>
+
+              {/* Notes */}
+              <Card title={t("form.notes")} size="small" style={{ marginTop: 16, borderRadius: 12 }}>
+                {record?.notes ? <Text>{record.notes}</Text> : <Empty description={t("form.noNotesAvailable")} />}
+              </Card>
+
               {/* Photos */}
               <Card title={t("form.AttachedPhotos")} size="small" style={{ marginTop: 16 }}>
                 <Spin spinning={isLoadingAttachments}>
@@ -208,21 +258,19 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                 </Spin>
               </Card>
 
-              {/* Comment Box */}
+              {/* Comments */}
               <div style={{ marginTop: 16 }}>
                 <Text strong>{t("form.comments")}</Text>
                 <TextArea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} rows={3} />
               </div>
 
-              {/* ✅ Approve / Reject With Confirmation */}
+              {/* Actions */}
               <Row justify="end" style={{ marginTop: 24 }}>
                 <Space>
                   <Button onClick={onClose}>{t("common.cancel")}</Button>
-
                   <Button danger onClick={confirmReject}>
                     {t("common.reject")}
                   </Button>
-
                   <Button type="primary" onClick={confirmApprove}>
                     {t("common.approve")}
                   </Button>
