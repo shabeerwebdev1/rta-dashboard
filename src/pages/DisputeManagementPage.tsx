@@ -91,6 +91,8 @@ const DisputeManagementPage: React.FC = () => {
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
   const [disputeSubReasonOptions, setDisputeSubReasonOptions] = useState<any[]>([]);
+  const [statsMetadata, setStatsMetadata] = useState<any>({});
+
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
@@ -105,17 +107,14 @@ const DisputeManagementPage: React.FC = () => {
   // NEW: State for My Approvals filter
   const [showMyApprovals, setShowMyApprovals] = useState(false);
 
-  // Modified API call to include assignedTo filter
-  const { data, isLoading, isFetching, refetch } = useGetDisputesQuery(
+  const { data, currentData, isLoading, isFetching, refetch } = useGetDisputesQuery(
     {
       ...apiParams,
-      // Add assignedTo filter to API params when showMyApprovals is true
       ...(showMyApprovals && user?.userGUID && { assignedTo: user.userGUID }),
     },
-    {
-      refetchOnMountOrArgChange: true,
-    },
+    { refetchOnMountOrArgChange: true },
   );
+  
 
   const [addDispute, { isLoading: isAdding }] = useAddDisputeMutation();
   const [updateDispute, { isLoading: isUpdating }] = useUpdateDisputeMutation();
@@ -629,6 +628,29 @@ const DisputeManagementPage: React.FC = () => {
     disputeStatusEnum.map((status) => [status.value, i18n.language === "ar" ? status.labelAr : status.labelEn]),
   );
 
+  useEffect(() => {
+    const loadStatsMetadata = async () => {
+      try {
+        const response = await refetch().unwrap();
+  
+        setStatsMetadata({
+          totalCount: response.totalCount,
+          pending: response.pending,
+          approved: response.approved,
+          rejected: response.rejected,
+          inReview: response.inReview,
+        });
+      } catch {
+        setStatsMetadata({});
+      }
+    };
+  
+    loadStatsMetadata();
+  }, [refetch]);
+  
+  
+  
+
   return (
     <>
       {/* <style>{`
@@ -639,7 +661,7 @@ const DisputeManagementPage: React.FC = () => {
       `}</style> */}
 
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
-        <StatsDisplay statsConfig={config.statsConfig} data={filteredData} loading={isLoading} />
+        <StatsDisplay statsConfig={config.statsConfig} data={filteredData} metadata={statsMetadata} loading={isLoading} />
         <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
           <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
             <Col>

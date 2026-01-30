@@ -224,6 +224,7 @@
     "isByLaw": "Is By-Law",
     "UploadJPG/JPEG": "Upload JPG/JPEG",
     "addedOn": "Added On",
+    "reviewedOn" : "Reviewed On",
     "fineAmount": "Fine Amount",
     "isPaid": "Is Paid",
     "carPlate": "Car Plate",
@@ -425,7 +426,12 @@
     "exitTime": "Exit Time",
     "towingDocuments": "Towing Documents",
     "violationAmount": "Violation Amount",
-    "notes": "Notes"
+    "notes": "Notes",
+    "violationNameEn" : "Violation Name (EN)",
+    "violationNameAr" : "Violation Name (AR)",
+    "tradenumber" : "Trade Number",
+    "plotnumber" : "Plot Number",
+    "violationName" : "Violation Name"
   },
   "common": {
     "action": "Action",
@@ -629,7 +635,10 @@
     "createdBy": "Enter creator name",
     "selectInspectors": "Select inspectors",
     "score": "Enter score",
-    "searchPlaceholder": "Search..."
+    "searchPlaceholder": "Search...",
+    "plotnumber" : "Enter the plot number",
+    "tradenumber" : "Enter the trade number"
+
   },
   "dashboard": {
     "totalInspectors": "Total Inspectors",
@@ -694,7 +703,12 @@
     "TotalCampaigns": "Total Campaigns",
     "ActiveCampaigns": "Active Campaigns",
     "DraftCampaigns": "Draft Campaigns",
-    "TotalAttendance": "Total Attendance Records"
+    "TotalAttendance": "Total Attendance Records",
+    "Pending" : "Pending",
+    "Approved" : "Approved",
+    "Rejected" : "Rejected",
+    "InReview" : "In Review"
+
   },
   "validation": {
     "required": " Please enter {{field}} ",

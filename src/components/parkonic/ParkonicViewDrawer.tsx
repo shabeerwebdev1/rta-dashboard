@@ -205,65 +205,71 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                   </Card>
                 </Col>
               </Row>
-
               {/* Violation Details */}
-              <Card title={t("form.violationDetails")} size="small" style={{ marginTop: 16, borderRadius: 12 }}>
-                {violationDetails.length === 0 ? (
-                  <Empty description={t("form.Noviolationdetailsavailable")} />
-                ) : (
-                  violationDetails.map((value, index) => (
-                    <Row
-                      key={index}
-                      style={{
-                        alignItems: "center",
-                        border: "1px solid #e8e8e8",
-                        padding: "8px 12px",
-                        marginBottom: 6,
-                        borderRadius: 8,
-                      }}
-                    >
-                      <Col flex="1">
-                        <Text strong>{i18n.language === "ar" ? value.violationNameAr : value.violationNameEn}</Text>
-                      </Col>
-                      <Col>
-                        <Text strong>{t("form.amount")}:</Text>
-                      </Col>
-                      <Col style={{ marginLeft: 8 }}>
-                        <Text strong>{value.totalFineAmount} AED</Text>
-                      </Col>
-                    </Row>
-                  ))
-                )}
-              </Card>
-
-              {/* Notes */}
-              <Card title={t("form.notes")} size="small" style={{ marginTop: 16, borderRadius: 12 }}>
-                {record?.notes ? <Text>{record.notes}</Text> : <Empty description={t("form.noNotesAvailable")} />}
-              </Card>
-
-              {/* Photos */}
-              <Card title={t("form.AttachedPhotos")} size="small" style={{ marginTop: 16 }}>
-                <Spin spinning={isLoadingAttachments}>
-                  <Image.PreviewGroup>
-                    {attachments.length === 0 ? (
-                      <Empty />
+              <Row gutter={16} style={{ marginTop: 16 }}>
+                <Col span={12}>
+                  <Card title={t("form.violationDetails")} size="small" style={{ borderRadius: 12 }}>
+                    {violationDetails.length === 0 ? (
+                      <Empty description={t("form.Noviolationdetailsavailable")} />
                     ) : (
-                      <Space wrap>
-                        {attachments.map((file) => (
-                          <Image key={file.attachmentGUID} width={100} src={getMobileFileUrl(file.filePath)} />
-                        ))}
-                      </Space>
+                      violationDetails.map((value, index) => (
+                        <Row
+                          key={index}
+                          style={{
+                            alignItems: "center",
+                            border: "1px solid #e8e8e8",
+                            padding: "8px 12px",
+                            marginBottom: 6,
+                            borderRadius: 8,
+                          }}
+                        >
+                          <Col flex="1">
+                            <Text strong>{i18n.language === "ar" ? value.violationNameAr : value.violationNameEn}</Text>
+                          </Col>
+                          <Col>
+                            <Text strong>{t("form.amount")}:</Text>
+                          </Col>
+                          <Col style={{ marginLeft: 8 }}>
+                            <Text strong>{value.totalFineAmount} AED</Text>
+                          </Col>
+                        </Row>
+                      ))
                     )}
-                  </Image.PreviewGroup>
-                </Spin>
-              </Card>
+                  </Card>
+                </Col>
 
-              {/* Comments */}
-              <div style={{ marginTop: 16 }}>
-                <Text strong>{t("form.comments")}</Text>
-                <TextArea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} rows={3} />
-              </div>
+                <Col span={12}>
+                  <Card title={t("form.notes")} size="small" style={{ borderRadius: 12 }}>
+                    {record?.notes ? <Text>{record.notes}</Text> : <Empty description={t("form.noNotesAvailable")} />}
+                  </Card>
+                </Col>
+              </Row>
+              {/* Photos */}
+              <Row gutter={16} style={{ marginTop: 16 }}>
+                <Col span={12}>
+                  <Card title={t("form.AttachedPhotos")} size="small">
+                    <Spin spinning={isLoadingAttachments}>
+                      <Image.PreviewGroup>
+                        {attachments.length === 0 ? (
+                          <Empty />
+                        ) : (
+                          <Space wrap>
+                            {attachments.map((file) => (
+                              <Image key={file.attachmentGUID} width={100} src={getMobileFileUrl(file.filePath)} />
+                            ))}
+                          </Space>
+                        )}
+                      </Image.PreviewGroup>
+                    </Spin>
+                  </Card>
+                </Col>
 
+                <Col span={12}>
+                  <Card title={t("form.comments")} size="small">
+                    <TextArea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} rows={4} />
+                  </Card>
+                </Col>
+              </Row>
               {/* Actions */}
               <Row justify="end" style={{ marginTop: 24 }}>
                 <Space>

@@ -396,10 +396,10 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                     style={{ marginBottom: 16 }}
                   >
                     <Row gutter={[0, 12]}>
-                      <Col span={10}>
+                      {/* <Col span={10}>
                         <Text strong>{t("form.fineNumber")}:</Text>
                       </Col>
-                      <Col span={14}>{dispute.fineId || t("common.noData")}</Col>
+                      <Col span={14}>{dispute.fineId || t("common.noData")}</Col> */}
 
                       <Col span={10}>
                         <Text strong>{t("form.department")}:</Text>
@@ -456,6 +456,11 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                           ? dayjs(dispute.actualDisputeDate).format("DD-MM-YYYY")
                           : t("common.noData")}
                       </Col>
+
+                      <Col span={10}>
+                        <Text strong>{t("form.source")}:</Text>
+                      </Col>
+                      <Col span={14}>{dispute.source || t("common.noData")}</Col>
                     </Row>
                   </Card>
                 </Col>

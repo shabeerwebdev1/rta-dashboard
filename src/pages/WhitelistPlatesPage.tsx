@@ -740,6 +740,25 @@ const WhitelistPlatesPage: React.FC = () => {
         <Row gutter={24}>
           <Col span={12}>
             <Form.Item
+              name="tradenumber"
+              label={t("form.tradenumber")}
+              rules={[{ required: true, message: t("validation.required", { field: t("form.tradenumber") }) }]}
+            >
+              <Input placeholder={t("placeholders.tradenumber")} maxLength={15} />
+            </Form.Item>
+          </Col>
+
+          <Col span={12}>
+            <Form.Item
+              name="plotnumber"
+              label={t("form.plotnumber")}
+              rules={[{ required: true, message: t("validation.required", { field: t("form.plotnumber") }) }]}
+            >
+              <Input placeholder={t("placeholders.plotnumber")} maxLength={15} />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
               name="violationCategory_Id"
               label={t("form.violationCategory") || "Violation Category"}
               rules={[

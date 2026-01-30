@@ -145,19 +145,41 @@ export const parkonicPageConfig: PageConfig = {
       },
 
       {
-        key: "startDateTime",
+        key: "entryDateTime",
         title: "form.vehicleEntry",
         type: "string",
         sortable: true,
         render: (value) => dayjs(value).format("DD-MM-YYYY, hh:mm A"),
       },
       {
-        key: "endDateTime",
+        key: "exitDateTime",
         title: "form.vehicleExit",
         type: "string",
         sortable: true,
         render: (value) => dayjs(value).format("DD-MM-YYYY, hh:mm A"),
       },
+      {
+        key: "violationName",
+        title: "form.violationName",
+        type: "custom" as const,
+        render: (_text: any, record: any) => {
+          const getCurrentLanguage = () => {
+            const storedLang = localStorage.getItem("i18nextLng");
+            if (storedLang) return storedLang;
+            if (document.documentElement.dir === "rtl") return "ar";
+            if (document.body.classList.contains("rtl")) return "ar";
+            return "en";
+          };
+
+          const language = getCurrentLanguage();
+          const isArabic = language.startsWith("ar");
+
+          return isArabic
+            ? record?.violationNameAr || record?.violationNameEn || "No Data"
+            : record?.violationNameEn || record?.violationNameAr || "No Data";
+        },
+      },
+
       {
         key: "violationAmount",
         title: "form.violationAmount",
@@ -179,6 +201,20 @@ export const parkonicPageConfig: PageConfig = {
           const { text, color } = statusMap[status ?? 2] || { text: "Unknown", color: "default" };
           return <Tag color={color}>{text}</Tag>;
         },
+      },
+      {
+        key: "createdDateTime",
+        title: "form.addedOn",
+        type: "string",
+        sortable: true,
+        render: (value) => dayjs(value).format("DD-MM-YYYY, hh:mm A"),
+      },
+      {
+        key: "reviewedDtTm",
+        title: "form.reviewedOn",
+        type: "string",
+        sortable: true,
+        render: (value) => dayjs(value).format("DD-MM-YYYY, hh:mm A"),
       },
       {
         key: "reviewer_name",

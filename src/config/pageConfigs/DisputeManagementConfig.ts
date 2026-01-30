@@ -1,4 +1,10 @@
-import { SearchOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  CloseCircleOutlined,
+  SearchOutlined,
+  SyncOutlined,
+} from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
 import React from "react";
 
@@ -13,17 +19,47 @@ export const disputeManagementConfig: PageConfig = {
     delete: "",
   },
   searchConfig: {
-    globalSearchKeys: ["fineId", "crM_Ref", "phone", "email"],
+    globalSearchKeys: ["fineId"],
     columnFilterKeys: ["department", "payment_Type"],
     dateRangeKey: "addon",
   },
+
   statsConfig: [
     {
       title: "stats.TotalDisputes",
       icon: React.createElement(SearchOutlined),
-      value: (data) => data.length,
+      value: (data, metadata) => `${data?.length || 0} / ${metadata?.totalCount || 0}`,
+    },
+    {
+      title: "stats.Pending",
+      icon: React.createElement(ClockCircleOutlined),
+      color: "orange",
+      value: (data, metadata) =>
+        `${data?.filter((d) => d.dispute_Status === 1).length || 0} / ${metadata?.pending || 0}`,
+    },
+    {
+      title: "stats.Approved",
+      icon: React.createElement(CheckCircleOutlined),
+      color: "green",
+      value: (data, metadata) =>
+        `${data?.filter((d) => d.dispute_Status === 2).length || 0} / ${metadata?.approved || 0}`,
+    },
+    {
+      title: "stats.Rejected",
+      icon: React.createElement(CloseCircleOutlined),
+      color: "red",
+      value: (data, metadata) =>
+        `${data?.filter((d) => d.dispute_Status === 3).length || 0} / ${metadata?.rejected || 0}`,
+    },
+    {
+      title: "stats.InReview",
+      icon: React.createElement(SyncOutlined),
+      color: "blue",
+      value: (data, metadata) =>
+        `${data?.filter((d) => d.dispute_Status === 4).length || 0} / ${metadata?.inReview || 0}`,
     },
   ],
+
   tableConfig: {
     rowKey: "dispute_Id",
     columns: [
@@ -48,9 +84,10 @@ export const disputeManagementConfig: PageConfig = {
           { label: "Online", value: 3 },
         ],
       },
-      { key: "phone", title: "form.phoneNumber", type: "string" },
-      { key: "crm_Ref", title: "form.crmReference", type: "string", sortable: true },
-      { key: "email", title: "form.email", type: "string" },
+      // { key: "phone", title: "form.phoneNumber", type: "string" },
+      // { key: "crm_Ref", title: "form.crmReference", type: "string", sortable: true },
+      // { key: "email", title: "form.email", type: "string" },
+      { key: "source", title: "form.source", type: "string" },
       { key: "created_At", title: "form.createdAt", type: "date" },
       { key: "dispute_Status", title: "form.disputestatus", type: "string" },
     ],

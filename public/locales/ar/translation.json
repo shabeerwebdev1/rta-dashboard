@@ -431,9 +431,13 @@
     "exitTime": "وقت الخروج",
     "towingDocuments": "مستندات السحب",
     "violationAmount": "مبلغ الانتهاك",
-    "notes": "ملاحظات"
-
-
+    "notes": "ملاحظات",
+    "violationNameEn": "اسم المخالفة (إنجليزي)",
+    "violationNameAr": "اسم المخالفة (عربي)",
+    "tradenumber": "رقم التجارة",
+    "plotnumber": "رقم القطعة",
+    "violationName": "اسم المخالفة",
+    "reviewedOn": "تمت المراجعة في"
   },
   "common": {
     "action": "إجراء",
@@ -633,7 +637,9 @@
     "createdBy": "أدخل اسم المنشئ",
     "selectInspectors": "اختر المفتشين",
     "score": "أدخل النتيجة",
-    "searchPlaceholder": "بحث..."
+    "searchPlaceholder": "بحث...",
+    "plotnumber": "أدخل رقم القطعة",
+    "tradenumber": "أدخل رقم الرخصة التجارية"
   },
   "dashboard": {
     "totalInspectors": "إجمالي المفتشين",
@@ -698,7 +704,11 @@
     "TotalCampaigns": "إجمالي الحملات",
     "ActiveCampaigns": "الحملات النشطة",
     "DraftCampaigns": "الحملات المسودة",
-    "TotalAttendance": "إجمالي سجلات الحضور"
+    "TotalAttendance": "إجمالي سجلات الحضور",
+    "Pending": "قيد الانتظار",
+    "Approved": "موافق",
+    "Rejected": "مرفوض",
+    "InReview": "قيد المراجعة"
   },
   "validation": {
     "required": "يرجى إدخال {{field}}",
