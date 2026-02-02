@@ -431,7 +431,13 @@
     "violationNameAr" : "Violation Name (AR)",
     "tradenumber" : "Trade Number",
     "plotnumber" : "Plot Number",
-    "violationName" : "Violation Name"
+    "violationName" : "Violation Name",
+    "violationCategoryId" : "Violation Category ID",
+    "violationDescription" : "Violation Description",
+    "disputeCategory" : "Dispute Category",
+    "disputeSubcategory" : "Dispute Subcategory",
+    "reviewtatus" : "Review Status",
+    "integrationStatus" : "Integration Status"
   },
   "common": {
     "action": "Action",

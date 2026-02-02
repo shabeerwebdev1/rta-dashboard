@@ -389,7 +389,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                       </span>
                     }
                     size="small"
-                    headStyle={{ background:colorBgContainer, fontWeight: 600 }}
+                    headStyle={{ background: colorBgContainer, fontWeight: 600 }}
                     style={{ marginBottom: 16, borderRadius: 12 }}
                   >
                     {/* Vehicle Plate at the top of Vehicle Details */}

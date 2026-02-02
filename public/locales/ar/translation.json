@@ -437,7 +437,14 @@
     "tradenumber": "رقم التجارة",
     "plotnumber": "رقم القطعة",
     "violationName": "اسم المخالفة",
-    "reviewedOn": "تمت المراجعة في"
+    "reviewedOn": "تمت المراجعة في",
+    "violationCategoryId": "معرّف فئة المخالفة",
+    "violationDescription": "وصف المخالفة",
+    "disputeCategory": "فئة الاعتراض",
+    "disputeSubcategory": "فئة الاعتراض الفرعية",
+    "reviewtatus" : "حالة المراجعة",
+    "integrationStatus" : "حالة التكامل"
+
   },
   "common": {
     "action": "إجراء",

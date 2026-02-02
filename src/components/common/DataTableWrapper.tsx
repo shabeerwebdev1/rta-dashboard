@@ -123,8 +123,13 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
 
     // Final fallback: extract unique values from data
     if (!data || data.length === 0) return [];
-    const uniqueValues = [...new Set(data.map((item: any) => item[columnKey]).filter(Boolean))];
-    return uniqueValues.map((value) => ({ text: String(value), value }));
+    const uniqueValues = [
+      ...new Set(
+        data
+          .map((item: any) => item[columnKey])
+          .filter((v) => v !== null && v !== undefined)
+      ),
+    ];    return uniqueValues.map((value) => ({ text: String(value), value }));
   };
 
   const columns = React.useMemo(() => {

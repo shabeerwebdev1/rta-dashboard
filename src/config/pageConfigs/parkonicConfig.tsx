@@ -3,6 +3,20 @@ import { IdcardOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-d
 import { Tag } from "antd";
 import UAEPlate from "../../components/UAEPlate";
 import dayjs from "dayjs";
+import "dayjs/locale/ar";
+
+const formatDateTime = (value: number) => {
+  if (!value) return "";
+
+  const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+
+  const isArabic = lang.startsWith("ar");
+
+  return dayjs(value)
+    .locale(isArabic ? "ar" : "en")
+    .format(isArabic ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
+};
+
 export const plateSources: Record<number, { en: string; ar: string }> = {
   1: { en: "Dubai", ar: "دبي" },
   2: { en: "Abu Dhabi", ar: "ابوظبي" },
@@ -114,6 +128,12 @@ export const parkonicPageConfig: PageConfig = {
       value: (data, metadata) => `${data.length}/${metadata.total}`,
     },
     {
+      title: "status.pending",
+      icon: <CheckCircleOutlined />,
+      value: (data, metadata) => `${data.filter((d) => d.reviewStatus === 0).length}/${metadata.total}`,
+      color: "#1890ff",
+    },
+    {
       title: "status.approved",
       icon: <CheckCircleOutlined />,
       value: (data, metadata) => `${data.filter((d) => d.reviewStatus === 1).length}/${metadata.total}`,
@@ -122,7 +142,7 @@ export const parkonicPageConfig: PageConfig = {
     {
       title: "status.rejected",
       icon: <CloseCircleOutlined />,
-      value: (data, metadata) => `${data.filter((d) => d.reviewStatus === 0).length}/${metadata.total}`,
+      value: (data, metadata) => `${data.filter((d) => d.reviewStatus === 2).length}/${metadata.total}`,
       color: "#ff4d4f",
     },
   ],
@@ -149,14 +169,14 @@ export const parkonicPageConfig: PageConfig = {
         title: "form.vehicleEntry",
         type: "string",
         sortable: true,
-        render: (value) => dayjs(value).format("DD-MM-YYYY, hh:mm A"),
+        render: (value) => formatDateTime(value),
       },
       {
         key: "exitDateTime",
         title: "form.vehicleExit",
         type: "string",
         sortable: true,
-        render: (value) => dayjs(value).format("DD-MM-YYYY, hh:mm A"),
+        render: (value) => formatDateTime(value),
       },
       {
         key: "violationName",
@@ -188,18 +208,32 @@ export const parkonicPageConfig: PageConfig = {
       },
       {
         key: "reviewStatus",
-        title: "form.status",
+        title: "form.reviewtatus",
         type: "custom",
         sortable: true,
         filterable: true,
         render: (status: number) => {
-          const statusMap: Record<number, { text: string; color: string }> = {
-            0: { text: "Rejected", color: "red" },
-            1: { text: "Approved", color: "green" },
-            2: { text: "Pending", color: "blue" },
+          const getCurrentLanguage = () => {
+            const storedLang = localStorage.getItem("i18nextLng");
+            if (storedLang) return storedLang;
+            if (document.documentElement.dir === "rtl") return "ar";
+            if (document.body.classList.contains("rtl")) return "ar";
+            return "en";
           };
-          const { text, color } = statusMap[status ?? 2] || { text: "Unknown", color: "default" };
-          return <Tag color={color}>{text}</Tag>;
+
+          const language = getCurrentLanguage();
+          const isArabic = language.startsWith("ar");
+
+          const statusMap: Record<number, { en: string; ar: string; color: string }> = {
+            0: { en: "Pending", ar: "قيد الانتظار", color: "blue" },
+            1: { en: "Approved", ar: "مُوافق عليه", color: "green" },
+            2: { en: "Rejected", ar: "مُرفوض", color: "red" },
+          };
+
+          const statusItem = statusMap[status ?? 2] || { en: "Unknown", ar: "غير معروف", color: "default" };
+          const text = isArabic ? statusItem.ar : statusItem.en;
+
+          return <Tag color={statusItem.color}>{text}</Tag>;
         },
       },
       {
@@ -207,21 +241,57 @@ export const parkonicPageConfig: PageConfig = {
         title: "form.addedOn",
         type: "string",
         sortable: true,
-        render: (value) => dayjs(value).format("DD-MM-YYYY, hh:mm A"),
+        render: (value) => formatDateTime(value),
+      },
+
+      {
+        key: "reviewerName",
+        title: "form.reviewedBy",
+        type: "string",
+        sortable: true,
+        render: (value) => value ?? "",
       },
       {
         key: "reviewedDtTm",
         title: "form.reviewedOn",
         type: "string",
         sortable: true,
-        render: (value) => dayjs(value).format("DD-MM-YYYY, hh:mm A"),
+        render: (value) => (value ? dayjs(value).format("DD MMM YYYY, hh:mm A") : ""),
       },
       {
-        key: "reviewer_name",
-        title: "form.reviewedBy",
-        type: "string",
+        key: "review_updateback_status",
+        title: "form.integrationStatus",
+        type: "custom",
         sortable: true,
-        render: (value) => value ?? "",
+        render: (status?: number) => {
+          if (status === null || status === undefined) {
+            return null;
+          }
+
+          const getCurrentLanguage = () => {
+            const storedLang = localStorage.getItem("i18nextLng");
+            if (storedLang) return storedLang;
+            if (document.documentElement.dir === "rtl") return "ar";
+            if (document.body.classList.contains("rtl")) return "ar";
+            return "en";
+          };
+
+          const language = getCurrentLanguage();
+          const isArabic = language.startsWith("ar");
+
+          const statusMap: Record<number, { en: string; ar: string; color: string }> = {
+            1: { en: "Success", ar: "ناجح", color: "green" },
+            2: { en: "Failed", ar: "فشل", color: "red" },
+          };
+
+          const statusItem = statusMap[status];
+          if (!statusItem) {
+            return null;
+          }
+
+          const text = isArabic ? statusItem.ar : statusItem.en;
+          return <Tag color={statusItem.color}>{text}</Tag>;
+        },
       },
     ],
     viewRecord: true,

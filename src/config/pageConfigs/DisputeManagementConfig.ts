@@ -7,6 +7,7 @@ import {
 } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
 import React from "react";
+import dayjs from "dayjs";
 
 export const disputeManagementConfig: PageConfig = {
   key: "dispute-management",
@@ -88,8 +89,17 @@ export const disputeManagementConfig: PageConfig = {
       // { key: "crm_Ref", title: "form.crmReference", type: "string", sortable: true },
       // { key: "email", title: "form.email", type: "string" },
       { key: "source", title: "form.source", type: "string" },
-      { key: "created_At", title: "form.createdAt", type: "date" },
-      { key: "dispute_Status", title: "form.disputestatus", type: "string" },
+      {
+        key: "created_At",
+        title: "form.createdAt",
+        type: "string",
+        render: (value) => dayjs(value).format("DD MMM YYYY, hh:mm A"),
+      },
+      {
+        key: "dispute_Status",
+        title: "form.disputestatus",
+        type: "string",
+      },
     ],
     viewRecord: true,
     showEdit: true,

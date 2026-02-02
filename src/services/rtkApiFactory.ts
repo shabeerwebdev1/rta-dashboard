@@ -361,7 +361,7 @@ export const dynamicApi = createApi({
     }),
 
     updateParkonic: builder.mutation({
-      query: (body) => ({ url: "api/trParkonics/UpdateStatus", method: "PUT", body }),
+      query: (body) => ({ url: "/api/Parkonic", method: "PUT", body }),
       invalidatesTags: ["ParkonicSearch"],
     }),
 

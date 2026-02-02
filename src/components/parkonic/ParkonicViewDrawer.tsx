@@ -1,3 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Space, Image } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
@@ -11,6 +14,8 @@ import { skipToken } from "@reduxjs/toolkit/query";
 import { useAppNotification } from "../../utils/notificationManager";
 import dayjs from "dayjs";
 import { plateSources, PLATE_TYPE_SHORT, PLATE_COLOR } from "../../config/pageConfigs/finesConfig";
+import UAEPlate from "../UAEPlate";
+import "dayjs/locale/ar";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -37,6 +42,17 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
       : skipToken,
   );
 
+  const formatDateTime = (value: number) => {
+    if (!value) return "";
+
+    const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+
+    const isArabic = lang.startsWith("ar");
+
+    return dayjs(value)
+      .locale(isArabic ? "ar" : "en")
+      .format(isArabic ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
+  };
   const mappedRecord = React.useMemo(() => {
     return record
       ? {
@@ -56,9 +72,10 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
 
     return [
       {
+        violationCategoryId: record.categoryId,
         violationNameEn: record.violationNameEn,
         violationNameAr: record.violationNameAr,
-        totalFineAmount: record.totalFineAmount,
+        violationAmount: record.violationAmount,
       },
     ];
   }, [record]);
@@ -77,31 +94,37 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
     return <Tag color={color}>{label?.[i18n.language === "ar" ? "ar" : "en"]}</Tag>;
   };
 
-  const submitReview = async (status: number) => {
-    try {
-      await reviewParkonic({
-        fineId: mappedRecord?.fineId,
-        reviewerName: "CurrentUser",
-        reviewTimestamp: new Date().toISOString(),
-        reviewStatus: status,
-        updatedby: "CurrentUser",
-        rejectionReason: status === 0 ? rejectionReason : "",
-        inspectionGUID: record?.inspectionGUID,
-      }).unwrap();
-
-      success(
+  const submitReview = async (action: 1 | 2) => {
+    // Validation handled by backend only
+    if (action === 2 && !rejectionReason.trim()) {
+      error(
         {
           data: {
-            en_Msg: status === 1 ? "Approved Successfully" : "Rejected Successfully",
-            ar_Msg: status === 1 ? "تمت الموافقة" : "تم الرفض",
+            en_Msg: "Rejection comments are required",
+            ar_Msg: "سبب الرفض مطلوب",
           },
         },
         "",
       );
+      return;
+    }
+
+    try {
+      const payload = {
+        iid: record?.iid,
+        review_Action: action, // 1 approve, 2 reject
+        review_Comments: action === 2 ? rejectionReason.trim() : "",
+      };
+
+      const response = await reviewParkonic(payload).unwrap();
+
+      // ✅ SUCCESS → backend message only
+      success(response, "");
 
       onClose();
     } catch (err: any) {
-      error(err, t("messages.reviewFailed") || "Action failed");
+      // ✅ ERROR → backend message only
+      error(err, "");
     }
   };
 
@@ -111,7 +134,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
       content: t("common.confirmApprovalContent"),
       okText: t("common.approve"),
       cancelText: t("common.cancel"),
-      onOk: () => submitReview(1),
+      onOk: () => submitReview(1), // ✅ APPROVE
     });
   };
 
@@ -122,13 +145,26 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
       okText: t("common.reject"),
       okButtonProps: { danger: true },
       cancelText: t("common.cancel"),
-      onOk: () => submitReview(0),
+      onOk: () => submitReview(2), // ✅ REJECT
     });
   };
+
+  const rejectionValidationMsg = i18n.language === "ar" ? "الرجاء إدخال سبب الرفض" : "Please enter rejection comments";
 
   useEffect(() => {
     setRejectionReason(mappedRecord?.rejectionReason || "");
   }, [mappedRecord]);
+
+  // Helper function to construct the complete file path
+  const getCompleteFilePath = (file: any) => {
+    // Check if filePath already contains the filename
+    if (file.filePath && file.filePath.includes(file.fileName)) {
+      return file.filePath;
+    }
+    // Otherwise, combine filePath and fileName
+    const separator = file.filePath.endsWith("\\") ? "" : "\\";
+    return `${file.filePath}${separator}${file.fileName}`;
+  };
 
   return (
     <>
@@ -169,23 +205,45 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                       <Col span={10}>
                         <Text strong>{t("form.vehicleEntryDateTime")}:</Text>
                       </Col>
-                      <Col span={14}>{dayjs(mappedRecord.entryDateTime).format("DD-MM-YYYY, hh:mm A")}</Col>
+                      <Col span={14}>{formatDateTime(mappedRecord.entryDateTime)}</Col>
 
                       <Col span={10}>
                         <Text strong>{t("form.vehicleExitDateTime")}:</Text>
                       </Col>
-                      <Col span={14}>{dayjs(mappedRecord.exitDateTime).format("DD-MM-YYYY, hh:mm A")}</Col>
+                      <Col span={14}>{formatDateTime(mappedRecord.exitDateTime)}</Col>
                     </Row>
                   </Card>
                 </Col>
 
                 <Col span={12}>
-                  <Card title={t("form.vehicleDetails")} size="small">
+                  <Card
+                    title={
+                      <span
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          width: "100%",
+                        }}
+                      >
+                        <span>{t("form.vehicleDetails")}</span>
+                        <span style={{ marginTop: "5px" }}>
+                          <UAEPlate
+                            code={record?.plateCode ? PLATE_COLOR[record.plateCode] : "---"}
+                            number={record?.plateNumber ?? "---"}
+                            emirateEn={record?.plateSource ? plateSources[record.plateSource]?.en || "" : ""}
+                            emirateAr={record?.plateSource ? plateSources[record.plateSource]?.ar || "" : ""}
+                          />
+                        </span>
+                      </span>
+                    }
+                    size="small"
+                  >
                     <Row gutter={[0, 12]}>
                       <Col span={10}>
-                        <Text strong>{t("form.vehicleNumber")}:</Text>
+                        <Text strong>{t("form.plateNumber")}:</Text>
                       </Col>
-                      <Col span={14}>{mappedRecord.plateNumber}</Col>
+                      <Col span={14}>{record?.plateNumber || "No Data"}</Col>
 
                       <Col span={10}>
                         <Text strong>{t("form.plateSource")}:</Text>
@@ -201,6 +259,31 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                         <Text strong>{t("form.plateCode")}:</Text>
                       </Col>
                       <Col span={14}>{record?.plateCode ? PLATE_COLOR[record.plateCode] : "---"}</Col>
+
+                      <Col span={10}>
+                        <Text strong>{t("form.vehicleColor")}:</Text>
+                      </Col>
+                      <Col span={14}>{record?.vehicleColor || "No Data"}</Col>
+
+                      <Col span={10}>
+                        <Text strong>{t("form.vehicleType")}:</Text>
+                      </Col>
+                      <Col span={14}>{record?.vehicleType || "No Data"}</Col>
+
+                      <Col span={10}>
+                        <Text strong>{t("form.vehicleBrand")}:</Text>
+                      </Col>
+                      <Col span={14}>{record?.vehicleBrand || "No Data"}</Col>
+
+                      <Col span={10}>
+                        <Text strong>{t("form.manufacturerYear")}:</Text>
+                      </Col>
+                      <Col span={14}>{record?.manufacturerYear || "No Data"}</Col>
+
+                      <Col span={10}>
+                        <Text strong>{t("form.vehicleOwnerName")}:</Text>
+                      </Col>
+                      <Col span={14}>{record?.vehicleOwnerName || "No Data"}</Col>
                     </Row>
                   </Card>
                 </Col>
@@ -212,25 +295,27 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                     {violationDetails.length === 0 ? (
                       <Empty description={t("form.Noviolationdetailsavailable")} />
                     ) : (
-                      violationDetails.map((value, index) => (
-                        <Row
-                          key={index}
-                          style={{
-                            alignItems: "center",
-                            border: "1px solid #e8e8e8",
-                            padding: "8px 12px",
-                            marginBottom: 6,
-                            borderRadius: 8,
-                          }}
-                        >
-                          <Col flex="1">
-                            <Text strong>{i18n.language === "ar" ? value.violationNameAr : value.violationNameEn}</Text>
+                      violationDetails.map((violation, index) => (
+                        <Row key={index} gutter={[0, 12]}>
+                          <Col span={10}>
+                            <Text strong>{t("form.violationCategoryId")}:</Text>
                           </Col>
-                          <Col>
+                          <Col span={14}>{violation.violationCategoryId ?? "No Data"}</Col>
+
+                          <Col span={10}>
+                            <Text strong>{t("form.violationDescription")}:</Text>
+                          </Col>
+                          <Col span={14}>
+                            {i18n.language === "ar" ? violation.violationNameAr : violation.violationNameEn}
+                          </Col>
+
+                          <Col span={10}>
                             <Text strong>{t("form.amount")}:</Text>
                           </Col>
-                          <Col style={{ marginLeft: 8 }}>
-                            <Text strong>{value.totalFineAmount} AED</Text>
+                          <Col span={14}>
+                            <Text strong type="danger">
+                              {violation.violationAmount} AED
+                            </Text>
                           </Col>
                         </Row>
                       ))
@@ -244,22 +329,32 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                   </Card>
                 </Col>
               </Row>
-              {/* Photos */}
+              {/* Photos - FIXED SECTION */}
               <Row gutter={16} style={{ marginTop: 16 }}>
                 <Col span={12}>
                   <Card title={t("form.AttachedPhotos")} size="small">
                     <Spin spinning={isLoadingAttachments}>
-                      <Image.PreviewGroup>
-                        {attachments.length === 0 ? (
-                          <Empty />
-                        ) : (
+                      {attachments.length > 0 ? (
+                        <Image.PreviewGroup>
                           <Space wrap>
-                            {attachments.map((file) => (
-                              <Image key={file.attachmentGUID} width={100} src={getMobileFileUrl(file.filePath)} />
-                            ))}
+                            {attachments.map((file) => {
+                              const completeFilePath = getCompleteFilePath(file);
+                              return (
+                                <Image
+                                  key={file.attachmentGUID}
+                                  width={100}
+                                  height={100}
+                                  src={getMobileFileUrl(completeFilePath)}
+                                  alt={file.fileName}
+                                  style={{ objectFit: "cover" }}
+                                />
+                              );
+                            })}
                           </Space>
-                        )}
-                      </Image.PreviewGroup>
+                        </Image.PreviewGroup>
+                      ) : (
+                        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
+                      )}
                     </Spin>
                   </Card>
                 </Col>

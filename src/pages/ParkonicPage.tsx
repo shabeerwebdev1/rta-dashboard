@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App } from "antd";
-import { EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
+import { DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { useGetParkonicsQuery } from "../services/rtkApiFactory";
@@ -54,6 +54,7 @@ const ParkonicPage: React.FC = () => {
     const statusMap: Record<number, string> = {
       2: t("status.rejected"),
       1: t("status.approved"),
+      0: t("status.pending"),
     };
     return statusMap;
   }, [t]);
@@ -198,10 +199,8 @@ const ParkonicPage: React.FC = () => {
             setSelectedRowKeys(keys);
 
             setSelectedRows((prev) => {
-              // Remove rows that are no longer selected
               const remaining = prev.filter((p) => keys.includes(p.id));
 
-              // Add newly selected rows (avoid duplicates)
               const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
 
               return [...remaining, ...newSelected];
@@ -214,6 +213,7 @@ const ParkonicPage: React.FC = () => {
         state={state}
         filterOptions={{
           reviewStatus: [
+            { text: t("status.pending"), value: 0 },
             { text: t("status.approved"), value: 1 },
             { text: t("status.rejected"), value: 2 },
           ],
