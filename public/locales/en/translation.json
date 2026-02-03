@@ -224,7 +224,7 @@
     "isByLaw": "Is By-Law",
     "UploadJPG/JPEG": "Upload JPG/JPEG",
     "addedOn": "Added On",
-    "reviewedOn" : "Reviewed On",
+    "reviewedOn": "Reviewed On",
     "fineAmount": "Fine Amount",
     "isPaid": "Is Paid",
     "carPlate": "Car Plate",
@@ -427,17 +427,20 @@
     "towingDocuments": "Towing Documents",
     "violationAmount": "Violation Amount",
     "notes": "Notes",
-    "violationNameEn" : "Violation Name (EN)",
-    "violationNameAr" : "Violation Name (AR)",
-    "tradenumber" : "Trade Number",
-    "plotnumber" : "Plot Number",
-    "violationName" : "Violation Name",
-    "violationCategoryId" : "Violation Category ID",
-    "violationDescription" : "Violation Description",
-    "disputeCategory" : "Dispute Category",
-    "disputeSubcategory" : "Dispute Subcategory",
-    "reviewtatus" : "Review Status",
-    "integrationStatus" : "Integration Status"
+    "violationNameEn": "Violation Name (EN)",
+    "violationNameAr": "Violation Name (AR)",
+    "tradenumber": "Trade Number",
+    "plotnumber": "Plot Number",
+    "violationName": "Violation Name",
+    "violationCategoryId": "Violation Category ID",
+    "violationDescription": "Violation Description",
+    "disputeCategory": "Dispute Category",
+    "disputeSubcategory": "Dispute Subcategory",
+    "reviewtatus": "Review Status",
+    "integrationStatus": "Integration Status",
+    "asReviewerSelectDecision": "As Reviewer, Select Decision",
+    "reviewResult": "Review Result"
+    
   },
   "common": {
     "action": "Action",
@@ -531,7 +534,10 @@
     "endDate": "End Date",
     "all": "All",
     "next": "Next",
-    "previous": "Previous"
+    "previous": "Previous",
+    "showPendingDisputes": " Show Pending Disputes",
+    "selectRole": "Select Role"
+
   },
   "entity": {
     "plate": "Plate",
@@ -565,7 +571,8 @@
     "absent": "Absent",
     "leave": "Leave",
     "inProgress": "In Progress",
-    "completed": "Completed"
+    "completed": "Completed",
+    "reviewed": "Reviewed"
   },
   "placeholders": {
     "plateNumber": "Enter the plate number",
@@ -642,9 +649,8 @@
     "selectInspectors": "Select inspectors",
     "score": "Enter score",
     "searchPlaceholder": "Search...",
-    "plotnumber" : "Enter the plot number",
-    "tradenumber" : "Enter the trade number"
-
+    "plotnumber": "Enter the plot number",
+    "tradenumber": "Enter the trade number"
   },
   "dashboard": {
     "totalInspectors": "Total Inspectors",
@@ -710,11 +716,10 @@
     "ActiveCampaigns": "Active Campaigns",
     "DraftCampaigns": "Draft Campaigns",
     "TotalAttendance": "Total Attendance Records",
-    "Pending" : "Pending",
-    "Approved" : "Approved",
-    "Rejected" : "Rejected",
-    "InReview" : "In Review"
-
+    "Pending": "Pending",
+    "Approved": "Approved",
+    "Rejected": "Rejected",
+    "InReview": "In Review"
   },
   "validation": {
     "required": " Please enter {{field}} ",

@@ -443,7 +443,11 @@
     "disputeCategory": "فئة الاعتراض",
     "disputeSubcategory": "فئة الاعتراض الفرعية",
     "reviewtatus" : "حالة المراجعة",
-    "integrationStatus" : "حالة التكامل"
+    "integrationStatus" : "حالة التكامل",
+    "asReviewerSelectDecision" : "كمراجع، اختر القرار",
+    "reviewResult": "نتيجة المراجعة"
+
+
 
   },
   "common": {
@@ -534,7 +538,10 @@
     "endDate": "تاريخ الانتهاء",
     "all": "الكل",
     "next": "التالي",
-    "previous": "السابق"
+    "previous": "السابق",
+    "showPendingDisputes" : "إظهار النزاعات المعلقة",
+    "selectRole": "اختر الدور"
+
   },
   "entity": {
     "plate": "لوحة",
@@ -568,7 +575,9 @@
     "absent": "غائب",
     "leave": "إجازة",
     "inProgress": "قيد التنفيذ",
-    "completed": "مكتمل"
+    "completed": "مكتمل",
+    "reviewed": "تمت المراجعة"
+
   },
   "placeholders": {
     "plateNumber": "أدخل رقم اللوحة",
