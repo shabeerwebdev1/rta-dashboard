@@ -536,7 +536,8 @@
     "next": "Next",
     "previous": "Previous",
     "showPendingDisputes": " Show Pending Disputes",
-    "selectRole": "Select Role"
+    "selectRole": "Select Role",
+    "resubmit" : "Resubmit"
 
   },
   "entity": {

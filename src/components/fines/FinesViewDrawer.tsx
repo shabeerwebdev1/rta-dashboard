@@ -6,6 +6,8 @@ import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, For
 import { CloseOutlined, ShareAltOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { theme } from "antd";
+import dayjs from "dayjs";
+
 
 import { useLazyGetLookupsQuery, useGetViolationDetailsQuery } from "../../services/rtkApiFactory";
 import {
@@ -145,13 +147,17 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
     });
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "No Data";
-    try {
-      return new Date(dateString).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-    } catch {
-      return "Invalid Date";
-    }
+
+  const formatDate = (value: number) => {
+    if (!value) return "";
+
+    const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+
+    const isArabic = lang.startsWith("ar");
+
+    return dayjs(value)
+      .locale(isArabic ? "ar" : "en")
+      .format(isArabic ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
   };
 
   const getPaymentTypeLabel = (paymentType: string) => {

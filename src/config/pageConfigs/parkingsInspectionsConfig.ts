@@ -1,5 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { PageConfig } from "../../types/config";
+import dayjs from "dayjs";
+import "dayjs/locale/ar";
+
+const formatDateTime = (value: number) => {
+  if (!value) return "";
+
+  const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+
+  const isArabic = lang.startsWith("ar");
+
+  return dayjs(value)
+    .locale(isArabic ? "ar" : "en")
+    .format(isArabic ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
+};
 
 export const parkingsInspectionsConfig: PageConfig = {
   key: "parkingsInspections",
@@ -57,7 +71,7 @@ export const parkingsInspectionsConfig: PageConfig = {
       // { key: "inspectionCategory", title: "form.fineType", type: "string", filterable: true },
       { key: "fineAmount", title: "form.fineAmount", type: "number" },
 
-      { key: "entityDateTime", title: "form.finedDate", type: "date" },
+      { key: "entityDateTime", title: "form.finedDate", type: "string", render: (value) => formatDateTime(value) },
       { key: "inspectionStatus", title: "form.inspectionStatus", type: "string", filterable: true },
     ],
     viewRecord: true,

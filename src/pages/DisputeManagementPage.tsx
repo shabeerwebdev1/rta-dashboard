@@ -615,14 +615,29 @@ const DisputeManagementPage: React.FC = () => {
     [config.tableConfig, lookupOptions, i18n, disputeStatusEnum, getDisputeReasonByCode],
   );
 
-  const actionMenuItems = (record: any) => [
-    {
-      key: "view",
-      label: t("common.view"),
-      icon: record.assignedTo !== user?.userGUID ? <EyeOutlined /> : <EditOutlined />,
-      onClick: () => handleView(record),
-    },
-  ];
+  const actionMenuItems = (record: any) => {
+    const roleGUIDFromStorage = localStorage.getItem("roleGUID");
+
+    const isAssignedToUserRole = () => {
+      if (!roleGUIDFromStorage) return false;
+
+      const normalizedRoleGUID = roleGUIDFromStorage.toLowerCase().trim();
+      if (record.assignedTo) {
+        const assignedTo = record.assignedTo.toLowerCase().trim();
+        return assignedTo === normalizedRoleGUID;
+      }
+      return false;
+    };
+
+    return [
+      {
+        key: "view",
+        label: t("common.view"),
+        icon: isAssignedToUserRole() ? <EditOutlined /> : <EyeOutlined />,
+        onClick: () => handleView(record),
+      },
+    ];
+  };
 
   const handleSearchKeyChange = (newKey: string) => {
     const currentValue = searchValue;
@@ -715,14 +730,14 @@ const DisputeManagementPage: React.FC = () => {
                   {t("common.downloadCsv")}
                 </Button>
 
-                <Button
+                {/* <Button
                   type="primary"
                   icon={<PlusOutlined />}
                   onClick={() => handleModalOpen("add")}
                   disabled={!canCreate(menuName)}
                 >
                   {t("common.addNew")}
-                </Button>
+                </Button> */}
               </Space>
             </Col>
           </Row>

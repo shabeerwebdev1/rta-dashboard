@@ -2,6 +2,21 @@
 import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
 import UAEPlate from "../../components/UAEPlate";
+import "dayjs/locale/ar";
+import dayjs from "dayjs";
+
+
+const formatDateTime = (value: number) => {
+  if (!value) return "";
+
+  const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+
+  const isArabic = lang.startsWith("ar");
+
+  return dayjs(value)
+    .locale(isArabic ? "ar" : "en")
+    .format(isArabic ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
+};
 
 export const plateSources: Record<number, { en: string; ar: string }> = {
   1: { en: "Dubai", ar: "دبي" },
@@ -177,7 +192,7 @@ export const finesConfig: PageConfig = {
       { key: "inspectionCategory", title: "form.fineType", type: "string", filterable: true },
       // { key: "fineAmount", title: "form.fineAmount", type: "number" },
 
-      { key: "entityDateTime", title: "form.inspectionDate", type: "date" },
+      { key: "entityDateTime", title: "form.inspectionDate", type: "string" , render: (value) => formatDateTime(value), sortable: true},
       { key: "inspectionStatus", title: "form.inspectionStatus", type: "string", filterable: true },
     ],
     viewRecord: true,

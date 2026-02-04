@@ -71,6 +71,18 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
 
   const { user } = useAuth();
 
+  const formatDate = (value: number) => {
+    if (!value) return "";
+
+    const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+
+    const isArabic = lang.startsWith("ar");
+
+    return dayjs(value)
+      .locale(isArabic ? "ar" : "en")
+      .format(isArabic ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
+  };
+
   // Helper function to normalize GUIDs (convert to lowercase)
   const normalizeGuid = (guid: string | null | undefined): string | null => {
     if (!guid) return null;
@@ -102,7 +114,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   const directorRoleGUID = "6d20d858-1128-4cd2-af7e-e8eb3c4bf887".toLowerCase(); // Director
   const managerRoleGUID = "33fa8623-20f8-417a-b655-18da372f18bd".toLowerCase(); // Manager
 
-  // All supervisor role GUIDs that can approve/reject (already lowercase from above)
+  // All supervisor role GUIDs that can approve/reject
   const supervisorRoleGUIDs = [seniorSupervisorRoleGUID, supervisorRoleGUID, managerRoleGUID, directorRoleGUID];
 
   // Check if user is DC (Dispute Coordinator) - case-insensitive
@@ -113,6 +125,12 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
     if (!userRoleGUID) return false;
     return supervisorRoleGUIDs.some((roleGuid) => roleGuid === userRoleGUID);
   }, [userRoleGUID]);
+
+  // Specific role checks
+  const isManagerRole = userRoleGUID === managerRoleGUID;
+  const isSeniorSupervisorRole = userRoleGUID === seniorSupervisorRoleGUID;
+  const isSupervisorRoleOnly = userRoleGUID === supervisorRoleGUID;
+  const isDirectorRole = userRoleGUID === directorRoleGUID;
 
   // Define the roles for DC assignment dropdown - only name, no role code
   const assignmentRoles = [
@@ -140,53 +158,6 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
     const normalizedGuid = normalizeGuid(guid);
     return assignmentRoles.find((role) => normalizeGuid(role.roleGUID) === normalizedGuid);
   };
-
-  // Check if dispute is assigned to current user's role - case-insensitive
-  const isAssignedToCurrentUserRole = useMemo(() => {
-    if (!userRoleGUID) return false;
-
-    // Check if dispute is assigned to user's role (normalize from API response)
-    if (disputeData?.data?.assignedToRole) {
-      const assignedRole = normalizeGuid(disputeData.data.assignedToRole);
-      if (assignedRole === userRoleGUID) {
-        return true;
-      }
-    }
-
-    // Check in reviews if last action was assignment to this role
-    if (disputeData?.data?.reviews?.length) {
-      const lastReview = disputeData.data.reviews[disputeData.data.reviews.length - 1];
-      if (lastReview.review_Action === 1) {
-        // Check both possible fields
-        const assignedRole = normalizeGuid(lastReview.assignedToRole) || normalizeGuid(lastReview.assignedTo);
-        if (assignedRole === userRoleGUID) {
-          return true;
-        }
-      }
-    }
-
-    // Check if assignedTo contains current user's role GUID in any field
-    const checkAssignment = (data: any) => {
-      if (!data) return false;
-      
-      // Convert to lowercase for comparison
-      const fieldsToCheck = [
-        data.assignedToRole,
-        data.assignedTo,
-        data.assignedTo?.roleGUID,
-        data.assignedToRoleGUID
-      ];
-      
-      return fieldsToCheck.some(field => {
-        if (!field) return false;
-        const normalizedField = normalizeGuid(field);
-        return normalizedField === userRoleGUID;
-      });
-    };
-
-    return checkAssignment(disputeData?.data) || 
-           disputeData?.data?.reviews?.some((review: any) => checkAssignment(review));
-  }, [disputeData?.data, userRoleGUID]);
 
   // Use disputeData instead of dispute to avoid reference before initialization
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
@@ -280,6 +251,24 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
     if (type === "plateType") return PLATE_TYPE_SHORT[value] || value;
     if (type === "source") return plateSources[value]?.en || value;
     return value;
+  };
+
+  const getCompleteFilePath = (file: any) => {
+    if (!file) return "";
+
+    const filePath = file.filePath;
+    const fileName = file.fileName;
+
+    if (!filePath) return fileName || "";
+    if (!fileName) return filePath;
+
+    // If filePath already contains filename
+    if (filePath.includes(fileName)) {
+      return filePath;
+    }
+
+    const separator = filePath.endsWith("\\") || filePath.endsWith("/") ? "" : "\\";
+    return `${filePath}${separator}${fileName}`;
   };
 
   // Fetch dispute data when modal opens
@@ -418,70 +407,111 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
   // Check if dispute status is 2 (Approved) or 3 (Rejected) - hide footer
   const isDisputeApprovedOrRejected = dispute?.dispute_Status === 2 || dispute?.dispute_Status === 3;
 
-  // Check if dispute is pending or in review
-  const isDisputePendingOrInReview = dispute?.dispute_Status === 1 || dispute?.dispute_Status === 4;
-
   // Check if review timeline is empty
   const isReviewTimelineEmpty = useMemo(() => {
     return !dispute?.reviews || dispute.reviews.length === 0;
   }, [dispute?.reviews]);
 
-  // Get the last assigned role GUID from reviews
-  const getLastAssignedRoleGUID = useMemo(() => {
+  // Get the last assignment from review timeline (where review_Action === 1)
+  const getLastAssignmentFromTimeline = useMemo(() => {
     if (!dispute?.reviews?.length) return null;
 
-    // Find the last assignment review (review_Action === 1)
+    // Filter only assignment actions (review_Action === 1)
     const assignmentReviews = dispute.reviews.filter((review: any) => review.review_Action === 1);
-    
+
     if (assignmentReviews.length === 0) return null;
 
     // Get the most recent assignment
     const lastAssignment = assignmentReviews[assignmentReviews.length - 1];
 
-    // Check both possible fields for role GUID
-    const assignedToRole = lastAssignment.assignedToRole || lastAssignment.assignedTo;
-    
-    if (!assignedToRole) return null;
+    // Get the assigned role GUID (check both fields)
+    const assignedRoleGUID = lastAssignment.assignedToRole || lastAssignment.assignedTo;
 
-    // Check if it's a GUID format
-    const normalizedAssigned = normalizeGuid(assignedToRole);
-    const isRoleGUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(normalizedAssigned || "");
+    if (!assignedRoleGUID) return null;
 
-    return isRoleGUID ? normalizedAssigned : null;
+    return normalizeGuid(assignedRoleGUID);
   }, [dispute?.reviews]);
 
-  // Check if last assigned role is Dispute Coordinator
-  const isLastAssignedRoleDC = useMemo(() => {
-    if (!getLastAssignedRoleGUID) return false;
-    return getLastAssignedRoleGUID === dcRoleGUID;
-  }, [getLastAssignedRoleGUID]);
+  // ==============================================
+  // FOOTER VISIBILITY LOGIC BASED ON REQUIREMENTS
+  // ==============================================
 
-  // Check if DC should see assign footer based on timeline conditions
+  // 1. Dispute Coordinator (DC) conditions
   const showAssignFooterForDC = useMemo(() => {
-    if (!isDCRole || !isDisputePendingOrInReview) return false;
+    if (!isDCRole || isDisputeApprovedOrRejected) return false;
 
-    // Condition 1: If review timeline is empty
+    const lastAssignedRole = getLastAssignmentFromTimeline;
+
+    // Condition 1: Review timeline is empty
     if (isReviewTimelineEmpty) {
       return true;
     }
 
-    // Condition 2: If review timeline is not empty AND last assigned role is DC
-    if (!isReviewTimelineEmpty && isLastAssignedRoleDC) {
+    // Condition 2: Last assignment in review timeline is to DC
+    if (lastAssignedRole === dcRoleGUID) {
       return true;
     }
 
+    // If last assignment is NOT to DC, hide entire footer
     return false;
-  }, [isDCRole, isDisputePendingOrInReview, isReviewTimelineEmpty, isLastAssignedRoleDC]);
+  }, [isDCRole, isDisputeApprovedOrRejected, isReviewTimelineEmpty, getLastAssignmentFromTimeline]);
 
-  // Check if DC should see approve/reject buttons (when assigned to their role)
-  const showFooterForDC = useMemo(() => {
-    return isDCRole && isDisputePendingOrInReview && isAssignedToCurrentUserRole;
-  }, [isDCRole, isDisputePendingOrInReview, isAssignedToCurrentUserRole]);
-
-  // Check if supervisor should see footer (comments and approve/reject buttons)
+  // 2. Senior Supervisor & Supervisor conditions
   const showFooterForSupervisors = useMemo(() => {
-    return isSupervisorRole && isDisputePendingOrInReview && isAssignedToCurrentUserRole;
-  }, [isSupervisorRole, isDisputePendingOrInReview, isAssignedToCurrentUserRole]);
+    // Check if user is Senior Supervisor or Supervisor
+    const isSupervisorOrSenior = isSeniorSupervisorRole || isSupervisorRoleOnly;
+
+    if (!isSupervisorOrSenior || isDisputeApprovedOrRejected) return false;
+
+    // Do not show footer if review timeline is empty
+    if (isReviewTimelineEmpty) return false;
+
+    const lastAssignedRole = getLastAssignmentFromTimeline;
+
+    // Only show if last assignment is to Senior Supervisor OR Supervisor
+    return lastAssignedRole === seniorSupervisorRoleGUID || lastAssignedRole === supervisorRoleGUID;
+  }, [
+    isSeniorSupervisorRole,
+    isSupervisorRoleOnly,
+    isDisputeApprovedOrRejected,
+    isReviewTimelineEmpty,
+    getLastAssignmentFromTimeline,
+  ]);
+
+  // 3. Manager conditions
+  const showFooterForManager = useMemo(() => {
+    if (!isManagerRole || isDisputeApprovedOrRejected) return false;
+
+    // Do not show footer if review timeline is empty
+    if (isReviewTimelineEmpty) return false;
+
+    const lastAssignedRole = getLastAssignmentFromTimeline;
+
+    // Only show if last assignment is to Manager
+    return lastAssignedRole === managerRoleGUID;
+  }, [isManagerRole, isDisputeApprovedOrRejected, isReviewTimelineEmpty, getLastAssignmentFromTimeline]);
+
+  // 4. Director conditions
+  const showFooterForDirector = useMemo(() => {
+    if (!isDirectorRole || isDisputeApprovedOrRejected) return false;
+
+    // Do not show footer if review timeline is empty
+    if (isReviewTimelineEmpty) return false;
+
+    const lastAssignedRole = getLastAssignmentFromTimeline;
+
+    // Only show if last assignment is to Director
+    return lastAssignedRole === directorRoleGUID;
+  }, [isDirectorRole, isDisputeApprovedOrRejected, isReviewTimelineEmpty, getLastAssignmentFromTimeline]);
+
+  // Combined supervisor footer check (for Approve/Reject)
+  const showApproveRejectFooter = showFooterForSupervisors || showFooterForManager || showFooterForDirector;
+
+  // Check if we should show reviewer helper text (Supervisor and Senior Supervisor only)
+  const showReviewerHelperText = useMemo(() => {
+    // Restrict to Supervisor and Senior Supervisor only
+    return isSupervisorRoleOnly || isSeniorSupervisorRole;
+  }, [isSupervisorRoleOnly, isSeniorSupervisorRole]);
 
   return (
     <Modal
@@ -614,9 +644,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                         <Text strong>{t("form.date")}:</Text>
                       </Col>
                       <Col span={14}>
-                        {dispute.actualDisputeDate
-                          ? dayjs(dispute.actualDisputeDate).format("DD MMM  YYYY ,  hh:mm A")
-                          : t("common.noData")}
+                        {dispute.actualDisputeDate ? formatDate(dispute.actualDisputeDate) : t("common.noData")}
                       </Col>
 
                       <Col span={10}>
@@ -790,8 +818,8 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                               key={file.attachmentGUID}
                               width={100}
                               height={100}
-                              src={getMobileFileUrl(file.filePath)}
-                              alt={file.fileName}
+                              src={getMobileFileUrl(getCompleteFilePath(file))}
+                              alt={file.fileName || "attachment"}
                             />
                           ))}
                         </Space>
@@ -922,7 +950,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
                                 {t("form.date")}:
                               </Text>
                               <Text style={{ color: token.colorTextSecondary }}>
-                                {review.action_DateTime ? formatDateTime(review.action_DateTime) : t("common.noDate")}
+                                {review.action_DateTime ? formatDate(review.action_DateTime) : t("common.noDate")}
                               </Text>
                             </div>
                           </div>
@@ -939,146 +967,125 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, disp
         )}
 
         {/* FOOTER - Action Form */}
-        {/* Show footer when dispute exists and is not Approved or Rejected */}
-        {dispute &&
-          !isDisputeApprovedOrRejected &&
-          (showFooterForDC || showFooterForSupervisors || showAssignFooterForDC) && (
-            <>
-              <Divider />
-              <Form form={form} layout="vertical">
-                <Row gutter={16} align="middle">
-                  {/* Assignment Dropdown - for DC role based on timeline conditions */}
-                  {showAssignFooterForDC && (
-                    <Col span={6}>
-                      <Form.Item
-                        name="assignedToRole"
-                        label={<Text strong>{t("form.assignedTo")}</Text>}
-                        rules={[
-                          {
-                            required: true,
-                            message: t("form.selectRole"),
-                          },
-                        ]}
-                      >
-                        <Select placeholder={t("common.selectRole")} allowClear showSearch optionFilterProp="children">
-                          {assignmentRoles.map((role) => (
-                            <Select.Option key={role.roleGUID.toLowerCase()} value={role.roleGUID.toLowerCase()}>
-                              {role.roleName} {/* Only name, no role code */}
-                            </Select.Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                    </Col>
-                  )}
+        {/* Hide footer entirely if dispute is Approved or Rejected */}
+        {dispute && !isDisputeApprovedOrRejected && (
+          <>
+            {(showAssignFooterForDC || showApproveRejectFooter) && (
+              <>
+                <Divider />
+                <Form form={form} layout="vertical">
+                  <Row gutter={16} align="middle">
+                    {/* Assignment Dropdown - for DC role only */}
+                    {showAssignFooterForDC && (
+                      <Col span={6}>
+                        <Form.Item
+                          name="assignedToRole"
+                          label={<Text strong>{t("form.assignedTo")}</Text>}
+                          rules={[
+                            {
+                              required: true,
+                              message: t("form.selectRole"),
+                            },
+                          ]}
+                        >
+                          <Select
+                            placeholder={t("common.selectRole")}
+                            allowClear
+                            showSearch
+                            optionFilterProp="children"
+                          >
+                            {assignmentRoles.map((role) => (
+                              <Select.Option key={role.roleGUID.toLowerCase()} value={role.roleGUID.toLowerCase()}>
+                                {role.roleName} {/* Only name, no role code */}
+                              </Select.Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                    )}
 
-                  {/* Comment Box - Show for all footer types */}
-                  {(showFooterForDC || showFooterForSupervisors || showAssignFooterForDC) && (
-                    <Col
-                      span={
-                        showAssignFooterForDC
-                          ? showFooterForSupervisors || showFooterForDC
-                            ? 10
-                            : 12
-                          : showFooterForDC || showFooterForSupervisors
-                            ? 16
-                            : 12
-                      }
-                    >
-                      <Form.Item
-                        name="review_Comments"
-                        label={<Text strong>{t("form.comments")}</Text>}
-                        style={{ marginBottom: 0 }}
-                        rules={[{ required: true, message: t("placeholders.enterComments") }]}
+                    {/* Comment Box - Show for all footer types */}
+                    {(showAssignFooterForDC || showApproveRejectFooter) && (
+                      <Col
+                        span={
+                          showAssignFooterForDC
+                            ? showApproveRejectFooter
+                              ? 10
+                              : 12
+                            : showApproveRejectFooter
+                              ? 16
+                              : 12
+                        }
                       >
-                        <TextArea placeholder={t("placeholders.enterComments")} rows={2} />
-                      </Form.Item>
-                    </Col>
-                  )}
+                        <Form.Item
+                          name="review_Comments"
+                          label={<Text strong>{t("form.comments")}</Text>}
+                          style={{ marginBottom: 0 }}
+                          rules={[{ required: true, message: t("placeholders.enterComments") }]}
+                        >
+                          <TextArea placeholder={t("placeholders.enterComments")} rows={2} />
+                        </Form.Item>
+                      </Col>
+                    )}
 
-                  {/* Action Buttons */}
-                  <Col span={8} style={{ textAlign: "right", paddingTop: 30 }}>
-                    {showAssignFooterForDC ? (
-                      // DC role - Show assign button based on timeline conditions
-                      <Button
-                        type="primary"
-                        loading={isUpdating && reviewAction === 1}
-                        onClick={() => {
-                          setReviewAction(1);
-                          handleStatusUpdate(1); // Assigned = 1
-                        }}
-                      >
-                        {t("form.assign")}
-                      </Button>
-                    ) : showFooterForDC ? (
-                      // DC role - Show Approve/Reject buttons when dispute is assigned to their role
-                      <div>
-                        <div style={{ marginBottom: 8, textAlign: "center" }}>
-                          <Text type="secondary" style={{ fontSize: 12 }}>
-                            {t("form.asReviewerSelectDecision")}
-                          </Text>
-                        </div>
+                    {/* Action Buttons */}
+                    <Col span={8} style={{ textAlign: "right", paddingTop: 30 }}>
+                      {showAssignFooterForDC ? (
+                        // DC role - Show only Assign button (DC never sees Approve/Reject)
+                        <Button
+                          type="primary"
+                          loading={isUpdating && reviewAction === 1}
+                          onClick={() => {
+                            setReviewAction(1);
+                            handleStatusUpdate(1); // Assigned = 1
+                          }}
+                        >
+                          {t("form.assign")}
+                        </Button>
+                      ) : showApproveRejectFooter ? (
+                        // Supervisor/Manager role - Show Approve/Reject buttons
                         <div>
-                          <Button
-                            type="primary"
-                            style={{ marginRight: 8 }}
-                            loading={isUpdating && reviewAction === 2}
-                            onClick={() => {
-                              setReviewAction(2);
-                              handleStatusUpdate(2); // Approved = 2
-                            }}
-                          >
-                            {t("form.approve")}
-                          </Button>
-                          <Button
-                            danger
-                            loading={isUpdating && reviewAction === 3}
-                            onClick={() => {
-                              setReviewAction(3);
-                              handleStatusUpdate(3); // Rejected = 3
-                            }}
-                          >
-                            {t("common.reject")}
-                          </Button>
+                          {/* Show reviewer helper text only for Supervisor and Senior Supervisor */}
+                          {showReviewerHelperText && (
+                            <div style={{ marginBottom: 8, textAlign: "center" }}>
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                {t("form.asReviewerSelectDecision")}
+                              </Text>
+                            </div>
+                          )}
+
+                          <div>
+                            <Button
+                              type="primary"
+                              style={{ marginRight: 8 }}
+                              loading={isUpdating && reviewAction === 2}
+                              onClick={() => {
+                                setReviewAction(2);
+                                handleStatusUpdate(2); // Approved = 2
+                              }}
+                            >
+                              {t("form.approve")}
+                            </Button>
+                            <Button
+                              danger
+                              loading={isUpdating && reviewAction === 3}
+                              onClick={() => {
+                                setReviewAction(3);
+                                handleStatusUpdate(3); // Rejected = 3
+                              }}
+                            >
+                              {t("common.reject")}
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    ) : showFooterForSupervisors ? (
-                      // Supervisor role - Show Approve/Reject buttons when dispute is assigned to role
-                      <div>
-                        <div style={{ marginBottom: 8, textAlign: "center" }}>
-                          <Text type="secondary" style={{ fontSize: 12 }}>
-                            {t("form.asReviewerSelectDecision")}
-                          </Text>
-                        </div>
-                        <div>
-                          <Button
-                            type="primary"
-                            style={{ marginRight: 8 }}
-                            loading={isUpdating && reviewAction === 2}
-                            onClick={() => {
-                              setReviewAction(2);
-                              handleStatusUpdate(2); // Approved = 2
-                            }}
-                          >
-                            {t("form.approve")}
-                          </Button>
-                          <Button
-                            danger
-                            loading={isUpdating && reviewAction === 3}
-                            onClick={() => {
-                              setReviewAction(3);
-                              handleStatusUpdate(3); // Rejected = 3
-                            }}
-                          >
-                            {t("common.reject")}
-                          </Button>
-                        </div>
-                      </div>
-                    ) : null}
-                  </Col>
-                </Row>
-              </Form>
-            </>
-          )}
+                      ) : null}
+                    </Col>
+                  </Row>
+                </Form>
+              </>
+            )}
+          </>
+        )}
       </Spin>
     </Modal>
   );

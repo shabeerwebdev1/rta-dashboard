@@ -3,6 +3,20 @@
 import { CheckCircleOutlined, EnvironmentOutlined, ExclamationCircleOutlined, IdcardOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
 import { Tag } from "antd";
+import dayjs from "dayjs";
+import "dayjs/locale/ar";
+
+const formatDateTime = (value: number) => {
+  if (!value) return "";
+
+  const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+
+  const isArabic = lang.startsWith("ar");
+
+  return dayjs(value)
+    .locale(isArabic ? "ar" : "en")
+    .format(isArabic ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
+};
 
 export const parkonicLocationPageConfig: PageConfig = {
   key: "parkonic-location",
@@ -46,11 +60,16 @@ export const parkonicLocationPageConfig: PageConfig = {
       { key: "parkonics_Location_Id", title: "form.parkonicsLocationId", type: "string" },
       { key: "parking_Name_En", title: "form.parkingNameEn", type: "string" },
       { key: "parking_Name_Ar", title: "form.parkingNameAr", type: "string" },
-      { key: "zone", title: "form.zone", type: "string" },
-      { key: "area", title: "form.area", type: "string" },
-      { key: "created_At", title: "form.addedOn", dataIndex: "long", type: "string", sortable: true },
-      { key: "updated_By", title: "form.approvedBy", type: "string" },
-      { key: "updated_At", title: "form.approvedDate", dataIndex: "long", type: "string", sortable: true },
+      // { key: "zone", title: "form.zone", type: "string" },
+      // { key: "area", title: "form.area", type: "string" },
+      {
+        key: "created_At",
+        title: "form.addedOn",
+        type: "string",
+        sortable: true,
+        render: (value) => formatDateTime(value),
+      },
+
       {
         key: "isUpdatedBack",
         title: "form.status",
@@ -66,6 +85,8 @@ export const parkonicLocationPageConfig: PageConfig = {
           return <Tag color={color}>{text}</Tag>;
         },
       },
+      { key: "updated_By", title: "form.approvedBy", type: "string" , },
+      { key: "updated_At", title: "form.approvedDate", dataIndex: "long", type: "string", sortable: true },
     ],
     viewRecord: true,
   },

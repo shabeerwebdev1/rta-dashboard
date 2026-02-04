@@ -77,6 +77,18 @@ const ParkonicLocationPage: React.FC = () => {
   // State to maintain the rows data for downloading
   const [selectedRows, setSelectedRows] = useState([]);
 
+  const formatDateTime = (value: number) => {
+    if (!value) return "";
+
+    const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+
+    const isArabic = lang.startsWith("ar");
+
+    return dayjs(value)
+      .locale(isArabic ? "ar" : "en")
+      .format(isArabic ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
+  };
+
   useEffect(() => {
     const recordId = state.viewRecordId;
     if (recordId && !isDrawerOpen) {
@@ -202,13 +214,13 @@ const ParkonicLocationPage: React.FC = () => {
         if (column.key === "created_At") {
           return {
             ...column,
-            render: (value: any) => (value ? dayjs(value).format("DD-MM-YYYY") : "-"),
+            render: (value: any) => formatDateTime(value),
           };
         }
         if (column.key === "updated_At") {
           return {
             ...column,
-            render: (value: any) => (value ? dayjs(value).format("DD-MM-YYYY") : "-"),
+            render: (value: any) => formatDateTime(value),
           };
         }
         if (column.key === "isUpdatedBack") {

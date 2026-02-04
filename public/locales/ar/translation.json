@@ -540,7 +540,9 @@
     "next": "التالي",
     "previous": "السابق",
     "showPendingDisputes" : "إظهار النزاعات المعلقة",
-    "selectRole": "اختر الدور"
+    "selectRole": "اختر الدور",
+    "resubmit" : "إعادة الإرسال"
+
 
   },
   "entity": {

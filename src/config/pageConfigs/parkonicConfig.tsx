@@ -1,6 +1,6 @@
 import type { PageConfig } from "../../types/config";
 import { IdcardOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
-import { Tag } from "antd";
+import { Tag, Typography } from "antd";
 import UAEPlate from "../../components/UAEPlate";
 import dayjs from "dayjs";
 import "dayjs/locale/ar";
@@ -164,20 +164,20 @@ export const parkonicPageConfig: PageConfig = {
         ),
       },
 
-      {
-        key: "entryDateTime",
-        title: "form.vehicleEntry",
-        type: "string",
-        sortable: true,
-        render: (value) => formatDateTime(value),
-      },
-      {
-        key: "exitDateTime",
-        title: "form.vehicleExit",
-        type: "string",
-        sortable: true,
-        render: (value) => formatDateTime(value),
-      },
+      // {
+      //   key: "entryDateTime",
+      //   title: "form.vehicleEntry",
+      //   type: "string",
+      //   sortable: true,
+      //   render: (value) => formatDateTime(value),
+      // },
+      // {
+      //   key: "exitDateTime",
+      //   title: "form.vehicleExit",
+      //   type: "string",
+      //   sortable: true,
+      //   render: (value) => formatDateTime(value),
+      // },
       {
         key: "violationName",
         title: "form.violationName",
@@ -204,8 +204,9 @@ export const parkonicPageConfig: PageConfig = {
         key: "violationAmount",
         title: "form.violationAmount",
         type: "number",
-        render: (value: number) => `${value} AED`,
+        render: (value?: number) => <Typography.Text type="danger">{value ?? "—"} AED</Typography.Text>,
       },
+
       {
         key: "reviewStatus",
         title: "form.reviewtatus",
