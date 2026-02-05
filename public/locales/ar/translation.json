@@ -442,13 +442,12 @@
     "violationDescription": "وصف المخالفة",
     "disputeCategory": "فئة الاعتراض",
     "disputeSubcategory": "فئة الاعتراض الفرعية",
-    "reviewtatus" : "حالة المراجعة",
-    "integrationStatus" : "حالة التكامل",
-    "asReviewerSelectDecision" : "كمراجع، اختر القرار",
-    "reviewResult": "نتيجة المراجعة"
-
-
-
+    "reviewtatus": "حالة المراجعة",
+    "integrationStatus": "حالة التكامل",
+    "asReviewerSelectDecision": "كمراجع، اختر القرار",
+    "reviewResult": "نتيجة المراجعة",
+    "vehiclePlate": "لوحة المركبة",
+    "reviewedDate": "تاريخ المراجعة"
   },
   "common": {
     "action": "إجراء",
@@ -539,11 +538,9 @@
     "all": "الكل",
     "next": "التالي",
     "previous": "السابق",
-    "showPendingDisputes" : "إظهار النزاعات المعلقة",
+    "showPendingDisputes": "إظهار النزاعات المعلقة",
     "selectRole": "اختر الدور",
-    "resubmit" : "إعادة الإرسال"
-
-
+    "resubmit": "إعادة الإرسال"
   },
   "entity": {
     "plate": "لوحة",
@@ -579,7 +576,6 @@
     "inProgress": "قيد التنفيذ",
     "completed": "مكتمل",
     "reviewed": "تمت المراجعة"
-
   },
   "placeholders": {
     "plateNumber": "أدخل رقم اللوحة",

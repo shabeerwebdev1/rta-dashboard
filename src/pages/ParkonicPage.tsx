@@ -1,6 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App } from "antd";
-import { DownloadOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  DownloadOutlined,
+  EditOutlined,
+  PaperClipOutlined,
+} from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import { useTranslation } from "react-i18next";
 import { useGetParkonicsQuery } from "../services/rtkApiFactory";
@@ -14,6 +20,7 @@ import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import { parkonicPageConfig } from "../config/pageConfigs/parkonicConfig";
+import ParkonicAttachmentsModal from "../components/parkonic/ParkonicAttachmentsModal";
 
 const { Option } = Select;
 
@@ -39,6 +46,8 @@ const ParkonicPage: React.FC = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [tableSize, setTableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [attachmentsOpen, setAttachmentsOpen] = useState(false);
+  const [attachmentsRecord, setAttachmentsRecord] = useState<any>(null);
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
@@ -115,7 +124,38 @@ const ParkonicPage: React.FC = () => {
   );
 
   const actionMenuItems = (record: any) => [
-    { key: "view", icon: <EditOutlined />, label: t("common.view"), onClick: () => showDrawer(record) },
+    // ✏️ PRIMARY ICON — stays the same
+    {
+      key: "view",
+      icon: <EditOutlined />,
+      label: t("common.view"),
+      onClick: () => showDrawer(record),
+    },
+
+    // ⬇️ THREE DOTS MENU ACTIONS
+    {
+      key: "approve",
+      icon: <CheckCircleOutlined />,
+      label: t("common.approve"),
+      disabled: record.reviewStatus !== 0,
+      onClick: () => handleApprove(record),
+    },
+    {
+      key: "reject",
+      icon: <CloseCircleOutlined />,
+      label: t("common.reject"),
+      disabled: record.reviewStatus !== 0,
+      onClick: () => handleReject(record),
+    },
+    {
+      key: "attachments",
+      icon: <PaperClipOutlined />,
+      label: t("common.viewAttachments"),
+      onClick: () => {
+        setAttachmentsRecord(record);
+        setAttachmentsOpen(true);
+      },
+    },
   ];
 
   const handleSearchKeyChange = (newKey: string) => {
@@ -138,6 +178,59 @@ const ParkonicPage: React.FC = () => {
       ))}
     </Select>
   );
+
+  const handleApprove = (record: any) => {
+    modal.confirm({
+      title: t("common.confirmApproval"),
+      content: t("common.confirmApprovalContent"),
+      okText: t("common.approve"),
+      cancelText: t("common.cancel"),
+      onOk: async () => {
+        try {
+          await fetch("/api/Parkonic/Review", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              iid: record.iid,
+              review_Action: 1,
+              review_Comments: "",
+            }),
+          });
+
+          notification.success({ data: { en_Msg: t("messages.approvedSuccessfully") } });
+        } catch (err) {
+          notification.error({ data: { en_Msg: t("messages.actionFailed") } });
+        }
+      },
+    });
+  };
+
+  const handleReject = (record: any) => {
+    modal.confirm({
+      title: t("common.confirmRejection"),
+      content: t("common.confirmRejectionContent"),
+      okText: t("common.reject"),
+      okButtonProps: { danger: true },
+      cancelText: t("common.cancel"),
+      onOk: async () => {
+        try {
+          await fetch("/api/Parkonic/Review", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              iid: record.iid,
+              review_Action: 2,
+              review_Comments: "",
+            }),
+          });
+
+          notification.success({ data: { en_Msg: t("messages.rejectedSuccessfully") } });
+        } catch (err) {
+          notification.error({ data: { en_Msg: t("messages.actionFailed") } });
+        }
+      },
+    });
+  };
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -218,6 +311,11 @@ const ParkonicPage: React.FC = () => {
             { text: t("status.rejected"), value: 2 },
           ],
         }}
+      />
+      <ParkonicAttachmentsModal
+        open={attachmentsOpen}
+        onClose={() => setAttachmentsOpen(false)}
+        record={attachmentsRecord}
       />
 
       <ParkonicViewDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} record={selectedRecord} />

@@ -439,7 +439,9 @@
     "reviewtatus": "Review Status",
     "integrationStatus": "Integration Status",
     "asReviewerSelectDecision": "As Reviewer, Select Decision",
-    "reviewResult": "Review Result"
+    "reviewResult": "Review Result",
+    "vehiclePlate": "Vehicle Plate",
+    "reviewedDate": "Reviewed Date"
     
   },
   "common": {

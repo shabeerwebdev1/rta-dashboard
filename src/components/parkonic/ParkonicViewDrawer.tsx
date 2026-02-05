@@ -467,26 +467,28 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                   </Card>
 
                   {/* Comments Section */}
-                  <Card
-                    title={
-                      <Text strong style={{ fontSize: "16px" }}>
-                        {t("form.comments")}
-                      </Text>
-                    }
-                    size="small"
-                    styles={{
-                      body: { padding: "20px" },
-                    }}
-                    style={{ marginTop: "24px" }}
-                  >
-                    <TextArea
-                      value={rejectionReason}
-                      onChange={(e) => setRejectionReason(e.target.value)}
-                      rows={5}
-                      placeholder={rejectionValidationMsg}
-                      style={{ borderRadius: "6px" }}
-                    />
-                  </Card>
+                  {isPending && (
+                    <Card
+                      title={
+                        <Text strong style={{ fontSize: "16px" }}>
+                          {t("form.comments")}
+                        </Text>
+                      }
+                      size="small"
+                      styles={{
+                        body: { padding: "20px" },
+                      }}
+                      style={{ marginTop: "24px" }}
+                    >
+                      <TextArea
+                        value={rejectionReason}
+                        onChange={(e) => setRejectionReason(e.target.value)}
+                        rows={5}
+                        placeholder={rejectionValidationMsg}
+                        style={{ borderRadius: "6px" }}
+                      />
+                    </Card>
+                  )}
                 </Col>
               </Row>
 

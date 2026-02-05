@@ -263,56 +263,50 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
   ];
 
   // Apply permission logic
-  const applyPermissions = (items: RawItem[]): any[] =>
-    items.map((it) => {
-      if (it.children && it.children.length > 0) {
-        const processedChildren = applyPermissions(it.children);
-
-        // Check if hasRead function exists before calling it
-        const parentHasRead = it.permission && hasRead ? hasRead(it.permission) : false;
-        const someChildEnabled = processedChildren.some((c: any) => !c.disabled);
-
-        if (parentHasRead) {
-          const forcedChildren = processedChildren.map((c: any) => ({ ...c, disabled: false }));
-          return { ...it, children: forcedChildren, disabled: false };
+  const applyPermissions = (items: RawItem[]): RawItem[] =>
+    items
+      .map((it) => {
+        // If item has children, process children first
+        if (it.children && it.children.length > 0) {
+          const visibleChildren = applyPermissions(it.children);
+  
+          const parentAllowed =
+            it.permission && hasRead ? hasRead(it.permission) : false;
+  
+          // Parent allowed → show parent + its visible children
+          if (parentAllowed) {
+            return { ...it, children: visibleChildren };
+          }
+  
+          // Parent not allowed but has visible children → keep parent
+          if (visibleChildren.length > 0) {
+            return { ...it, children: visibleChildren };
+          }
+  
+          // Parent and children not allowed → hide completely
+          return null;
         }
-
-        return { ...it, children: processedChildren, disabled: !someChildEnabled };
-      }
-
-      // Check if canAccessAny function exists before calling it
-      const allowed = it.permission && canAccessAny ? canAccessAny(it.permission) : false;
-      return { ...it, disabled: !allowed };
-    });
+  
+        // Leaf menu item permission check
+        const allowed =
+          it.permission && canAccessAny ? canAccessAny(it.permission) : false;
+  
+        return allowed ? it : null;
+      })
+      .filter(Boolean) as RawItem[];
+  
 
   const permApplied = useMemo(() => applyPermissions(rawMenu), [rawMenu, canAccessAny, hasRead, filteredReports]);
 
   // Transform to Antd Menu items (disable visually without changing color)
-  const transformToAntd = (items: any[]): MenuProps["items"] =>
-    items.map((i) => {
-      const labelNode = i.children ? (
-        i.labelText
-      ) : (
-        <Link
-          to={i.disabled ? "#" : i.key}
-          onClick={(e) => i.disabled && e.preventDefault()}
-          style={{
-            cursor: i.disabled ? "not-allowed" : "pointer",
-            color: "inherit",
-          }}
-        >
-          {i.labelText}
-        </Link>
-      );
-
-      return {
-        key: i.key,
-        icon: i.icon,
-        label: labelNode,
-        disabled: false,
-        children: i.children ? transformToAntd(i.children) : undefined,
-      };
-    });
+  const transformToAntd = (items: RawItem[]): MenuProps["items"] =>
+    items.map((i) => ({
+      key: i.key,
+      icon: i.icon,
+      label: i.children ? i.labelText : <Link to={i.key}>{i.labelText}</Link>,
+      children: i.children ? transformToAntd(i.children) : undefined,
+    }));
+  
 
   const menuItems = useMemo(() => transformToAntd(permApplied), [permApplied]);
 

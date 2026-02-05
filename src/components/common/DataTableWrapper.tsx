@@ -124,12 +124,9 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
     // Final fallback: extract unique values from data
     if (!data || data.length === 0) return [];
     const uniqueValues = [
-      ...new Set(
-        data
-          .map((item: any) => item[columnKey])
-          .filter((v) => v !== null && v !== undefined)
-      ),
-    ];    return uniqueValues.map((value) => ({ text: String(value), value }));
+      ...new Set(data.map((item: any) => item[columnKey]).filter((v) => v !== null && v !== undefined)),
+    ];
+    return uniqueValues.map((value) => ({ text: String(value), value }));
   };
 
   const columns = React.useMemo(() => {
@@ -214,23 +211,62 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
     });
 
     if (actionMenuItems) {
+      const useIconWithMenu = pageConfig.actionLayout === "icon+menu";
+
       generatedColumns.push({
         key: "action",
         align: "center" as const,
         fixed: "right",
-        width: 50,
+        width: useIconWithMenu ? 90 : 50,
         render: (_: any, record: any) => {
           const items = actionMenuItems(record);
+          if (!items || items.length === 0) return null;
 
-          if (items.length === 1) {
-            const single = items[0];
-            return <Button type="text" icon={single.icon} onClick={single.onClick} disabled={single.disabled}></Button>;
+          // ✅ DEFAULT BEHAVIOR (FINES, OTHERS)
+          if (!useIconWithMenu) {
+            if (items.length === 1) {
+              const single = items[0];
+              return <Button type="text" icon={single.icon} onClick={single.onClick} disabled={single.disabled} />;
+            }
+
+            return (
+              <Dropdown menu={{ items }} trigger={["click"]}>
+                <Button type="text" icon={<MoreOutlined />} />
+              </Dropdown>
+            );
           }
 
+          // ✅ PARKONIC ONLY: icon + three dots
+          const [primaryAction, ...menuActions] = items;
+
           return (
-            <Dropdown menu={{ items }} trigger={["click"]}>
-              <Button type="text" icon={<MoreOutlined />} />
-            </Dropdown>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              {primaryAction && (
+                <Button
+                  type="text"
+                  icon={primaryAction.icon}
+                  onClick={primaryAction.onClick}
+                  disabled={primaryAction.disabled}
+                />
+              )}
+
+              {menuActions.length > 0 && (
+                <Dropdown
+                  trigger={["click"]}
+                  menu={{
+                    items: menuActions.map((item) => ({
+                      key: item.key,
+                      icon: item.icon,
+                      label: item.label,
+                      disabled: item.disabled,
+                      onClick: item.onClick,
+                    })),
+                  }}
+                >
+                  <Button type="text" icon={<MoreOutlined />} />
+                </Dropdown>
+              )}
+            </div>
           );
         },
       });

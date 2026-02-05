@@ -1,6 +1,6 @@
 import type { PageConfig } from "../../types/config";
 import { IdcardOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
-import { Tag, Typography } from "antd";
+import { Space, Tag, Tooltip, Typography } from "antd";
 import UAEPlate from "../../components/UAEPlate";
 import dayjs from "dayjs";
 import "dayjs/locale/ar";
@@ -113,6 +113,7 @@ export const PLATE_COLOR: Record<number, string> = {
 export const parkonicPageConfig: PageConfig = {
   key: "parkonic",
   title: "page.title.parkonic",
+  actionLayout: "icon+menu",
   name: { singular: "Parkonic Record", plural: "Parkonic Records" },
   api: { get: "/api/Parkonic", post: "", put: "/api/Parkonic/Review", delete: "" },
   searchConfig: {
@@ -152,7 +153,7 @@ export const parkonicPageConfig: PageConfig = {
       // { key: "entityNo", title: "form.fineNumber", type: "string", sortable: true },
       {
         key: "plateNumber",
-        title: "form.vehicleNumber",
+        title: "form.vehiclePlate",
         type: "string",
         render: (_, record) => (
           <UAEPlate
@@ -179,10 +180,10 @@ export const parkonicPageConfig: PageConfig = {
       //   render: (value) => formatDateTime(value),
       // },
       {
-        key: "violationName",
-        title: "form.violationName",
+        key: "categoryId",
+        title: "form.violationCategory",
         type: "custom" as const,
-        render: (_text: any, record: any) => {
+        render: (_: any, record: any) => {
           const getCurrentLanguage = () => {
             const storedLang = localStorage.getItem("i18nextLng");
             if (storedLang) return storedLang;
@@ -191,12 +192,17 @@ export const parkonicPageConfig: PageConfig = {
             return "en";
           };
 
-          const language = getCurrentLanguage();
-          const isArabic = language.startsWith("ar");
+          const isArabic = getCurrentLanguage().startsWith("ar");
 
-          return isArabic
-            ? record?.violationNameAr || record?.violationNameEn || "No Data"
-            : record?.violationNameEn || record?.violationNameAr || "No Data";
+          const violationText = isArabic
+            ? record?.violationNameAr || record?.violationNameEn
+            : record?.violationNameEn || record?.violationNameAr;
+
+          return (
+            <Tooltip title={violationText || "No Data"} placement="topLeft">
+              <Typography.Text style={{ cursor: "help" }}>{record?.categoryId ?? "—"}</Typography.Text>
+            </Tooltip>
+          );
         },
       },
 
@@ -254,7 +260,7 @@ export const parkonicPageConfig: PageConfig = {
       },
       {
         key: "reviewedDtTm",
-        title: "form.reviewedOn",
+        title: "form.reviewedDate",
         type: "string",
         sortable: true,
         render: (value) => (value ? dayjs(value).format("DD MMM YYYY, hh:mm A") : ""),
@@ -294,6 +300,48 @@ export const parkonicPageConfig: PageConfig = {
           return <Tag color={statusItem.color}>{text}</Tag>;
         },
       },
+      // {
+      //   key: "review_updateback_status",
+      //   title: "form.integrationStatus",
+      //   type: "custom",
+      //   sortable: true,
+      //   render: (status?: number) => {
+      //     if (status === null || status === undefined) return null;
+
+      //     const getCurrentLanguage = () => {
+      //       const storedLang = localStorage.getItem("i18nextLng");
+      //       if (storedLang) return storedLang;
+      //       if (document.documentElement.dir === "rtl") return "ar";
+      //       return "en";
+      //     };
+
+      //     const isArabic = getCurrentLanguage().startsWith("ar");
+
+      //     const statusMap: Record<number, { en: string; ar: string; color: string }> = {
+      //       1: { en: "Success", ar: "ناجح", color: "green" },
+      //       2: { en: "Failed", ar: "فشل", color: "red" },
+      //     };
+
+      //     const statusItem = statusMap[status];
+      //     if (!statusItem) return null;
+
+      //     const text = isArabic ? statusItem.ar : statusItem.en;
+
+      //     const StatusRow = ({ label }: { label: string }) => (
+      //       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      //         <span style={{ fontSize: 12, color: "black", minWidth: 70 }}>{label}</span>
+      //         <Tag color={statusItem.color}>{text}</Tag>
+      //       </div>
+      //     );
+
+      //     return (
+      //       <Space direction="vertical" size={10}>
+      //         <StatusRow label="Parkonic" />
+      //         <StatusRow label="eTraffic" />
+      //       </Space>
+      //     );
+      //   },
+      // },
     ],
     viewRecord: true,
   },
