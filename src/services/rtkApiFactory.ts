@@ -79,6 +79,8 @@ export const dynamicApi = createApi({
     "ParkonicsLocation",
     "InspectionAttachments",
     "Files",
+    "InboxSummary",
+    "InboxSummaryMenu",
   ],
 
   endpoints: (builder) => ({
@@ -371,6 +373,13 @@ export const dynamicApi = createApi({
       providesTags: ["ParkonicSearch"],
     }),
 
+    getParkonicById: builder.query({
+      query: (id: string) => ({
+        url: `/api/Parkonic/${id}`,
+        method: "GET",
+      }),
+    }),
+
     // Web Dashboard
     getSupervisorDashboard: builder.query({
       query: (supervisorId: string) => `/api/WebDashboard/dashboard?supervisorId=${supervisorId}`,
@@ -602,6 +611,93 @@ export const dynamicApi = createApi({
         body: payload,
       }),
     }),
+
+    getInboxSummary: builder.query<any, void>({
+      query: () => ({
+        url: "/api/CallIntegration/inboxNotifications",
+        method: "POST",
+        body: {
+          url: "/api/work-item/count",
+          method: "GET",
+          param: "",
+        },
+      }),
+      providesTags: ["InboxSummary"], // 🔥 ADD THIS
+    }),
+
+    getInboxList: builder.query<any, { PageNumber: number; PageSize: number; notificationCode?: string }>({
+      query: ({ PageNumber, PageSize, notificationCode }) => ({
+        url: "/api/CallIntegration/inboxNotifications",
+        method: "POST",
+        body: {
+          url: "/api/work-item/list?notificationCode=" + (notificationCode || ""),  
+          method: "GET",
+          param: {
+            PageNumber,
+            PageSize,
+            notificationCode: notificationCode || "",
+          },
+        },
+      }),
+
+      transformResponse: (response: any) => {
+        const result = response?.data;
+
+        return {
+          Columns: result?.Columns || [],
+          DataTable: result?.Result || [], // <-- FIX HERE
+          TotalRecords: result?.TotalRecords || 0,
+        };
+      },
+    }),
+
+    getInboxSummaryMenu: builder.query<any[], void>({
+      query: () => ({
+        url: "/api/CallIntegration/inboxNotifications",
+        method: "POST",
+        body: {
+          url: "/api/work-item/summary",
+          method: "GET",
+          param: "",
+        },
+      }),
+      transformResponse: (response: any) => response?.data || [],
+      providesTags: ["InboxSummaryMenu"], // 🔥 ADD THIS
+    }),
+
+    getReviewOptions: builder.query<any, string>({
+      query: (rcwiuri) => ({
+        url: "/api/CallIntegration/inboxNotifications",
+        method: "POST",
+        body: {
+          url: `/api/work-item/review-options?rcwiuri=${rcwiuri}`,
+          method: "GET",
+          param: "", // ✅ Changed from {} to ""
+        },
+      }),
+
+      transformResponse: (response: any) => {
+        return response?.data || null;
+      },
+    }),
+
+    getReviewHistory: builder.query<any[], { entityCode: string; entityId: string }>({
+      query: ({ entityCode, entityId }) => ({
+        url: "/api/CallIntegration/inboxNotifications",
+        method: "POST",
+        body: {
+          url: `/api/work-item/review-history/${entityCode}?id=${entityId}`,
+          method: "GET",
+          param: "", // empty string - same pattern as review-options
+        },
+      }),
+
+      transformResponse: (response: any) => {
+        // Assuming the real data comes in response.data as array
+        // Adjust this if your actual response structure is different
+        return response?.data || [];
+      },
+    }),
   }),
 });
 
@@ -662,6 +758,7 @@ export const {
   useUpdateParkonicMutation,
   useLazyGetLookupsQuery,
   useGetParkonicVoilationsQuery,
+  useLazyGetParkonicByIdQuery,
 
   // Disputes
   useGetDisputesQuery,
@@ -719,4 +816,11 @@ export const {
   useGetSavedScheduleDraftQuery,
   useGetLastBatchDetailQuery,
   usePublishShiftPlanMutation,
+
+  // Inbox Summary
+  useGetInboxSummaryQuery,
+  useGetInboxListQuery,
+  useGetInboxSummaryMenuQuery,
+  useLazyGetReviewOptionsQuery,
+  useLazyGetReviewHistoryQuery,
 } = dynamicApi;

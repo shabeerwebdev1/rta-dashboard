@@ -27,13 +27,17 @@ import { FULL_PATHS } from "../../constants/paths";
 import { useAuth } from "../../contexts/AuthContext";
 import { reports } from "../../config/pageConfigs/reportsConfig";
 import { useSearchParams } from "react-router-dom";
+import { useGetInboxSummaryQuery } from "../../services/rtkApiFactory";
+import { useGetInboxSummaryMenuQuery } from "../../services/rtkApiFactory";
+
+import { InboxOutlined } from "@ant-design/icons";
 
 const { Sider } = Layout;
 
 type RawItem = {
   key: string;
   icon?: React.ReactNode;
-  labelText: string;
+  labelText: React.ReactNode;
   permission?: string;
   children?: RawItem[];
 };
@@ -56,12 +60,62 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
   // Determine current language
   const currentLanguage = i18n.language === "ar" || i18n.language === "ar-SA" ? "Arabic" : "English";
 
+  const { data: inboxSummary, isLoading } = useGetInboxSummaryQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+    pollingInterval: 5000,
+  });
+  
+  
+  const { data: inboxMenus = [], isLoading: inboxLoading } = useGetInboxSummaryMenuQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+    pollingInterval: 5000,
+  });
+  
+
+  const inboxCount = inboxSummary?.data ?? 0;
+  const totalInboxCount = inboxMenus.reduce((sum: number, item: any) => sum + (item.AW || 0), 0);
+
   // Filter reports based on current language
   const filteredReports = useMemo(() => {
     return reports.filter((report) => report.language === currentLanguage);
   }, [currentLanguage]);
 
   const rawMenu: RawItem[] = [
+    {
+      key: FULL_PATHS.INBOX,
+      icon: <InboxOutlined />,
+      labelText: (
+        <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+          <span>{t("sidebar.inbox")}</span>
+          <span style={{ color: "#ff4d4f", fontWeight: 600 }}>{inboxLoading ? 0 : totalInboxCount}</span>
+        </div>
+      ),
+
+      children: [
+        // ALL INBOX ITEM
+        {
+          key: FULL_PATHS.INBOX, // no code parameter
+          labelText: (
+            <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+              <span>{t("sidebar.allInbox") || "All Inbox"}</span>
+              <span style={{ color: "#ff4d4f", fontWeight: 600 }}>{totalInboxCount}</span>
+            </div>
+          ),
+        },
+
+        // DYNAMIC NOTIFICATION ITEMS
+        ...inboxMenus.map((item: any) => ({
+          key: `${FULL_PATHS.INBOX}?code=${item.NotificationCode}`,
+          labelText: (
+            <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+              <span>{item.NotificationName}</span>
+              <span style={{ color: "#ff4d4f", fontWeight: 600 }}>{item.AW ?? 0}</span>
+            </div>
+          ),
+        })),
+      ],
+    },
+
     {
       key: FULL_PATHS.DASHBOARD,
       icon: <DashboardOutlined />,
@@ -266,47 +320,44 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
   const applyPermissions = (items: RawItem[]): RawItem[] =>
     items
       .map((it) => {
-        // If item has children, process children first
         if (it.children && it.children.length > 0) {
           const visibleChildren = applyPermissions(it.children);
-  
-          const parentAllowed =
-            it.permission && hasRead ? hasRead(it.permission) : false;
-  
-          // Parent allowed → show parent + its visible children
-          if (parentAllowed) {
-            return { ...it, children: visibleChildren };
+
+          // Parent with no permission → allow if children exist
+          if (!it.permission) {
+            if (visibleChildren.length > 0) return { ...it, children: visibleChildren };
+            return it;
           }
-  
-          // Parent not allowed but has visible children → keep parent
-          if (visibleChildren.length > 0) {
-            return { ...it, children: visibleChildren };
-          }
-  
-          // Parent and children not allowed → hide completely
+
+          const parentAllowed = hasRead ? hasRead(it.permission) : false;
+
+          if (parentAllowed) return { ...it, children: visibleChildren };
+          if (visibleChildren.length > 0) return { ...it, children: visibleChildren };
+
           return null;
         }
-  
-        // Leaf menu item permission check
-        const allowed =
-          it.permission && canAccessAny ? canAccessAny(it.permission) : false;
-  
+
+        // Leaf items
+        if (!it.permission) return it;
+
+        const allowed = canAccessAny ? canAccessAny(it.permission) : false;
         return allowed ? it : null;
       })
       .filter(Boolean) as RawItem[];
-  
 
-  const permApplied = useMemo(() => applyPermissions(rawMenu), [rawMenu, canAccessAny, hasRead, filteredReports]);
+  const permApplied = useMemo(
+    () => applyPermissions(rawMenu),
+    [rawMenu, canAccessAny, hasRead, filteredReports, inboxCount, isLoading],
+  );
 
   // Transform to Antd Menu items (disable visually without changing color)
   const transformToAntd = (items: RawItem[]): MenuProps["items"] =>
     items.map((i) => ({
       key: i.key,
       icon: i.icon,
-      label: i.children ? i.labelText : <Link to={i.key}>{i.labelText}</Link>,
+      label: i.children || !i.key.startsWith("/") ? i.labelText : <Link to={i.key}>{i.labelText}</Link>,
       children: i.children ? transformToAntd(i.children) : undefined,
     }));
-  
 
   const menuItems = useMemo(() => transformToAntd(permApplied), [permApplied]);
 

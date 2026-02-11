@@ -1,14 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect } from "react";
-import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Space, Image, Divider } from "antd";
+import React, { useState, useEffect, useMemo } from "react";
+import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Space, Image, Divider, theme } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import {
   useUpdateParkonicMutation,
   useGetInspectionAttachmentsQuery,
   getMobileFileUrl,
+  useLazyGetReviewHistoryQuery,
 } from "../../services/rtkApiFactory";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useAppNotification } from "../../utils/notificationManager";
@@ -16,6 +17,9 @@ import dayjs from "dayjs";
 import { plateSources, PLATE_TYPE_SHORT, PLATE_COLOR } from "../../config/pageConfigs/finesConfig";
 import UAEPlate from "../UAEPlate";
 import "dayjs/locale/ar";
+import { Select, Form } from "antd";
+import { useLazyGetReviewOptionsQuery } from "../../services/rtkApiFactory";
+import ReviewTimeline from "../ReviewTimeline";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -29,9 +33,17 @@ interface ParkonicViewDrawerProps {
 
 const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, record, isLoading = false }) => {
   const { t, i18n } = useTranslation();
+  const { token } = theme.useToken();
+
+  const isRTL = i18n.language === "ar";
   const { success, error } = useAppNotification();
-  const [modal, contextHolder] = Modal.useModal();
+  const [form] = Form.useForm();
+
   const [reviewParkonic, { isLoading: isSubmitting }] = useUpdateParkonicMutation();
+
+  const [getReviewOptions, { data: reviewResponse, isLoading: loadingOptions }] = useLazyGetReviewOptionsQuery();
+
+  const [getReviewHistory, { data: reviewHistory = [], isLoading: historyLoading }] = useLazyGetReviewHistoryQuery();
 
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
     record
@@ -42,18 +54,43 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
       : skipToken,
   );
 
-  const formatDateTime = (value: number) => {
-    if (!value) return "";
+  const [selectedAction, setSelectedAction] = useState<any>(null);
+  const [comments, setComments] = useState("");
 
-    const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+  useEffect(() => {
+    if (open && record) {
+      if (record.$SKWorkItemData) {
+        getReviewOptions(record.$SKWorkItemData);
+      }
 
-    const isArabic = lang.startsWith("ar");
+      const entityId = record.EntityGUID || record.inspectionGUID;
+      const entityCode = record.EntityCode || record.entityCode;
 
-    return dayjs(value)
-      .locale(isArabic ? "ar" : "en")
-      .format(isArabic ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
-  };
-  const mappedRecord = React.useMemo(() => {
+      if (entityId && entityCode) {
+        getReviewHistory({
+          entityCode,
+          entityId,
+        });
+      }
+    }
+  }, [open, record]);
+
+  // Reset form when closing
+  useEffect(() => {
+    if (!open) {
+      setSelectedAction(null);
+      setComments("");
+      form.resetFields();
+    }
+  }, [open, form]);
+
+  const reviewOptions = useMemo(() => {
+    return reviewResponse?.ActivityOption
+      ? [...reviewResponse.ActivityOption].sort((a: any, b: any) => a.SequenceNo - b.SequenceNo)
+      : [];
+  }, [reviewResponse]);
+
+  const mappedRecord = useMemo(() => {
     return record
       ? {
           fineId: record.entityNo,
@@ -66,10 +103,8 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
       : null;
   }, [record]);
 
-  /** Violation Details (scalable for future multiple violations) */
-  const violationDetails = React.useMemo(() => {
+  const violationDetails = useMemo(() => {
     if (!record) return [];
-
     return [
       {
         violationCategoryId: record.categoryId,
@@ -80,10 +115,74 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
     ];
   }, [record]);
 
-  const [rejectionReason, setRejectionReason] = useState<string>("");
+  const hideFooterActions =
+    mappedRecord?.reviewStatus === 2 || mappedRecord?.reviewStatus === 3 || !record?.$SKWorkItemData; // hide footer when opened from page
 
-  const isPending = mappedRecord?.reviewStatus === 0;
-  const isIntegrationFailed = record?.review_updateback_status === 2;
+  const submitReview = async () => {
+    try {
+      await form.validateFields();
+
+      if (!selectedAction) {
+        error(
+          {
+            data: {
+              en_Msg: "Please select an action",
+              ar_Msg: "الرجاء تحديد إجراء",
+            },
+          },
+          "",
+        );
+        return;
+      }
+
+      if (selectedAction.IsCommentMandatory && !comments.trim()) {
+        error(
+          {
+            data: {
+              en_Msg: "Comments are required for this action",
+              ar_Msg: "التعليقات مطلوبة لهذا الإجراء",
+            },
+          },
+          "",
+        );
+        return;
+      }
+
+      const payload = {
+        inspectionGUID: record?.EntityGUID || record?.inspectionGUID,
+        review: {
+          reviewStatusCode: selectedAction.ReviewStatusCode,
+          activityCode: record?.ActivityCode ?? record?.nvarchar3, // fix here
+          entityCode: record?.EntityCode ?? record?.nvarchar12,
+          entityGUID: record?.EntityGUID ?? record?.nvarchar2,
+          activityOptionGUID: selectedAction.ActivityOptionGUID,
+          reviewComments: comments || "",
+          rcwuri: record?.$SKWorkItemData,
+        },
+      };
+
+      const response = await reviewParkonic(payload).unwrap();
+      success(response, "");
+      onClose();
+    } catch (err: any) {
+      if (err.errorFields) return; // Validation error, don't show notification
+      error(err, "");
+    }
+  };
+
+  const formatDateTime = (value: any) => {
+    if (!value) return "—";
+    return dayjs(value)
+      .locale(isRTL ? "ar" : "en")
+      .format(isRTL ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
+  };
+
+  const getCompleteFilePath = (file: any) => {
+    if (!file) return "";
+    if (file.filePath?.includes(file.fileName)) return file.filePath;
+    const separator = file.filePath?.endsWith("\\") ? "" : "\\";
+    return `${file.filePath}${separator}${file.fileName}`;
+  };
 
   const statusLabels: Record<number, { en: string; ar: string }> = {
     1: { en: t("status.approved"), ar: "موافق" },
@@ -97,215 +196,290 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
     return <Tag color={color}>{label?.[i18n.language === "ar" ? "ar" : "en"]}</Tag>;
   };
 
-  const submitReview = async (action: 1 | 2) => {
-    // Validation handled by backend only
-    if (action === 2 && !rejectionReason.trim()) {
-      error(
-        {
-          data: {
-            en_Msg: "Rejection comments are required",
-            ar_Msg: "سبب الرفض مطلوب",
-          },
-        },
-        "",
-      );
-      return;
-    }
-
-    try {
-      const payload = {
-        iid: record?.iid,
-        review_Action: action, // 1 approve, 2 reject
-        review_Comments: action === 2 ? rejectionReason.trim() : "",
-      };
-
-      const response = await reviewParkonic(payload).unwrap();
-
-      // ✅ SUCCESS → backend message only
-      success(response, "");
-
-      onClose();
-    } catch (err: any) {
-      // ✅ ERROR → backend message only
-      error(err, "");
-    }
-  };
-
-  const confirmApprove = () => {
-    modal.confirm({
-      title: t("common.confirmApproval"),
-      content: t("common.confirmApprovalContent"),
-      okText: t("common.approve"),
-      cancelText: t("common.cancel"),
-      onOk: () => submitReview(1), // ✅ APPROVE
-    });
-  };
-
-  const confirmReject = () => {
-    modal.confirm({
-      title: t("common.confirmRejection"),
-      content: t("common.confirmRejectionContent"),
-      okText: t("common.reject"),
-      okButtonProps: { danger: true },
-      cancelText: t("common.cancel"),
-      onOk: () => submitReview(2), // ✅ REJECT
-    });
-  };
-
-  const rejectionValidationMsg = i18n.language === "ar" ? "الرجاء إدخال سبب الرفض" : "Please enter rejection comments";
-
-  useEffect(() => {
-    setRejectionReason(mappedRecord?.rejectionReason || "");
-  }, [mappedRecord]);
-
-  // Helper function to construct the complete file path
-  const getCompleteFilePath = (file: any) => {
-    // Check if filePath already contains the filename
-    if (file.filePath && file.filePath.includes(file.fileName)) {
-      return file.filePath;
-    }
-    // Otherwise, combine filePath and fileName
-    const separator = file.filePath.endsWith("\\") ? "" : "\\";
-    return `${file.filePath}${separator}${file.fileName}`;
+  const handleActionChange = (value: string) => {
+    const opt = reviewOptions.find((o: any) => o.ActivityOptionGUID === value);
+    setSelectedAction(opt);
   };
 
   return (
-    <>
-      {contextHolder}
-      <Modal
-        open={open}
-        onCancel={onClose}
-        width={1100}
-        footer={null}
-        closable={false}
-        centered
-        styles={{
-          body: {
-            padding: "24px",
-            maxHeight: "85vh",
-            overflowY: "auto",
-          },
-        }}
-      >
-        <Spin spinning={isLoading || isSubmitting}>
-          {/* Header with border */}
-          <div style={{ borderBottom: "1px solid #f0f0f0", paddingBottom: "16px", marginBottom: "24px" }}>
-            <Row justify="space-between" align="middle">
+    <Modal
+      open={open}
+      onCancel={onClose}
+      width={1600}
+      footer={null}
+      title={null}
+      closable={false}
+      style={{ top: 40 }}
+      bodyStyle={{
+        padding: 0,
+      }}
+      dir={isRTL ? "rtl" : "ltr"}
+    >
+      <Spin spinning={isLoading || isSubmitting || historyLoading || loadingOptions}>
+        <div style={{ display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 120px)" }}>
+          {/* Fixed Header */}
+          <div
+            style={{
+              padding: 24,
+              position: "sticky",
+              top: 0,
+              zIndex: 10,
+              background: token.colorBgContainer,
+              borderBottom: "1px solid #f0f0f0",
+            }}
+          >
+            <Row
+              align="middle"
+              style={{
+                marginBottom: 24,
+                direction: isRTL ? "rtl" : "ltr",
+              }}
+            >
               <Col>
-                <Title level={4} style={{ margin: 0 }}>
-                  {t("form.parkonicdetails")}
-                  <Text type="danger" style={{ marginLeft: "8px", fontWeight: 600 }}>
-                    #{mappedRecord?.fineId}
-                  </Text>
-                </Title>
+                <Space size="middle" align="center">
+                  <Title level={4} style={{ margin: 0 }}>
+                    {t("form.parkonicdetails")} <Text type="danger">#{mappedRecord?.fineId || "—"}</Text>
+                  </Title>
+
+                  {mappedRecord?.reviewStatus !== undefined && getStatusTag(mappedRecord.reviewStatus)}
+                </Space>
               </Col>
+
+              <Col flex="auto" />
+
               <Col>
-                <Button type="text" icon={<CloseOutlined />} onClick={onClose} style={{ fontSize: "16px" }} />
+                <Button type="text" icon={<CloseOutlined />} onClick={onClose} style={{ fontSize: 16 }} />
               </Col>
             </Row>
           </div>
 
-          {!mappedRecord ? (
-            <Empty />
-          ) : (
-            <>
-              {/* Main Content - Two Column Layout */}
-              <Row gutter={[24, 24]}>
-                {/* Left Column */}
-                <Col span={12}>
-                  {/* Parkonic Details Card */}
-                  <Card
-                    title={
-                      <Text strong style={{ fontSize: "16px" }}>
-                        {t("form.parkonicdetails")}
-                      </Text>
-                    }
-                    size="small"
-                    styles={{
-                      body: { padding: "20px" },
-                    }}
-                  >
-                    <Row gutter={[0, 16]}>
-                      <Col span={10}>
-                        <Text strong style={{ color: "#666" }}>
-                          {t("form.fineNumber")}:
-                        </Text>
-                      </Col>
-                      <Col span={14}>
-                        <Text strong>{mappedRecord.fineId}</Text>
-                      </Col>
-
-                      <Col span={10}>
-                        <Text strong style={{ color: "#666" }}>
-                          {t("form.status")}:
-                        </Text>
-                      </Col>
-                      <Col span={14}>{getStatusTag(mappedRecord.reviewStatus)}</Col>
-
-                      <Col span={10}>
-                        <Text strong style={{ color: "#666" }}>
-                          {t("form.vehicleEntryDateTime")}:
-                        </Text>
-                      </Col>
-                      <Col span={14}>{formatDateTime(mappedRecord.entryDateTime)}</Col>
-
-                      <Col span={10}>
-                        <Text strong style={{ color: "#666" }}>
-                          {t("form.vehicleExitDateTime")}:
-                        </Text>
-                      </Col>
-                      <Col span={14}>{formatDateTime(mappedRecord.exitDateTime)}</Col>
-                    </Row>
-                  </Card>
-
-                  {/* Violation Details Card */}
-                  <Card
-                    title={
-                      <Text strong style={{ fontSize: "16px" }}>
-                        {t("form.violationDetails")}
-                      </Text>
-                    }
-                    size="small"
-                    styles={{
-                      body: { padding: "20px" },
-                    }}
-                    style={{ marginTop: "24px" }}
-                  >
-                    {violationDetails.length === 0 ? (
-                      <Empty description={t("form.Noviolationdetailsavailable")} />
-                    ) : (
-                      <Row gutter={[0, 16]}>
-                        <Col span={10}>
-                          <Text strong style={{ color: "#666" }}>
-                            {t("form.violationCategoryId")}:
+          {/* Scrollable Body */}
+          <div
+            style={{
+              padding: 24,
+              overflowY: "auto",
+              flex: 1,
+            }}
+          >
+            {!mappedRecord ? (
+              <Empty />
+            ) : (
+              <Row gutter={24} dir={isRTL ? "rtl" : "ltr"}>
+                {/* Left Column - Main Content */}
+                <Col span={18}>
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Card
+                        title={
+                          <Text strong style={{ fontSize: "16px" }}>
+                            {t("form.parkonicdetails")}
                           </Text>
-                        </Col>
-                        <Col span={14}>{violationDetails[0].violationCategoryId ?? "No Data"}</Col>
+                        }
+                        size="small"
+                        style={{ marginBottom: 16 }}
+                        headStyle={{
+                          background: "#f8fafc",
+                          fontWeight: 600,
+                          textAlign: isRTL ? "right" : "left",
+                        }}
+                      >
+                        <Row gutter={[0, 12]} dir={isRTL ? "rtl" : "ltr"}>
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.refernecenumber")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{record.transcationId}</Text>
+                          </Col>
 
-                        <Col span={10}>
-                          <Text strong style={{ color: "#666" }}>
-                            {t("form.violationDescription")}:
-                          </Text>
-                        </Col>
-                        <Col span={14}>
-                          {i18n.language === "ar"
-                            ? violationDetails[0].violationNameAr
-                            : violationDetails[0].violationNameEn}
-                        </Col>
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.fineNumber")}:</Text>
+                          </Col>
 
-                        <Col span={10}>
-                          <Text strong style={{ color: "#666" }}>
-                            {t("form.amount")}:
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {mappedRecord.reviewStatus === 1 ? (mappedRecord.fineId ?? "No Data") : "No Data"}
+                          </Col>
+
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.status")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {getStatusTag(mappedRecord.reviewStatus)}
+                          </Col>
+
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.vehicleEntryDateTime")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {formatDateTime(mappedRecord.entryDateTime)}
+                          </Col>
+
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.vehicleExitDateTime")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {formatDateTime(mappedRecord.exitDateTime)}
+                          </Col>
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.reviewedBy")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{record.reviewerName}</Text>
+                          </Col>
+                        </Row>
+                      </Card>
+
+                      <Card
+                        title={
+                          <Text strong style={{ fontSize: "16px" }}>
+                            {t("form.violationDetails")}
                           </Text>
-                        </Col>
-                        <Col span={14}>
-                          <Text strong type="danger" style={{ fontSize: "16px", fontWeight: 600 }}>
-                            {violationDetails[0].violationAmount} AED
-                          </Text>
-                        </Col>
-                      </Row>
-                    )}
-                  </Card>
+                        }
+                        size="small"
+                        style={{ marginBottom: 16 }}
+                        headStyle={{
+                          background: "#f8fafc",
+                          fontWeight: 600,
+                          textAlign: isRTL ? "right" : "left",
+                        }}
+                      >
+                        {violationDetails.length > 0 ? (
+                          <Row gutter={[0, 12]} dir={isRTL ? "rtl" : "ltr"}>
+                            <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              <Text strong>{t("form.violationCategoryId")}:</Text>
+                            </Col>
+                            <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              {violationDetails[0].violationCategoryId ?? "No Data"}
+                            </Col>
+
+                            <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              <Text strong>{t("form.violationDescription")}:</Text>
+                            </Col>
+                            <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              {i18n.language === "ar"
+                                ? violationDetails[0].violationNameAr
+                                : violationDetails[0].violationNameEn}
+                            </Col>
+
+                            <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              <Text strong>{t("form.amount")}:</Text>
+                            </Col>
+                            <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              <Text strong type="danger" style={{ fontSize: "16px", fontWeight: 600 }}>
+                                {violationDetails[0].violationAmount} AED
+                              </Text>
+                            </Col>
+                          </Row>
+                        ) : (
+                          <Empty description={t("form.Noviolationdetailsavailable")} />
+                        )}
+                      </Card>
+                    </Col>
+
+                    <Col span={12}>
+                      <Card
+                        title={
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              flexDirection: isRTL ? "row-reverse" : "row",
+                              marginBottom: 8,
+                              marginTop: 8,
+                            }}
+                          >
+                            <Text strong style={{ fontSize: "16px" }}>
+                              {t("form.vehicleDetails")}
+                            </Text>
+                            <div style={{ marginTop: "4px" }}>
+                              <UAEPlate
+                                code={record?.plateCode ? PLATE_COLOR[record.plateCode] : "---"}
+                                number={record?.plateNumber ?? "---"}
+                                emirateEn={record?.plateSource ? plateSources[record.plateSource]?.en || "" : ""}
+                                emirateAr={record?.plateSource ? plateSources[record.plateSource]?.ar || "" : ""}
+                              />
+                            </div>
+                          </div>
+                        }
+                        size="small"
+                        style={{ marginBottom: 16 }}
+                        headStyle={{
+                          background: "#f8fafc",
+                          fontWeight: 600,
+                          textAlign: isRTL ? "right" : "left",
+                        }}
+                      >
+                        <Row gutter={[0, 12]} dir={isRTL ? "rtl" : "ltr"}>
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.plateNumber")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {record?.plateNumber || "No Data"}
+                          </Col>
+
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.plateSource")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {record?.plateSource
+                              ? i18n.language === "ar"
+                                ? plateSources[record.plateSource]?.ar
+                                : plateSources[record.plateSource]?.en
+                              : "---"}
+                          </Col>
+
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.plateCategory")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {record?.plateCategory ? PLATE_TYPE_SHORT[record.plateCategory] : "---"}
+                          </Col>
+
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.plateCode")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {record?.plateCode ? PLATE_COLOR[record.plateCode] : "---"}
+                          </Col>
+
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.vehicleColor")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {record?.vehicleColor || "No Data"}
+                          </Col>
+
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.vehicleType")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {record?.vehicleType || "No Data"}
+                          </Col>
+
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.vehicleBrand")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {record?.vehicleBrand || "No Data"}
+                          </Col>
+
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.manufacturerYear")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {record?.manufacturerYear || "No Data"}
+                          </Col>
+
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{t("form.vehicleOwnerName")}:</Text>
+                          </Col>
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {record?.vehicleOwnerName || "No Data"}
+                          </Col>
+                        </Row>
+                      </Card>
+                    </Col>
+                  </Row>
 
                   {/* Notes Card */}
                   <Card
@@ -315,10 +489,12 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                       </Text>
                     }
                     size="small"
-                    styles={{
-                      body: { padding: "20px", minHeight: "120px" },
+                    style={{ marginBottom: 16 }}
+                    headStyle={{
+                      background: "#f8fafc",
+                      fontWeight: 600,
+                      textAlign: isRTL ? "right" : "left",
                     }}
-                    style={{ marginTop: "24px" }}
                   >
                     {record?.notes ? (
                       <Text style={{ whiteSpace: "pre-wrap" }}>{record.notes}</Text>
@@ -326,99 +502,8 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                       <Empty description={t("form.noNotesAvailable")} />
                     )}
                   </Card>
-                </Col>
 
-                {/* Right Column */}
-                <Col span={12}>
-                  {/* Vehicle Details Card with Plate */}
-                  <Card
-                    title={
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <Text strong style={{ fontSize: "16px" }}>
-                          {t("form.vehicleDetails")}
-                        </Text>
-                        <div style={{ marginTop: "4px" }}>
-                          <UAEPlate
-                            code={record?.plateCode ? PLATE_COLOR[record.plateCode] : "---"}
-                            number={record?.plateNumber ?? "---"}
-                            emirateEn={record?.plateSource ? plateSources[record.plateSource]?.en || "" : ""}
-                            emirateAr={record?.plateSource ? plateSources[record.plateSource]?.ar || "" : ""}
-                          />
-                        </div>
-                      </div>
-                    }
-                    size="small"
-                    styles={{
-                      body: { padding: "20px" },
-                    }}
-                  >
-                    <Row gutter={[0, 16]}>
-                      <Col span={10}>
-                        <Text strong style={{ color: "#666" }}>
-                          {t("form.plateNumber")}:
-                        </Text>
-                      </Col>
-                      <Col span={14}>{record?.plateNumber || "No Data"}</Col>
-
-                      <Col span={10}>
-                        <Text strong style={{ color: "#666" }}>
-                          {t("form.plateSource")}:
-                        </Text>
-                      </Col>
-                      <Col span={14}>{record?.plateSource ? plateSources[record.plateSource]?.en : "---"}</Col>
-
-                      <Col span={10}>
-                        <Text strong style={{ color: "#666" }}>
-                          {t("form.plateCategory")}:
-                        </Text>
-                      </Col>
-                      <Col span={14}>{record?.plateCategory ? PLATE_TYPE_SHORT[record.plateCategory] : "---"}</Col>
-
-                      <Col span={10}>
-                        <Text strong style={{ color: "#666" }}>
-                          {t("form.plateCode")}:
-                        </Text>
-                      </Col>
-                      <Col span={14}>{record?.plateCode ? PLATE_COLOR[record.plateCode] : "---"}</Col>
-
-                      <Col span={10}>
-                        <Text strong style={{ color: "#666" }}>
-                          {t("form.vehicleColor")}:
-                        </Text>
-                      </Col>
-                      <Col span={14}>{record?.vehicleColor || "No Data"}</Col>
-
-                      <Col span={10}>
-                        <Text strong style={{ color: "#666" }}>
-                          {t("form.vehicleType")}:
-                        </Text>
-                      </Col>
-                      <Col span={14}>{record?.vehicleType || "No Data"}</Col>
-
-                      <Col span={10}>
-                        <Text strong style={{ color: "#666" }}>
-                          {t("form.vehicleBrand")}:
-                        </Text>
-                      </Col>
-                      <Col span={14}>{record?.vehicleBrand || "No Data"}</Col>
-
-                      <Col span={10}>
-                        <Text strong style={{ color: "#666" }}>
-                          {t("form.manufacturerYear")}:
-                        </Text>
-                      </Col>
-                      <Col span={14}>{record?.manufacturerYear || "No Data"}</Col>
-
-                      <Col span={10}>
-                        <Text strong style={{ color: "#666" }}>
-                          {t("form.vehicleOwnerName")}:
-                        </Text>
-                      </Col>
-                      <Col span={14}>{record?.vehicleOwnerName || "No Data"}</Col>
-                    </Row>
-                  </Card>
-
-                  {/* Photos Section */}
+                  {/* Attachments Card */}
                   <Card
                     title={
                       <Text strong style={{ fontSize: "16px" }}>
@@ -426,10 +511,12 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                       </Text>
                     }
                     size="small"
-                    styles={{
-                      body: { padding: "20px" },
+                    style={{ marginBottom: 16 }}
+                    headStyle={{
+                      background: "#f8fafc",
+                      fontWeight: 600,
+                      textAlign: isRTL ? "right" : "left",
                     }}
-                    style={{ marginTop: "24px" }}
                   >
                     <Spin spinning={isLoadingAttachments}>
                       {attachments.length > 0 ? (
@@ -465,66 +552,96 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                       )}
                     </Spin>
                   </Card>
+                </Col>
 
-                  {/* Comments Section */}
-                  {isPending && (
-                    <Card
-                      title={
-                        <Text strong style={{ fontSize: "16px" }}>
-                          {t("form.comments")}
-                        </Text>
-                      }
-                      size="small"
-                      styles={{
-                        body: { padding: "20px" },
-                      }}
-                      style={{ marginTop: "24px" }}
-                    >
-                      <TextArea
-                        value={rejectionReason}
-                        onChange={(e) => setRejectionReason(e.target.value)}
-                        rows={5}
-                        placeholder={rejectionValidationMsg}
-                        style={{ borderRadius: "6px" }}
-                      />
-                    </Card>
-                  )}
+                {/* Right Column - Review Timeline */}
+                <Col span={6}>
+                  <ReviewTimeline data={reviewHistory} />
                 </Col>
               </Row>
+            )}
 
-              {/* Action Buttons - Fixed at bottom */}
-              <Divider style={{ margin: "32px 0 24px 0" }} />
-              <Row justify="end">
-                <Space size="middle">
-                  <Button onClick={onClose} size="large">
-                    {t("common.cancel")}
-                  </Button>
+            {!hideFooterActions && (
+              <>
+                <Divider />
+                <Form form={form} layout="vertical" dir={isRTL ? "rtl" : "ltr"}>
+                  <Row gutter={16} align="middle" dir={isRTL ? "rtl" : "ltr"}>
+                    <Col span={6}>
+                      <Form.Item
+                        name="action"
+                        label={<Text strong>{isRTL ? "الإجراء" : "Action"}</Text>}
+                        rules={[{ required: true, message: isRTL ? "الرجاء اختيار إجراء" : "Please select an action" }]}
+                      >
+                        <Select
+                          placeholder={isRTL ? "اختر إجراء" : "Select action"}
+                          onChange={handleActionChange}
+                          allowClear
+                          loading={loadingOptions}
+                          value={selectedAction?.ActivityOptionGUID}
+                        >
+                          {reviewOptions.map((opt: any) => (
+                            <Select.Option key={opt.ActivityOptionGUID} value={opt.ActivityOptionGUID}>
+                              {opt.ReviewStatus}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    </Col>
 
-                  {/* Show Approve / Reject ONLY when Pending */}
-                  {isPending && (
-                    <>
-                      <Button danger onClick={confirmReject} size="large" style={{ minWidth: "100px" }}>
-                        {t("common.reject")}
-                      </Button>
-                      <Button type="primary" onClick={confirmApprove} size="large">
-                        {t("common.approve")}
-                      </Button>
-                    </>
-                  )}
+                    <Col span={12}>
+                      <Form.Item
+                        name="review_Comments"
+                        label={<Text strong>{t("form.comments")}</Text>}
+                        style={{ marginBottom: 0 }}
+                        rules={[
+                          {
+                            required: selectedAction?.IsCommentMandatory || false,
+                            message: isRTL ? "الرجاء إدخال التعليقات" : "Please enter comments",
+                          },
+                        ]}
+                      >
+                        <TextArea
+                          placeholder={
+                            selectedAction?.IsCommentMandatory
+                              ? isRTL
+                                ? "أدخل التعليقات (مطلوبة)"
+                                : "Enter comments (required)"
+                              : isRTL
+                                ? "أدخل التعليقات (اختياري)"
+                                : "Enter comments (optional)"
+                          }
+                          rows={2}
+                          dir={isRTL ? "rtl" : "ltr"}
+                          value={comments}
+                          onChange={(e) => setComments(e.target.value)}
+                        />
+                      </Form.Item>
+                    </Col>
 
-                  {/* Show Resubmit ONLY when not pending AND integration failed */}
-                  {!isPending && isIntegrationFailed && (
-                    <Button type="primary" size="large">
-                      {t("common.resubmit") || "Resubmit"}
-                    </Button>
-                  )}
-                </Space>
-              </Row>
-            </>
-          )}
-        </Spin>
-      </Modal>
-    </>
+                    <Col
+                      span={6}
+                      style={{
+                        textAlign: isRTL ? "left" : "right",
+                        paddingTop: 30,
+                      }}
+                    >
+                      <Space>
+                        <Button type="primary" loading={isSubmitting} onClick={submitReview} disabled={!selectedAction}>
+                          {isRTL ? "إرسال" : "Submit"}
+                        </Button>
+                        <Button danger onClick={onClose}>
+                          {isRTL ? "إلغاء" : "Cancel"}
+                        </Button>
+                      </Space>
+                    </Col>
+                  </Row>
+                </Form>
+              </>
+            )}
+          </div>
+        </div>
+      </Spin>
+    </Modal>
   );
 };
 

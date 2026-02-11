@@ -44,7 +44,9 @@
     "carplateinspections": "لوحة السيارة",
     "tradelicenseinspections": "الرخصة التجارية",
     "Criteria&Weights": "المعايير والأوزان",
-    "proactivecampaigns": "الحملات الاستباقية"
+    "proactivecampaigns": "الحملات الاستباقية",
+    "inbox": "صندوق الوارد",
+    "allInbox": "جميع الرسائل"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -447,7 +449,11 @@
     "asReviewerSelectDecision": "كمراجع، اختر القرار",
     "reviewResult": "نتيجة المراجعة",
     "vehiclePlate": "لوحة المركبة",
-    "reviewedDate": "تاريخ المراجعة"
+    "reviewedDate": "تاريخ المراجعة",
+    "selectAction": "اختر الإجراء",
+    "selectActionPlaceholder": "اختر إجراء للموافقة أو الرفض",
+    "refernecenumber": "رقم المرجع"
+
   },
   "common": {
     "action": "إجراء",
@@ -540,7 +546,8 @@
     "previous": "السابق",
     "showPendingDisputes": "إظهار النزاعات المعلقة",
     "selectRole": "اختر الدور",
-    "resubmit": "إعادة الإرسال"
+    "resubmit": "إعادة الإرسال",
+    "aed": "درهم إماراتي"
   },
   "entity": {
     "plate": "لوحة",

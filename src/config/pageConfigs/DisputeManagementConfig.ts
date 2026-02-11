@@ -68,6 +68,7 @@ export const disputeManagementConfig: PageConfig = {
         key: "fineId",
         title: "form.fineNumber",
         type: "select",
+        
       },
       {
         key: "dispute_Id",

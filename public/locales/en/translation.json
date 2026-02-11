@@ -40,7 +40,9 @@
     "Vehicle": "Vehicles",
     "Parkings": "Parkings",
     "Criteria&Weights": "Criteria & Weights",
-    "proactivecampaigns": "Proactive Campaigns"
+    "proactivecampaigns": "Proactive Campaigns",
+    "inbox": "Inbox",
+    "allInbox": "All Inbox"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -441,7 +443,10 @@
     "asReviewerSelectDecision": "As Reviewer, Select Decision",
     "reviewResult": "Review Result",
     "vehiclePlate": "Vehicle Plate",
-    "reviewedDate": "Reviewed Date"
+    "reviewedDate": "Reviewed Date",
+    "selectAction" : "Select Action",
+    "selectActionPlaceholder": "Please select an action",
+    "refernecenumber": "Reference Number"
     
   },
   "common": {
@@ -539,7 +544,8 @@
     "previous": "Previous",
     "showPendingDisputes": " Show Pending Disputes",
     "selectRole": "Select Role",
-    "resubmit" : "Resubmit"
+    "resubmit" : "Resubmit",
+    "aed": "AED"
 
   },
   "entity": {

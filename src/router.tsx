@@ -35,6 +35,7 @@ const ShiftPlanPage = lazy(() => import("./pages/ShiftPlanPage"));
 const CriteriaPage = lazy(() => import("./pages/CriteriaPage"));
 const ProactiveCampaignsPage = lazy(() => import("./pages/ProactiveCampaignsPage"));
 const HRMSPage = lazy(() => import("./pages/HRMSPage"));
+const InboxPage = lazy(() => import("./pages/InboxPage"));
 
 const AppRoutes = () => (
   <Routes>
@@ -171,6 +172,15 @@ const AppRoutes = () => (
             </ProtectedRoute>
           }
         />
+        <Route
+          path={PATHS.INBOX}
+          element={
+            <ProtectedRoute>
+              <InboxPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path={PATHS.DND_SHIFT_MANAGEMENT}
           element={

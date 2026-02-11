@@ -5,12 +5,11 @@ import { useValidatecodeQuery } from "../services/rtkApiFactory";
 import { useAuth } from "../contexts/AuthContext";
 import { EXTERNAL_LOGIN_URL } from "../config/envConfig";
 
+//  202602056735FED1C0BC48978ACA603F dc
 
-  //  202602056735FED1C0BC48978ACA603F dc
+// 20260205ED7F72A095154944BCB7F249  sr senior
 
-  // 20260205ED7F72A095154944BCB7F249  sr senior
-
-const FALLBACK_CODE = "20260205ED7F72A095154944BCB7F249";
+const FALLBACK_CODE = "20260211C3CD17A4CAE1404296E3D302";
 
 const SPLASH_DELAY = 1300;
 // const EXTERNAL_LOGIN_URL = "https://sso.kandaprojects.live/webapp/ui/common/login.aspx";

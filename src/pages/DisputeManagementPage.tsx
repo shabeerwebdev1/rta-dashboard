@@ -31,6 +31,9 @@ import {
   useUpdateDisputeMutation,
   useLazyGetLookupsQuery,
   useLazyGetDisputeByIdQuery,
+  useGetParkonicsQuery,
+  useSearchFinesQuery,
+  useSearchTradeQuery,
 } from "../services/rtkApiFactory";
 import { getFileUrl, useUploadFilesMutation } from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
@@ -42,6 +45,9 @@ import DataTableWrapper from "../components/common/DataTableWrapper";
 import DisputeViewModal from "../components/dispute/DisputeViewModal";
 import { usePermission } from "../hooks/usePermission";
 import { useAuth } from "../contexts/AuthContext";
+import { skipToken } from "@reduxjs/toolkit/query";
+import FinesViewDrawer from "../components/fines/FinesViewDrawer";
+import ParkonicViewDrawer from "../components/parkonic/ParkonicViewDrawer";
 
 const { Option } = Select;
 const pageKey = "dispute-management";
@@ -100,8 +106,73 @@ const DisputeManagementPage: React.FC = () => {
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
+  const [drawerType, setDrawerType] = useState<"vehicle" | "parkonic" | "trade" | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedFineId, setSelectedFineId] = useState<string | null>(null);
+  const [selectedFine, setSelectedFine] = useState<any>(null);
+
   // State to maintain the rows data for downloading
   const [selectedRows, setSelectedRows] = useState([]);
+
+  const parkonicQuery = useGetParkonicsQuery(
+    drawerType === "parkonic" && selectedFineId
+      ? { searchKey: "entityNo", searchValue: selectedFineId, PageNumber: 1, PageSize: 1 }
+      : skipToken,
+  );
+
+  const vehicleQuery = useSearchFinesQuery(
+    drawerType === "vehicle" && selectedFineId
+      ? { searchKey: "fineId", searchValue: selectedFineId, PageNumber: 1, PageSize: 1 }
+      : skipToken,
+  );
+
+  const tradeQuery = useSearchTradeQuery(
+    drawerType === "trade" && selectedFineId
+      ? { searchKey: "fineId", searchValue: selectedFineId, PageNumber: 1, PageSize: 1 }
+      : skipToken,
+  );
+
+  const handleFineClick = (record: any) => {
+    // full reset first
+    setDrawerOpen(false);
+    setSelectedFine(null);
+    setDrawerType(null);
+    setSelectedFineId(null);
+
+    // allow React to apply reset before new values
+    setTimeout(() => {
+      if (record.source?.toLowerCase().includes("parkonic")) {
+        setDrawerType("parkonic");
+      } else if (record.entityCode?.toLowerCase().includes("trade")) {
+        setDrawerType("trade");
+      } else {
+        setDrawerType("vehicle");
+      }
+
+      setSelectedFineId(record.fineId);
+    }, 0);
+  };
+
+  useEffect(() => {
+    if (drawerType === "parkonic" && parkonicQuery.data?.data?.length) {
+      setSelectedFine(parkonicQuery.data.data[0]);
+      setDrawerOpen(true);
+    }
+  }, [parkonicQuery.data]);
+
+  useEffect(() => {
+    if (drawerType === "vehicle" && vehicleQuery.data?.data?.length) {
+      setSelectedFine(vehicleQuery.data.data[0]);
+      setDrawerOpen(true);
+    }
+  }, [vehicleQuery.data]);
+
+  useEffect(() => {
+    if (drawerType === "trade" && tradeQuery.data?.data?.length) {
+      setSelectedFine(tradeQuery.data.data[0]);
+      setDrawerOpen(true);
+    }
+  }, [tradeQuery.data]);
 
   // State for Pending Disputes filter
   const [showPendingDisputes, setShowPendingDisputes] = useState(false);
@@ -557,6 +628,13 @@ const DisputeManagementPage: React.FC = () => {
     () => ({
       ...config.tableConfig,
       columns: config.tableConfig.columns.map((column) => {
+        if (column.key === "fineId") {
+          return {
+            ...column,
+            render: (value: any, record: any) => <a onClick={() => handleFineClick(record)}>{value}</a>,
+          };
+        }
+
         if (column.key === "dispute_Status") {
           return {
             ...column,
@@ -1060,7 +1138,47 @@ const DisputeManagementPage: React.FC = () => {
               setViewRecord(null);
             }}
             disputeId={viewRecord.disputeCode}
+            record={viewRecord}
             onStatusUpdate={refetch}
+          />
+        )}
+
+        {drawerType === "vehicle" && selectedFine && (
+          <FinesViewDrawer
+            open={drawerOpen}
+            fine={selectedFine}
+            onClose={() => {
+              setDrawerOpen(false);
+              setSelectedFine(null);
+              setDrawerType(null);
+              setSelectedFineId(null); // important
+            }}
+          />
+        )}
+
+        {drawerType === "parkonic" && selectedFine && (
+          <ParkonicViewDrawer
+            open={drawerOpen}
+            record={selectedFine}
+            onClose={() => {
+              setDrawerOpen(false);
+              setSelectedFine(null);
+              setDrawerType(null);
+              setSelectedFineId(null); // important
+            }}
+          />
+        )}
+
+        {drawerType === "trade" && selectedFine && (
+          <FinesViewDrawer
+            open={drawerOpen}
+            fine={selectedFine}
+            onClose={() => {
+              setDrawerOpen(false);
+              setSelectedFine(null);
+              setDrawerType(null);
+              setSelectedFineId(null); // important
+            }}
           />
         )}
       </Space>

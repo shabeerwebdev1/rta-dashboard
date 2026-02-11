@@ -345,7 +345,6 @@ const VehicleInspectionsPage: React.FC = () => {
               <Input
                 addonBefore={searchAddon}
                 placeholder={t("common.searchPlaceholder")}
-                value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 style={{ width: 450 }}
                 allowClear

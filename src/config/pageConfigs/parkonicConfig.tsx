@@ -131,26 +131,38 @@ export const parkonicPageConfig: PageConfig = {
     {
       title: "status.pending",
       icon: <CheckCircleOutlined />,
-      value: (data, metadata) => `${data.filter((d) => d.reviewStatus === 0).length}/${metadata.total}`,
+      value: (data, metadata) => `${data.filter((d) => d.reviewStatus === 0).length}/${metadata.pendingRecords}`,
       color: "#1890ff",
     },
     {
       title: "status.approved",
       icon: <CheckCircleOutlined />,
-      value: (data, metadata) => `${data.filter((d) => d.reviewStatus === 1).length}/${metadata.total}`,
+      value: (data, metadata) => `${data.filter((d) => d.reviewStatus === 1).length}/${metadata.approvedRecords}`,
       color: "#52c41a",
     },
     {
       title: "status.rejected",
       icon: <CloseCircleOutlined />,
-      value: (data, metadata) => `${data.filter((d) => d.reviewStatus === 2).length}/${metadata.total}`,
+      value: (data, metadata) => `${data.filter((d) => d.reviewStatus === 2).length}/${metadata.rejectedRecords}`,
       color: "#ff4d4f",
     },
   ],
   tableConfig: {
     rowKey: "fineId",
     columns: [
-      // { key: "entityNo", title: "form.fineNumber", type: "string", sortable: true },
+      {
+        key: "entityNo",
+        title: "form.refernecenumber",
+        type: "custom",
+        render: (_: any, record: any) => {
+          if (record.reviewStatus === 1) {
+            return record.entityNo || "-";   // Approved
+          }
+      
+          return record.transcationId || "-"; // Pending or Rejected
+        },
+      },
+      
       {
         key: "plateNumber",
         title: "form.vehiclePlate",

@@ -5,6 +5,8 @@ import {
   CloseCircleOutlined,
   DownloadOutlined,
   EditOutlined,
+  EyeFilled,
+  EyeOutlined,
   PaperClipOutlined,
 } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
@@ -127,26 +129,11 @@ const ParkonicPage: React.FC = () => {
     // ✏️ PRIMARY ICON — stays the same
     {
       key: "view",
-      icon: <EditOutlined />,
+      icon: <EyeOutlined />,
       label: t("common.view"),
       onClick: () => showDrawer(record),
     },
 
-    // ⬇️ THREE DOTS MENU ACTIONS
-    {
-      key: "approve",
-      icon: <CheckCircleOutlined />,
-      label: t("common.approve"),
-      disabled: record.reviewStatus !== 0,
-      onClick: () => handleApprove(record),
-    },
-    {
-      key: "reject",
-      icon: <CloseCircleOutlined />,
-      label: t("common.reject"),
-      disabled: record.reviewStatus !== 0,
-      onClick: () => handleReject(record),
-    },
     {
       key: "attachments",
       icon: <PaperClipOutlined />,
@@ -232,12 +219,24 @@ const ParkonicPage: React.FC = () => {
     });
   };
 
+  const statsMetadata = useMemo(() => {
+    const rows = data?.data || [];
+  
+    return {
+      total: data?.total || rows.length,
+      pendingRecords: rows.filter((r: any) => r.reviewStatus === 0).length,
+      approvedRecords: rows.filter((r: any) => r.reviewStatus === 1).length,
+      rejectedRecords: rows.filter((r: any) => r.reviewStatus === 2).length,
+    };
+  }, [data]);
+  
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <StatsDisplay
         statsConfig={config.statsConfig}
         data={data?.data || []}
-        metadata={{ total: data?.total }}
+        metadata={statsMetadata}
         loading={isLoading}
       />
       <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
