@@ -28,7 +28,10 @@ import dayjs from "dayjs";
 import "dayjs/locale/ar";
 import { PLATE_COLOR, PLATE_TYPE_SHORT } from "../../config/pageConfigs/finesConfig";
 import { plateSources } from "../../config/pageConfigs/finesConfig";
-import { useLazyGetReviewOptionsQuery } from "../../services/rtkApiFactory";
+import {
+  useLazyGetReviewOptionsQuery,
+  useLazyGetEntityHistoryQuery, // add this
+} from "../../services/rtkApiFactory";
 import ReviewTimeline from "../ReviewTimeline"; // Add this import
 
 const { Title, Text } = Typography;
@@ -60,6 +63,8 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
   const { data: activeShiftsData, isLoading: isLoadingSupervisors } = useGetActiveShiftsQuery({});
   const [getReviewOptions, { data: reviewResponse, isLoading: loadingOptions }] = useLazyGetReviewOptionsQuery();
+  const [getEntityHistory, { data: entityHistory = [], isLoading: entityHistoryLoading }] =
+    useLazyGetEntityHistoryQuery();
 
   // Add review history API call like in ParkonicViewDrawer
   const [getReviewHistory, { data: reviewHistory = [], isLoading: historyLoading }] = useLazyGetReviewHistoryQuery();
@@ -107,22 +112,30 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
   useEffect(() => {
     if (!open) return;
 
-    // Inbox → workflow id
-    // Dispute page → disputeCode
     const idToLoad = rcwuri ? record?.EntityGUID : disputeId;
-
     if (!idToLoad) return;
 
     triggerGetDisputeById(idToLoad).then((result) => {
       const disputeCode = result.data?.data?.disputeCode;
+      const entityCode = result.data?.data?.entityCode || "parking-parkonic-fine-dispute";
 
       if (disputeCode) {
         setStoredDisputeId(disputeCode);
 
-        getReviewHistory({
-          entityCode: result.data.data.entityCode || "parking-parkonic-fine-dispute",
-          entityId: disputeCode,
-        });
+        // Inbox flow
+        if (rcwuri) {
+          getReviewHistory({
+            entityCode,
+            entityId: disputeCode,
+          });
+        }
+        // Dispute page flow
+        else {
+          getEntityHistory({
+            entityCode,
+            entityId: disputeCode,
+          });
+        }
       }
     });
   }, [open]);
@@ -304,6 +317,20 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
       assignedSupervisor: undefined,
       assignedSeniorSupervisor: undefined,
     });
+  };
+
+  // defalut senior supervisor is the reviewer of the dispute if they are a senior supervisor and have an active shift
+  const getDefaultSeniorSupervisor = () => {
+    if (!activeShiftsData || !dispute?.fineDetails?.reviewerName) return null;
+
+    const reviewerName = dispute.fineDetails.reviewerName.trim().toLowerCase();
+
+    const match = activeShiftsData.find((emp: any) => {
+      const empName = emp.employeeName?.trim().toLowerCase();
+      return empName && empName.includes(reviewerName) && normalizeGuid(emp.roleGUID) === seniorSupervisorRoleGUID;
+    });
+
+    return match ? match.employeeId : null;
   };
 
   const handleSubmit = async () => {
@@ -541,21 +568,17 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
   }, [open, i18n.language]);
 
   useEffect(() => {
-    if (open && storedDisputeId) {
-      triggerGetDisputeById(storedDisputeId).then((result) => {
-        // If storedDisputeId is the display code, update it to the GUID if available
-        if (result.data?.data?.disputeCode && result.data.data.disputeCode !== storedDisputeId) {
-          setStoredDisputeId(result.data.data.disputeCode);
+    if (!showSeniorSupervisorDropdown) return;
 
-          // Load review history after dispute data is fetched
-          getReviewHistory({
-            entityCode: result.data.data.entityCode || "parking-parkonic-fine-dispute",
-            entityId: result.data.data.disputeCode || result.data.data.dispute_Id,
-          });
-        }
-      });
-    }
-  }, [open, storedDisputeId, triggerGetDisputeById, getReviewHistory]);
+    const currentValue = form.getFieldValue("assignedSeniorSupervisor");
+    if (currentValue) return; // do not override user choice
+
+    const defaultSupervisor = getDefaultSeniorSupervisor();
+
+    form.setFieldsValue({
+      assignedSeniorSupervisor: defaultSupervisor || "all",
+    });
+  }, [showSeniorSupervisorDropdown, activeShiftsData, dispute]);
 
   useEffect(() => {
     if (open && rcwuri) {
@@ -585,12 +608,12 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
       }}
       dir={isRTL ? "rtl" : "ltr"}
     >
-      <Spin spinning={isLoading || isUpdating || isLoadingLookups || historyLoading}>
+      <Spin spinning={isLoading || isUpdating || isLoadingLookups || historyLoading || entityHistoryLoading}>
         <div style={{ display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 120px)" }}>
           {/* Fixed Header */}
           <div
             style={{
-              padding: 24,
+              padding: 10,
               position: "sticky",
               top: 0,
               zIndex: 10,
@@ -601,7 +624,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
             <Row
               align="middle"
               style={{
-                marginBottom: 24,
+                marginBottom: 0,
                 direction: isRTL ? "rtl" : "ltr",
               }}
             >
@@ -838,34 +861,91 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                     }}
                   >
                     {dispute.fineDetails ? (
-                      <Row gutter={16} dir={isRTL ? "rtl" : "ltr"}>
-                        <Col span={8} style={{ textAlign: isRTL ? "right" : "left" }}>
+                      <Row gutter={[0, 12]} dir={isRTL ? "rtl" : "ltr"}>
+                        {/* Fine Number */}
+                        <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                          <Text strong>{t("form.fineNumber")}:</Text>
+                        </Col>
+                        <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                          {dispute.fineDetails.fineNo || t("common.noData")}
+                        </Col>
+
+                        {/* Fine Amount */}
+                        <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
                           <Text strong>{t("form.fineAmount")}:</Text>
+                        </Col>
+                        <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
                           {dispute.fineDetails.fineAmount !== null && dispute.fineDetails.fineAmount !== undefined ? (
-                            <Text type="danger" strong style={{ display: "block", marginTop: 4 }}>
+                            <Text type="danger" strong>
                               {dispute.fineDetails.fineAmount} {t("common.aed")}
                             </Text>
                           ) : (
-                            <Text style={{ display: "block", marginTop: 4 }}>{t("common.noData")}</Text>
+                            t("common.noData")
                           )}
                         </Col>
-                        <Col span={8} style={{ textAlign: isRTL ? "right" : "left" }}>
+
+                        {/* Fine Status */}
+                        <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
                           <Text strong>{t("form.status")}:</Text>
+                        </Col>
+                        <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
                           {dispute.fineDetails.fineStatus ? (
-                            <div style={{ marginTop: 4 }}>
-                              <Tag color={getFineStatusColor(dispute.fineDetails.fineStatus)}>
-                                {getLabelFromValue(dispute.fineDetails.fineStatus, 1500)}
-                              </Tag>
-                            </div>
+                            <Tag color={getFineStatusColor(dispute.fineDetails.fineStatus)}>
+                              {getLabelFromValue(dispute.fineDetails.fineStatus, 1500)}
+                            </Tag>
                           ) : (
-                            <Text style={{ display: "block", marginTop: 4 }}>{t("common.noData")}</Text>
+                            t("common.noData")
                           )}
                         </Col>
-                        <Col span={8} style={{ textAlign: isRTL ? "right" : "left" }}>
-                          <Text strong>{t("form.fineNumber")}:</Text>
-                          <Text style={{ display: "block", marginTop: 4 }}>
-                            {dispute.fineDetails.fineNo || t("common.noData")}
-                          </Text>
+
+                        {/* Violation Category ID */}
+                        <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                          <Text strong>{t("form.violationCategoryId")}:</Text>
+                        </Col>
+                        <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                          {dispute.fineDetails.categoryId ?? t("common.noData")}
+                        </Col>
+
+                        {/* Violation Description */}
+                        <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                          <Text strong>{t("form.violationDescription")}:</Text>
+                        </Col>
+                        <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                          {i18n.language === "ar"
+                            ? dispute.fineDetails.violationNameAr || t("common.noData")
+                            : dispute.fineDetails.violationNameEn || t("common.noData")}
+                        </Col>
+
+                        {isParkonicEntity && (
+                          <>
+                            {/* Vehicle Entry DateTime */}
+                            <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              <Text strong>{t("form.vehicleEntryDateTime")}:</Text>
+                            </Col>
+                            <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              {dispute.fineDetails.entryDateTime
+                                ? formatDate(dispute.fineDetails.entryDateTime)
+                                : t("common.noData")}
+                            </Col>
+
+                            {/* Vehicle Exit DateTime */}
+                            <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              <Text strong>{t("form.vehicleExitDateTime")}:</Text>
+                            </Col>
+                            <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              {dispute.fineDetails.exitDateTime
+                                ? formatDate(dispute.fineDetails.exitDateTime)
+                                : t("common.noData")}
+                            </Col>
+                          </>
+                        )}
+
+                        {/* Reviewed By */}
+                        <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                          <Text strong>{t("form.approvedBy")}:</Text>
+                        </Col>
+                        <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                          {dispute.fineDetails.reviewerName || t("common.noData")}
                         </Col>
                       </Row>
                     ) : (
@@ -949,7 +1029,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
 
                 {/* Right Column - Review Timeline */}
                 <Col span={6}>
-                  <ReviewTimeline data={reviewHistory} />
+                  <ReviewTimeline data={rcwuri ? reviewHistory : entityHistory} />
                 </Col>
               </Row>
             )}

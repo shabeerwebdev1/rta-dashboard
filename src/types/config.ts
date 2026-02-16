@@ -61,6 +61,8 @@ export interface SearchConfig {
   globalSearchKeys: string[];
   columnFilterKeys: string[];
   dateRangeKey: string;
+  filterKeyMap?: Record<string, string>;
+
 }
 export interface AppColumn<T = any> extends ColumnType<T> {
   type?: "string" | "date" | "badge" | "tag" | "ReactNode" | "number" | "custom" | "select";
@@ -93,4 +95,5 @@ export interface PageConfig<T = any> {
   };
   formConfig: FormConfig;
   statsConfig?: StatConfig[];
+
 }

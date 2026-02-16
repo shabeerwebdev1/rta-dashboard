@@ -25,11 +25,8 @@ const AppHeader = () => {
 
   const userImage = localStorage.getItem("userImage");
 
-  const { data: inboxSummary, isLoading } = useGetInboxSummaryQuery(undefined, {
-    refetchOnMountOrArgChange: true,
-    pollingInterval: 5000,
-  });
-  
+  const { data: inboxSummary, isLoading } = useGetInboxSummaryQuery();
+
   // bind count safely
   const inboxCount = inboxSummary?.data ?? 0;
 

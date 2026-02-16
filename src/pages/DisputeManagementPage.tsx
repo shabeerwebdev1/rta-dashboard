@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Space,
   Card,
@@ -18,6 +18,8 @@ import {
   Tag,
   Upload,
   Image,
+  Tooltip,
+  Typography,
 } from "antd";
 import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined, UserOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
@@ -31,9 +33,6 @@ import {
   useUpdateDisputeMutation,
   useLazyGetLookupsQuery,
   useLazyGetDisputeByIdQuery,
-  useGetParkonicsQuery,
-  useSearchFinesQuery,
-  useSearchTradeQuery,
 } from "../services/rtkApiFactory";
 import { getFileUrl, useUploadFilesMutation } from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
@@ -45,9 +44,6 @@ import DataTableWrapper from "../components/common/DataTableWrapper";
 import DisputeViewModal from "../components/dispute/DisputeViewModal";
 import { usePermission } from "../hooks/usePermission";
 import { useAuth } from "../contexts/AuthContext";
-import { skipToken } from "@reduxjs/toolkit/query";
-import FinesViewDrawer from "../components/fines/FinesViewDrawer";
-import ParkonicViewDrawer from "../components/parkonic/ParkonicViewDrawer";
 
 const { Option } = Select;
 const pageKey = "dispute-management";
@@ -105,74 +101,19 @@ const DisputeManagementPage: React.FC = () => {
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
-
-  const [drawerType, setDrawerType] = useState<"vehicle" | "parkonic" | "trade" | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedFineId, setSelectedFineId] = useState<string | null>(null);
-  const [selectedFine, setSelectedFine] = useState<any>(null);
+  
+  // Enhanced hover state management
+  const [hoverDetails, setHoverDetails] = useState<Record<string, any>>({});
+  const [loadingHoverId, setLoadingHoverId] = useState<string | null>(null);
+  
+  // Prefetch management refs
+  const prefetchQueue = useRef<Set<string>>(new Set());
+  const prefetchTimeoutRef = useRef<NodeJS.Timeout>();
+  const hoverTimeoutRef = useRef<NodeJS.Timeout>();
+  const abortControllers = useRef<Map<string, AbortController>>(new Map());
 
   // State to maintain the rows data for downloading
   const [selectedRows, setSelectedRows] = useState([]);
-
-  const parkonicQuery = useGetParkonicsQuery(
-    drawerType === "parkonic" && selectedFineId
-      ? { searchKey: "entityNo", searchValue: selectedFineId, PageNumber: 1, PageSize: 1 }
-      : skipToken,
-  );
-
-  const vehicleQuery = useSearchFinesQuery(
-    drawerType === "vehicle" && selectedFineId
-      ? { searchKey: "fineId", searchValue: selectedFineId, PageNumber: 1, PageSize: 1 }
-      : skipToken,
-  );
-
-  const tradeQuery = useSearchTradeQuery(
-    drawerType === "trade" && selectedFineId
-      ? { searchKey: "fineId", searchValue: selectedFineId, PageNumber: 1, PageSize: 1 }
-      : skipToken,
-  );
-
-  const handleFineClick = (record: any) => {
-    // full reset first
-    setDrawerOpen(false);
-    setSelectedFine(null);
-    setDrawerType(null);
-    setSelectedFineId(null);
-
-    // allow React to apply reset before new values
-    setTimeout(() => {
-      if (record.source?.toLowerCase().includes("parkonic")) {
-        setDrawerType("parkonic");
-      } else if (record.entityCode?.toLowerCase().includes("trade")) {
-        setDrawerType("trade");
-      } else {
-        setDrawerType("vehicle");
-      }
-
-      setSelectedFineId(record.fineId);
-    }, 0);
-  };
-
-  useEffect(() => {
-    if (drawerType === "parkonic" && parkonicQuery.data?.data?.length) {
-      setSelectedFine(parkonicQuery.data.data[0]);
-      setDrawerOpen(true);
-    }
-  }, [parkonicQuery.data]);
-
-  useEffect(() => {
-    if (drawerType === "vehicle" && vehicleQuery.data?.data?.length) {
-      setSelectedFine(vehicleQuery.data.data[0]);
-      setDrawerOpen(true);
-    }
-  }, [vehicleQuery.data]);
-
-  useEffect(() => {
-    if (drawerType === "trade" && tradeQuery.data?.data?.length) {
-      setSelectedFine(tradeQuery.data.data[0]);
-      setDrawerOpen(true);
-    }
-  }, [tradeQuery.data]);
 
   // State for Pending Disputes filter
   const [showPendingDisputes, setShowPendingDisputes] = useState(false);
@@ -211,41 +152,9 @@ const DisputeManagementPage: React.FC = () => {
   const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [triggerGetDisputeById] = useLazyGetDisputeByIdQuery();
 
-  const [uploadFiles, { isLoading: isUploadingFiles }] = useUploadFilesMutation();
-
-  const searchInputRef = useRef<any>(null);
-
-  const handleShowPendingDisputes = () => {
-    if (!userRoleGUID) {
-      notification.error({ data: { en_Msg: "User role information not available" } }, "Error");
-      return;
-    }
-
-    if (showPendingDisputes) {
-      // Clear the filter
-      setShowPendingDisputes(false);
-    } else {
-      // Apply the filter
-      setShowPendingDisputes(true);
-    }
-  };
-
-  // Function to check if row is assigned to current user's role - case-insensitive
-  const isRowAssignedToUserRole = (record: any) => {
-    if (!userRoleGUID) return false;
-
-    // Check if record has assignedToRole field
-    if (record.assignedToRole) {
-      const assignedRole = normalizeGuid(record.assignedToRole);
-      return assignedRole === userRoleGUID;
-    }
-
-    return false;
-  };
-
-  // Custom row class name function
-  const getRowClassName = (record: any, index: number) => {
-    return isRowAssignedToUserRole(record) ? "assigned-to-user-row" : "";
+  // Check if error is from cancellation
+  const isCancelledError = (error: any): boolean => {
+    return error?.name === 'AbortError' || error?.message?.includes('aborted');
   };
 
   // Filter data locally for pending disputes - with case-insensitive comparison
@@ -264,6 +173,24 @@ const DisputeManagementPage: React.FC = () => {
     return data?.data || [];
   }, [data?.data, showPendingDisputes, userRoleGUID]);
 
+  // Function to check if row is assigned to current user's role - case-insensitive
+  const isRowAssignedToUserRole = useCallback((record: any) => {
+    if (!userRoleGUID) return false;
+
+    // Check if record has assignedToRole field
+    if (record.assignedToRole) {
+      const assignedRole = normalizeGuid(record.assignedToRole);
+      return assignedRole === userRoleGUID;
+    }
+
+    return false;
+  }, [userRoleGUID]);
+
+  // Custom row class name function
+  const getRowClassName = useCallback((record: any, index: number) => {
+    return isRowAssignedToUserRole(record) ? "assigned-to-user-row" : "";
+  }, [isRowAssignedToUserRole]);
+
   // Get total count for pagination (use original data total when not filtering)
   const totalCount = useMemo(() => {
     if (showPendingDisputes && userRoleGUID) {
@@ -272,6 +199,199 @@ const DisputeManagementPage: React.FC = () => {
     }
     return data?.total || 0;
   }, [data?.total, filteredData.length, showPendingDisputes, userRoleGUID]);
+
+  // Optimized hover handler with caching and abort controller
+  const handleFineHover = useCallback(async (record: any) => {
+    const disputeCode = record.disputeCode;
+
+    // Immediate return if already have data or currently loading
+    if (hoverDetails[disputeCode] || loadingHoverId === disputeCode) {
+      return;
+    }
+
+    // Cancel any existing request for this disputeCode
+    if (abortControllers.current.has(disputeCode)) {
+      abortControllers.current.get(disputeCode)?.abort();
+      abortControllers.current.delete(disputeCode);
+    }
+
+    try {
+      setLoadingHoverId(disputeCode);
+      
+      // Create new abort controller for this request
+      const controller = new AbortController();
+      abortControllers.current.set(disputeCode, controller);
+
+      const result = await triggerGetDisputeById(disputeCode).unwrap();
+      
+      // Only update if not aborted
+      if (!controller.signal.aborted && result?.data) {
+        setHoverDetails((prev) => ({
+          ...prev,
+          [disputeCode]: result.data,
+        }));
+      }
+    } catch (err) {
+      if (!isCancelledError(err)) {
+        console.error("Failed to load hover details for:", disputeCode);
+      }
+    } finally {
+      setLoadingHoverId(null);
+      abortControllers.current.delete(disputeCode);
+    }
+  }, [hoverDetails, loadingHoverId, triggerGetDisputeById]);
+
+  // Prefetch visible rows with priority queue - NOW DEFINED AFTER filteredData
+  const prefetchVisibleRows = useCallback(() => {
+    if (!filteredData || filteredData.length === 0) return;
+    
+    const rowsToPrefetch = filteredData.filter((record: any) => {
+      // Only prefetch if not already loaded and not in queue and not currently loading
+      return !hoverDetails[record.disputeCode] && 
+             !prefetchQueue.current.has(record.disputeCode) &&
+             loadingHoverId !== record.disputeCode;
+    });
+
+    // Add to queue
+    rowsToPrefetch.forEach((record: any) => {
+      prefetchQueue.current.add(record.disputeCode);
+    });
+
+    // Process queue with delay to avoid blocking UI
+    if (prefetchTimeoutRef.current) {
+      clearTimeout(prefetchTimeoutRef.current);
+    }
+
+    prefetchTimeoutRef.current = setTimeout(() => {
+      const processQueue = async () => {
+        const batch = Array.from(prefetchQueue.current).slice(0, 3); // Process 3 at a time
+        
+        for (const disputeCode of batch) {
+          const record = filteredData.find((r: any) => r.disputeCode === disputeCode);
+          if (record) {
+            await handleFineHover(record);
+            prefetchQueue.current.delete(disputeCode);
+          }
+        }
+        
+        // Process next batch if queue still has items
+        if (prefetchQueue.current.size > 0) {
+          prefetchTimeoutRef.current = setTimeout(processQueue, 200);
+        }
+      };
+      
+      processQueue();
+    }, 300); // Wait 300ms after last trigger
+  }, [filteredData, hoverDetails, loadingHoverId, handleFineHover]);
+
+  // Prefetch first page immediately
+  useEffect(() => {
+    if (filteredData && filteredData.length > 0) {
+      // Immediately prefetch first 5 records
+      const initialRecords = filteredData.slice(0, 5);
+      initialRecords.forEach((record: any) => {
+        if (!hoverDetails[record.disputeCode] && loadingHoverId !== record.disputeCode) {
+          // Use requestIdleCallback for non-blocking prefetch
+          if ('requestIdleCallback' in window) {
+            (window as any).requestIdleCallback(() => handleFineHover(record), { timeout: 1000 });
+          } else {
+            setTimeout(() => handleFineHover(record), 100);
+          }
+        }
+      });
+
+      // Then prefetch remaining visible rows
+      prefetchVisibleRows();
+    }
+  }, [filteredData, hoverDetails, loadingHoverId, handleFineHover, prefetchVisibleRows]);
+
+  // Set up Intersection Observer for rows as they become visible
+  useEffect(() => {
+    if (!filteredData || filteredData.length === 0) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const row = entry.target;
+            const disputeCode = row.getAttribute('data-dispute-code');
+            
+            if (disputeCode && !hoverDetails[disputeCode] && loadingHoverId !== disputeCode) {
+              const record = filteredData.find((r: any) => r.disputeCode === disputeCode);
+              if (record) {
+                // Use requestIdleCallback or setTimeout for non-urgent prefetch
+                if ('requestIdleCallback' in window) {
+                  (window as any).requestIdleCallback(() => handleFineHover(record), { timeout: 500 });
+                } else {
+                  setTimeout(() => handleFineHover(record), 50);
+                }
+              }
+            }
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '100px' } // Start loading when within 100px of viewport
+    );
+
+    // Observe all table rows after they're rendered
+    const timeoutId = setTimeout(() => {
+      document.querySelectorAll('[data-dispute-code]').forEach((el) => {
+        observer.observe(el);
+      });
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      observer.disconnect();
+    };
+  }, [filteredData, hoverDetails, loadingHoverId, handleFineHover]);
+
+  // Add scroll listener for table
+  useEffect(() => {
+    const tableContainer = document.querySelector('.ant-table-body');
+    if (tableContainer) {
+      const handleScroll = () => {
+        prefetchVisibleRows();
+      };
+      
+      tableContainer.addEventListener('scroll', handleScroll);
+      return () => tableContainer.removeEventListener('scroll', handleScroll);
+    }
+  }, [prefetchVisibleRows]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (prefetchTimeoutRef.current) {
+        clearTimeout(prefetchTimeoutRef.current);
+      }
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+      // Abort any ongoing requests
+      abortControllers.current.forEach(controller => controller.abort());
+      abortControllers.current.clear();
+    };
+  }, []);
+
+  const [uploadFiles, { isLoading: isUploadingFiles }] = useUploadFilesMutation();
+
+  const searchInputRef = useRef<any>(null);
+
+  const handleShowPendingDisputes = () => {
+    if (!userRoleGUID) {
+      notification.error({ data: { en_Msg: "User role information not available" } }, "Error");
+      return;
+    }
+
+    if (showPendingDisputes) {
+      // Clear the filter
+      setShowPendingDisputes(false);
+    } else {
+      // Apply the filter
+      setShowPendingDisputes(true);
+    }
+  };
 
   const getBase64 = (file: File) =>
     new Promise<string>((resolve, reject) => {
@@ -631,10 +751,66 @@ const DisputeManagementPage: React.FC = () => {
         if (column.key === "fineId") {
           return {
             ...column,
-            render: (value: any, record: any) => <a onClick={() => handleFineClick(record)}>{value}</a>,
+            render: (_: any, record: any) => {
+              const details = hoverDetails[record.disputeCode];
+              const fineDetails = details?.fineDetails;
+
+              const tooltipContent = fineDetails ? (
+                <div style={{ minWidth: 250 }}>
+                  <div>
+                    <strong>{t("form.violationCategoryId")}:</strong> {fineDetails.categoryId ?? t("common.noData")}
+                  </div>
+
+                  <div>
+                    <strong>{t("form.violationDescription")}:</strong>{" "}
+                    {i18n.language === "ar"
+                      ? fineDetails.violationNameAr || t("common.noData")
+                      : fineDetails.violationNameEn || t("common.noData")}
+                  </div>
+
+                  <div>
+                    <strong>{t("form.approvedBy")}:</strong> {fineDetails.reviewerName || t("common.noData")}
+                  </div>
+                </div>
+              ) : loadingHoverId === record.disputeCode ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Spin size="small" />
+                  {t("common.loading")}...
+                </span>
+              ) : (
+                <span>{t("common.hoverToLoad")}</span>
+              );
+
+              return (
+                <Tooltip
+                  key={record.disputeCode + (fineDetails ? "_loaded" : "_loading")}
+                  title={tooltipContent}
+                  placement="topLeft"
+                  mouseEnterDelay={0.3} // Slight delay to avoid flickering
+                >
+                  <Typography.Text 
+                    style={{ cursor: "help" }}
+                    onMouseEnter={() => {
+                      // Only trigger hover if not already loaded or loading
+                      if (!hoverDetails[record.disputeCode] && loadingHoverId !== record.disputeCode) {
+                        // Use a small timeout to avoid rapid fire requests
+                        if (hoverTimeoutRef.current) {
+                          clearTimeout(hoverTimeoutRef.current);
+                        }
+                        hoverTimeoutRef.current = setTimeout(() => {
+                          handleFineHover(record);
+                        }, 100);
+                      }
+                    }}
+                    data-dispute-code={record.disputeCode}
+                  >
+                    {record?.fineId || "—"}
+                  </Typography.Text>
+                </Tooltip>
+              );
+            },
           };
         }
-
         if (column.key === "dispute_Status") {
           return {
             ...column,
@@ -690,28 +866,27 @@ const DisputeManagementPage: React.FC = () => {
         return column;
       }),
     }),
-    [config.tableConfig, lookupOptions, i18n, disputeStatusEnum, getDisputeReasonByCode],
+    [
+      config.tableConfig,
+      lookupOptions,
+      i18n,
+      disputeStatusEnum,
+      getDisputeReasonByCode,
+      hoverDetails,
+      loadingHoverId,
+      t,
+      handleFineHover,
+    ],
   );
 
   const actionMenuItems = (record: any) => {
     const roleGUIDFromStorage = localStorage.getItem("roleGUID");
 
-    const isAssignedToUserRole = () => {
-      if (!roleGUIDFromStorage) return false;
-
-      const normalizedRoleGUID = roleGUIDFromStorage.toLowerCase().trim();
-      if (record.assignedTo) {
-        const assignedTo = record.assignedTo.toLowerCase().trim();
-        return assignedTo === normalizedRoleGUID;
-      }
-      return false;
-    };
-
     return [
       {
         key: "view",
         label: t("common.view"),
-        icon: isAssignedToUserRole() ? <EditOutlined /> : <EyeOutlined />,
+        icon: <EyeOutlined />,
         onClick: () => handleView(record),
       },
     ];
@@ -792,14 +967,6 @@ const DisputeManagementPage: React.FC = () => {
                   placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                   onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
                 />
-                {/* <Button
-                  icon={<UserOutlined />}
-                  onClick={handleShowPendingDisputes}
-                  className={showPendingDisputes ? "my-approvals-btn active" : "my-approvals-btn"}
-                  type={showPendingDisputes ? "primary" : "default"}
-                >
-                  {t("common.showPendingDisputes")}
-                </Button> */}
               </Space>
             </Col>
             <Col>
@@ -807,15 +974,6 @@ const DisputeManagementPage: React.FC = () => {
                 <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                   {t("common.downloadCsv")}
                 </Button>
-
-                {/* <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={() => handleModalOpen("add")}
-                  disabled={!canCreate(menuName)}
-                >
-                  {t("common.addNew")}
-                </Button> */}
               </Space>
             </Col>
           </Row>
@@ -846,7 +1004,6 @@ const DisputeManagementPage: React.FC = () => {
             selectedRowKeys,
             onChange: (keys: React.Key[], selectedRows: any[]) => {
               setSelectedRowKeys(keys);
-
               setSelectedRows((prev) => {
                 const remaining = prev.filter((p) => keys.includes(p.id));
                 const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
@@ -1140,45 +1297,6 @@ const DisputeManagementPage: React.FC = () => {
             disputeId={viewRecord.disputeCode}
             record={viewRecord}
             onStatusUpdate={refetch}
-          />
-        )}
-
-        {drawerType === "vehicle" && selectedFine && (
-          <FinesViewDrawer
-            open={drawerOpen}
-            fine={selectedFine}
-            onClose={() => {
-              setDrawerOpen(false);
-              setSelectedFine(null);
-              setDrawerType(null);
-              setSelectedFineId(null); // important
-            }}
-          />
-        )}
-
-        {drawerType === "parkonic" && selectedFine && (
-          <ParkonicViewDrawer
-            open={drawerOpen}
-            record={selectedFine}
-            onClose={() => {
-              setDrawerOpen(false);
-              setSelectedFine(null);
-              setDrawerType(null);
-              setSelectedFineId(null); // important
-            }}
-          />
-        )}
-
-        {drawerType === "trade" && selectedFine && (
-          <FinesViewDrawer
-            open={drawerOpen}
-            fine={selectedFine}
-            onClose={() => {
-              setDrawerOpen(false);
-              setSelectedFine(null);
-              setDrawerType(null);
-              setSelectedFineId(null); // important
-            }}
           />
         )}
       </Space>

@@ -60,17 +60,9 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
   // Determine current language
   const currentLanguage = i18n.language === "ar" || i18n.language === "ar-SA" ? "Arabic" : "English";
 
-  const { data: inboxSummary, isLoading } = useGetInboxSummaryQuery(undefined, {
-    refetchOnMountOrArgChange: true,
-    pollingInterval: 5000,
-  });
-  
-  
-  const { data: inboxMenus = [], isLoading: inboxLoading } = useGetInboxSummaryMenuQuery(undefined, {
-    refetchOnMountOrArgChange: true,
-    pollingInterval: 5000,
-  });
-  
+  const { data: inboxSummary, isLoading } = useGetInboxSummaryQuery();
+
+  const { data: inboxMenus = [], isLoading: inboxLoading } = useGetInboxSummaryMenuQuery();
 
   const inboxCount = inboxSummary?.data ?? 0;
   const totalInboxCount = inboxMenus.reduce((sum: number, item: any) => sum + (item.AW || 0), 0);

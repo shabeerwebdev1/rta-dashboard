@@ -10,6 +10,7 @@ import {
   useGetInspectionAttachmentsQuery,
   getMobileFileUrl,
   useLazyGetReviewHistoryQuery,
+  useLazyGetEntityHistoryQuery,
 } from "../../services/rtkApiFactory";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useAppNotification } from "../../utils/notificationManager";
@@ -45,6 +46,9 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
 
   const [getReviewHistory, { data: reviewHistory = [], isLoading: historyLoading }] = useLazyGetReviewHistoryQuery();
 
+  const [getEntityHistory, { data: entityHistory = [], isLoading: entityHistoryLoading }] =
+  useLazyGetEntityHistoryQuery();
+
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
     record
       ? {
@@ -53,6 +57,22 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
         }
       : skipToken,
   );
+
+
+  useEffect(() => {
+    if (open && record) {
+      const entityId = record.EntityGUID || record.inspectionGUID;
+      const entityCode = record.EntityCode || record.entityCode;
+  
+      if (record?.$SKWorkItemData) {
+        getReviewOptions(record.$SKWorkItemData);
+        getReviewHistory({ entityCode, entityId });
+      } else if (entityId && entityCode) {
+        getEntityHistory({ entityCode, entityId });
+      }
+    }
+  }, [open, record]);
+  
 
   const [selectedAction, setSelectedAction] = useState<any>(null);
   const [comments, setComments] = useState("");
@@ -220,7 +240,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
           {/* Fixed Header */}
           <div
             style={{
-              padding: 24,
+              padding: 10,
               position: "sticky",
               top: 0,
               zIndex: 10,
@@ -231,7 +251,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
             <Row
               align="middle"
               style={{
-                marginBottom: 24,
+                marginBottom: 0,
                 direction: isRTL ? "rtl" : "ltr",
               }}
             >
@@ -278,7 +298,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                         size="small"
                         style={{ marginBottom: 16 }}
                         headStyle={{
-                          background: "#f8fafc",
+                          background: token.colorBgContainer,
                           fontWeight: 600,
                           textAlign: isRTL ? "right" : "left",
                         }}
@@ -337,7 +357,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                         size="small"
                         style={{ marginBottom: 16 }}
                         headStyle={{
-                          background: "#f8fafc",
+                          background: token.colorBgContainer,
                           fontWeight: 600,
                           textAlign: isRTL ? "right" : "left",
                         }}
@@ -404,7 +424,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                         size="small"
                         style={{ marginBottom: 16 }}
                         headStyle={{
-                          background: "#f8fafc",
+                          background: token.colorBgContainer,
                           fontWeight: 600,
                           textAlign: isRTL ? "right" : "left",
                         }}
@@ -491,7 +511,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                     size="small"
                     style={{ marginBottom: 16 }}
                     headStyle={{
-                      background: "#f8fafc",
+                      background: token.colorBgContainer,
                       fontWeight: 600,
                       textAlign: isRTL ? "right" : "left",
                     }}
@@ -513,7 +533,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                     size="small"
                     style={{ marginBottom: 16 }}
                     headStyle={{
-                      background: "#f8fafc",
+                      background: token.colorBgContainer,
                       fontWeight: 600,
                       textAlign: isRTL ? "right" : "left",
                     }}
@@ -556,7 +576,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
 
                 {/* Right Column - Review Timeline */}
                 <Col span={6}>
-                  <ReviewTimeline data={reviewHistory} />
+                <ReviewTimeline data={record?.$SKWorkItemData ? reviewHistory : entityHistory} />
                 </Col>
               </Row>
             )}

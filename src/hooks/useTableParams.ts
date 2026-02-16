@@ -56,7 +56,8 @@ const serializeParams = (params: Record<string, any>): string => {
   return parts.join("&");
 };
 
-const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: string }, initialPageSize = 10) => {
+const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: string ;     filterKeyMap?: Record<string, string>;   // add this
+}, initialPageSize = 10) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const getBlankState = useCallback(
@@ -254,8 +255,9 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
       const value = state.columnFilters[key];
       if (value && value.length > 0) {
         // Convert 'status' (frontend) to 'leave_status' (backend)
-        const backendKey = key === 'status' ? 'leavestatus' : key;
+        const backendKey = pageConfig.filterKeyMap?.[key] || key;
         orFilters[backendKey] = value;
+        
       }
     }
     if (state.searchKey && state.searchValue) {

@@ -266,7 +266,11 @@ export const dynamicApi = createApi({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["Dispute"],
+      invalidatesTags: [
+        "Dispute",
+        "InboxSummary", // refresh count + list
+        "InboxSummaryMenu",
+      ],
     }),
 
     //Inpection Shifts
@@ -364,7 +368,11 @@ export const dynamicApi = createApi({
 
     updateParkonic: builder.mutation({
       query: (body) => ({ url: "/api/Parkonic", method: "PUT", body }),
-      invalidatesTags: ["ParkonicSearch"],
+      invalidatesTags: [
+        "ParkonicSearch",
+        "InboxSummary", // refresh count + list
+        "InboxSummaryMenu",
+      ],
     }),
 
     getParkonicVoilations: builder.query({
@@ -549,19 +557,27 @@ export const dynamicApi = createApi({
       providesTags: ["ParkonicsLocation"],
     }),
     getParkonicsLocationById: builder.query({
-      query: (id) => `/api/ParkonicsLocation/${id}`,
+      query: (locationGuid) => ({
+        url: "/api/ParkonicsLocation/getbyid",
+        params: { LocationGuid: locationGuid },
+      }),
     }),
+
     addParkonicsLocation: builder.mutation({
       query: (body) => ({ url: "/api/ParkonicsLocation", method: "POST", body }),
       invalidatesTags: ["ParkonicsLocation"],
     }),
     updateParkonicsLocation: builder.mutation({
-      query: ({ id, ...body }) => ({
-        url: `/api/ParkonicsLocation/status/${id}`,
+      query: (body) => ({
+        url: `/api/ParkonicsLocation/status`,
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["ParkonicsLocation"],
+      invalidatesTags: [
+        "ParkonicsLocation",
+        "InboxSummary", // refresh count + list
+        "InboxSummaryMenu",
+      ],
     }),
 
     // Reports
@@ -630,7 +646,7 @@ export const dynamicApi = createApi({
         url: "/api/CallIntegration/inboxNotifications",
         method: "POST",
         body: {
-          url: "/api/work-item/list?notificationCode=" + (notificationCode || ""),  
+          url: "/api/work-item/list?notificationCode=" + (notificationCode || ""),
           method: "GET",
           param: {
             PageNumber,
@@ -649,6 +665,7 @@ export const dynamicApi = createApi({
           TotalRecords: result?.TotalRecords || 0,
         };
       },
+      providesTags: ["InboxSummary"], // 🔥 ADD THIS
     }),
 
     getInboxSummaryMenu: builder.query<any[], void>({
@@ -698,7 +715,26 @@ export const dynamicApi = createApi({
         return response?.data || [];
       },
     }),
+
+    getEntityHistory: builder.query<any[], { entityCode: string; entityId: string }>({
+      query: ({ entityCode, entityId }) => ({
+        url: "/api/CallIntegration/inboxNotifications",
+        method: "POST",
+        body: {
+          url: `/api/entity/${entityCode}/history?id=${entityId}`,
+          method: "GET",
+          param: "", // keep same pattern
+        },
+      }),
+    
+      transformResponse: (response: any) => {
+        return response?.data || [];
+      },
+    }),
+    
   }),
+
+  
 });
 
 export const {
@@ -823,4 +859,5 @@ export const {
   useGetInboxSummaryMenuQuery,
   useLazyGetReviewOptionsQuery,
   useLazyGetReviewHistoryQuery,
+  useLazyGetEntityHistoryQuery,
 } = dynamicApi;

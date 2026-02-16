@@ -1,8 +1,9 @@
 import React, { useMemo } from "react";
-import { Card, Typography, Tag, Empty } from "antd";
+import { Card, Typography, Tag, Empty, theme } from "antd";
 import { CheckOutlined, RightOutlined, ClockCircleOutlined, UserOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
+import "dayjs/locale/ar";
 
 const { Text } = Typography;
 
@@ -11,8 +12,11 @@ interface ReviewTimelineProps {
 }
 
 const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
+  const { token } = theme.useToken();
   const isRTL = i18n.language === "ar";
+
+  const L = (en: string, ar: string) => (isRTL ? ar : en);
 
   const timelineData = useMemo(() => {
     if (!data?.length) return [];
@@ -24,15 +28,15 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
       <Card
         title={
           <Text strong style={{ fontSize: 16 }}>
-            {t("Review Timeline")}
+            {L("Review Timeline", "سجل المراجعة")}
           </Text>
         }
         size="small"
         style={{
           borderRadius: 12,
-          background: "#f8fafc",
+          background: token.colorBgContainer,
           height: 720,
-          border: "1px solid #e2e8f0",
+          border: `1px solid ${token.colorBorder}`,
         }}
         bodyStyle={{
           padding: "20px 16px",
@@ -42,7 +46,7 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
           justifyContent: "center",
         }}
       >
-        <Empty description={t("No Review History")} />
+        <Empty description={L("No Review History", "لا يوجد سجل مراجعة")} />
       </Card>
     );
   }
@@ -61,10 +65,10 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
     send_back: "#f97316",
     rfi: "#2563eb",
     feedback: "#7c3aed",
-    "Dispute Created": "#2563eb",
-    "Send to Director Review": "#f97316",
-    "Send to Manager Review": "#f97316",
-    "Send to Senior Supervisor Review": "#f97316",
+    "dispute created": "#2563eb",
+    "send to director review": "#f97316",
+    "send to manager review": "#f97316",
+    "send to senior supervisor review": "#f97316",
   };
 
   const ROLE_COLOR_MAP: Record<string, string> = {
@@ -89,37 +93,17 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
   return (
     <Card
       title={
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Text strong style={{ fontSize: 16 }}>
-            {t("Review Timeline")}
-          </Text>
-          {/* <Tag
-            style={{
-              background: "#e0f2fe",
-              color: "#0369a1",
-              borderRadius: "6px",
-              border: "none",
-              fontWeight: 600,
-              padding: "4px 12px",
-            }}
-          >
-            {t("Last In First Out")}
-          </Tag> */}
-        </div>
+        <Text strong style={{ fontSize: 16 }}>
+          {L("Review Timeline", "سجل المراجعة")}
+        </Text>
       }
       size="small"
       style={{
         borderRadius: 12,
-        background: "#f8fafc",
+        background: token.colorBgContainer,
         height: 720,
-        border: "1px solid #e2e8f0",
-        boxShadow: "0 1px 3px 0 rgb(0 0 0 / 0.1)",
+        border: `1px solid ${token.colorBorder}`,
+        boxShadow: token.boxShadowTertiary,
       }}
       bodyStyle={{
         padding: "20px 16px",
@@ -128,6 +112,7 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
       }}
     >
       <div style={{ position: "relative" }}>
+        {/* Timeline vertical line */}
         <div
           style={{
             position: "absolute",
@@ -136,7 +121,7 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
             top: 0,
             bottom: 0,
             width: 2,
-            background: "#e2e8f0",
+            background: token.colorBorderSecondary,
             zIndex: 0,
           }}
         />
@@ -144,9 +129,9 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
         {timelineData.map((item, index) => {
           const actionKey = (item.ReviewStatus || item.ActionType || "").toLowerCase();
 
-          const actionColor = ACTION_COLOR_MAP[actionKey] || "#64748b";
+          const actionColor = ACTION_COLOR_MAP[actionKey] || token.colorTextSecondary;
 
-          const roleColor = ROLE_COLOR_MAP[item.ActivityName] || ROLE_COLOR_MAP[item.Role] || "#64748b";
+          const roleColor = ROLE_COLOR_MAP[item.ActivityName] || ROLE_COLOR_MAP[item.Role] || token.colorTextSecondary;
 
           return (
             <div
@@ -159,10 +144,11 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
                 flexDirection: isRTL ? "row-reverse" : "row",
               }}
             >
+              {/* Icon */}
               <div style={{ width: 30, textAlign: "center" }}>
                 <div
                   style={{
-                    background: "white",
+                    background: token.colorBgContainer,
                     padding: "2px",
                     marginTop: "4px",
                   }}
@@ -180,23 +166,24 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
                       style={{
                         color: actionColor,
                         fontSize: 14,
-                        fontWeight: "bold",
                       }}
                     />
                   )}
                 </div>
               </div>
 
+              {/* Card */}
               <div
                 style={{
                   flex: 1,
-                  background: "#fff",
-                  border: "1px solid #e2e8f0",
+                  background: token.colorBgContainer,
+                  border: `1px solid ${token.colorBorder}`,
                   borderRadius: 12,
                   padding: 16,
                   position: "relative",
                 }}
               >
+                {/* Role ribbon */}
                 <div
                   style={{
                     position: "absolute",
@@ -214,25 +201,17 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
                   {item.ActivityName || item.Role || "—"}
                 </div>
 
-                <div
-                  style={{
-                    marginBottom: 12,
-                    textAlign: isRTL ? "right" : "left",
-                  }}
-                >
-                  <Text style={{ fontWeight: 700 }}>{t("Action")}:</Text>{" "}
+                {/* Action */}
+                <div style={{ marginBottom: 12, textAlign: isRTL ? "right" : "left", marginTop: 18 }}>
+                  <Text strong>{L("Action", "الإجراء")}:</Text>{" "}
                   <Tag color={actionColor} style={{ border: "none", fontWeight: 600 }}>
                     {item.ReviewStatus || item.ActionType || "—"}
                   </Tag>
                 </div>
 
-                <div
-                  style={{
-                    marginBottom: 12,
-                    textAlign: isRTL ? "right" : "left",
-                  }}
-                >
-                  <Text strong>{item.ActivityName || item.Role || "Actor"}:</Text>
+                {/* Actor */}
+                <div style={{ marginBottom: 12, textAlign: isRTL ? "right" : "left" }}>
+                  <Text strong>{L("Actor", "المنفذ")}:</Text>
                   <div
                     style={{
                       display: "flex",
@@ -246,29 +225,26 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
                   </div>
                 </div>
 
-                <div
-                  style={{
-                    marginBottom: 12,
-                    textAlign: isRTL ? "right" : "left",
-                  }}
-                >
-                  <Text strong>{t("Comments")}:</Text>
+                {/* Comments */}
+                <div style={{ marginBottom: 12, textAlign: isRTL ? "right" : "left" }}>
+                  <Text strong>{L("Comments", "التعليقات")}:</Text>
                   <div
                     style={{
-                      background: "#f8fafc",
+                      background: token.colorBgLayout,
                       padding: 12,
                       borderLeft: isRTL ? "none" : `4px solid ${actionColor}`,
                       borderRight: isRTL ? `4px solid ${actionColor}` : "none",
                       marginTop: 4,
                     }}
                   >
-                    {item.ReviewComments || item.Comments || t("No comments")}
+                    {item.ReviewComments || item.Comments || L("No comments", "لا توجد تعليقات")}
                   </div>
                 </div>
 
+                {/* Date */}
                 <div
                   style={{
-                    borderTop: "1px dashed #e2e8f0",
+                    borderTop: `1px dashed ${token.colorBorderSecondary}`,
                     paddingTop: 8,
                     textAlign: isRTL ? "right" : "left",
                   }}
@@ -276,7 +252,9 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
                   <ClockCircleOutlined />
                   <Text style={{ marginLeft: 6 }}>
                     {item.ActionDateTime || item.Date
-                      ? dayjs(item.ActionDateTime || item.Date).format("DD MMM YYYY, hh:mm A")
+                      ? dayjs(item.ActionDateTime || item.Date)
+                          .locale(isRTL ? "ar" : "en")
+                          .format(isRTL ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A")
                       : "—"}
                   </Text>
                 </div>

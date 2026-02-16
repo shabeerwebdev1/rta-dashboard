@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Define the PageConfig interface if not already defined
-import { CheckCircleOutlined, EnvironmentOutlined, ExclamationCircleOutlined, IdcardOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, EnvironmentOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
 import { Tag } from "antd";
 import dayjs from "dayjs";
@@ -31,30 +31,35 @@ export const parkonicLocationPageConfig: PageConfig = {
     delete: "/api/ParkonicLocation/:id",
   },
   searchConfig: {
-    // globalSearchKeys: [i18n.language === "en" ? "parking_Name_En" : "parking_Name_Ar", "parkonics_Location_Id"],
     globalSearchKeys: ["parking_Name_En", "parking_Name_Ar", "parkonics_Location_Id"],
-    columnFilterKeys: ["zone", "area"],
+    columnFilterKeys: ["zone", "area", "status"],
     dateRangeKey: "created_At",
+    filterKeyMap: {
+      status: "status"
+    }
   },
+  
   statsConfig: [
     {
       title: "stats.TotalRecords",
       icon: <EnvironmentOutlined />,
-      value: (data, metadata) => `${data.length} / ${metadata.totalCount}`,
+      value: (data, metadata) => `${data.length} / ${metadata.total}`,
     },
     {
       title: "status.approved",
       icon: <CheckCircleOutlined />,
-      value: (data) => `${data.filter((d) => d.isUpdatedBack).length} / ${data.length}`,
+      value: (data, metadata) => `${data.filter((d) => d.status === 1).length}/${metadata.pgnApprovedRecords}`,
+
       color: "#52c41a",
     },
     {
       title: "status.pending",
       icon: <ExclamationCircleOutlined />,
-      value: (data) => `${data.filter((d) => !d.isUpdatedBack).length} / ${data.length}`,
+      value: (data, metadata) => `${data.filter((d) => d.status === 0).length}/${metadata.pgnPendingRecords}`,
       color: "#faad14",
     },
   ],
+  
   tableConfig: {
     columns: [
       { key: "parkonics_Location_Id", title: "form.parkonicsLocationId", type: "string" },
@@ -71,21 +76,26 @@ export const parkonicLocationPageConfig: PageConfig = {
       },
 
       {
-        key: "isUpdatedBack",
+        key: "status",
         title: "form.status",
         type: "custom",
         sortable: true,
         filterable: true,
         render: (status: string) => {
           const statusMap: Record<string, { text: string; color: string }> = {
-            0: { text: "Approved", color: "green" },
-            1: { text: "Pending", color: "blue" },
+            1: { text: "Approved", color: "green" },
+            0: { text: "Pending", color: "blue" },
           };
           const { text, color } = statusMap[Number(status)] || { text: "Unknown", color: "default" };
           return <Tag color={color}>{text}</Tag>;
         },
       },
-      { key: "updated_By", title: "form.approvedBy", type: "string" , },
+      {
+        key: "updated_By",
+        title: "form.approvedBy",
+        type: "string",
+        render: (value: any) => (value ? value : ""),
+      },
       { key: "updated_At", title: "form.approvedDate", dataIndex: "long", type: "string", sortable: true },
     ],
     viewRecord: true,

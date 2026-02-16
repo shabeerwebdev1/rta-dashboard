@@ -30,6 +30,9 @@ export const leaveManagementPageConfig: PageConfig = {
     globalSearchKeys: ["userName"],
     columnFilterKeys: ["leaveType", "leave_status"],
     dateRangeKey: "LeaveFromDate",
+    filterKeyMap: {
+      status: "status"
+    }
   },
   statsConfig: [
     {

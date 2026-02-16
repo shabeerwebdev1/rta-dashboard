@@ -444,10 +444,10 @@
     "reviewResult": "Review Result",
     "vehiclePlate": "Vehicle Plate",
     "reviewedDate": "Reviewed Date",
-    "selectAction" : "Select Action",
+    "selectAction": "Select Action",
     "selectActionPlaceholder": "Please select an action",
     "refernecenumber": "Reference Number"
-    
+
   },
   "common": {
     "action": "Action",
@@ -544,9 +544,8 @@
     "previous": "Previous",
     "showPendingDisputes": " Show Pending Disputes",
     "selectRole": "Select Role",
-    "resubmit" : "Resubmit",
+    "resubmit": "Resubmit",
     "aed": "AED"
-
   },
   "entity": {
     "plate": "Plate",

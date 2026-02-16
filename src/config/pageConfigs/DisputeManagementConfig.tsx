@@ -19,6 +19,7 @@ export const disputeManagementConfig: PageConfig = {
     put: "/api/Dispute/Update",
     delete: "",
   },
+
   searchConfig: {
     globalSearchKeys: ["fineId"],
     columnFilterKeys: ["department", "payment_Type"],
@@ -67,14 +68,16 @@ export const disputeManagementConfig: PageConfig = {
       {
         key: "fineId",
         title: "form.fineNumber",
-        type: "select",
-        
+        type: "custom" as const,
       },
+      
+
       {
         key: "dispute_Id",
         title: "form.disputenumber",
         type: "select",
       },
+
       {
         key: "payment_Type",
         title: "form.paymentType",
@@ -86,25 +89,27 @@ export const disputeManagementConfig: PageConfig = {
           { label: "Online", value: 3 },
         ],
       },
-      // { key: "phone", title: "form.phoneNumber", type: "string" },
-      // { key: "crm_Ref", title: "form.crmReference", type: "string", sortable: true },
-      // { key: "email", title: "form.email", type: "string" },
+
       { key: "source", title: "form.source", type: "string" },
+
       {
         key: "created_At",
         title: "form.createdAt",
         type: "string",
         render: (value) => dayjs(value).format("DD MMM YYYY, hh:mm A"),
       },
+
       {
         key: "dispute_Status",
         title: "form.disputestatus",
         type: "string",
       },
     ],
+
     viewRecord: true,
     showEdit: true,
   },
+
   formConfig: {
     modalWidth: "720px",
     fields: [
