@@ -1,5 +1,18 @@
 import type { PageConfig } from "../../types/config";
+import dayjs from "dayjs";
 import { CheckCircleOutlined, CloseCircleOutlined, SearchOutlined } from "@ant-design/icons";
+
+
+const formatDate = (value: string) => {
+  if (!value) return "";
+
+  const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+  const isArabic = lang.startsWith("ar");
+
+  return dayjs(value)
+    .locale(isArabic ? "ar" : "en")
+    .format(isArabic ? "DD MMMM YYYY" : "DD MMM YYYY");
+};
 
 export const inspectionObstacleConfig: PageConfig = {
   key: "inspection-obstacles",
@@ -42,7 +55,7 @@ export const inspectionObstacleConfig: PageConfig = {
       { key: "zone", title: "form.zone", type: "string", sortable: true },
       { key: "area", title: "form.area", type: "string", sortable: true },
       { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "string", filterable: true },
-      { key: "createdDateTime", title: "form.createdDate", type: "date" },
+      { key: "createdDateTime", title: "form.createdDate", type: "date" , render: formatDate, sortable: true },
       { key: "closestPaymentDevice", title: "form.closestPD", type: "string" },
     ],
     viewRecord: true,

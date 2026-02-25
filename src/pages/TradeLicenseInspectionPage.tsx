@@ -207,7 +207,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
                 displayValue =
                   displayValue == null ? t("common.noData") : getLabelFromValue(displayValue, lookupOptions, i18n);
               } else if (columnKey.includes("Date") || columnKey.includes("date")) {
-                displayValue = displayValue ? dayjs(displayValue).format("DD-MM-YYYY") : t("common.noData");
+                displayValue = displayValue ? dayjs(displayValue).format("DD MMM YYYY") : t("common.noData");
               } else {
                 displayValue = displayValue == null || displayValue === "" ? t("common.noData") : displayValue;
               }
@@ -386,7 +386,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
 
               <RangePicker
                 value={state.dateRange}
-                format={"DD-MM-YYYY"}
+                format={"DD MMM YYYY"}
                 placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />

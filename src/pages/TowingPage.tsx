@@ -140,10 +140,10 @@ const TowingPage: React.FC = () => {
               case "updated_Date":
               case "towing_Date":
               case "inspection_Date":
-                // Format dates to dd-mm-yyyy (without time)
+                // Format dates to DD MMM YYYY (without time)
                 if (value) {
                   try {
-                    value = dayjs(value).format("DD-MM-YYYY");
+                    value = dayjs(value).format("DD MMM YYYY");
                   } catch (error) {
                     value = value; // Keep original if parsing fails
                   }
@@ -165,7 +165,7 @@ const TowingPage: React.FC = () => {
             ) {
               if (value) {
                 try {
-                  value = dayjs(value).format("DD-MM-YYYY");
+                  value = dayjs(value).format("DD MMM YYYY");
                 } catch (error) {
                   // Keep original value if parsing fails
                 }
@@ -247,7 +247,7 @@ const TowingPage: React.FC = () => {
 
                 <DatePicker.RangePicker
                   value={state.dateRange}
-                  format={"DD-MM-YYYY"}
+                  format={"DD MMM YYYY"}
                   placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                   onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
                 />

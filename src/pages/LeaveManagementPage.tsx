@@ -190,7 +190,7 @@ const LeaveManagementPage: React.FC = () => {
         if (key === "leaveType") value = getLeaveTypeName(value);
         else if (key === "status") value = statusLabels[value] || value;
         else if (key.includes("Date") && value) {
-          value = key === "createdDate" ? dayjs(value).format("DD-MM-YYYY") : dayjs(value).format("DD-MM-YYYY");
+          value = key === "createdDate" ? dayjs(value).format("DD MMM YYYY") : dayjs(value).format("DD MMM YYYY");
         }
 
         csvRecord[headerName] = value !== null && value !== undefined ? value : "";
@@ -405,7 +405,7 @@ const LeaveManagementPage: React.FC = () => {
 
                 <DatePicker.RangePicker
                   value={state.dateRange}
-                  format={"DD-MM-YYYY"}
+                  format={"DD MMM YYYY"}
                   placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                   onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
                 />

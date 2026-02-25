@@ -247,7 +247,7 @@ const ReportsPage: React.FC = () => {
         XML: "xml",
         MHTML: "mhtml",
       };
-      const fileName = `${reportConfig.name}_${dayjs().format("DD-MM-YYYY-HH-mm-ss")}.${extMap[values.format] || "bin"}`;
+      const fileName = `${reportConfig.name}_${dayjs().format("DD MMM YYYY-HH-mm-ss")}.${extMap[values.format] || "bin"}`;
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -336,7 +336,7 @@ const ReportsPage: React.FC = () => {
                         label={t("form.dateRange")}
                         rules={[{ required: true, message: t("messages.pleaseSelectDateRange") }]}
                       >
-                        <DatePicker.RangePicker format="DD-MM-YYYY" style={{ width: "100%" }} />
+                        <DatePicker.RangePicker format="DD MMM YYYY" style={{ width: "100%" }} />
                       </Form.Item>
                     </Col>
                   )}

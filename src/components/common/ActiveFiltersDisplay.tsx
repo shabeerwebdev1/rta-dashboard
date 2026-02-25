@@ -3,6 +3,14 @@ import { Tag, Space, Typography, Button, theme } from "antd";
 import { ArrowUpOutlined, ArrowDownOutlined, UserOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
+import "dayjs/locale/ar";
+
+// Helper function to format date based on language
+const formatDateRange = (date: dayjs.Dayjs, language: string) => {
+  return date
+    .locale(language.startsWith("ar") ? "ar" : "en")
+    .format(language.startsWith("ar") ? "DD MMMM YYYY" : "DD MMM YYYY");
+};
 
 const tagStyle: React.CSSProperties = {
   margin: "0 4px",
@@ -26,7 +34,7 @@ interface ActiveFiltersDisplayProps {
   lookupOptions?: any[];
   getLabelFromValue?: (value: number, options: any[], i18n: any) => string;
   statusLabels?: Record<number, string>;
-  // NEW: My Approvals filter props
+  // My Approvals filter props
   showMyApprovals?: boolean;
   onClearMyApprovals?: () => void;
   zoneOptions?: any[];
@@ -42,7 +50,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
   lookupOptions = [],
   getLabelFromValue,
   statusLabels,
-  // NEW: My Approvals props
+  // My Approvals props
   showMyApprovals,
   onClearMyApprovals,
   zoneOptions = [],
@@ -99,18 +107,19 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
       return String(value);
     }
 
-    // Handle status labels
+    // Handle status labels with bilingual support
     if (
       (columnKey === "status" ||
         columnKey === "dispute_Status" ||
         columnKey === "reviewStatus" ||
-        columnKey === "isUpdatedBack") &&
+        columnKey === "isUpdatedBack" ||
+        columnKey === "plateStatus_Id") &&
       statusLabels
     ) {
       return statusLabels[Number(value)] || String(value);
     }
 
-    // Handle lookup-based filters
+    // Handle lookup-based filters (with bilingual support)
     if (getLabelFromValue) {
       const optionsForColumn = getLookupOptionsForColumn(columnKey);
       if (optionsForColumn.length > 0) {
@@ -155,15 +164,17 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     );
   }
 
-  // 3. Date Range Filter
+  // 3. Date Range Filter (with bilingual support)
   if (state.dateRange) {
-    const from = state.dateRange[0].format("DD-MM-YYYY");
-    const to = state.dateRange[1].format("DD-MM-YYYY");
+    const from = formatDateRange(state.dateRange[0], i18n.language);
+    const to = formatDateRange(state.dateRange[1], i18n.language);
+    const dateLabel = i18n.language === "ar" ? "من إلى" : "from to";
+    
     filterGroups.push(
       <Space key="date_group" align="center">
         <Text>{t("form.dateRange")}: </Text>
         <Tag color={tagColor} key="date" closable onClose={() => onClearFilter("date")} style={tagStyle}>
-          {`${from} to ${to}`}
+          {`${from} ${dateLabel} ${to}`}
         </Tag>
       </Space>,
     );

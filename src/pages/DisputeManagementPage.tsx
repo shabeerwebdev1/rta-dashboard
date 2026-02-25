@@ -705,7 +705,7 @@ const DisputeManagementPage: React.FC = () => {
                 : disputeStatusEnum.find((s) => s.value === item.dispute_Status)?.labelEn
               : "-",
             [t("form.actualDisputeDate")]: item.actualDisputeDate
-              ? dayjs(item.actualDisputeDate).format("DD-MM-YYYY")
+              ? dayjs(item.actualDisputeDate).format("DD MMM YYYY")
               : "-",
             [t("form.crmReference")]: item.crm_Ref || "-",
             [t("form.email")]: item.email || "-",
@@ -963,7 +963,7 @@ const DisputeManagementPage: React.FC = () => {
 
                 <DatePicker.RangePicker
                   value={state.dateRange}
-                  format={"DD-MM-YYYY"}
+                  format={"DD MMM YYYY"}
                   placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                   onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
                 />
@@ -1214,7 +1214,7 @@ const DisputeManagementPage: React.FC = () => {
                   >
                     <DatePicker
                       style={{ width: "100%" }}
-                      format="DD-MM-YYYY"
+                      format="DD MMM YYYY"
                       disabledDate={(current) => current && current > dayjs().endOf("day")}
                     />
                   </Form.Item>

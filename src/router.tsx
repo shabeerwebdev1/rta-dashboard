@@ -12,6 +12,7 @@ import DndShiftManagement from "./pages/DndShiftManagement";
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const PermitsPage = lazy(() => import("./pages/PermitsPage"));
 const WhitelistPlatesPage = lazy(() => import("./pages/WhitelistPlatesPage"));
+const WhitelistTradeLicensesPage = lazy(() => import("./pages/WhitelistTradeLicensesPage"));
 const PledgesPage = lazy(() => import("./pages/PledgesPage"));
 const InspectionObstaclesPage = lazy(() => import("./pages/InspectionObstaclesPage"));
 const FinesPage = lazy(() => import("./pages/FinesPage"));
@@ -123,6 +124,14 @@ const AppRoutes = () => (
             element={
               <ProtectedRoute>
                 <WhitelistPlatesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={PATHS.WHITELIST_TRADELICENSES}
+            element={
+              <ProtectedRoute>
+                <WhitelistTradeLicensesPage />
               </ProtectedRoute>
             }
           />

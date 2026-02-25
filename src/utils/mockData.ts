@@ -29,7 +29,7 @@ export const generateWhitelistData = (count: number): WhitelistRecord[] => {
       licenseNumber: `TLN${Math.floor(10000000 + Math.random() * 90000000)}`,
       date: dayjs()
         .add(Math.floor(Math.random() * 365) - 60, "day")
-        .format("DD-MM-YYYY"),
+        .format("DD MMM YYYY"),
       location: {
         lat: baseCity.lat + latOffset,
         lng: baseCity.lng + lngOffset,

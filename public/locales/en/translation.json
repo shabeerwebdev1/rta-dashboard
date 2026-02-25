@@ -42,7 +42,9 @@
     "Criteria&Weights": "Criteria & Weights",
     "proactivecampaigns": "Proactive Campaigns",
     "inbox": "Inbox",
-    "allInbox": "All Inbox"
+    "allInbox": "All Inbox",
+    "whitelistPlates": "Plate",
+    "whitelistTradeLicenses": "Trade License"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -447,7 +449,6 @@
     "selectAction": "Select Action",
     "selectActionPlaceholder": "Please select an action",
     "refernecenumber": "Reference Number"
-
   },
   "common": {
     "action": "Action",
@@ -658,7 +659,11 @@
     "score": "Enter score",
     "searchPlaceholder": "Search...",
     "plotnumber": "Enter the plot number",
-    "tradenumber": "Enter the trade number"
+    "tradenumber": "Enter the trade number",
+    "plotNumber": "Enter the plot number",
+    "tradeLicense_EN_Name": "Enter the trade license name in English",
+    "tradeLicense_AR_Name": "Enter the trade license name in Arabic",
+    "sendToEmail": "Enter email to send the report"
   },
   "dashboard": {
     "totalInspectors": "Total Inspectors",
@@ -727,7 +732,11 @@
     "Pending": "Pending",
     "Approved": "Approved",
     "Rejected": "Rejected",
-    "InReview": "In Review"
+    "InReview": "In Review",
+    "TotalLicenses": "Total Licenses",
+    "ActiveLicenses": "Active Licenses",
+    "ExpiredLicenses": "Expired Licenses",
+    "InactiveLicenses": "Inactive Licenses"
   },
   "validation": {
     "required": " Please enter {{field}} ",

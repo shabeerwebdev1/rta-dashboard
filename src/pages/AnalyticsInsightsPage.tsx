@@ -35,7 +35,7 @@ const ReportHtmlViewer: React.FC = () => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `report-${dayjs().format("DD-MM-YYYY-HH-mm-ss")}.pdf`;
+        a.download = `report-${dayjs().format("DD MMM YYYY-HH-mm-ss")}.pdf`;
         a.click();
         window.URL.revokeObjectURL(url);
       } else {
@@ -77,7 +77,7 @@ const ReportHtmlViewer: React.FC = () => {
             <RangePicker
               value={dateRange as any}
               onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
-              format="DD-MM-YYYY"
+              format="DD MMM YYYY"
               style={{ width: "100%" }}
             />
           </div>

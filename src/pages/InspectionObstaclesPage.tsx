@@ -480,7 +480,7 @@ const InspectionObstaclesPage: React.FC = () => {
         } else if (column.key === "status") {
           csvRecord[t("form.status")] = statusLabels[item.status] || item.status;
         } else if (column.key === "createdDate") {
-          csvRecord[t("form.createdDate")] = item.createdDate ? dayjs(item.createdDate).format("DD-MM-YYYY") : "";
+          csvRecord[t("form.createdDate")] = item.createdDate ? dayjs(item.createdDate).format("DD MMM YYYY") : "";
         }
       });
 
@@ -755,7 +755,7 @@ const InspectionObstaclesPage: React.FC = () => {
 
               <DatePicker.RangePicker
                 value={state.dateRange}
-                format={"DD-MM-YYYY"}
+                format={"DD MMM YYYY"}
                 placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />

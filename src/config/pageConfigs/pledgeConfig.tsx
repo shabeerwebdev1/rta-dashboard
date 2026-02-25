@@ -8,6 +8,18 @@ import {
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
 
+
+const formatDate = (value: string) => {
+  if (!value) return "";
+
+  const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+  const isArabic = lang.startsWith("ar");
+
+  return dayjs(value)
+    .locale(isArabic ? "ar" : "en")
+    .format(isArabic ? "DD MMMM YYYY" : "DD MMM YYYY");
+};
+
 export const pledgeConfig: PageConfig = {
   key: "pledges",
   title: "page.title.pledges",
@@ -81,8 +93,8 @@ export const pledgeConfig: PageConfig = {
       { key: "tradeLicenseNumber", title: "form.tradeLicenseNumber", type: "string", sortable: true },
       { key: "businessName", title: "form.businessName", type: "string", sortable: true },
       { key: "pledgeType", title: "form.pledgeType", type: "string", filterable: true },
-      { key: "pledgeDate", title: "form.pledgestartDate", type: "date", sortable: true },
-      { key: "pledgeEndDate", title: "form.pledgeEndDate", type: "date", sortable: true },
+      { key: "pledgeDate", title: "form.pledgestartDate", type: "date", sortable: true , render: formatDate},
+      { key: "pledgeEndDate", title: "form.pledgeEndDate", type: "date", sortable: true , render: formatDate},
       { key: "pledgeStatus", title: "form.status", type: "string", sortable: true, filterable: true },
     ],
   },

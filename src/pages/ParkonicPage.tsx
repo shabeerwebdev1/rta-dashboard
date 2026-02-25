@@ -254,7 +254,7 @@ const ParkonicPage: React.FC = () => {
               <span>{t("common.filterByEntryDate")}</span>
               <DatePicker.RangePicker
                 value={state.dateRange}
-                format={"DD-MM-YYYY"}
+                format={"DD MMM YYYY"}
                 placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />

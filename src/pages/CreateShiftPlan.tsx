@@ -1055,7 +1055,7 @@ export default function CreateShiftPlan() {
                   }
                   return false;
                 }}
-                format="DD-MM-YYYY"
+                format="DD MMM YYYY"
                 placeholder={[t("placeholders.startDate", "Start Date"), t("placeholders.endDate", "End Date")]}
               />
             </Form.Item>
@@ -1096,7 +1096,7 @@ export default function CreateShiftPlan() {
                     <div style={{ color: "#666", fontSize: 12 }}>
                       {t("shiftPlanning.publishedOn", "Published On")}:{" "}
                       {dayjs(lastBatch.data.addOn).isValid()
-                        ? dayjs(lastBatch.data.addOn).format("DD-MM-YYYY HH:mm")
+                        ? dayjs(lastBatch.data.addOn).format("DD MMM YYYY HH:mm")
                         : "-"}
                     </div>
                   </div>

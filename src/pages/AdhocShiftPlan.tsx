@@ -1062,7 +1062,7 @@ export default function AdhocShiftPlan() {
                   setHasPlanned(false);
                   setRows([]);
                 }}
-                format="DD-MM-YYYY"
+                format="DD MMM YYYY"
               />
             </Col>
 

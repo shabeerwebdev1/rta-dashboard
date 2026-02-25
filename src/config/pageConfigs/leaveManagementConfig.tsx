@@ -1,11 +1,7 @@
-import {
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  CloseCircleOutlined,
-  IdcardOutlined,
-} from "@ant-design/icons";
+import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, IdcardOutlined } from "@ant-design/icons";
 import { PageConfig } from "../../types/config";
 import { Tag } from "antd";
+import dayjs from "dayjs";
 
 export enum LeaveStatus {
   Pending = 0,
@@ -21,6 +17,17 @@ const statusMap: Record<LeaveStatus, { text: string; color: string }> = {
   [LeaveStatus.Rejected]: { text: "Rejected", color: "red" },
 };
 
+const formatDate = (value: string) => {
+  if (!value) return "";
+
+  const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+  const isArabic = lang.startsWith("ar");
+
+  return dayjs(value)
+    .locale(isArabic ? "ar" : "en")
+    .format(isArabic ? "DD MMMM YYYY" : "DD MMM YYYY");
+};
+
 export const leaveManagementPageConfig: PageConfig = {
   key: "LeaveManagement",
   title: "page.title.leaveManagement",
@@ -31,8 +38,8 @@ export const leaveManagementPageConfig: PageConfig = {
     columnFilterKeys: ["leaveType", "leave_status"],
     dateRangeKey: "LeaveFromDate",
     filterKeyMap: {
-      status: "status"
-    }
+      status: "status",
+    },
   },
   statsConfig: [
     {
@@ -63,21 +70,20 @@ export const leaveManagementPageConfig: PageConfig = {
         `${data.filter((d) => d.status === LeaveStatus.Rejected).length} / ${metadata?.rejectedRecords || 0}`,
       color: "red",
     },
-    
   ],
   tableConfig: {
     rowKey: "leaveId",
     columns: [
       { key: "userName", title: "form.employeeName", type: "string", sortable: false },
-      { 
+      {
         key: "leaveTypeName", // Changed from "leaveType" to "leaveTypeName"
-        title: "form.leaveType", 
-        type: "string", 
-        sortable: false, 
-        filterable: false 
+        title: "form.leaveType",
+        type: "string",
+        sortable: false,
+        filterable: false,
       },
-      { key: "fromDate", title: "form.fromDate", type: "date", sortable: false },
-      { key: "toDate", title: "form.toDate", type: "date", sortable: false },
+      { key: "fromDate", title: "form.fromDate", type: "date", sortable: false, render: formatDate },
+      { key: "toDate", title: "form.toDate", type: "date", sortable: false, render: formatDate },
       {
         key: "totalLeaveDays",
         title: "form.totalLeaveDays",

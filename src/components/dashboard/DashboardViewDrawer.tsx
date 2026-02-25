@@ -15,7 +15,7 @@ const DashboardViewDrawer: React.FC<DashboardViewDrawerProps> = ({ open, onClose
   const inspectorData = inspector?.details || {
     name: "INS - 000-111 - RTA",
     email: "Email00@gmail.com",
-    dob: "dd-mm-yyyy",
+    dob: "DD MMM YYYY",
     mobile: "0000000000",
     zone: "Zone",
     area: "Area",

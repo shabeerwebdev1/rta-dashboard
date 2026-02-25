@@ -251,7 +251,7 @@ const SupervisorViewPage: React.FC = () => {
           </Col>
           <Col span={6}>
             <DatePicker.RangePicker
-              format={"DD-MM-YYYY"}
+              format={"DD MMM YYYY"}
               placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
             />
           </Col>

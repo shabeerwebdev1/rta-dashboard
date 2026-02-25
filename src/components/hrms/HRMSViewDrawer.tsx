@@ -248,7 +248,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                   {record.supervisorName}
                 </Descriptions.Item>
                 <Descriptions.Item label={t("form.date") || "Date"}>
-                  {dayjs(record.date).format("DD-MM-YYYY")}
+                  {dayjs(record.date).format("DD MMM YYYY")}
                 </Descriptions.Item>
               </Descriptions>
             </Card>

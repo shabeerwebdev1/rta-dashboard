@@ -43,6 +43,7 @@ export const PATHS = {
   CRITERIA: "criteria",
   PROACTIVECAMPAIGN: "proactive-campaign",
   HRMS: "hrms",
+  WHITELIST_TRADELICENSES: "tradelicenses", // ✅ added missing path
 };
 
 export const FULL_PATHS = {
@@ -60,7 +61,7 @@ export const FULL_PATHS = {
   // --- Whitelist section ---
   WHITELIST: "/whitelist",
   WHITELIST_PLATES: "/whitelist/plates",
-  WHITELIST_TRADELICENSES: "/whitelist/tradelicenses",
+  WHITELIST_TRADELICENSES: "/whitelist/tradelicenses", // ✅ added missing path
   INSPECTIONS_OBSTACLES: "/whitelist/inspections-obstacles", // ✅ fixed nesting
 
   PLEDGES: "/pledges",

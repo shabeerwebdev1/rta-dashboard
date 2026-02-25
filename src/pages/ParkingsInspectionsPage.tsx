@@ -180,13 +180,13 @@ const TradeLicenseInspectionPage: React.FC = () => {
           case "dueDate":
           case "paymentDate":
           case "date":
-            // Format date fields to DD-MM-YYYY
-            value = value ? dayjs(value).format("DD-MM-YYYY") : t("common.noData");
+            // Format date fields to DD MMM YYYY
+            value = value ? dayjs(value).format("DD MMM YYYY") : t("common.noData");
             break;
           default:
             // ✅ ADDED: Auto-detect other date fields
             if (key.includes("Date") || key.includes("date") || key.includes("Time") || key.includes("time")) {
-              value = value ? dayjs(value).format("DD-MM-YYYY") : t("common.noData");
+              value = value ? dayjs(value).format("DD MMM YYYY") : t("common.noData");
             } else {
               value = value != null ? String(value) : t("common.noData");
             }
@@ -353,7 +353,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
 
               <RangePicker
                 value={state.dateRange}
-                format={"DD-MM-YYYY"}
+                format={"DD MMM YYYY"}
                 placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />

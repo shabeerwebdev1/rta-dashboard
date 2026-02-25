@@ -86,7 +86,6 @@ const WhitelistPlatesPage: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("plate");
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
@@ -104,31 +103,31 @@ const WhitelistPlatesPage: React.FC = () => {
   const violationCategoryOptions = useMemo(
     () => [
       {
-        value: 6001,
+        value: "Parking Violation",
         labelEn: "Parking Violation",
         labelAr: "مخالفة وقوف",
         label: i18n.language === "ar" ? "مخالفة وقوف" : "Parking Violation",
       },
       {
-        value: 6002,
+        value: "Speed Violation",
         labelEn: "Speed Violation",
         labelAr: "مخالفة سرعة",
         label: i18n.language === "ar" ? "مخالفة سرعة" : "Speed Violation",
       },
       {
-        value: 6003,
+        value: "Traffic Light Violation",
         labelEn: "Traffic Light Violation",
         labelAr: "مخالفة إشارة مرور",
         label: i18n.language === "ar" ? "مخالفة إشارة مرور" : "Traffic Light Violation",
       },
       {
-        value: 6004,
+        value: "Lane Violation",
         labelEn: "Lane Violation",
         labelAr: "مخالفة مسار",
         label: i18n.language === "ar" ? "مخالفة مسار" : "Lane Violation",
       },
       {
-        value: 6005,
+        value: "No Entry Violation",
         labelEn: "No Entry Violation",
         labelAr: "مخالفة دخول ممنوع",
         label: i18n.language === "ar" ? "مخالفة دخول ممنوع" : "No Entry Violation",
@@ -239,7 +238,6 @@ const WhitelistPlatesPage: React.FC = () => {
     setModalMode(mode);
     setSelectedRecord(record || null);
     setIsModalOpen(true);
-    setActiveTab("plate"); // Reset to first tab
     if (mode === "edit" && record) {
       form.setFieldsValue({
         ...record,
@@ -251,30 +249,34 @@ const WhitelistPlatesPage: React.FC = () => {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedRecord(null);
-    setActiveTab("plate");
     form.resetFields();
   };
 
   const handleFormSubmit = async (values: any) => {
     const { dateRange, ...rest } = values;
+
     const payload = {
       ...rest,
       fromDate: dateRange[0].format("YYYY-MM-DD"),
       toDate: dateRange[1].format("YYYY-MM-DD"),
       plateStatus_Id: modalMode === "add" ? 5001 : rest.plateStatus_Id,
-      // Add plate type based on active tab
-      entryType: activeTab === "plate" ? "PLATE" : "TL",
     };
 
     try {
       let response;
+
       if (modalMode === "add") {
         response = await addPlate(payload).unwrap();
         notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
       } else {
-        response = await updatePlate({ ...payload, id: selectedRecord.id }).unwrap();
+        response = await updatePlate({
+          ...payload,
+          id: selectedRecord.id,
+        }).unwrap();
+
         notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
       }
+
       handleModalClose();
     } catch (err) {
       notification.error(err as any, "Operation Failed");
@@ -371,9 +373,9 @@ const WhitelistPlatesPage: React.FC = () => {
         } else if (column.key === "isByLaw") {
           csvRecord[t("form.isByLaw")] = item.isByLaw ? t("common.yes") : t("common.no");
         } else if (column.key === "fromDate") {
-          csvRecord[t("form.fromDate")] = item.fromDate ? dayjs(item.fromDate).format("DD-MM-YYYY") : "";
+          csvRecord[t("form.fromDate")] = item.fromDate ? dayjs(item.fromDate).format("DD MMM YYYY") : "";
         } else if (column.key === "toDate") {
-          csvRecord[t("form.toDate")] = item.toDate ? dayjs(item.toDate).format("DD-MM-YYYY") : "";
+          csvRecord[t("form.toDate")] = item.toDate ? dayjs(item.toDate).format("DD MMM YYYY") : "";
         }
       });
 
@@ -622,7 +624,7 @@ const WhitelistPlatesPage: React.FC = () => {
           </Col>
           <Col span={12}>
             <Form.Item
-              name="violationCategory_Id"
+              name="violationCategory"
               label={t("form.violationCategory") || "Violation Category"}
               rules={[
                 { required: true, message: t("validation.selectRequired", { field: t("form.violationCategory") }) },
@@ -648,144 +650,7 @@ const WhitelistPlatesPage: React.FC = () => {
             >
               <DatePicker.RangePicker
                 style={{ width: "100%" }}
-                format={"DD-MM-YYYY"}
-                disabledDate={(d) => d && d < dayjs().startOf("day")}
-                placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
-              />
-            </Form.Item>
-          </Col>
-
-          <Col span={12}>
-            <Form.Item
-              name="exemptionReason_ID"
-              label={t("form.exemptionReason")}
-              rules={[
-                { required: true, message: t("validation.selectRequired", { field: t("form.exemptionReason") }) },
-              ]}
-            >
-              <Select
-                showSearch
-                placeholder={t("placeholders.exemptionReason")}
-                optionFilterProp="label"
-                filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
-                options={exemptionReasons.map((option) => ({
-                  label: option.label,
-                  value: option.value,
-                }))}
-              />
-            </Form.Item>
-          </Col>
-
-          {modalMode === "edit" && (
-            <Col span={12}>
-              <Form.Item
-                name="plateStatus_Id"
-                label={t("form.status")}
-                rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.status") }) }]}
-              >
-                <Select
-                  showSearch
-                  placeholder={t("placeholders.status")}
-                  optionFilterProp="label"
-                  filterOption={(input, option) =>
-                    (option?.label as string).toLowerCase().includes(input.toLowerCase())
-                  }
-                  options={(() => {
-                    const statusId = form.getFieldValue("plateStatus_Id");
-                    const baseOptions = plateStatusOptions.filter((opt) => [5001, 5002].includes(opt.value));
-
-                    if (statusId === 5003) {
-                      const expiredOption = plateStatusOptions.find((opt) => opt.value === 5003);
-                      if (expiredOption) {
-                        baseOptions.push(expiredOption);
-                      }
-                    }
-
-                    return baseOptions.map((option) => ({
-                      label: option.label,
-                      value: option.value,
-                    }));
-                  })()}
-                  disabled={form.getFieldValue("plateStatus_Id") === 5003}
-                />
-              </Form.Item>
-            </Col>
-          )}
-
-          <Col span={12}>
-            <Form.Item
-              name="isByLaw"
-              label={t("form.isByLaw")}
-              rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.isByLaw") }) }]}
-            >
-              <Select
-                showSearch
-                placeholder={t("placeholders.isByLaw")}
-                optionFilterProp="label"
-                filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
-                options={[
-                  { label: t("common.true"), value: true },
-                  { label: t("common.false"), value: false },
-                ]}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-      ),
-    },
-    {
-      key: "tl",
-      label: t("tabs.addNewTL") || "Add New TL",
-      children: (
-        <Row gutter={24}>
-          <Col span={12}>
-            <Form.Item
-              name="tradenumber"
-              label={t("form.tradenumber")}
-              rules={[{ required: true, message: t("validation.required", { field: t("form.tradenumber") }) }]}
-            >
-              <Input placeholder={t("placeholders.tradenumber")} maxLength={15} />
-            </Form.Item>
-          </Col>
-
-          <Col span={12}>
-            <Form.Item
-              name="plotnumber"
-              label={t("form.plotnumber")}
-              rules={[{ required: true, message: t("validation.required", { field: t("form.plotnumber") }) }]}
-            >
-              <Input placeholder={t("placeholders.plotnumber")} maxLength={15} />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              name="violationCategory_Id"
-              label={t("form.violationCategory") || "Violation Category"}
-              rules={[
-                { required: true, message: t("validation.selectRequired", { field: t("form.violationCategory") }) },
-              ]}
-            >
-              <Select
-                showSearch
-                placeholder={t("placeholders.violationCategory") || "Select violation category"}
-                optionFilterProp="label"
-                filterOption={(input, option) => (option?.label as string).toLowerCase().includes(input.toLowerCase())}
-                options={violationCategoryOptions.map((option) => ({
-                  label: option.label,
-                  value: option.value,
-                }))}
-              />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              name="dateRange"
-              label={t("form.dateRange")}
-              rules={[{ required: true, message: t("validation.selectRequired", { field: t("form.dateRange") }) }]}
-            >
-              <DatePicker.RangePicker
-                style={{ width: "100%" }}
-                format={"DD-MM-YYYY"}
+                format={"DD MMM YYYY"}
                 disabledDate={(d) => d && d < dayjs().startOf("day")}
                 placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
               />
@@ -890,7 +755,7 @@ const WhitelistPlatesPage: React.FC = () => {
               <span>{t("common.filterByFromDate")}</span>
               <DatePicker.RangePicker
                 value={state.dateRange}
-                format={"DD-MM-YYYY"}
+                format={"DD MMM YYYY"}
                 placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
@@ -952,7 +817,7 @@ const WhitelistPlatesPage: React.FC = () => {
 
       <Modal
         open={isModalOpen}
-        //title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
+        title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
         onCancel={handleModalClose}
         width="720px"
         footer={[
@@ -969,7 +834,7 @@ const WhitelistPlatesPage: React.FC = () => {
       >
         <Spin spinning={isLoadingLookups}>
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
-            <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
+            {tabItems[0].children}
           </Form>
         </Spin>
       </Modal>

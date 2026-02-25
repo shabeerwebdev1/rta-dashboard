@@ -6,6 +6,7 @@ import { ShareAltOutlined } from "@ant-design/icons";
 import { LeaveStatus } from "../../config/pageConfigs/leaveManagementConfig";
 import { useUpdateLeaveStatusMutation } from "../../services/rtkApiFactory";
 import dayjs from "dayjs";
+import "dayjs/locale/ar";
 import { useTranslation } from "react-i18next";
 import { useAppNotification } from "../../utils/notificationManager";
 
@@ -16,6 +17,18 @@ interface LeaveViewDrawerProps {
   onShare?: () => void;
   getLeaveTypeName?: (code: number | string | undefined) => string;
 }
+
+// Helper function to format date based on language
+const formatDate = (date: string) => {
+  if (!date) return "";
+
+  const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+  const isArabic = lang.startsWith("ar");
+
+  return dayjs(date)
+    .locale(isArabic ? "ar" : "en")
+    .format(isArabic ? "DD MMMM YYYY" : "DD MMM YYYY");
+};
 
 const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record, onShare, getLeaveTypeName }) => {
   const notification = useAppNotification();
@@ -116,11 +129,9 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label={t("form.employeeName")}>{record.userName}</Descriptions.Item>
 
-            <Descriptions.Item label={t("form.fromDate")}>
-              {dayjs(record.fromDate).format("DD MMM YYYY")}
-            </Descriptions.Item>
+            <Descriptions.Item label={t("form.fromDate")}>{formatDate(record.fromDate)}</Descriptions.Item>
 
-            <Descriptions.Item label={t("form.toDate")}>{dayjs(record.toDate).format("DD MMM YYYY")}</Descriptions.Item>
+            <Descriptions.Item label={t("form.toDate")}>{formatDate(record.toDate)}</Descriptions.Item>
 
             <Descriptions.Item label={t("form.totalLeaveDays")}>{record.totalLeaveDays}</Descriptions.Item>
 
@@ -178,8 +189,7 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
                         t("placeholders.rejectionReason") || "Enter reason for rejection (required when rejecting)"
                       }
                       maxLength={500}
-                      showCount
-                      onChange={(e) => setRejectionReason(e.target.value)}
+                      // Removed showCount prop to hide 0/500 counter
                     />
                   </Form.Item>
                 )}

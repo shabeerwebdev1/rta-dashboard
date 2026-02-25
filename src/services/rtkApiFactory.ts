@@ -168,7 +168,13 @@ export const dynamicApi = createApi({
     // Whitelist Trade Licenses
     getTradeLicenses: builder.query({
       query: (params) => ({ url: "/api/WhitelistTradeLicense", params }),
-      transformResponse: transformListResponse,
+      transformResponse: (response: any) => ({
+        data: response?.data || [],
+        totalCount: response?.totalCount || 0,
+        activeRecords: response?.activeRecords || 0,
+        inactiveRecords: response?.inactiveRecords || 0,
+        expiredRecords: response?.expiredRecords || 0,
+      }),
       providesTags: ["WhitelistTradeLicense"],
     }),
     getTradeLicenseById: builder.query({
@@ -553,7 +559,15 @@ export const dynamicApi = createApi({
     // Parkonic Location
     getParkonicsLocation: builder.query({
       query: (params) => ({ url: "/api/ParkonicsLocation", params }),
-      transformResponse: transformListResponse,
+      transformResponse: (response: any) => ({
+        data: response?.data || [],
+        total: response?.totalCount || 0,
+        totalCount: response?.totalCount || 0,
+        pageNumber: response?.pageNumber,
+        pageSize: response?.pageSize,
+        pgnApprovedRecords: response?.pgnApprovedRecords || 0,
+        pgnPendingRecords: response?.pgnPendingRecords || 0,
+      }),
       providesTags: ["ParkonicsLocation"],
     }),
     getParkonicsLocationById: builder.query({
@@ -726,15 +740,12 @@ export const dynamicApi = createApi({
           param: "", // keep same pattern
         },
       }),
-    
+
       transformResponse: (response: any) => {
         return response?.data || [];
       },
     }),
-    
   }),
-
-  
 });
 
 export const {

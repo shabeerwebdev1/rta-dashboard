@@ -482,7 +482,7 @@ const TeamEvaluationPage: React.FC = () => {
               />
               <DatePicker.RangePicker
                 value={dateRange}
-                format={"DD-MM-YYYY"}
+                format={"DD MMM YYYY"}
                 placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 onChange={(vals) => setDateRange(vals as any)}
               />
@@ -619,7 +619,7 @@ const TeamEvaluationPage: React.FC = () => {
                   { required: true, message: t("validation.selectRequired", { field: t("form.evaluationDate") }) },
                 ]}
               >
-                <DatePicker style={{ width: "100%" }} format="DD-MM-YYYY" placeholder={t("placeholders.selectDate")} />
+                <DatePicker style={{ width: "100%" }} format="DD MMM YYYY" placeholder={t("placeholders.selectDate")} />
               </Form.Item>
             </Col>
 
@@ -653,7 +653,7 @@ const TeamEvaluationPage: React.FC = () => {
               >
                 <DatePicker.RangePicker
                   style={{ width: "100%" }}
-                  format="DD-MM-YYYY"
+                  format="DD MMM YYYY"
                   placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 />
               </Form.Item>

@@ -294,7 +294,7 @@ const HRMSPage: React.FC = () => {
 
       config.tableConfig.columns.forEach((column) => {
         if (column.key === "date") {
-          csvRecord[t("form.date") || "Date"] = item.date ? dayjs(item.date).format("DD-MM-YYYY") : "";
+          csvRecord[t("form.date") || "Date"] = item.date ? dayjs(item.date).format("DD MMM YYYY") : "";
         } else if (column.key === "inspectorName") {
           csvRecord[t("form.inspectorName") || "Inspector Name"] = item.inspectorName || "";
         } else if (column.key === "supervisorName") {
@@ -383,7 +383,7 @@ const HRMSPage: React.FC = () => {
         if (column.key === "date") {
           return {
             ...column,
-            render: (value: any) => (value ? dayjs(value).format("DD-MM-YYYY") : ""),
+            render: (value: any) => (value ? dayjs(value).format("DD MMM YYYY") : ""),
           };
         }
 
@@ -480,7 +480,7 @@ const HRMSPage: React.FC = () => {
               <span>{t("common.filterByDate") || "Filter by Date:"}</span>
               <DatePicker.RangePicker
                 value={state.dateRange}
-                format={"DD-MM-YYYY"}
+                format={"DD MMM YYYY"}
                 placeholder={[t("placeholders.startDate") || "Start Date", t("placeholders.endDate") || "End Date"]}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
@@ -590,7 +590,7 @@ const HRMSPage: React.FC = () => {
                   label={t("form.date") || "Date"}
                   rules={[{ required: true, message: "Please select date" }]}
                 >
-                  <DatePicker style={{ width: "100%" }} format="DD-MM-YYYY" />
+                  <DatePicker style={{ width: "100%" }} format="DD MMM YYYY" />
                 </Form.Item>
               </Col>
 

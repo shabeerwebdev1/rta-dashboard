@@ -146,7 +146,7 @@ const ParkonicLocationPage: React.FC = () => {
       csvRecord[t("form.parkonicsLocationId")] = item.parkonics_Location_Id || "";
       csvRecord[t("form.zone")] = item.zone || "";
       csvRecord[t("form.area")] = item.area || "";
-      csvRecord[t("form.addedOn")] = item.created_At ? dayjs(item.created_At).format("DD-MM-YYYY") : "";
+      csvRecord[t("form.addedOn")] = item.created_At ? dayjs(item.created_At).format("DD MMM YYYY") : "";
       csvRecord[t("form.approvedBy")] = item.updated_By || "";
       csvRecord[t("form.isApproved")] = item.isUpdatedBack ? t("form.approved") : t("form.pending");
 
@@ -300,12 +300,10 @@ const ParkonicLocationPage: React.FC = () => {
   };
 
   const statsMetadata = useMemo(() => {
-    const rows = data?.data || [];
-
     return {
-      total: data?.total || rows.length,
-      pgnApprovedRecords: rows.filter((r: any) => r.status === 1).length,
-      pgnPendingRecords: rows.filter((r: any) => r.status === 0).length,
+      total: data?.totalCount || 0,
+      pgnApprovedRecords: data?.pgnApprovedRecords || 0,
+      pgnPendingRecords: data?.pgnPendingRecords || 0,
     };
   }, [data]);
 

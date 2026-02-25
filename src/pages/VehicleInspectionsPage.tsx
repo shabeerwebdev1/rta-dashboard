@@ -208,8 +208,8 @@ const VehicleInspectionsPage: React.FC = () => {
                 columnKey.includes("Time") ||
                 columnKey.includes("time")
               ) {
-                // Format any date/time field to DD-MM-YYYY
-                displayValue = displayValue ? dayjs(displayValue).format("DD-MM-YYYY") : t("common.noData");
+                // Format any date/time field to DD MMM YYYY
+                displayValue = displayValue ? dayjs(displayValue).format("DD MMM YYYY") : t("common.noData");
               } else {
                 displayValue = displayValue == null || displayValue === "" ? t("common.noData") : displayValue;
               }
@@ -353,7 +353,7 @@ const VehicleInspectionsPage: React.FC = () => {
 
               <RangePicker
                 value={state.dateRange}
-                format={"DD-MM-YYYY"}
+                format={"DD MMM YYYY"}
                 placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />

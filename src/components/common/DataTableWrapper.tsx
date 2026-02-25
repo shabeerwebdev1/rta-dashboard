@@ -181,7 +181,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
 
           switch (col.type) {
             case "date":
-              return dayjs(text as string).isValid() ? dayjs(text as string).format("DD-MM-YYYY") : String(text);
+              return dayjs(text as string).isValid() ? dayjs(text as string).format("DD MMM YYYY") : String(text);
 
             case "tag": {
               const statusKey = String(text).toLowerCase();

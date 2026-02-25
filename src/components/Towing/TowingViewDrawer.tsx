@@ -200,7 +200,7 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
             <Descriptions.Item label={t("form.vehicleOwnerMobile")}>{record.vehicleOwnerMobile}</Descriptions.Item>
 
             <Descriptions.Item label={t("form.towingDate")}>
-              {dayjs(record.entityDateTime).format("DD-MM-YYYY")}
+              {dayjs(record.entityDateTime).format("DD MMM YYYY")}
             </Descriptions.Item>
 
             <Descriptions.Item label={t("form.status")}>

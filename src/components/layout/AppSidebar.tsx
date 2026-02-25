@@ -20,6 +20,7 @@ import {
   WarningOutlined,
   IdcardOutlined,
   BookOutlined,
+  SolutionOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -132,10 +133,24 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       labelText: t("sidebar.management"),
       children: [
         {
-          key: FULL_PATHS.WHITELIST_PLATES,
+          key: "whitelist",
           icon: <FileTextOutlined />,
           labelText: t("sidebar.whitelists"),
           permission: "WhiteListPlate",
+          children: [
+            {
+              key: FULL_PATHS.WHITELIST_PLATES,
+              icon: <FileTextOutlined />,
+              labelText: t("sidebar.whitelistPlates"),
+              permission: "WhiteListPlate",
+            },
+            {
+              key: FULL_PATHS.WHITELIST_TRADELICENSES,
+              icon: <SolutionOutlined />,
+              labelText: t("sidebar.whitelistTradeLicenses"),
+              permission: "WhitelistTradeLicense",
+            },
+          ],
         },
         {
           key: FULL_PATHS.INSPECTIONS_OBSTACLES,

@@ -373,35 +373,48 @@ const GeneralSearchPage: React.FC = () => {
                     label={t("form.tradeLicenseNumber")}
                     rules={[
                       { required: true, message: t("validation.required", { field: t("form.tradeLicenseNumber") }) },
-                      {
-                        validator: (_, value) => {
-                          if (!value) return Promise.resolve();
-
-                          // Check for digits only
-                          if (!/^[0-9]+$/.test(value)) {
-                            return Promise.reject(
-                              new Error(t("validation.onlyNumbers", { field: t("form.tradeLicenseNumber") })),
-                            );
-                          }
-
-                          // Check for minimum length
-                          if (value.length < 6) {
-                            return Promise.reject(
-                              new Error(
-                                t("validation.lengthRange", {
-                                  field: t("form.tradeLicenseNumber"),
-                                  min: 6,
-                                }),
-                              ),
-                            );
-                          }
-
-                          return Promise.resolve();
-                        },
-                      },
                     ]}
                   >
-                    <Input placeholder={t("placeholders.tradeLicenseNumber")} minLength={6} maxLength={12} />
+                    <Input.Group compact>
+                      <Form.Item
+                        name="licenseNo"
+                        noStyle
+                        rules={[
+                          {
+                            validator: (_, value) => {
+                              if (!value) return Promise.resolve();
+
+                              if (!/^[0-9]+$/.test(value)) {
+                                return Promise.reject(
+                                  new Error(t("validation.onlyNumbers", { field: t("form.tradeLicenseNumber") })),
+                                );
+                              }
+
+                              if (value.length < 6) {
+                                return Promise.reject(
+                                  new Error(
+                                    t("validation.lengthRange", {
+                                      field: t("form.tradeLicenseNumber"),
+                                      min: 6,
+                                    }),
+                                  ),
+                                );
+                              }
+
+                              return Promise.resolve();
+                            },
+                          },
+                        ]}
+                      >
+                        <Input
+                          style={{ width: "100%" }}
+                          addonBefore={i18n.language === "ar" ? "ر خ -" : "TL-"}
+                          placeholder={t("placeholders.tradeLicenseNumber")}
+                          minLength={6}
+                          maxLength={12}
+                        />
+                      </Form.Item>
+                    </Input.Group>
                   </Form.Item>
                 </Col>
                 <Col>

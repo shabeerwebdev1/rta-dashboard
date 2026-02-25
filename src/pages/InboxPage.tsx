@@ -149,7 +149,7 @@ const InboxPage = () => {
         sortable: col.AllowSorting === "true",
         render:
           col.Type === "datetime"
-            ? (value: any) => (value ? dayjs(value).format("DD-MM-YYYY HH:mm:ss") : "-")
+            ? (value: any) => (value ? dayjs(value).format("DD MMM YYYY HH:mm:ss") : "-")
             : undefined,
       }));
 

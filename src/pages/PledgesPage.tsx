@@ -317,8 +317,8 @@ const PledgesPage: React.FC = () => {
         tradeLicenseNumber: record.tradeLicenseNumber,
         businessName: record.businessName,
         businessEmail: record.businessEmail,
-        toSendEmail: record.toSendEmail,
-        violationCategory_Id: record.violationCategory_Id || 6005, // Default to Renewal
+        sendToEmail: record.sendToEmail,
+        // violationCategory_Id: record.violationCategory_Id , // Default to Renewal
         remarks: record.remarks,
         document: fileList,
         dateRange: dateRange,
@@ -351,13 +351,12 @@ const PledgesPage: React.FC = () => {
       TradeLicenseNumber: values.tradeLicenseNumber,
       BusinessName: values.businessName,
       BusinessEmail: values.businessEmail,
-      ToSendEmail: values.toSendEmail,
+      sendToEmail: values.sendToEmail,
       ViolationCategory_Id: values.violationCategory_Id,
       Remarks: values.remarks,
       DocumentUploaded: false,
       PledgeStatus: values.pledgeStatus,
       IsActive: values.pledgeStatus === 5002 ? false : true,
-      // Add date fields with proper formatting
       PledgeDate: startDate ? startDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]") : null,
       PledgeEndDate: endDate ? endDate.format("YYYY-MM-DDTHH:mm:ss.SSS[Z]") : null,
     };
@@ -517,16 +516,18 @@ const PledgesPage: React.FC = () => {
         } else if (column.key === "businessName") {
           csvRecord[t("form.businessName")] = item.businessName || "";
         } else if (column.key === "pledgeDate") {
-          csvRecord[t("form.pledgestartDate")] = item.pledgeDate ? dayjs(item.pledgeDate).format("DD-MM-YYYY") : "";
+          csvRecord[t("form.pledgestartDate")] = item.pledgeDate ? dayjs(item.pledgeDate).format("DD MMM YYYY") : "";
         } else if (column.key === "pledgeEndDate") {
-          csvRecord[t("form.pledgeEndDate")] = item.pledgeEndDate ? dayjs(item.pledgeEndDate).format("DD-MM-YYYY") : "";
+          csvRecord[t("form.pledgeEndDate")] = item.pledgeEndDate
+            ? dayjs(item.pledgeEndDate).format("DD MMM YYYY")
+            : "";
         } else if (column.key === "remarks") {
           csvRecord[t("form.remarks")] = item.remarks || "";
         } else if (column.key === "pledgeStatus") {
           const status = item.pledgeStatus || determinePledgeStatus(item);
           csvRecord[t("form.status")] = getLabelFromValue(status, pledgeStatusOptions, i18n);
         } else if (column.key === "createdDate") {
-          csvRecord[t("form.createdDate")] = item.createdDate ? dayjs(item.createdDate).format("DD-MM-YYYY") : "";
+          csvRecord[t("form.createdDate")] = item.createdDate ? dayjs(item.createdDate).format("DD MMM YYYY") : "";
         }
       });
 
@@ -698,7 +699,7 @@ const PledgesPage: React.FC = () => {
 
               <DatePicker.RangePicker
                 value={state.dateRange}
-                format={"DD-MM-YYYY"}
+                format={"DD MMM YYYY"}
                 placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
@@ -875,6 +876,7 @@ const PledgesPage: React.FC = () => {
 
                           form.setFieldsValue({
                             businessName: result?.data?.companyName || "",
+                            businessEmail: result?.data?.companyEmail || "",
                           });
 
                           notification.success(result, t("messages.tradeLicenseFetched"));
@@ -914,14 +916,18 @@ const PledgesPage: React.FC = () => {
                     { type: "email", message: t("validation.invalidEmail") || "Please enter a valid email address" },
                   ]}
                 >
-                  <Input type="email" placeholder={t("placeholders.businessEmail") || "Enter business email"} />
+                  <Input
+                    type="email"
+                    disabled
+                    placeholder={t("placeholders.businessEmail") || "Enter business email"}
+                  />
                 </Form.Item>
               </Col>
 
               {/* To-send Email Field */}
               <Col span={12}>
                 <Form.Item
-                  name="toSendEmail"
+                  name="sendToEmail"
                   label={t("form.toSendEmail") || "To-send Email"}
                   rules={[
                     {
@@ -933,13 +939,13 @@ const PledgesPage: React.FC = () => {
                 >
                   <Input
                     type="email"
-                    placeholder={t("placeholders.toSendEmail") || "Enter email to send notifications"}
+                    placeholder={t("placeholders.sendToEmail") || "Enter email to send notifications"}
                   />
                 </Form.Item>
               </Col>
 
               {/* Violation Category Field */}
-              <Col span={12}>
+              {/* <Col span={12}>
                 <Form.Item
                   name="violationCategory_Id"
                   label={t("form.violationCategory") || "Violation Category"}
@@ -965,7 +971,7 @@ const PledgesPage: React.FC = () => {
                     }))}
                   />
                 </Form.Item>
-              </Col>
+              </Col> */}
 
               {modalMode === "edit" && (
                 <Col span={12}>
@@ -1011,7 +1017,7 @@ const PledgesPage: React.FC = () => {
                 >
                   <DatePicker.RangePicker
                     style={{ width: "100%" }}
-                    format={"DD-MM-YYYY"}
+                    format={"DD MMM YYYY"}
                     disabledDate={(d) => d && d < dayjs().startOf("day")}
                     placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
                     disabled={[modalMode === "edit", false]}

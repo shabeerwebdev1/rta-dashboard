@@ -42,7 +42,9 @@
     "Criteria&Weights": "المعايير والأوزان",
     "proactivecampaigns": "الحملات الاستباقية",
     "inbox": "صندوق الوارد",
-    "allInbox": "جميع الرسائل"
+    "allInbox": "جميع الرسائل",
+    "whitelistPlates": "لوحات",
+    "whitelistTradeLicenses": "الرخص التجارية"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -657,8 +659,13 @@
     "score": "أدخل النتيجة",
     "searchPlaceholder": "بحث...",
     "plotnumber": "أدخل رقم القطعة",
-    "tradenumber": "أدخل الرقم التجاري"
+    "tradenumber": "أدخل الرقم التجاري",
+    "plotNumber": "أدخل رقم القطعة",
+    "tradeLicense_EN_Name": "أدخل اسم الرخصة التجارية باللغة الإنجليزية",
+    "tradeLicense_AR_Name": "أدخل اسم الرخصة التجارية باللغة العربية",
+    "sendToEmail": "أدخل البريد الإلكتروني للإرسال"
   },
+
   "dashboard": {
     "totalInspectors": "إجمالي المفتشين",
     "checkedIn": "تم تسجيل الحضور",
@@ -726,7 +733,11 @@
     "Pending": "قيد الانتظار",
     "Approved": "موافق",
     "Rejected": "مرفوض",
-    "InReview": "قيد المراجعة"
+    "InReview": "قيد المراجعة",
+    "TotalLicenses": "إجمالي الرخص",
+    "ActiveLicenses": "الرخص النشطة",
+    "ExpiredLicenses": "الرخص منتهية الصلاحية",
+    "InactiveLicenses": "الرخص غير النشطة"
   },
   "validation": {
     "required": "يرجى إدخال {{field}}",

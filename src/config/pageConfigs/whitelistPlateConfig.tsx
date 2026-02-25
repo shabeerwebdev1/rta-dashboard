@@ -1,7 +1,18 @@
 import UAEPlate from "../../components/UAEPlate";
 import type { PageConfig } from "../../types/config";
+import dayjs from "dayjs";
 import { IdcardOutlined, CheckCircleOutlined, CloseCircleOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 
+const formatDate = (value: string) => {
+  if (!value) return "";
+
+  const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+  const isArabic = lang.startsWith("ar");
+
+  return dayjs(value)
+    .locale(isArabic ? "ar" : "en")
+    .format(isArabic ? "DD MMMM YYYY" : "DD MMM YYYY");
+};
 export const EMIRATES: Record<number, { en: string; ar: string; code: string }> = {
   1: { en: "Dubai", ar: "دبي", code: "DXB" },
   2: { en: "Abu Dhabi", ar: "أبو ظبي", code: "AUH" },
@@ -250,8 +261,22 @@ export const whitelistPlateConfig: PageConfig = {
         lookupCategory: 400,
         filterable: true,
       },
-      { key: "fromDate", title: "form.fromDate", dataIndex: "fromDate", type: "date", sortable: true },
-      { key: "toDate", title: "form.toDate", dataIndex: "toDate", type: "date", sortable: true },
+      {
+        key: "fromDate",
+        title: "form.fromDate",
+        dataIndex: "fromDate",
+        type: "date",
+        sortable: true,
+        render: (value) => formatDate(value),
+      },
+      {
+        key: "toDate",
+        title: "form.toDate",
+        dataIndex: "toDate",
+        type: "date",
+        sortable: true,
+        render: (value) => formatDate(value),
+      },
       {
         key: "plateStatus_Id",
         title: "form.status",

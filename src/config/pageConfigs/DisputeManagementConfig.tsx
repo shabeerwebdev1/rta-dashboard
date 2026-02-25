@@ -8,6 +8,18 @@ import {
 import type { PageConfig } from "../../types/config";
 import React from "react";
 import dayjs from "dayjs";
+import "dayjs/locale/ar";
+
+const formatDateTime = (value: string) => {
+  if (!value) return "";
+
+  const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+  const isArabic = lang.startsWith("ar");
+
+  return dayjs(value)
+    .locale(isArabic ? "ar" : "en")
+    .format(isArabic ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
+};
 
 export const disputeManagementConfig: PageConfig = {
   key: "dispute-management",
@@ -70,14 +82,11 @@ export const disputeManagementConfig: PageConfig = {
         title: "form.fineNumber",
         type: "custom" as const,
       },
-      
-
       {
         key: "dispute_Id",
         title: "form.disputenumber",
         type: "select",
       },
-
       {
         key: "payment_Type",
         title: "form.paymentType",
@@ -89,23 +98,19 @@ export const disputeManagementConfig: PageConfig = {
           { label: "Online", value: 3 },
         ],
       },
-
       { key: "source", title: "form.source", type: "string" },
-
       {
         key: "created_At",
         title: "form.createdAt",
         type: "string",
-        render: (value) => dayjs(value).format("DD MMM YYYY, hh:mm A"),
+        render: (value: string) => formatDateTime(value),
       },
-
       {
         key: "dispute_Status",
         title: "form.disputestatus",
         type: "string",
       },
     ],
-
     viewRecord: true,
     showEdit: true,
   },

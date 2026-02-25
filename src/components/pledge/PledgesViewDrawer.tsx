@@ -5,6 +5,7 @@ import { Drawer, Descriptions, Typography, Button, Space, Image, Empty, Spin } f
 import { useTranslation } from "react-i18next";
 import { ShareAltOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import "dayjs/locale/ar";
 import { useSearchParams } from "react-router-dom";
 import type { PageConfig } from "../../types/config";
 import { getFileUrl } from "../../services/rtkApiFactory";
@@ -19,6 +20,18 @@ const getLabelFromValue = (value: number, options: any[], language: string): str
 
 const filterOptionsByCategory = (options: any[], categoryId: number): any[] => {
   return options.filter((option) => option.categoryId === categoryId);
+};
+
+// Helper function to format date based on language
+const formatDate = (date: string) => {
+  if (!date) return "";
+  
+  const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+  const isArabic = lang.startsWith("ar");
+
+  return dayjs(date)
+    .locale(isArabic ? "ar" : "en")
+    .format(isArabic ? "DD MMMM YYYY" : "DD MMM YYYY");
 };
 
 // ---------- Component ----------
@@ -94,10 +107,8 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({
     const mapped = {
       ...recordData,
       pledgeTypeLabel: getLabelFromValue(recordData.pledgeType as number, pledgeTypeOptions, i18n.language),
-      pledgeDateFormatted: recordData.pledgeDate ? dayjs(recordData.pledgeDate as string).format("YYYY-MM-DD") : "",
-      pledgeEndDateFormatted: recordData.pledgeEndDate
-        ? dayjs(recordData.pledgeEndDate as string).format("YYYY-MM-DD")
-        : "",
+      pledgeDateFormatted: formatDate(recordData.pledgeDate as string),
+      pledgeEndDateFormatted: formatDate(recordData.pledgeEndDate as string),
     };
 
     setMappedRecord(mapped);
@@ -111,6 +122,8 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({
     { key: "remarks", title: "form.remarks", type: "text" },
     { key: "pledgeDateFormatted", title: "form.pledgestartDate", type: "date" },
     { key: "pledgeEndDateFormatted", title: "form.pledgeEndDate", type: "date" },
+    { key: "businessEmail", title: "form.businessEmail", type: "text" },
+    { key: "sendToEmail", title: "form.toSendEmail", type: "text" },
   ];
 
   const imageNames = mappedRecord?.documentPath ? String(mappedRecord.documentPath).split(";").filter(Boolean) : [];
@@ -142,8 +155,8 @@ const PledgesViewDrawer: React.FC<PledgesViewDrawerProps> = ({
                     {(() => {
                       if (!text) return t("common.noData");
 
-                      if (field.type === "date" && dayjs(text as string).isValid()) {
-                        return dayjs(text as string).format("DD MMM YYYY");
+                      if (field.type === "date") {
+                        return text; // Value is already formatted by formatDate function
                       }
 
                       return String(text);
