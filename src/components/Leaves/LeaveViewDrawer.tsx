@@ -176,9 +176,8 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
                         message: t("validation.required", { field: t("form.rejectionReason") || "Rejection Reason" }),
                       },
                       {
-                        min: 10,
                         message:
-                          t("validation.minLength", { field: t("form.rejectionReason"), min: 10 }) ||
+                          t("validation.minLength", { field: t("form.rejectionReason")}) ||
                           "Please enter at least 10 characters",
                       },
                     ]}

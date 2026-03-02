@@ -220,16 +220,13 @@ const ParkonicPage: React.FC = () => {
   };
 
   const statsMetadata = useMemo(() => {
-    const rows = data?.data || [];
-  
     return {
-      total: data?.total || rows.length,
-      pendingRecords: rows.filter((r: any) => r.reviewStatus === 0).length,
-      approvedRecords: rows.filter((r: any) => r.reviewStatus === 1).length,
-      rejectedRecords: rows.filter((r: any) => r.reviewStatus === 2).length,
+      total: data?.total ?? 0,
+      pendingRecords: data?.pending ?? 0,
+      approvedRecords: data?.approved ?? 0,
+      rejectedRecords: data?.rejected ?? 0,
     };
   }, [data]);
-  
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>

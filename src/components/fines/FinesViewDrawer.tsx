@@ -8,7 +8,6 @@ import { useTranslation } from "react-i18next";
 import { theme } from "antd";
 import dayjs from "dayjs";
 
-
 import { useLazyGetLookupsQuery, useGetViolationDetailsQuery } from "../../services/rtkApiFactory";
 import {
   useUpdateFineCancelStatusMutation,
@@ -146,7 +145,6 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
           : fine.supervisorNameEn || fine.supervisorNameAr || "No Data",
     });
   };
-
 
   const formatDate = (value: number) => {
     if (!value) return "";
@@ -472,7 +470,10 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                           <Text strong>{t("form.amount")}:</Text>
                         </Col>
                         <Col style={{ textAlign: "right" }}>
-                          <Text strong> {value?.totalFineAmount} AED </Text>
+                          <Text type="danger" strong>
+                            {" "}
+                            {value?.totalFineAmount} AED{" "}
+                          </Text>
                         </Col>
                       </Row>
                     );

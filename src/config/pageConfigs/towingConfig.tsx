@@ -1,6 +1,7 @@
 import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, IdcardOutlined } from "@ant-design/icons";
 import { PageConfig } from "../../types/config";
 import { Tag } from "antd";
+import dayjs from "dayjs";
 
 export enum TowingStatus {
   Pending = "PENDING",
@@ -10,6 +11,18 @@ export enum TowingStatus {
   InProgress = "IN_TOWING",
   Completed = "COMPLETED",
 }
+
+
+const formatDate = (value: string) => {
+  if (!value) return "";
+
+  const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+  const isArabic = lang.startsWith("ar");
+
+  return dayjs(value)
+    .locale(isArabic ? "ar" : "en")
+    .format(isArabic ? "DD MMMM YYYY" : "DD MMM YYYY");
+};
 
 // Helper function to map string status to enum
 export const mapTowingStatus = (statusString: string): TowingStatus => {
@@ -152,14 +165,7 @@ export const towingConfig: PageConfig = {
         type: "custom",
         dataIndex: "entityDateTime",
         sortable: false,
-        render: (dateString: string) => {
-          if (!dateString) return "-";
-          const date = new Date(dateString);
-          const day = date.getDate().toString().padStart(2, "0");
-          const month = (date.getMonth() + 1).toString().padStart(2, "0");
-          const year = date.getFullYear();
-          return `${day}-${month}-${year}`;
-        },
+        render: (value) => formatDate(value),
       },
     ],
     viewRecord: true,

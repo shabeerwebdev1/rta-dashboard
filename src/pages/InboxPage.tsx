@@ -2,23 +2,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo, useEffect } from "react";
 import { Card } from "antd";
-import { FolderOpenFilled } from "@ant-design/icons";
 import dayjs from "dayjs";
-
-import DataTableWrapper from "../components/common/DataTableWrapper";
-import {
-  useGetInboxListQuery,
-  useGetInboxSummaryMenuQuery,
-  useLazyGetParkonicByIdQuery,
-  useLazyGetParkonicsLocationByIdQuery,
-} from "../services/rtkApiFactory";
-
-import { usePage } from "../contexts/PageContext";
 import { useSearchParams } from "react-router-dom";
 
-import ParkonicViewDrawer from "../components/parkonic/ParkonicViewDrawer";
-import ParkonicLocationViewDrawer from "../components/ParkonicLocation/ParkonicLocationViewDrawer";
-import DisputeViewModal from "../components/dispute/DisputeViewModal";
+import DataTableWrapper from "../components/common/DataTableWrapper";
+import { useGetInboxListQuery, useGetInboxSummaryMenuQuery } from "../services/rtkApiFactory";
+
+import { usePage } from "../contexts/PageContext";
+
+// Import the dynamic entity handler
+import { DynamicEntityHandler, EntityActionButton, useEntityHandler } from "../components/common/DynamicEntityHandler";
 
 const InboxPage = () => {
   const { setPageTitle } = usePage();
@@ -49,28 +42,18 @@ const InboxPage = () => {
     notificationCode,
   });
 
-  // ========================
-  // PARKONIC FINES STATE
-  // ========================
-  const [parkonicOpen, setParkonicOpen] = useState(false);
-  const [parkonicRecord, setParkonicRecord] = useState<any>(null);
+  // Use the unified entity handler
+  const {
+    open,
+    record,
+    entityCode,
+    isLoading: entityLoading,
+    fetchedData,
+    openEntity,
+    closeEntity,
+  } = useEntityHandler();
 
-  // ========================
-  // LOCATION STATE  ✅ ADD
-  // ========================
-  const [locationOpen, setLocationOpen] = useState(false);
-  const [locationRecord, setLocationRecord] = useState<any>(null);
-
-  // ========================
-  // DISPUTE STATE
-  // ========================
-  const [disputeOpen, setDisputeOpen] = useState(false);
-  const [disputeRecord, setDisputeRecord] = useState<any>(null);
-
-  const [getParkonicById, { isFetching: parkonicLoading }] = useLazyGetParkonicByIdQuery();
-  const [getLocationById, { isFetching: locationLoading }] = useLazyGetParkonicsLocationByIdQuery(); // ✅ ADD
-
-  // SLNO
+  // SLNO Column
   const slNoColumn = {
     key: "slno",
     title: "SL.No",
@@ -78,65 +61,17 @@ const InboxPage = () => {
     render: (_: any, __: any, index: number) => (apiParams.PageNumber - 1) * apiParams.PageSize + index + 1,
   };
 
-  // ACTION
+  // Action Column with unified button
   const actionColumn = {
     key: "actions",
     title: "Action",
     width: 100,
     render: (_: any, record: any) => (
-      <FolderOpenFilled
-        style={{ cursor: "pointer", fontSize: 16 }}
-        onClick={async () => {
-          try {
-            // PARKONIC FINES
-            if (record.EntityCode === "parking-parkonic-fines") {
-              const res = await getParkonicById(record.EntityGUID).unwrap();
-
-              const mergedRecord = {
-                ...(res?.data || res),
-                $SKWorkItemData: record.$SKWorkItemData,
-                EntityGUID: record.EntityGUID,
-                EntityCode: record.EntityCode,
-                ActivityCode: record.ActivityCode || record.nvarchar3,
-                iid: record.id,
-              };
-
-              setParkonicRecord(mergedRecord);
-              setParkonicOpen(true);
-            }
-
-            // LOCATION  ✅ ADD THIS BLOCK
-            if (record.EntityCode === "parking-parkonic-location") {
-              const res = await getLocationById(record.EntityGUID).unwrap();
-
-              const mergedRecord = {
-                ...(res?.data || res),
-                $SKWorkItemData: record.$SKWorkItemData,
-                EntityGUID: record.EntityGUID,
-                EntityCode: record.EntityCode,
-
-                // guarantee activityCode always exists
-                ActivityCode: record.ActivityCode || record.nvarchar3 || res?.data?.ActivityCode || "",
-              };
-
-              setLocationRecord(mergedRecord);
-              setLocationOpen(true);
-            }
-
-            // DISPUTE
-            if (record.EntityCode === "parking-parkonic-fine-dispute") {
-              setDisputeRecord(record);
-              setDisputeOpen(true);
-            }
-          } catch (err) {
-            console.error("Open record failed", err);
-          }
-        }}
-      />
+      <EntityActionButton record={record} entityCode={record.EntityCode} onClick={openEntity} />
     ),
   };
 
-  // COLUMNS
+  // Dynamic Columns
   const columns = useMemo(() => {
     if (!data?.Columns) return [];
 
@@ -183,37 +118,14 @@ const InboxPage = () => {
         />
       </Card>
 
-      {/* FINES DRAWER */}
-      <ParkonicViewDrawer
-        open={parkonicOpen}
-        onClose={() => {
-          setParkonicOpen(false);
-          setParkonicRecord(null);
-        }}
-        record={parkonicRecord}
-        isLoading={parkonicLoading}
-      />
-
-      {/* LOCATION DRAWER  ✅ ADD */}
-      <ParkonicLocationViewDrawer
-        open={locationOpen}
-        onClose={() => {
-          setLocationOpen(false);
-          setLocationRecord(null);
-        }}
-        record={locationRecord}
-        config={{ name: { singular: "entity.location" } }}
-        isLoading={locationLoading}
-      />
-
-      {/* DISPUTE MODAL */}
-      <DisputeViewModal
-        open={disputeOpen}
-        onClose={() => {
-          setDisputeOpen(false);
-          setDisputeRecord(null);
-        }}
-        record={disputeRecord}
+      {/* Single Dynamic Entity Handler - replaces all separate drawers/modals */}
+      <DynamicEntityHandler
+        entityCode={entityCode}
+        record={record}
+        open={open}
+        onClose={closeEntity}
+        isLoading={entityLoading}
+        fetchedData={fetchedData}
       />
     </>
   );

@@ -455,7 +455,7 @@ const PledgesPage: React.FC = () => {
             {
               data: {
                 en_Msg: t("messages.shareSuccessEn"),
-                ar_Msg: t("messages.shareSuccessAr"),
+                ar_Msg: t("messages.shareSuccessEn"),
               },
             },
             t("messages.shareSuccessTitle"),
@@ -466,7 +466,7 @@ const PledgesPage: React.FC = () => {
             {
               data: {
                 en_Msg: t("messages.shareErrorEn"),
-                ar_Msg: t("messages.shareErrorAr"),
+                ar_Msg: t("messages.shareErrorEn"),
               },
             },
             t("messages.shareErrorTitle"),
@@ -483,7 +483,7 @@ const PledgesPage: React.FC = () => {
           {
             data: {
               en_Msg: t("messages.shareSuccessEn"),
-              ar_Msg: t("messages.shareSuccessAr"),
+              ar_Msg: t("messages.shareSuccessEn"),
             },
           },
           t("messages.shareSuccessTitle"),
@@ -493,7 +493,7 @@ const PledgesPage: React.FC = () => {
           {
             data: {
               en_Msg: t("messages.shareErrorEn"),
-              ar_Msg: t("messages.shareErrorAr"),
+              ar_Msg: t("messages.shareErrorEn"),
             },
           },
           t("messages.shareErrorTitle"),

@@ -365,13 +365,26 @@ export const dynamicApi = createApi({
       invalidatesTags: ["FineSearch"],
     }),
 
-    // Parkonics
     getParkonics: builder.query({
       query: (params) => ({ url: "/api/Parkonic", params }),
-      providesTags: ["ParkonicSearch"],
-      transformResponse: transformListResponse,
-    }),
+      transformResponse: (response: any) => ({
+        data: response?.data ?? [],
+        total: response?.totalCount ?? 0,
+        totalCount: response?.totalCount ?? 0,
+        pageNumber: response?.pageNumber,
+        pageSize: response?.pageSize,
 
+        pending: response?.pendingRecords ?? 0,
+        approved: response?.approvedRecords ?? 0,
+        rejected: response?.rejectedRecords ?? 0,
+
+        statusCode: response?.statusCode,
+        successful: response?.successful,
+        en_Msg: response?.en_Msg,
+        ar_Msg: response?.ar_Msg,
+      }),
+      providesTags: ["ParkonicSearch"],
+    }),
     updateParkonic: builder.mutation({
       query: (body) => ({ url: "/api/Parkonic", method: "PUT", body }),
       invalidatesTags: [

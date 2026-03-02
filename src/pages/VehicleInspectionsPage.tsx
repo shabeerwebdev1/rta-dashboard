@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tag } from "antd";
+import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tag, Typography } from "antd";
 import { EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
@@ -311,7 +311,8 @@ const VehicleInspectionsPage: React.FC = () => {
             ...column,
             render: (value: any) => {
               if (value == null || value === "") return t("common.noData");
-              return `${value} AED`;
+
+              return <Typography.Text type="danger">{value} AED</Typography.Text>;
             },
           };
         }

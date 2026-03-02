@@ -546,7 +546,9 @@
     "showPendingDisputes": " Show Pending Disputes",
     "selectRole": "Select Role",
     "resubmit": "Resubmit",
-    "aed": "AED"
+    "aed": "AED",
+    "day": "Day",
+    "days": "Days"
   },
   "entity": {
     "plate": "Plate",

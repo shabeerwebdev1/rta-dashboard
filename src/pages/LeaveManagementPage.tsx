@@ -14,7 +14,7 @@ import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
-import { leaveManagementPageConfig } from "../config/pageConfigs/leaveManagementConfig";
+import { useLeaveManagementPageConfig } from "../config/pageConfigs/leaveManagementConfig";
 import LeaveViewDrawer from "../components/Leaves/LeaveViewDrawer";
 import { useGetLeaveDetailsQuery, useLazyGetLookupsQuery } from "../services/rtkApiFactory";
 
@@ -25,7 +25,7 @@ const LeaveManagementPage: React.FC = () => {
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
-  const config = leaveManagementPageConfig;
+  const config = useLeaveManagementPageConfig();
 
   const {
     apiParams,
@@ -296,7 +296,7 @@ const LeaveManagementPage: React.FC = () => {
             {
               data: {
                 en_Msg: t("messages.shareSuccessEn"),
-                ar_Msg: t("messages.shareSuccessAr"),
+                ar_Msg: t("messages.shareSuccessEn"),
               },
             },
             t("messages.shareSuccessTitle"),
@@ -306,7 +306,7 @@ const LeaveManagementPage: React.FC = () => {
             {
               data: {
                 en_Msg: t("messages.shareErrorEn"),
-                ar_Msg: t("messages.shareErrorAr"),
+                ar_Msg: t("messages.shareErrorEn"),
               },
             },
             t("messages.shareErrorTitle"),
@@ -329,7 +329,7 @@ const LeaveManagementPage: React.FC = () => {
             {
               data: {
                 en_Msg: t("messages.shareSuccessEn"),
-                ar_Msg: t("messages.shareSuccessAr"),
+                ar_Msg: t("messages.shareSuccessEn"),
               },
             },
             t("messages.shareSuccessTitle"),
@@ -342,7 +342,7 @@ const LeaveManagementPage: React.FC = () => {
           {
             data: {
               en_Msg: t("messages.shareErrorEn"),
-              ar_Msg: t("messages.shareErrorAr"),
+              ar_Msg: t("messages.shareErrorEn"),
             },
           },
           t("messages.shareErrorTitle"),

@@ -101,11 +101,11 @@ const DisputeManagementPage: React.FC = () => {
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
-  
+
   // Enhanced hover state management
   const [hoverDetails, setHoverDetails] = useState<Record<string, any>>({});
   const [loadingHoverId, setLoadingHoverId] = useState<string | null>(null);
-  
+
   // Prefetch management refs
   const prefetchQueue = useRef<Set<string>>(new Set());
   const prefetchTimeoutRef = useRef<NodeJS.Timeout>();
@@ -154,7 +154,7 @@ const DisputeManagementPage: React.FC = () => {
 
   // Check if error is from cancellation
   const isCancelledError = (error: any): boolean => {
-    return error?.name === 'AbortError' || error?.message?.includes('aborted');
+    return error?.name === "AbortError" || error?.message?.includes("aborted");
   };
 
   // Filter data locally for pending disputes - with case-insensitive comparison
@@ -174,22 +174,28 @@ const DisputeManagementPage: React.FC = () => {
   }, [data?.data, showPendingDisputes, userRoleGUID]);
 
   // Function to check if row is assigned to current user's role - case-insensitive
-  const isRowAssignedToUserRole = useCallback((record: any) => {
-    if (!userRoleGUID) return false;
+  const isRowAssignedToUserRole = useCallback(
+    (record: any) => {
+      if (!userRoleGUID) return false;
 
-    // Check if record has assignedToRole field
-    if (record.assignedToRole) {
-      const assignedRole = normalizeGuid(record.assignedToRole);
-      return assignedRole === userRoleGUID;
-    }
+      // Check if record has assignedToRole field
+      if (record.assignedToRole) {
+        const assignedRole = normalizeGuid(record.assignedToRole);
+        return assignedRole === userRoleGUID;
+      }
 
-    return false;
-  }, [userRoleGUID]);
+      return false;
+    },
+    [userRoleGUID],
+  );
 
   // Custom row class name function
-  const getRowClassName = useCallback((record: any, index: number) => {
-    return isRowAssignedToUserRole(record) ? "assigned-to-user-row" : "";
-  }, [isRowAssignedToUserRole]);
+  const getRowClassName = useCallback(
+    (record: any, index: number) => {
+      return isRowAssignedToUserRole(record) ? "assigned-to-user-row" : "";
+    },
+    [isRowAssignedToUserRole],
+  );
 
   // Get total count for pagination (use original data total when not filtering)
   const totalCount = useMemo(() => {
@@ -201,55 +207,60 @@ const DisputeManagementPage: React.FC = () => {
   }, [data?.total, filteredData.length, showPendingDisputes, userRoleGUID]);
 
   // Optimized hover handler with caching and abort controller
-  const handleFineHover = useCallback(async (record: any) => {
-    const disputeCode = record.disputeCode;
+  const handleFineHover = useCallback(
+    async (record: any) => {
+      const disputeCode = record.disputeCode;
 
-    // Immediate return if already have data or currently loading
-    if (hoverDetails[disputeCode] || loadingHoverId === disputeCode) {
-      return;
-    }
-
-    // Cancel any existing request for this disputeCode
-    if (abortControllers.current.has(disputeCode)) {
-      abortControllers.current.get(disputeCode)?.abort();
-      abortControllers.current.delete(disputeCode);
-    }
-
-    try {
-      setLoadingHoverId(disputeCode);
-      
-      // Create new abort controller for this request
-      const controller = new AbortController();
-      abortControllers.current.set(disputeCode, controller);
-
-      const result = await triggerGetDisputeById(disputeCode).unwrap();
-      
-      // Only update if not aborted
-      if (!controller.signal.aborted && result?.data) {
-        setHoverDetails((prev) => ({
-          ...prev,
-          [disputeCode]: result.data,
-        }));
+      // Immediate return if already have data or currently loading
+      if (hoverDetails[disputeCode] || loadingHoverId === disputeCode) {
+        return;
       }
-    } catch (err) {
-      if (!isCancelledError(err)) {
-        console.error("Failed to load hover details for:", disputeCode);
+
+      // Cancel any existing request for this disputeCode
+      if (abortControllers.current.has(disputeCode)) {
+        abortControllers.current.get(disputeCode)?.abort();
+        abortControllers.current.delete(disputeCode);
       }
-    } finally {
-      setLoadingHoverId(null);
-      abortControllers.current.delete(disputeCode);
-    }
-  }, [hoverDetails, loadingHoverId, triggerGetDisputeById]);
+
+      try {
+        setLoadingHoverId(disputeCode);
+
+        // Create new abort controller for this request
+        const controller = new AbortController();
+        abortControllers.current.set(disputeCode, controller);
+
+        const result = await triggerGetDisputeById(disputeCode).unwrap();
+
+        // Only update if not aborted
+        if (!controller.signal.aborted && result?.data) {
+          setHoverDetails((prev) => ({
+            ...prev,
+            [disputeCode]: result.data,
+          }));
+        }
+      } catch (err) {
+        if (!isCancelledError(err)) {
+          console.error("Failed to load hover details for:", disputeCode);
+        }
+      } finally {
+        setLoadingHoverId(null);
+        abortControllers.current.delete(disputeCode);
+      }
+    },
+    [hoverDetails, loadingHoverId, triggerGetDisputeById],
+  );
 
   // Prefetch visible rows with priority queue - NOW DEFINED AFTER filteredData
   const prefetchVisibleRows = useCallback(() => {
     if (!filteredData || filteredData.length === 0) return;
-    
+
     const rowsToPrefetch = filteredData.filter((record: any) => {
       // Only prefetch if not already loaded and not in queue and not currently loading
-      return !hoverDetails[record.disputeCode] && 
-             !prefetchQueue.current.has(record.disputeCode) &&
-             loadingHoverId !== record.disputeCode;
+      return (
+        !hoverDetails[record.disputeCode] &&
+        !prefetchQueue.current.has(record.disputeCode) &&
+        loadingHoverId !== record.disputeCode
+      );
     });
 
     // Add to queue
@@ -265,7 +276,7 @@ const DisputeManagementPage: React.FC = () => {
     prefetchTimeoutRef.current = setTimeout(() => {
       const processQueue = async () => {
         const batch = Array.from(prefetchQueue.current).slice(0, 3); // Process 3 at a time
-        
+
         for (const disputeCode of batch) {
           const record = filteredData.find((r: any) => r.disputeCode === disputeCode);
           if (record) {
@@ -273,13 +284,13 @@ const DisputeManagementPage: React.FC = () => {
             prefetchQueue.current.delete(disputeCode);
           }
         }
-        
+
         // Process next batch if queue still has items
         if (prefetchQueue.current.size > 0) {
           prefetchTimeoutRef.current = setTimeout(processQueue, 200);
         }
       };
-      
+
       processQueue();
     }, 300); // Wait 300ms after last trigger
   }, [filteredData, hoverDetails, loadingHoverId, handleFineHover]);
@@ -292,7 +303,7 @@ const DisputeManagementPage: React.FC = () => {
       initialRecords.forEach((record: any) => {
         if (!hoverDetails[record.disputeCode] && loadingHoverId !== record.disputeCode) {
           // Use requestIdleCallback for non-blocking prefetch
-          if ('requestIdleCallback' in window) {
+          if ("requestIdleCallback" in window) {
             (window as any).requestIdleCallback(() => handleFineHover(record), { timeout: 1000 });
           } else {
             setTimeout(() => handleFineHover(record), 100);
@@ -308,19 +319,19 @@ const DisputeManagementPage: React.FC = () => {
   // Set up Intersection Observer for rows as they become visible
   useEffect(() => {
     if (!filteredData || filteredData.length === 0) return;
-    
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             const row = entry.target;
-            const disputeCode = row.getAttribute('data-dispute-code');
-            
+            const disputeCode = row.getAttribute("data-dispute-code");
+
             if (disputeCode && !hoverDetails[disputeCode] && loadingHoverId !== disputeCode) {
               const record = filteredData.find((r: any) => r.disputeCode === disputeCode);
               if (record) {
                 // Use requestIdleCallback or setTimeout for non-urgent prefetch
-                if ('requestIdleCallback' in window) {
+                if ("requestIdleCallback" in window) {
                   (window as any).requestIdleCallback(() => handleFineHover(record), { timeout: 500 });
                 } else {
                   setTimeout(() => handleFineHover(record), 50);
@@ -330,12 +341,12 @@ const DisputeManagementPage: React.FC = () => {
           }
         });
       },
-      { threshold: 0.1, rootMargin: '100px' } // Start loading when within 100px of viewport
+      { threshold: 0.1, rootMargin: "100px" }, // Start loading when within 100px of viewport
     );
 
     // Observe all table rows after they're rendered
     const timeoutId = setTimeout(() => {
-      document.querySelectorAll('[data-dispute-code]').forEach((el) => {
+      document.querySelectorAll("[data-dispute-code]").forEach((el) => {
         observer.observe(el);
       });
     }, 100);
@@ -348,14 +359,14 @@ const DisputeManagementPage: React.FC = () => {
 
   // Add scroll listener for table
   useEffect(() => {
-    const tableContainer = document.querySelector('.ant-table-body');
+    const tableContainer = document.querySelector(".ant-table-body");
     if (tableContainer) {
       const handleScroll = () => {
         prefetchVisibleRows();
       };
-      
-      tableContainer.addEventListener('scroll', handleScroll);
-      return () => tableContainer.removeEventListener('scroll', handleScroll);
+
+      tableContainer.addEventListener("scroll", handleScroll);
+      return () => tableContainer.removeEventListener("scroll", handleScroll);
     }
   }, [prefetchVisibleRows]);
 
@@ -369,7 +380,7 @@ const DisputeManagementPage: React.FC = () => {
         clearTimeout(hoverTimeoutRef.current);
       }
       // Abort any ongoing requests
-      abortControllers.current.forEach(controller => controller.abort());
+      abortControllers.current.forEach((controller) => controller.abort());
       abortControllers.current.clear();
     };
   }, []);
@@ -596,10 +607,10 @@ const DisputeManagementPage: React.FC = () => {
   const handleFormSubmit = async (values: any) => {
     try {
       const formData = new FormData();
-      const tempFineId = values.FineId?.split("");
-      const validFineId = tempFineId?.filter((char: string) => char !== " " && char !== "\t").join("");
 
-      formData.append("FineId", validFineId || "");
+      const cleanedFineId = values.FineId ? values.FineId.replace(/\s+/g, "") : "";
+
+      formData.append("FineId", cleanedFineId);
       formData.append("Department", values.Department || "0");
       formData.append("Payment_Type", values.Payment_Type || "0");
       formData.append("Comments", values.Comments || "");
@@ -608,7 +619,9 @@ const DisputeManagementPage: React.FC = () => {
       formData.append("Email", values.Email || "");
       formData.append("Phone", values.Phone || "");
       formData.append("Address", values.Address || "");
+
       formData.append("ActualDisputeDate", values.ActualDisputeDate ? values.ActualDisputeDate.toISOString() : "");
+
       formData.append("DisputeMainReason", values.DisputeMainReason || "0");
       formData.append("DisputeSubReason", values.DisputeSubReason || "0");
 
@@ -616,47 +629,37 @@ const DisputeManagementPage: React.FC = () => {
         i18n.language === "ar"
           ? localStorage.getItem("displayNameAr") || ""
           : localStorage.getItem("displayNameEn") || "";
+
       formData.append("SourceUser", displayName);
       formData.append("Source", values.Source || "sTafteesh_parking");
 
-      const prepareFilesForUpload = async (fileList: any[]) => {
-        const files: File[] = [];
-        for (const file of fileList) {
+      // ✅ MULTIPLE FILES
+      if (values.Attachment && values.Attachment.length > 0) {
+        values.Attachment.forEach((file: any) => {
           if (file.originFileObj) {
-            files.push(file.originFileObj);
-          } else if (file.url) {
-            const response = await fetch(file.url);
-            const blob = await response.blob();
-            const fileName = file.name || "file";
-            files.push(new File([blob], fileName, { type: blob.type }));
+            formData.append("Attachment", file.originFileObj);
           }
-        }
-        return files;
-      };
-
-      if (values.Evidence && values.Evidence.length > 0) {
-        const files = await prepareFilesForUpload(values.Evidence);
-        files.forEach((file) => {
-          formData.append("Evidence", file, file.name);
         });
-      } else {
-        formData.append("Evidence", new Blob([]), "empty.txt");
       }
 
       let response;
+
       if (modalMode === "add") {
         response = await addDispute(formData).unwrap();
-        notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
       } else {
         formData.append("dispute_Id", selectedRecord.dispute_Id);
         response = await updateDispute(formData).unwrap();
-        notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
       }
+
+      notification.success(
+        response,
+        t(modalMode === "add" ? "messages.addSuccess" : "messages.updateSuccess", { entity: t(config.name.singular) }),
+      );
 
       handleModalClose();
       refetch();
-    } catch (err: any) {
-      notification.error(err, "Operation Failed");
+    } catch (error: any) {
+      notification.error(error, "Operation Failed");
     }
   };
 
@@ -773,7 +776,7 @@ const DisputeManagementPage: React.FC = () => {
                   </div>
                 </div>
               ) : loadingHoverId === record.disputeCode ? (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <Spin size="small" />
                   {t("common.loading")}...
                 </span>
@@ -788,7 +791,7 @@ const DisputeManagementPage: React.FC = () => {
                   placement="topLeft"
                   mouseEnterDelay={0.3} // Slight delay to avoid flickering
                 >
-                  <Typography.Text 
+                  <Typography.Text
                     style={{ cursor: "help" }}
                     onMouseEnter={() => {
                       // Only trigger hover if not already loaded or loading
@@ -974,6 +977,15 @@ const DisputeManagementPage: React.FC = () => {
                 <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                   {t("common.downloadCsv")}
                 </Button>
+
+                {/* <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => handleModalOpen("add")}
+                  disabled={!canCreate(menuName)}
+                >
+                  {t("common.addNew")}
+                </Button> */}
               </Space>
             </Col>
           </Row>
@@ -1242,7 +1254,7 @@ const DisputeManagementPage: React.FC = () => {
 
                 <Col span={24}>
                   <Form.Item
-                    name="Evidence"
+                    name="Attachment"
                     label={t("form.evidence")}
                     rules={[{ required: true, message: t("validation.uploadRequired", { field: t("form.evidence") }) }]}
                     valuePropName="fileList"
