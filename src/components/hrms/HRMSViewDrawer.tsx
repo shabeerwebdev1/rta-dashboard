@@ -4,9 +4,9 @@ import React, { useEffect } from "react";
 import { Modal, Descriptions, Card, Row, Col, Statistic, Badge } from "antd";
 import { useTranslation } from "react-i18next";
 import { CheckCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
 import type { PageConfig } from "../../types/config";
 import ArcGISMap from "../common/ArcGISMap";
+import { formatDateDisplay } from "../../utils/dateFormatter";
 
 interface HRMSViewDrawerProps {
   open: boolean;
@@ -248,7 +248,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                   {record.supervisorName}
                 </Descriptions.Item>
                 <Descriptions.Item label={t("form.date") || "Date"}>
-                  {dayjs(record.date).format("DD MMM YYYY")}
+                  {formatDateDisplay(record.date, i18n.language)}
                 </Descriptions.Item>
               </Descriptions>
             </Card>

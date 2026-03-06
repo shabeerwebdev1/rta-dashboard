@@ -12,8 +12,8 @@ import { useTranslation } from "react-i18next";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../common/ArcGISMap";
 import { useAppNotification } from "../../utils/notificationManager";
-import dayjs from "dayjs";
 import { TowingStatus } from "../../config/pageConfigs/towingConfig";
+import { formatDateDisplay } from "../../utils/dateFormatter";
 
 const { Title } = Typography;
 
@@ -200,7 +200,7 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
             <Descriptions.Item label={t("form.vehicleOwnerMobile")}>{record.vehicleOwnerMobile}</Descriptions.Item>
 
             <Descriptions.Item label={t("form.towingDate")}>
-              {dayjs(record.entityDateTime).format("DD MMM YYYY")}
+              {formatDateDisplay(record.entityDateTime, i18n.language)}
             </Descriptions.Item>
 
             <Descriptions.Item label={t("form.status")}>

@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tag, Typography } from "antd";
-import { EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
+import { EyeOutlined, DownloadOutlined, EnvironmentOutlined, PaperClipOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -15,6 +15,8 @@ import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import FinesViewDrawer from "../components/fines/FinesViewDrawer";
+import MapModal from "../components/fines/MapModal";
+import AttachmentsModal from "../components/fines/AttachmentsModal";
 import { parkingsInspectionsConfig } from "../config/pageConfigs/parkingsInspectionsConfig";
 
 const { Option } = Select;
@@ -52,6 +54,9 @@ const TradeLicenseInspectionPage: React.FC = () => {
 
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedFineData, setSelectedFineData] = useState<any>(null);
+  const [mapModalVisible, setMapModalVisible] = useState(false);
+  const [attachmentsModalVisible, setAttachmentsModalVisible] = useState(false);
+  const [selectedFineForModal, setSelectedFineForModal] = useState<any>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
 
@@ -135,6 +140,16 @@ const TradeLicenseInspectionPage: React.FC = () => {
   const handleView = (record: any) => {
     setSelectedFineData(record);
     setDrawerVisible(true);
+  };
+
+  const handleViewLocation = (record: any) => {
+    setSelectedFineForModal(record);
+    setMapModalVisible(true);
+  };
+
+  const handleViewAttachments = (record: any) => {
+    setSelectedFineForModal(record);
+    setAttachmentsModalVisible(true);
   };
 
   // Create a helper function to format data for CSV export
@@ -237,8 +252,20 @@ const TradeLicenseInspectionPage: React.FC = () => {
     {
       key: "view",
       label: t("common.view"),
-      icon: record.inspectionStatus === 15003 ? <EditOutlined /> : <EyeOutlined />,
+      icon: <EyeOutlined />,
       onClick: () => handleView(record),
+    },
+    {
+      key: "location",
+      label: t("common.viewLocation"),
+      icon: <EnvironmentOutlined />,
+      onClick: () => handleViewLocation(record),
+    },
+    {
+      key: "attachments",
+      label: t("common.viewAttachments"),
+      icon: <PaperClipOutlined />,
+      onClick: () => handleViewAttachments(record),
     },
   ];
 
@@ -419,6 +446,14 @@ const TradeLicenseInspectionPage: React.FC = () => {
         isLoading={isFetching}
         lookupOptions={lookupOptions}
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
+      />
+
+      <MapModal open={mapModalVisible} onClose={() => setMapModalVisible(false)} fine={selectedFineForModal} />
+
+      <AttachmentsModal
+        open={attachmentsModalVisible}
+        onClose={() => setAttachmentsModalVisible(false)}
+        fine={selectedFineForModal}
       />
     </Space>
   );

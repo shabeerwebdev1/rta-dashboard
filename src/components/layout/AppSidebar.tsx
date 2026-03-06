@@ -62,11 +62,15 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
   const currentLanguage = i18n.language === "ar" || i18n.language === "ar-SA" ? "Arabic" : "English";
 
   const { data: inboxSummary, isLoading } = useGetInboxSummaryQuery();
-
   const { data: inboxMenus = [], isLoading: inboxLoading } = useGetInboxSummaryMenuQuery();
 
   const inboxCount = inboxSummary?.data ?? 0;
   const totalInboxCount = inboxMenus.reduce((sum: number, item: any) => sum + (item.AW || 0), 0);
+
+  const sanitizeInboxTitle = (title?: string) => {
+    if (!title) return "";
+    return title.replace(/^Parking\s*-\s*/i, "").trim();
+  };
 
   // Filter reports based on current language
   const filteredReports = useMemo(() => {
@@ -85,23 +89,12 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       ),
 
       children: [
-        // ALL INBOX ITEM
-        {
-          key: FULL_PATHS.INBOX, // no code parameter
-          labelText: (
-            <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
-              <span>{t("sidebar.allInbox") || "All Inbox"}</span>
-              <span style={{ color: "#ff4d4f", fontWeight: 600 }}>{totalInboxCount}</span>
-            </div>
-          ),
-        },
-
         // DYNAMIC NOTIFICATION ITEMS
         ...inboxMenus.map((item: any) => ({
           key: `${FULL_PATHS.INBOX}?code=${item.NotificationCode}`,
           labelText: (
             <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
-              <span>{item.NotificationName}</span>
+              <span>{sanitizeInboxTitle(item.NotificationName)}</span>
               <span style={{ color: "#ff4d4f", fontWeight: 600 }}>{item.AW ?? 0}</span>
             </div>
           ),
@@ -271,7 +264,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         // },
       ],
     },
-    // Reports as parent with filtered reports based on language
+    // Reports as parent with filtered reports based on languagep
     {
       key: "reports",
       icon: <BarChartOutlined />,

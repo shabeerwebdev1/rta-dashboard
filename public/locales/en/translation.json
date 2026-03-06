@@ -60,6 +60,7 @@
   },
   "info": {
     "basicDetails": "Basic Details",
+    "eTrafficVehicleDetails": "E-Traffic Vehicle Details",
     "allFines": "All Fines",
     "permitsRequest": "Permits Request"
   },
@@ -260,6 +261,7 @@
     "disputesubreason": "Dispute Sub Reason",
     "Shift": "Shift",
     "AssignmentType": "Assignment Type",
+    "SpecialZone": "Special Zone",
     "WeekOffs": "Week Offs",
     "Actions": "Actions",
     "employeeName": " Name",
@@ -484,6 +486,7 @@
     "searchPlaceholder": "Search...",
     "location": "Location",
     "noData": "No Data",
+    "notAvailable": "Not Available",
     "selectFile": "Select File",
     "share": "Share",
     "activeFilters": "Active Filters",
@@ -548,7 +551,8 @@
     "resubmit": "Resubmit",
     "aed": "AED",
     "day": "Day",
-    "days": "Days"
+    "days": "Days",
+    "open": "Open"
   },
   "entity": {
     "plate": "Plate",
@@ -630,6 +634,7 @@
     "plateCode": "Select plate code",
     "selectShift": "Select Shift",
     "selectZones": "Select Zone(s)",
+    "selectAreas": "Select Area(s)",
     "selectAssignmentTypes": "Select Assignment Type(s)",
     "selectRole": "Select Role",
     "enterComments": "Enter comments",

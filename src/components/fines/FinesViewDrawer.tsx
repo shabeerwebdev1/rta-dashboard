@@ -17,7 +17,7 @@ import {
 import { useAppNotification } from "../../utils/notificationManager";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../../components/common/ArcGISMap";
-import { plateSources, PLATE_COLOR } from "../../config/pageConfigs/finesConfig";
+import { plateSources, PLATE_COLOR, PLATE_TYPE_SHORT } from "../../config/pageConfigs/finesConfig";
 import UAEPlate from "../UAEPlate";
 
 const { Title, Text } = Typography;
@@ -33,6 +33,8 @@ interface FinesViewDrawerProps {
   onShare?: () => void;
   onViewLocation?: (fine: any) => void;
   onViewAttachments?: (fine: any) => void;
+  readOnly?: boolean;
+  hideLocation?: boolean;
 }
 
 const getLabelFromValue = (value: number, options: any[], i18n: any) => {
@@ -49,11 +51,13 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
   onClose,
   fine,
   isLoading = false,
-  lookupOptions: externalLookupOptions = [],
+  lookupOptions: externalLookupOptions,
   getLabelFromValue: externalGetLabelFromValue,
   onShare,
   onViewLocation,
   onViewAttachments,
+  readOnly = false,
+  hideLocation = false,
 }) => {
   const {
     token: { borderRadius, colorBgContainer },
@@ -70,9 +74,10 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
   const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [updateFineCancelStatus] = useUpdateFineCancelStatusMutation();
 
-  const lookupOptionsToUse = externalLookupOptions.length > 0 ? externalLookupOptions : internalLookupOptions;
+  const hasExternalLookupOptions = Array.isArray(externalLookupOptions) && externalLookupOptions.length > 0;
+  const lookupOptionsToUse = hasExternalLookupOptions ? externalLookupOptions : internalLookupOptions;
   const getLabelFunction = externalGetLabelFromValue || getLabelFromValue;
-  const isStatus15003 = mappedFine?.inspectionStatus === 15003;
+  const isStatus15003 = !readOnly && mappedFine?.inspectionStatus === 15003;
 
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
     fine ? { inspectionGUID: fine.inspectionGUID, entityCode: fine.entityCode } : skipToken,
@@ -83,8 +88,10 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
   );
 
   useEffect(() => {
-    if (externalLookupOptions.length === 0 && open) fetchLookupData();
-  }, [open, externalLookupOptions]);
+    if (!hasExternalLookupOptions && open && internalLookupOptions.length === 0) {
+      fetchLookupData();
+    }
+  }, [open, hasExternalLookupOptions, internalLookupOptions.length]);
 
   useEffect(() => {
     if (fine && lookupOptionsToUse.length > 0) mapFineToLabels();
@@ -92,15 +99,17 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
 
   useEffect(() => {
     if (open) {
-      form.resetFields();
+      if (!readOnly) {
+        form.resetFields();
+      }
       setLastAction(null);
     }
-  }, [open, fine, form]);
+  }, [open, fine, form, readOnly]);
 
   const fetchLookupData = async () => {
     setIsLoadingLookups(true);
     try {
-      const result = await triggerGetLookups([1400, 1300, 1500]).unwrap();
+      const result = await triggerGetLookups([1400, 1300, 1500, 1100]).unwrap();
       setInternalLookupOptions(result);
     } catch (error) {
       notification.error({ data: error });
@@ -115,6 +124,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
     const inspectionTypeOptions = filterOptionsByCategory(lookupOptionsToUse, 1400);
     const inspectionCategoryOptions = filterOptionsByCategory(lookupOptionsToUse, 1300);
     const inspectionStatusOptions = filterOptionsByCategory(lookupOptionsToUse, 1500);
+    const paymentTypeOptions = filterOptionsByCategory(lookupOptionsToUse, 1100);
 
     setMappedFine({
       ...fine,
@@ -131,7 +141,9 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
       fineAmountFormatted: (fine.fineAmount ?? fine.fineAmount === 0) ? `${fine.fineAmount} AED` : "No Data",
       totalAmountFormatted:
         (fine.totalFineAmount ?? fine.totalFineAmount === 0) ? `${fine.totalFineAmount} AED` : "No Data",
-      paymentTypeLabel: getPaymentTypeLabel(fine.paymentType),
+      paymentTypeLabel: fine.paymentType !== undefined && fine.paymentType !== null
+        ? getLabelFunction(fine.paymentType, paymentTypeOptions, i18n)
+        : getPaymentTypeLabel(fine.paymentType),
       statusLabel: getStatusLabel(fine.isPaid, fine.inspectionStatus),
       statusColor: getStatusColor(fine.isPaid, fine.inspectionStatus),
       blackPointsFormatted: (fine.blackPoint ?? fine.blackPoint === 0) ? fine.blackPoint : "0",
@@ -256,6 +268,13 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
     }
   };
 
+  const getCompleteFilePath = (file: any) => {
+    if (!file) return "";
+    if (file.filePath?.includes(file.fileName)) return file.filePath;
+    const separator = file.filePath?.endsWith("\\") ? "" : "\\";
+    return `${file.filePath}${separator}${file.fileName}`;
+  };
+
   return (
     <Modal open={open} onCancel={onClose} width={1000} footer={null} title={null} closable={false}>
       <Spin spinning={isLoading || isLoadingLookups || isProcessing}>
@@ -285,202 +304,224 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
         ) : (
           <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
             <Row gutter={16}>
-              {/* Fine Details with Trade License */}
-              <Col span={mappedFine?.plateNumber ? 12 : 24}>
-                <Card
-                  title={t("form.finedetails")}
-                  size="small"
-                  headStyle={{ background: colorBgContainer, fontWeight: 600 }}
-                  style={{ marginBottom: 16, borderRadius: 12 }}
-                >
-                  <Row gutter={[0, 12]}>
-                    {/* Trade License Number */}
-                    {mappedFine?.tradeLicenseNumber && (
-                      <>
+              <Col span={24}>
+                <Row gutter={16}>
+                  {/* Fine Details with Trade License */}
+                  <Col span={mappedFine?.plateNumber ? 12 : 24}>
+                    <Card
+                      title={t("form.finedetails")}
+                      size="small"
+                      headStyle={{ background: colorBgContainer, fontWeight: 600 }}
+                      style={{ marginBottom: 16, borderRadius: 12 }}
+                    >
+                      <Row gutter={[0, 12]}>
+                        {/* Trade License Number */}
+                        {mappedFine?.tradeLicenseNumber && (
+                          <>
+                            <Col span={10}>
+                              <Text strong>{t("form.tradeLicenseNumber")}:</Text>
+                            </Col>
+                            <Col span={14}>{mappedFine.tradeLicenseNumber || "---"}</Col>
+
+                            <Col span={10}>
+                              <Text strong>{t("form.tradeLicenseName")}:</Text>
+                            </Col>
+                            <Col span={14}>{mappedFine.tradeLicenseNameEn || mappedFine.tradeLicenseNameAr || "---"}</Col>
+                          </>
+                        )}
+
+                        {/* Fine Details */}
                         <Col span={10}>
-                          <Text strong>{t("form.tradeLicenseNumber")}:</Text>
+                          <Text strong>{t("form.fineType")}:</Text>
                         </Col>
-                        <Col span={14}>{mappedFine.tradeLicenseNumber || "---"}</Col>
+                        <Col span={14}>{mappedFine.inspectionCategoryLabel}</Col>
 
                         <Col span={10}>
-                          <Text strong>{t("form.tradeLicenseName")}:</Text>
+                          <Text strong>{t("form.fineNumber")}:</Text>
                         </Col>
-                        <Col span={14}>{mappedFine.tradeLicenseNameEn || mappedFine.tradeLicenseNameAr || "---"}</Col>
-                      </>
-                    )}
+                        <Col span={14}>{mappedFine.entityNo}</Col>
 
-                    {/* Fine Details */}
-                    <Col span={10}>
-                      <Text strong>{t("form.fineType")}:</Text>
-                    </Col>
-                    <Col span={14}>{mappedFine.inspectionCategoryLabel}</Col>
-
-                    <Col span={10}>
-                      <Text strong>{t("form.fineNumber")}:</Text>
-                    </Col>
-                    <Col span={14}>{mappedFine.entityNo}</Col>
-
-                    <Col span={10}>
-                      <Text strong>{t("form.inspectionType")}:</Text>
-                    </Col>
-                    <Col span={14}>{mappedFine.inspectionTypeLabel}</Col>
-
-                    <Col span={10}>
-                      <Text strong>{t("form.inspectionDate")}:</Text>
-                    </Col>
-                    <Col span={14}>{mappedFine.inspectionDateFormatted}</Col>
-
-                    <Col span={10}>
-                      <Text strong>{t("form.amount")}:</Text>
-                    </Col>
-                    <Col span={14}>{mappedFine.fineAmountFormatted}</Col>
-
-                    <Col span={10}>
-                      <Text strong>{t("form.paymentType")}:</Text>
-                    </Col>
-                    <Col span={14}>{mappedFine.paymentTypeLabel}</Col>
-
-                    <Col span={10}>
-                      <Text strong>{t("form.inspectionStatus")}:</Text>
-                    </Col>
-                    <Col span={14}>
-                      <Tag color={mappedFine.statusColor}>{mappedFine.inspectionStatusLabel}</Tag>
-                    </Col>
-
-                    {/* <Col span={10}>
-                      <Text strong>{t("form.blackPoints")}:</Text>
-                    </Col>
-                    <Col span={14}>{mappedFine.blackPointsFormatted}</Col> */}
-
-                    <Col span={10}>
-                      <Text strong>{t("form.inspectorName")}:</Text>
-                    </Col>
-                    <Col span={14}>{mappedFine.inspectorName}</Col>
-
-                    {mappedFine.supervisorName && mappedFine.supervisorName !== "No Data" && (
-                      <>
                         <Col span={10}>
-                          <Text strong>{t("form.supervisorName")}:</Text>
+                          <Text strong>{t("form.inspectionType")}:</Text>
                         </Col>
-                        <Col span={14}>{mappedFine.supervisorName}</Col>
-                      </>
-                    )}
-                  </Row>
-                </Card>
-              </Col>
+                        <Col span={14}>{mappedFine.inspectionTypeLabel}</Col>
 
-              {/* Vehicle Details with Plate */}
-              {mappedFine?.plateNumber && (
-                <Col span={12}>
-                  <Card
-                    title={
-                      <span
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        {t("form.vehicleDetails")}
-                        <span style={{ paddingTop: "10px", paddingBottom: "10px" }}>
-                          <UAEPlate
-                            code={PLATE_COLOR[mappedFine?.plateCodeValue] ?? "---"}
-                            number={mappedFine?.plateNumber ?? "---"}
-                            emirateEn={plateSources[mappedFine?.plateSourceValue]?.en || ""}
-                            emirateAr={plateSources[mappedFine?.plateSourceValue]?.ar || ""}
-                          />
-                        </span>
-                      </span>
-                    }
-                    size="small"
-                    headStyle={{ background: colorBgContainer, fontWeight: 600 }}
-                    style={{ marginBottom: 16, borderRadius: 12 }}
-                  >
-                    {/* Vehicle Plate at the top of Vehicle Details */}
-                    <div style={{ display: "flex", justifyContent: "left", marginBottom: 16 }}></div>
-
-                    <Row gutter={[0, 12]}>
-                      <Col span={10}>
-                        <Text strong>{t("form.plateNumber")}:</Text>
-                      </Col>
-                      <Col span={14}>{mappedFine.plateNumber || "No Data"}</Col>
-                      <Col span={10}>
-                        <Text strong>{t("form.vehicleColor")}:</Text>
-                      </Col>
-                      <Col span={14}>{mappedFine.vehicleColor || "No Data"}</Col>
-                      <Col span={10}>
-                        <Text strong>{t("form.vehicleType")}:</Text>
-                      </Col>
-                      <Col span={14}>{mappedFine.vehicleType || "No Data"}</Col>
-                      <Col span={10}>
-                        <Text strong>{t("form.vehicleBrand")}:</Text>
-                      </Col>
-                      <Col span={14}>{mappedFine.vehicleBrand || "No Data"}</Col>
-                      <Col span={10}>
-                        <Text strong>{t("form.manufacturerYear")}:</Text>
-                      </Col>
-                      <Col span={14}>{mappedFine.manufacturerYear || "No Data"}</Col>
-                      <Col span={10}>
-                        <Text strong>{t("form.vehicleOwnerName")}:</Text>
-                      </Col>
-                      <Col span={14}>{mappedFine.vehicleOwnerName || "No Data"}</Col>
-                      <Col span={10}>
-                        <Text strong>{t("form.vehicleOwnerEmail")}:</Text>
-                      </Col>
-                      <Col span={14}>{mappedFine.vehicleOwnerEmail || "No Data"}</Col>
-                      <Col span={10}>
-                        <Text strong>{t("form.vehicleOwnerMobile")}:</Text>
-                      </Col>
-                      <Col span={14}>{mappedFine.vehicleOwnerMobile || "No Data"}</Col>
-                    </Row>
-                  </Card>
-                </Col>
-              )}
-            </Row>
-
-            {/* Violation Details */}
-            <Card
-              title={t("form.violationDetails")}
-              size="small"
-              style={{ marginBottom: 16, borderRadius: 12 }}
-              headStyle={{ background: colorBgContainer, fontWeight: 600 }}
-            >
-              {violationDetails?.length === 0 ? (
-                <Empty description={t("form.Noviolationdetailsavailable")} />
-              ) : (
-                <Spin spinning={isLoadingViolation}>
-                  {violationDetails?.map((value, index) => {
-                    return (
-                      <Row
-                        key={index}
-                        gutter={[0, 0]}
-                        style={{
-                          alignItems: "center",
-                          border: "1px solid #e8e8e8",
-                          padding: "8px 12px",
-                          background: colorBgContainer,
-                          marginBottom: "5px",
-                          borderRadius: borderRadius,
-                        }}
-                      >
-                        <Col flex="1">
-                          <Text strong>{i18n.language === "ar" ? value?.violationNameAr : value?.violationNameEn}</Text>
+                        <Col span={10}>
+                          <Text strong>{t("form.inspectionDate")}:</Text>
                         </Col>
-                        <Col>
+                        <Col span={14}>{mappedFine.inspectionDateFormatted}</Col>
+
+                        <Col span={10}>
                           <Text strong>{t("form.amount")}:</Text>
                         </Col>
-                        <Col style={{ textAlign: "right" }}>
-                          <Text type="danger" strong>
-                            {" "}
-                            {value?.totalFineAmount} AED{" "}
-                          </Text>
+                        <Col span={14}>{mappedFine.fineAmountFormatted}</Col>
+
+                        <Col span={10}>
+                          <Text strong>{t("form.paymentType")}:</Text>
                         </Col>
+                        <Col span={14}>{mappedFine.paymentTypeLabel}</Col>
+
+                        <Col span={10}>
+                          <Text strong>{t("form.inspectionStatus")}:</Text>
+                        </Col>
+                        <Col span={14}>
+                          <Tag color={mappedFine.statusColor}>{mappedFine.inspectionStatusLabel}</Tag>
+                        </Col>
+
+                        <Col span={10}>
+                          <Text strong>{t("form.inspectorName")}:</Text>
+                        </Col>
+                        <Col span={14}>{mappedFine.inspectorName}</Col>
+
+                        {mappedFine.supervisorName && mappedFine.supervisorName !== "No Data" && (
+                          <>
+                            <Col span={10}>
+                              <Text strong>{t("form.supervisorName")}:</Text>
+                            </Col>
+                            <Col span={14}>{mappedFine.supervisorName}</Col>
+                          </>
+                        )}
                       </Row>
-                    );
-                  })}
-                </Spin>
-              )}
-            </Card>
+                    </Card>
+                  </Col>
+
+                  {/* Vehicle Details with Plate */}
+                  {mappedFine?.plateNumber && (
+                    <Col span={12}>
+                      <Card
+                        title={
+                          <span
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                            }}
+                          >
+                            {t("form.vehicleDetails")}
+                            <span style={{ paddingTop: "10px", paddingBottom: "10px" }}>
+                              <UAEPlate
+                                code={PLATE_COLOR[mappedFine?.plateCodeValue] ?? "---"}
+                                number={mappedFine?.plateNumber ?? "---"}
+                                emirateEn={plateSources[mappedFine?.plateSourceValue]?.en || ""}
+                                emirateAr={plateSources[mappedFine?.plateSourceValue]?.ar || ""}
+                              />
+                            </span>
+                          </span>
+                        }
+                        size="small"
+                        headStyle={{ background: colorBgContainer, fontWeight: 600 }}
+                        style={{ marginBottom: 16, borderRadius: 12 }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "left", marginBottom: 16 }}></div>
+
+                        <Row gutter={[0, 12]}>
+                          <Col span={10}>
+                            <Text strong>{t("form.plateNumber")}:</Text>
+                          </Col>
+                          <Col span={14}>{mappedFine.plateNumber || "No Data"}</Col>
+                          <Col span={10}>
+                            <Text strong>{t("form.plateSource")}:</Text>
+                          </Col>
+                          <Col span={14}>
+                            {mappedFine?.plateSourceValue
+                              ? i18n.language === "ar"
+                                ? plateSources[mappedFine.plateSourceValue]?.ar || mappedFine.plateSourceValue
+                                : plateSources[mappedFine.plateSourceValue]?.en || mappedFine.plateSourceValue
+                              : "No Data"}
+                          </Col>
+                          <Col span={10}>
+                            <Text strong>{t("form.plateCategory")}:</Text>
+                          </Col>
+                          <Col span={14}>
+                            {mappedFine?.plateCategoryValue
+                              ? PLATE_TYPE_SHORT[mappedFine.plateCategoryValue] || mappedFine.plateCategoryValue
+                              : "No Data"}
+                          </Col>
+                          <Col span={10}>
+                            <Text strong>{t("form.plateCode")}:</Text>
+                          </Col>
+                          <Col span={14}>
+                            {mappedFine?.plateCodeValue
+                              ? PLATE_COLOR[mappedFine.plateCodeValue] || mappedFine.plateCodeValue
+                              : "No Data"}
+                          </Col>
+                          <Col span={10}>
+                            <Text strong>{t("form.vehicleColor")}:</Text>
+                          </Col>
+                          <Col span={14}>{mappedFine.vehicleColor || "No Data"}</Col>
+                          <Col span={10}>
+                            <Text strong>{t("form.vehicleType")}:</Text>
+                          </Col>
+                          <Col span={14}>{mappedFine.vehicleType || "No Data"}</Col>
+                          <Col span={10}>
+                            <Text strong>{t("form.vehicleBrand")}:</Text>
+                          </Col>
+                          <Col span={14}>{mappedFine.vehicleBrand || "No Data"}</Col>
+                          <Col span={10}>
+                            <Text strong>{t("form.manufacturerYear")}:</Text>
+                          </Col>
+                          <Col span={14}>{mappedFine.manufacturerYear || "No Data"}</Col>
+                          <Col span={10}>
+                            <Text strong>{t("form.vehicleOwnerName")}:</Text>
+                          </Col>
+                          <Col span={14}>{mappedFine.vehicleOwnerName || "No Data"}</Col>
+                          <Col span={10}>
+                            <Text strong>{t("form.vehicleOwnerEmail")}:</Text>
+                          </Col>
+                          <Col span={14}>{mappedFine.vehicleOwnerEmail || "No Data"}</Col>
+                          <Col span={10}>
+                            <Text strong>{t("form.vehicleOwnerMobile")}:</Text>
+                          </Col>
+                          <Col span={14}>{mappedFine.vehicleOwnerMobile || "No Data"}</Col>
+                        </Row>
+                      </Card>
+                    </Col>
+                  )}
+                </Row>
+
+                {/* Violation Details */}
+                <Card
+                  title={t("form.violationDetails")}
+                  size="small"
+                  style={{ marginBottom: 16, borderRadius: 12 }}
+                  headStyle={{ background: colorBgContainer, fontWeight: 600 }}
+                >
+                  {violationDetails?.length === 0 ? (
+                    <Empty description={t("form.Noviolationdetailsavailable")} />
+                  ) : (
+                    <Spin spinning={isLoadingViolation}>
+                      {violationDetails?.map((value, index) => {
+                        return (
+                          <Row
+                            key={index}
+                            gutter={[0, 0]}
+                            style={{
+                              alignItems: "center",
+                              border: "1px solid #e8e8e8",
+                              padding: "8px 12px",
+                              background: colorBgContainer,
+                              marginBottom: "5px",
+                              borderRadius: borderRadius,
+                            }}
+                          >
+                            <Col flex="1">
+                              <Text strong>{i18n.language === "ar" ? value?.violationNameAr : value?.violationNameEn}</Text>
+                            </Col>
+                            <Col>
+                              <Text strong>{t("form.amount")}:</Text>
+                            </Col>
+                            <Col style={{ textAlign: "right" }}>
+                              <Text type="danger" strong>
+                                {" "}
+                                {value?.totalFineAmount} AED{" "}
+                              </Text>
+                            </Col>
+                          </Row>
+                        );
+                      })}
+                    </Spin>
+                  )}
+                </Card>
 
             {/* Approval Actions */}
             {isStatus15003 && (
@@ -530,83 +571,87 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
               </Card>
             )}
 
-            <Row gutter={16}>
-              <Col span={12}>
-                <Card
-                  title={t("form.FineLocation")}
-                  size="small"
-                  style={{ borderRadius: 12, marginBottom: 16 }}
-                  headStyle={{ background: colorBgContainer, fontWeight: 600 }}
-                >
-                  {mappedFine.latitude && mappedFine.longitude ? (
-                    <ArcGISMap
-                      inspectors={[
-                        {
-                          id: 1,
-                          name: "Fine Location",
-                          nameAr: "موقع المخالفة",
-                          lat: mappedFine.latitude,
-                          lng: mappedFine.longitude,
-                          status: "Fine",
-                          statusAr: "مخالفة",
-                          details: { zone: "", lastCheckIn: "" },
-                          markerType: "google-pin",
-                        },
-                      ]}
-                      center={[mappedFine.longitude, mappedFine.latitude]}
-                      zoom={16}
-                      height="180px"
-                      disablePopup={true}
-                    />
-                  ) : (
-                    <Empty description="No Location Data Available" />
+                <Row gutter={16}>
+                  {!hideLocation && (
+                    <Col span={12}>
+                      <Card
+                        title={t("form.FineLocation")}
+                        size="small"
+                        style={{ borderRadius: 12, marginBottom: 16 }}
+                        headStyle={{ background: colorBgContainer, fontWeight: 600 }}
+                      >
+                        {mappedFine.latitude && mappedFine.longitude ? (
+                          <ArcGISMap
+                            inspectors={[
+                              {
+                                id: 1,
+                                name: "Fine Location",
+                                nameAr: "موقع المخالفة",
+                                lat: mappedFine.latitude,
+                                lng: mappedFine.longitude,
+                                status: "Fine",
+                                statusAr: "مخالفة",
+                                details: { zone: "", lastCheckIn: "" },
+                                markerType: "google-pin",
+                              },
+                            ]}
+                            center={[mappedFine.longitude, mappedFine.latitude]}
+                            zoom={16}
+                            height="180px"
+                            disablePopup={true}
+                          />
+                        ) : (
+                          <Empty description="No Location Data Available" />
+                        )}
+                      </Card>
+                    </Col>
                   )}
-                </Card>
-              </Col>
 
-              <Col span={12}>
-                <Card
-                  title={t("form.AttachedPhotos")}
-                  size="small"
-                  style={{ borderRadius: 12, marginBottom: 16 }}
-                  headStyle={{ background: colorBgContainer, fontWeight: 600 }}
-                >
-                  <Spin spinning={isLoadingAttachments}>
-                    {attachments.length > 0 ? (
-                      <Image.PreviewGroup>
-                        <Space wrap>
-                          {attachments.slice(0, 3).map((file) => (
-                            <Image
-                              key={file.attachmentGUID}
-                              width={100}
-                              height={100}
-                              src={getMobileFileUrl(file.filePath)}
-                              alt={file.fileName}
-                              style={{ objectFit: "cover", borderRadius: 8 }}
-                            />
-                          ))}
-                          {attachments.length > 3 && (
-                            <div
-                              style={{
-                                width: 100,
-                                height: 100,
-                                background: "#f5f5f5",
-                                borderRadius: 8,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                            >
-                              <Text type="secondary">+{attachments.length - 3} more</Text>
-                            </div>
-                          )}
-                        </Space>
-                      </Image.PreviewGroup>
-                    ) : (
-                      <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
-                    )}
-                  </Spin>
-                </Card>
+                  <Col span={hideLocation ? 24 : 12}>
+                    <Card
+                      title={t("form.AttachedPhotos")}
+                      size="small"
+                      style={{ borderRadius: 12, marginBottom: 16 }}
+                      headStyle={{ background: colorBgContainer, fontWeight: 600 }}
+                    >
+                      <Spin spinning={isLoadingAttachments}>
+                        {attachments.length > 0 ? (
+                          <Image.PreviewGroup>
+                            <Space wrap>
+                              {attachments.slice(0, 3).map((file) => (
+                                <Image
+                                  key={file.attachmentGUID}
+                                  width={100}
+                                  height={100}
+                                  src={getMobileFileUrl(getCompleteFilePath(file))}
+                                  alt={file.fileName}
+                                  style={{ objectFit: "cover", borderRadius: 8 }}
+                                />
+                              ))}
+                              {attachments.length > 3 && (
+                                <div
+                                  style={{
+                                    width: 100,
+                                    height: 100,
+                                    background: "#f5f5f5",
+                                    borderRadius: 8,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}
+                                >
+                                  <Text type="secondary">+{attachments.length - 3} more</Text>
+                                </div>
+                              )}
+                            </Space>
+                          </Image.PreviewGroup>
+                        ) : (
+                          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t("common.noData")} />
+                        )}
+                      </Spin>
+                    </Card>
+                  </Col>
+                </Row>
               </Col>
             </Row>
           </div>

@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import type { PageConfig } from "../types/config";
 import { STATUS_COLORS } from "../constants/ui";
 import { getFileUrl } from "../services/fileApi";
+import { formatDateTimeDisplay } from "../utils/dateFormatter";
 
 interface DynamicViewDrawerProps {
   open: boolean;
@@ -64,9 +65,7 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, re
 
                 switch (field.type) {
                   case "date":
-                    return dayjs(text as string).isValid()
-                      ? dayjs(text as string).format("DD MMM YYYY, h:mm A")
-                      : String(text);
+                    return dayjs(text as string).isValid() ? formatDateTimeDisplay(text as string) : String(text);
 
                   case "tag":
                     return <Tag color={tagColor}>{t(`status.${statusKey}`, statusKey)}</Tag>;

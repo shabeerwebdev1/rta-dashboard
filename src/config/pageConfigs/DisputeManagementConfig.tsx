@@ -34,7 +34,7 @@ export const disputeManagementConfig: PageConfig = {
 
   searchConfig: {
     globalSearchKeys: ["fineId"],
-    columnFilterKeys: ["department", "payment_Type"],
+    columnFilterKeys: ["department"],
     dateRangeKey: "addon",
   },
 
@@ -87,18 +87,9 @@ export const disputeManagementConfig: PageConfig = {
         title: "form.disputenumber",
         type: "select",
       },
-      {
-        key: "payment_Type",
-        title: "form.paymentType",
-        type: "select",
-        filterable: true,
-        options: [
-          { label: "Cash", value: 1 },
-          { label: "Credit Card", value: 2 },
-          { label: "Online", value: 3 },
-        ],
-      },
       { key: "source", title: "form.source", type: "string" },
+      { key: "vehicleExitDateTime", title: "form.vehicleExit", type: "string" },
+      { key: "approvedBy", title: "form.approvedBy", type: "string" },
       {
         key: "created_At",
         title: "form.createdAt",

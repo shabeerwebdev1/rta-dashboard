@@ -1,8 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo, useEffect } from "react";
-import { Card } from "antd";
-import dayjs from "dayjs";
+import { Card, Dropdown, Button } from "antd";
+import { EyeOutlined, MoreOutlined } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
 import DataTableWrapper from "../components/common/DataTableWrapper";
@@ -11,19 +12,26 @@ import { useGetInboxListQuery, useGetInboxSummaryMenuQuery } from "../services/r
 import { usePage } from "../contexts/PageContext";
 
 // Import the dynamic entity handler
-import { DynamicEntityHandler, EntityActionButton, useEntityHandler } from "../components/common/DynamicEntityHandler";
+import { DynamicEntityHandler, useEntityHandler } from "../components/common/DynamicEntityHandler";
+import { formatDateTimeDisplay } from "../utils/dateFormatter";
 
 const InboxPage = () => {
+  const { t } = useTranslation();
   const { setPageTitle } = usePage();
   const [searchParams] = useSearchParams();
   const notificationCode = searchParams.get("code") || "";
 
   const { data: inboxMenus = [] } = useGetInboxSummaryMenuQuery();
 
+  const sanitizeInboxTitle = (title?: string) => {
+    if (!title) return "Inbox";
+    return title.replace(/^Parking\s*-\s*/i, "").trim();
+  };
+
   const notificationName = useMemo(() => {
     if (!notificationCode) return "Inbox";
     const match = inboxMenus.find((item: any) => item.NotificationCode === notificationCode);
-    return match?.NotificationName || "Inbox";
+    return sanitizeInboxTitle(match?.NotificationName || "Inbox");
   }, [notificationCode, inboxMenus]);
 
   useEffect(() => {
@@ -66,8 +74,22 @@ const InboxPage = () => {
     key: "actions",
     title: "Action",
     width: 100,
-    render: (_: any, record: any) => (
-      <EntityActionButton record={record} entityCode={record.EntityCode} onClick={openEntity} />
+    render: (_: any, row: any) => (
+      <Dropdown
+        trigger={["click"]}
+        menu={{
+          items: [
+            {
+              key: "view",
+              icon: <EyeOutlined />,
+              label: t("common.open"),
+              onClick: () => openEntity(row.EntityCode, row),
+            },
+          ],
+        }}
+      >
+        <Button type="text" icon={<MoreOutlined />} />
+      </Dropdown>
     ),
   };
 
@@ -77,15 +99,19 @@ const InboxPage = () => {
 
     const dynamicColumns = data.Columns.filter((col: any) => col.Visible)
       .sort((a: any, b: any) => a.Position - b.Position)
+      .filter((col: any) => {
+        const name = String(col.DisplayName || "").toLowerCase();
+        const field = String(col.Field || "").toLowerCase();
+        const blockedNames = ["actor name", "supervisor name", "activity name", "notification name", "payment type"];
+        return !blockedNames.some((v) => name.includes(v) || field.includes(v.replace(/\s+/g, "")));
+      })
       .map((col: any) => ({
         key: col.Field,
         dataIndex: col.Field,
-        title: col.DisplayName,
+        title:
+          String(col.DisplayName || "").toLowerCase() === "last updated date time" ? "Last Updated" : col.DisplayName,
         sortable: col.AllowSorting === "true",
-        render:
-          col.Type === "datetime"
-            ? (value: any) => (value ? dayjs(value).format("DD MMM YYYY HH:mm:ss") : "-")
-            : undefined,
+        render: col.Type === "datetime" ? (value: any) => (value ? formatDateTimeDisplay(value) : "-") : undefined,
       }));
 
     return [slNoColumn, ...dynamicColumns, actionColumn];

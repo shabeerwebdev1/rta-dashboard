@@ -1,10 +1,10 @@
 /* eslint-disable react/prop-types */
 import { Drawer, Descriptions, Tag } from "antd";
 import { useTranslation } from "react-i18next";
-import dayjs from "dayjs";
+import { formatDateByLocale } from "../../utils/dateFormatter";
 
 const ProactiveCampaignViewDrawer = ({ open, onClose, record, getLabel }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   if (!record) return null;
 
@@ -18,7 +18,8 @@ const ProactiveCampaignViewDrawer = ({ open, onClose, record, getLabel }) => {
         <Descriptions.Item label={t("form.location")}>{getLabel(record.location, "locations")}</Descriptions.Item>
 
         <Descriptions.Item label={t("form.timeInterval")}>
-          {dayjs(record.startTime).format("DD/MM/YYYY HH:mm")} - {dayjs(record.endTime).format("DD/MM/YYYY HH:mm")}
+          {formatDateByLocale(record.startTime, { en: "DD/MM/YYYY HH:mm", ar: "DD/MM/YYYY HH:mm" }, i18n.language)} -{" "}
+          {formatDateByLocale(record.endTime, { en: "DD/MM/YYYY HH:mm", ar: "DD/MM/YYYY HH:mm" }, i18n.language)}
         </Descriptions.Item>
 
         <Descriptions.Item label={t("form.violationTypes")}>
@@ -50,7 +51,7 @@ const ProactiveCampaignViewDrawer = ({ open, onClose, record, getLabel }) => {
         <Descriptions.Item label={t("form.createdBy")}>{record.createdBy}</Descriptions.Item>
 
         <Descriptions.Item label={t("form.createdAt")}>
-          {dayjs(record.createdAt).format("DD/MM/YYYY HH:mm")}
+          {formatDateByLocale(record.createdAt, { en: "DD/MM/YYYY HH:mm", ar: "DD/MM/YYYY HH:mm" }, i18n.language)}
         </Descriptions.Item>
       </Descriptions>
     </Drawer>

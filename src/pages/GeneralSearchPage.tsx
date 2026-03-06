@@ -297,7 +297,7 @@ const GeneralSearchPage: React.FC = () => {
               {/* Show vehicle details and fines only if vehicleDetails exist */}
               {vehicleDetails && (
                 <>
-                  <Card title={t("info.basicDetails")}>
+                  <Card title={t("info.eTrafficVehicleDetails")}>
                     <Descriptions bordered column={2} size="small">
                       <Descriptions.Item label={t("form.plateNumber")}>
                         {vehicleDetails.plateNo || "N/A"}

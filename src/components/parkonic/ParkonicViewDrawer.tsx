@@ -316,7 +316,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                           </Col>
 
                           <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                            {mappedRecord.reviewStatus === 1 ? (mappedRecord.fineId ?? "No Data") : "No Data"}
+                            {mappedRecord.reviewStatus === 1 ? (mappedRecord.fineId ?? t("common.notAvailable")) : t("common.notAvailable")}
                           </Col>
 
                           <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>

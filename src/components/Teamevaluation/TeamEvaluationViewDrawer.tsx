@@ -1,8 +1,8 @@
 import React from "react";
 import { Drawer, Descriptions, Collapse, Tag, Progress } from "antd";
 import { useTranslation } from "react-i18next";
-import dayjs from "dayjs";
 import { staticLookupData } from "../../config/pageConfigs/teamEvaluationConfig";
+import { formatDateByLocale } from "../../utils/dateFormatter";
 
 const { Panel } = Collapse;
 
@@ -49,7 +49,7 @@ const TeamEvaluationViewDrawer: React.FC<TeamEvaluationViewDrawerProps> = ({
         </Descriptions.Item>
 
         <Descriptions.Item label={t("form.evaluationDate")}>
-          {dayjs(record.evaluationDate).format("DD/MM/YYYY")}
+          {formatDateByLocale(record.evaluationDate, { en: "DD/MM/YYYY", ar: "DD/MM/YYYY" }, i18n.language)}
         </Descriptions.Item>
 
         <Descriptions.Item label={t("form.evaluationType")}>
@@ -57,8 +57,8 @@ const TeamEvaluationViewDrawer: React.FC<TeamEvaluationViewDrawerProps> = ({
         </Descriptions.Item>
 
         <Descriptions.Item label={t("form.evaluationPeriod")}>
-          {dayjs(record.periodFrom).format("DD/MM/YYYY")} -{" "}
-          {dayjs(record.periodTo).format("DD/MM/YYYY")}
+          {formatDateByLocale(record.periodFrom, { en: "DD/MM/YYYY", ar: "DD/MM/YYYY" }, i18n.language)} -{" "}
+          {formatDateByLocale(record.periodTo, { en: "DD/MM/YYYY", ar: "DD/MM/YYYY" }, i18n.language)}
         </Descriptions.Item>
 
         <Descriptions.Item label={t("form.zone")}>

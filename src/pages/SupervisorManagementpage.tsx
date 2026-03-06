@@ -1,12 +1,14 @@
 // SupervisorManagement.tsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Space, Select, Checkbox, Button, Spin, Pagination, Input } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { Space, Select, Checkbox, Button, Spin, Pagination, Input, Tooltip } from "antd";
+import { SearchOutlined, SyncOutlined } from "@ant-design/icons";
 import { SupervisorManagemnetConfig } from "../config/pageConfigs/SupervisorManagementConfig";
 import { useTranslation } from "react-i18next";
 import {
+  useLazyGetLookupsQuery,
   useLazyGetShiftsQuery,
   useLazyGetZonesQuery,
+  useGetAllAreasQuery,
   useGetActiveShiftsQuery,
   useUpdateShiftManagementMutation,
 } from "../services/rtkApiFactory";
@@ -20,8 +22,12 @@ interface SupervisorData {
   key: string;
   SupervisorName: string;
   zone?: string[];
+  area?: string[];
   shift?: string;
   weekOffs?: number[];
+  assignmentType?: number[];
+  specialZones?: string[];
+  addOnMeta?: Record<string, unknown>;
   role: string;
   employeeId: string;
   uswMcode: string;
@@ -41,6 +47,27 @@ interface Shift {
   shiftTypeCode: string;
   shiftTypeNameEn: string;
   shiftTypeNameAr: string;
+}
+
+interface Area {
+  areaId?: string | number;
+  area_Id?: string | number;
+  id?: string | number;
+  areaGUID?: string | number;
+  areaCode?: string;
+  area?: string;
+  areaName?: string;
+  name?: string;
+  zoneId?: string | number;
+  zone_Id?: string | number;
+}
+
+interface LookupItem {
+  categoryId: number;
+  categoryName: string;
+  value: number;
+  labelEn: string;
+  labelAr: string;
 }
 
 interface ActiveShiftData {
@@ -66,10 +93,13 @@ function SupervisorManagement() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [isLoadingZones, setIsLoadingZones] = useState(false);
   const [isLoadingShifts, setIsLoadingShifts] = useState(false);
+  const [isLoadingLookups, setIsLoadingLookups] = useState(false);
   const [zones, setZones] = useState<Zone[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
+  const [lookupOptions, setLookupOptions] = useState<LookupItem[]>([]);
   const [updatingRowKey, setUpdatingRowKey] = useState<string | null>(null);
 
+  const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [triggerGetZones] = useLazyGetZonesQuery();
   const [triggerGetShifts] = useLazyGetShiftsQuery();
 
@@ -82,15 +112,34 @@ function SupervisorManagement() {
     isLoading: isLoadingActiveShifts,
     refetch: refetchActiveShifts,
   } = useGetActiveShiftsQuery();
+  const { data: allAreasResponse = [], isLoading: isLoadingAreas } = useGetAllAreasQuery(undefined);
 
   const [updateShiftManagement, { isLoading: isUpdating }] = useUpdateShiftManagementMutation();
 
   useEffect(() => {
+    fetchLookupData();
     fetchZonesData();
     fetchShiftsData();
   }, [i18n.language]);
 
   const availableShiftIds = useMemo(() => shifts.map((shift) => shift.shiftTypeGUID), [shifts]);
+  const specialZoneOptions = useMemo(() => ["G9", "GX"], []);
+
+  const parseAddOnData = (rawAddOn?: string): Record<string, unknown> => {
+    if (!rawAddOn) return {};
+    try {
+      const parsed = JSON.parse(rawAddOn);
+      return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
+    } catch {
+      return {};
+    }
+  };
+
+  const toStringArray = (value: unknown): string[] => {
+    if (Array.isArray(value)) return value.map((v) => String(v)).filter(Boolean);
+    if (value === null || value === undefined || value === "") return [];
+    return [String(value)];
+  };
 
   useEffect(() => {
     if (activeShiftsResponse) {
@@ -103,13 +152,29 @@ function SupervisorManagement() {
         .map((item: ActiveShiftData, index: number) => {
           const isValidShift = item.shiftId && availableShiftIds.includes(item.shiftId);
           const zoneIds = item.zoneIds?.map((id) => id.toString()) || [];
+          const addOnData = parseAddOnData(item.addOn);
+          const parsedAreaIds = toStringArray(
+            addOnData.areaIds ?? addOnData.areasIds ?? addOnData.areaId ?? addOnData.assignedAreaIds,
+          );
+          const parsedSpecialZones = toStringArray(addOnData.specialZones ?? addOnData.specialZoneCodes);
+          const addOnMeta = { ...addOnData };
+          delete addOnMeta.areaIds;
+          delete addOnMeta.areasIds;
+          delete addOnMeta.areaId;
+          delete addOnMeta.assignedAreaIds;
+          delete addOnMeta.specialZones;
+          delete addOnMeta.specialZoneCodes;
 
           return {
             key: item.employeeId || item.uswMcode || `supervisor-${index}`,
             SupervisorName: item.employeeName,
             zone: zoneIds,
+            area: parsedAreaIds,
             shift: isValidShift ? item.shiftId : undefined,
             weekOffs: item.wO_Days ? item.wO_Days.split(",").map((d) => parseInt(d)) : [],
+            assignmentType: item.assignmentTypes || [],
+            specialZones: parsedSpecialZones,
+            addOnMeta,
             role: item.role,
             employeeId: item.employeeId,
             uswMcode: item.uswMcode,
@@ -165,6 +230,18 @@ function SupervisorManagement() {
     }
   };
 
+  const fetchLookupData = async () => {
+    setIsLoadingLookups(true);
+    try {
+      const result = await triggerGetLookups([1400]).unwrap();
+      setLookupOptions(result);
+    } catch {
+      notification.error(t("Fetch failed"), t("Failed to fetch lookup data."));
+    } finally {
+      setIsLoadingLookups(false);
+    }
+  };
+
   const fetchShiftsData = async () => {
     setIsLoadingShifts(true);
     try {
@@ -198,6 +275,30 @@ function SupervisorManagement() {
     [shifts, i18n.language],
   );
 
+  const areaOptions = useMemo(() => {
+    const raw = Array.isArray(allAreasResponse) ? allAreasResponse : [];
+    return (raw as Area[]).map((a) => {
+      const value = a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area;
+      const zoneId = a.zoneId ?? a.zone_Id;
+      return {
+        value: String(value ?? ""),
+        label: a.area || a.areaName || a.name || String(value ?? ""),
+        zoneId: zoneId ? String(zoneId) : "",
+      };
+    });
+  }, [allAreasResponse]);
+
+  const assignmentTypeOptions = useMemo(
+    () =>
+      lookupOptions
+        .filter((item) => item.categoryId === 1400)
+        .map((item) => ({
+          value: item.value,
+          label: i18n.language === "ar" ? item.labelAr : item.labelEn,
+        })),
+    [lookupOptions, i18n.language],
+  );
+
   const weekDayOptions = useMemo(
     () =>
       SupervisorManagemnetConfig.tableConfig.weekDays.map((d) => ({
@@ -209,15 +310,36 @@ function SupervisorManagement() {
 
   // === Handlers ===
   const handleZoneChange = (value: string[], record: SupervisorData) => {
-    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, zone: value } : item)));
+    setData((prev) =>
+      prev.map((item) => {
+        if (item.key !== record.key) return item;
+        const allowedAreaIds = new Set(
+          areaOptions.filter((option) => value.includes(option.zoneId)).map((option) => option.value),
+        );
+        const nextAreas = (item.area || []).filter((areaId) => allowedAreaIds.has(areaId));
+        return { ...item, zone: value, area: nextAreas };
+      }),
+    );
   };
 
   const handleShiftChange = (value: string, record: SupervisorData) => {
     setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, shift: value } : item)));
   };
 
+  const handleAreaChange = (value: string[], record: SupervisorData) => {
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, area: value } : item)));
+  };
+
   const handleWeekOffChange = (checkedValues: number[], record: SupervisorData) => {
     setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, weekOffs: checkedValues } : item)));
+  };
+
+  const handleAssignmentTypeChange = (value: number[], record: SupervisorData) => {
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, assignmentType: value } : item)));
+  };
+
+  const handleSpecialZoneChange = (checkedValues: string[], record: SupervisorData) => {
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, specialZones: checkedValues } : item)));
   };
 
   // === Update Handler ===
@@ -226,7 +348,9 @@ function SupervisorManagement() {
       setUpdatingRowKey(record.key);
 
       const zoneIds = record.zone?.map((zoneId) => zoneId) || [];
-      const assignmentTypes = [0];
+      const areaIds = record.area || [];
+      const specialZones = record.specialZones || [];
+      const assignmentTypes = record.assignmentType || [];
 
       const updateData = {
         employeeId: record.employeeId,
@@ -235,6 +359,11 @@ function SupervisorManagement() {
         role: "Supervisor",
         assignmentTypes,
         zoneIds,
+        addOn: JSON.stringify({
+          ...record.addOnMeta,
+          areaIds,
+          specialZones,
+        }),
       };
 
       await updateShiftManagement(updateData).unwrap();
@@ -259,10 +388,11 @@ function SupervisorManagement() {
             <Select
               mode="multiple"
               value={record.zone || []}
-              style={{ width: 250 }}
+              style={{ width: 170 }}
               onChange={(val) => handleZoneChange(val, record)}
               placeholder={t("placeholders.selectZones")}
               loading={isLoadingZones}
+              maxTagCount="responsive"
             >
               {zoneOptions.map((option) => (
                 <Option key={option.value} value={option.value}>
@@ -274,13 +404,47 @@ function SupervisorManagement() {
         };
       }
 
+      if (col.key === "area") {
+        return {
+          ...col,
+          render: (_: any, record: SupervisorData) => {
+            const selectedZoneIds = record.zone || [];
+            const filteredAreaOptions =
+              selectedZoneIds.length > 0
+                ? areaOptions.filter((option) => selectedZoneIds.includes(option.zoneId))
+                : [];
+
+            return (
+              <Select
+                mode="multiple"
+                value={record.area || []}
+                style={{ width: 170 }}
+                onChange={(val) => handleAreaChange(val, record)}
+                placeholder={t("placeholders.selectAreas")}
+                loading={isLoadingAreas}
+                maxTagCount="responsive"
+                maxCount={2}
+                allowClear
+                disabled={selectedZoneIds.length === 0}
+              >
+                {filteredAreaOptions.map((option) => (
+                  <Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Option>
+                ))}
+              </Select>
+            );
+          },
+        };
+      }
+
       if (col.key === "shift") {
         return {
           ...col,
           render: (_: any, record: SupervisorData) => (
             <Select
               value={record.shift}
-              style={{ width: 200 }}
+              style={{ width: 150 }}
               onChange={(val) => handleShiftChange(val, record)}
               placeholder={t("placeholders.selectShift")}
               loading={isLoadingShifts}
@@ -296,6 +460,43 @@ function SupervisorManagement() {
         };
       }
 
+      if (col.key === "AssignmentType") {
+        return {
+          ...col,
+          render: (_: any, record: SupervisorData) => (
+            <Select
+              mode="multiple"
+              value={record.assignmentType || []}
+              style={{ width: 160 }}
+              onChange={(val) => handleAssignmentTypeChange(val, record)}
+              placeholder={t("placeholders.selectAssignmentTypes")}
+              loading={isLoadingLookups}
+              maxTagCount="responsive"
+            >
+              {assignmentTypeOptions.map((option) => (
+                <Option key={option.value} value={option.value}>
+                  {option.label}
+                </Option>
+              ))}
+            </Select>
+          ),
+        };
+      }
+
+      if (col.key === "SpecialZone") {
+        return {
+          ...col,
+          render: (_: any, record: SupervisorData) => (
+            <Checkbox.Group
+              options={specialZoneOptions}
+              value={record.specialZones || []}
+              onChange={(vals) => handleSpecialZoneChange(vals as string[], record)}
+              style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
+            />
+          ),
+        };
+      }
+
       if (col.key === "weekOffs") {
         return {
           ...col,
@@ -304,7 +505,14 @@ function SupervisorManagement() {
               options={weekDayOptions}
               value={record.weekOffs}
               onChange={(vals) => handleWeekOffChange(vals as number[], record)}
-              style={{ display: "flex", flexDirection: "column", gap: 4 }}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, minmax(130px, 1fr))",
+                columnGap: 16,
+                rowGap: 6,
+                minWidth: 300,
+                whiteSpace: "nowrap",
+              }}
             />
           ),
         };
@@ -314,23 +522,51 @@ function SupervisorManagement() {
         return {
           ...col,
           fixed: "right",
-          width: 120,
+          width: 80,
           render: (_: any, record: SupervisorData) => (
-            <Space>
-              <Button type="primary" onClick={() => handleUpdate(record)} loading={updatingRowKey === record.key}>
-                {t("common.update")}
-              </Button>
-            </Space>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                paddingRight: 8,
+              }}
+            >
+              <Tooltip title={t("common.update")}>
+                <Button
+                  type="primary"
+                  shape="circle"
+                  icon={<SyncOutlined />}
+                  onClick={() => handleUpdate(record)}
+                  loading={updatingRowKey === record.key}
+                />
+              </Tooltip>
+            </div>
           ),
         };
       }
 
       return { ...col, dataIndex: col.key };
     });
-  }, [zones, shifts, data, isLoadingZones, isLoadingShifts, updatingRowKey, weekDayOptions, t]);
+  }, [
+    zones,
+    shifts,
+    data,
+    isLoadingZones,
+    isLoadingShifts,
+    isLoadingAreas,
+    isLoadingLookups,
+    updatingRowKey,
+    weekDayOptions,
+    areaOptions,
+    assignmentTypeOptions,
+    specialZoneOptions,
+    t,
+  ]);
 
   return (
-    <Spin spinning={isLoadingActiveShifts || isLoadingZones || isLoadingShifts || isUpdating}>
+    <Spin
+      spinning={isLoadingActiveShifts || isLoadingZones || isLoadingShifts || isLoadingAreas || isLoadingLookups || isUpdating}
+    >
       {/* Search Bar */}
       <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Search
@@ -340,8 +576,7 @@ function SupervisorManagement() {
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
           onSearch={handleSearch}
-          style={{ width: 400 }}
-          size="large"
+          style={{ width: 320 }}
         />
         <div style={{ color: "#666", fontSize: 14 }}>
           {filteredData.length > 0 ? (
@@ -368,11 +603,11 @@ function SupervisorManagement() {
         isLoading={isLoadingActiveShifts}
         handleTableChange={() => {}}
         handlePaginationChange={() => {}}
-        tableSize="middle"
+        tableSize="small"
         state={{ columnFilters: {} }}
         showPagination={false}
         rowKey={(record: SupervisorData) => record.key}
-        scroll={{ x: "max-content" }}
+        scroll={{ x: 1180 }}
       />
 
       {/* Custom Pagination */}

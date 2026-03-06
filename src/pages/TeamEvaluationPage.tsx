@@ -47,6 +47,7 @@ import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
 import StatsDisplay from "../components/common/StatsDisplay";
 import { exportToCsv } from "../utils/csvExporter";
+import { formatDateByLocale } from "../utils/dateFormatter";
 import {
   teamEvaluationConfig,
   staticEvaluationsData as seedEvaluations,
@@ -374,7 +375,7 @@ const TeamEvaluationPage: React.FC = () => {
       title: t("form.evaluationDate"),
       dataIndex: "evaluationDate",
       key: "evaluationDate",
-      render: (d: string) => dayjs(d).format("DD/MM/YYYY"),
+      render: (d: string) => formatDateByLocale(d, { en: "DD/MM/YYYY", ar: "DD/MM/YYYY" }, i18n.language),
     },
     {
       title: t("form.evaluationType"),

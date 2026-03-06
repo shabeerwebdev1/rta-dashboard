@@ -1,13 +1,14 @@
 // UserZoneLinking.tsx
 import React, { useEffect, useState, useMemo } from "react";
-import { Space, Select, Checkbox, Spin, Button, Pagination, Input } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
+import { Space, Select, Checkbox, Spin, Button, Pagination, Input, Tooltip } from "antd";
+import { SearchOutlined, SyncOutlined } from "@ant-design/icons";
 import { UserZoneLinkingConfig } from "../config/pageConfigs/userZoneLinkingConfig";
 import { useTranslation } from "react-i18next";
 import {
   useLazyGetLookupsQuery,
   useLazyGetZonesQuery,
   useLazyGetShiftsQuery,
+  useGetAllAreasQuery,
   useGetActiveShiftsQuery,
   useUpdateShiftManagementMutation,
 } from "../services/rtkApiFactory";
@@ -21,9 +22,12 @@ interface InspectorData {
   key: string;
   InspectorName: string;
   zone?: string[];
+  area?: string[];
   shift?: string;
   weekOffs?: string[];
   assignmentType?: number[];
+  specialZones?: string[];
+  addOnMeta?: Record<string, unknown>;
   role: string;
   roleGUID: string;
   employeeId: string;
@@ -44,6 +48,19 @@ interface Zone {
   zoneCode: string;
   zone: string;
   zoneNameAr?: string;
+}
+
+interface Area {
+  areaId?: string | number;
+  area_Id?: string | number;
+  id?: string | number;
+  areaGUID?: string | number;
+  areaCode?: string;
+  area?: string;
+  areaName?: string;
+  name?: string;
+  zoneId?: string | number;
+  zone_Id?: string | number;
 }
 
 interface Shift {
@@ -84,6 +101,7 @@ function UserZoneLinking() {
     isLoading: isLoadingActiveShifts,
     refetch: refetchActiveShifts,
   } = useGetActiveShiftsQuery();
+  const { data: allAreasResponse = [], isLoading: isLoadingAreas } = useGetAllAreasQuery(undefined);
 
   const [updateShiftManagement, { isLoading: isUpdating }] = useUpdateShiftManagementMutation();
 
@@ -105,6 +123,23 @@ function UserZoneLinking() {
   }, [i18n.language]);
 
   const availableShiftIds = useMemo(() => shifts.map((shift) => shift.shiftTypeGUID), [shifts]);
+  const specialZoneOptions = useMemo(() => ["G9", "GX"], []);
+
+  const parseAddOnData = (rawAddOn?: string): Record<string, unknown> => {
+    if (!rawAddOn) return {};
+    try {
+      const parsed = JSON.parse(rawAddOn);
+      return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : {};
+    } catch {
+      return {};
+    }
+  };
+
+  const toStringArray = (value: unknown): string[] => {
+    if (Array.isArray(value)) return value.map((v) => String(v)).filter(Boolean);
+    if (value === null || value === undefined || value === "") return [];
+    return [String(value)];
+  };
 
   useEffect(() => {
     if (activeShiftsResponse) {
@@ -117,6 +152,11 @@ function UserZoneLinking() {
         .map((item: ActiveShiftData, index: number) => {
           const isValidShift = item.shiftId && availableShiftIds.includes(item.shiftId);
           const zoneIds = (item.zoneIds || []).map((id) => id.toString());
+          const addOnData = parseAddOnData(item.addOn);
+          const parsedAreaIds = toStringArray(
+            addOnData.areaIds ?? addOnData.areasIds ?? addOnData.areaId ?? addOnData.assignedAreaIds,
+          );
+          const parsedSpecialZones = toStringArray(addOnData.specialZones ?? addOnData.specialZoneCodes);
 
           const weekOffDays = item.wO_Days ? item.wO_Days.split(",").filter(Boolean) : [];
           const weekOffNumbers = weekOffDays.map((day) => {
@@ -140,14 +180,24 @@ function UserZoneLinking() {
           });
 
           const assignmentTypes = item.assignmentTypes || [];
+          const addOnMeta = { ...addOnData };
+          delete addOnMeta.areaIds;
+          delete addOnMeta.areasIds;
+          delete addOnMeta.areaId;
+          delete addOnMeta.assignedAreaIds;
+          delete addOnMeta.specialZones;
+          delete addOnMeta.specialZoneCodes;
 
           return {
             key: item.uswMcode || `inspector-${index}`,
             InspectorName: item.employeeName,
             zone: zoneIds,
+            area: parsedAreaIds,
             shift: isValidShift ? item.shiftId : undefined,
             weekOffs: weekOffNumbers,
             assignmentType: assignmentTypes,
+            specialZones: parsedSpecialZones,
+            addOnMeta,
             role: item.role,
             roleGUID: item.roleGUID,
             employeeId: item.employeeId,
@@ -259,6 +309,19 @@ function UserZoneLinking() {
     [shifts, i18n.language],
   );
 
+  const areaOptions = useMemo(() => {
+    const raw = Array.isArray(allAreasResponse) ? allAreasResponse : [];
+    return (raw as Area[]).map((a) => {
+      const value = a.areaId ?? a.area_Id ?? a.id ?? a.areaGUID ?? a.areaCode ?? a.area;
+      const zoneId = a.zoneId ?? a.zone_Id;
+      return {
+        value: String(value ?? ""),
+        label: a.area || a.areaName || a.name || String(value ?? ""),
+        zoneId: zoneId ? String(zoneId) : "",
+      };
+    });
+  }, [allAreasResponse]);
+
   const weekDayOptions = useMemo(
     () =>
       UserZoneLinkingConfig.tableConfig.weekDays.map((day) => ({
@@ -270,11 +333,24 @@ function UserZoneLinking() {
 
   // === Handlers ===
   const handleZoneChange = (value: string[], record: InspectorData) => {
-    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, zone: value } : item)));
+    setData((prev) =>
+      prev.map((item) => {
+        if (item.key !== record.key) return item;
+        const allowedAreaIds = new Set(
+          areaOptions.filter((option) => value.includes(option.zoneId)).map((option) => option.value),
+        );
+        const nextAreas = (item.area || []).filter((areaId) => allowedAreaIds.has(areaId));
+        return { ...item, zone: value, area: nextAreas };
+      }),
+    );
   };
 
   const handleShiftChange = (value: string, record: InspectorData) => {
     setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, shift: value } : item)));
+  };
+
+  const handleAreaChange = (value: string[], record: InspectorData) => {
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, area: value } : item)));
   };
 
   const handleWeekOffChange = (checkedValues: string[], record: InspectorData) => {
@@ -285,12 +361,18 @@ function UserZoneLinking() {
     setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, assignmentType: value } : item)));
   };
 
+  const handleSpecialZoneChange = (checkedValues: string[], record: InspectorData) => {
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, specialZones: checkedValues } : item)));
+  };
+
   // === Update Handler ===
   const handleUpdate = async (record: InspectorData) => {
     try {
       const zoneIds = record.zone || [];
+      const areaIds = record.area || [];
       const assignmentTypes = record.assignmentType || [];
       const weekOffsString = (record.weekOffs || []).join(",");
+      const specialZones = record.specialZones || [];
 
       const updateData = {
         employeeId: record.employeeId,
@@ -299,6 +381,11 @@ function UserZoneLinking() {
         role: "Inspector",
         assignmentTypes,
         zoneIds,
+        addOn: JSON.stringify({
+          ...record.addOnMeta,
+          areaIds,
+          specialZones,
+        }),
       };
 
       await updateShiftManagement(updateData).unwrap();
@@ -321,10 +408,11 @@ function UserZoneLinking() {
             <Select
               mode="multiple"
               value={record.zone || []}
-              style={{ width: 210 }}
+              style={{ width: 170 }}
               onChange={(val) => handleZoneChange(val, record)}
               placeholder={t("placeholders.selectZones")}
               loading={isLoadingZones}
+              maxTagCount="responsive"
             >
               {zoneOptions.map((option) => (
                 <Option key={option.value} value={option.value}>
@@ -336,13 +424,45 @@ function UserZoneLinking() {
         };
       }
 
+      if (col.key === "Area") {
+        return {
+          ...col,
+          render: (_: any, record: InspectorData) => {
+            const selectedZoneIds = record.zone || [];
+            const filteredAreaOptions =
+              selectedZoneIds.length > 0 ? areaOptions.filter((option) => selectedZoneIds.includes(option.zoneId)) : [];
+
+            return (
+              <Select
+                mode="multiple"
+                value={record.area || []}
+                style={{ width: 170 }}
+                onChange={(val) => handleAreaChange(val, record)}
+                placeholder={t("placeholders.selectAreas")}
+                loading={isLoadingAreas}
+                maxTagCount="responsive"
+                maxCount={2}
+                allowClear
+                disabled={selectedZoneIds.length === 0}
+              >
+                {filteredAreaOptions.map((option) => (
+                  <Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Option>
+                ))}
+              </Select>
+            );
+          },
+        };
+      }
+
       if (col.key === "Shift") {
         return {
           ...col,
           render: (_: any, record: InspectorData) => (
             <Select
               value={record.shift}
-              style={{ width: 200 }}
+              style={{ width: 150 }}
               onChange={(val) => handleShiftChange(val, record)}
               placeholder={t("placeholders.selectShift")}
               loading={isLoadingShifts}
@@ -365,10 +485,11 @@ function UserZoneLinking() {
             <Select
               mode="multiple"
               value={record.assignmentType || []}
-              style={{ width: 200 }}
+              style={{ width: 160 }}
               onChange={(val) => handleAssignmentTypeChange(val, record)}
               placeholder={t("placeholders.selectAssignmentTypes")}
               loading={isLoadingLookups}
+              maxTagCount="responsive"
             >
               {assignmentTypeOptions.map((option) => (
                 <Option key={option.value} value={option.value}>
@@ -380,16 +501,39 @@ function UserZoneLinking() {
         };
       }
 
-      if (col.key === "WeekOffs") {
+      if (col.key === "SpecialZone") {
         return {
           ...col,
           render: (_: any, record: InspectorData) => (
             <Checkbox.Group
-              options={weekDayOptions}
-              value={record.weekOffs || []}
-              onChange={(vals) => handleWeekOffChange(vals as string[], record)}
-              style={{ display: "flex", flexDirection: "column", gap: 4 }}
+              options={specialZoneOptions}
+              value={record.specialZones || []}
+              onChange={(vals) => handleSpecialZoneChange(vals as string[], record)}
+              style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
             />
+          ),
+        };
+      }
+
+      if (col.key === "WeekOffs") {
+        return {
+          ...col,
+          render: (_: any, record: InspectorData) => (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(2, 1fr)",
+                rowGap: 6,
+                columnGap: 16,
+              }}
+            >
+              <Checkbox.Group
+                options={weekDayOptions}
+                value={record.weekOffs || []}
+                onChange={(vals) => handleWeekOffChange(vals as string[], record)}
+                style={{ display: "contents" }}
+              />
+            </div>
           ),
         };
       }
@@ -398,13 +542,25 @@ function UserZoneLinking() {
         return {
           ...col,
           fixed: "right",
-          width: 120,
+          width: 80,
           render: (_: any, record: InspectorData) => (
-            <Space>
-              <Button type="primary" onClick={() => handleUpdate(record)} loading={isUpdating}>
-                {t("common.update")}
-              </Button>
-            </Space>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                paddingRight: 8,
+              }}
+            >
+              <Tooltip title={t("common.update")}>
+                <Button
+                  type="primary"
+                  shape="circle"
+                  icon={<SyncOutlined />}
+                  onClick={() => handleUpdate(record)}
+                  loading={isUpdating}
+                />
+              </Tooltip>
+            </div>
           ),
         };
       }
@@ -419,14 +575,21 @@ function UserZoneLinking() {
     isLoadingZones,
     isLoadingShifts,
     isLoadingLookups,
+    isLoadingAreas,
     isUpdating,
     i18n.language,
     weekDayOptions,
+    areaOptions,
+    specialZoneOptions,
     t,
   ]);
 
   return (
-    <Spin spinning={isLoadingActiveShifts || isLoadingLookups || isLoadingZones || isLoadingShifts || isUpdating}>
+    <Spin
+      spinning={
+        isLoadingActiveShifts || isLoadingLookups || isLoadingZones || isLoadingShifts || isLoadingAreas || isUpdating
+      }
+    >
       {/* Search Bar */}
       <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Search
@@ -436,8 +599,7 @@ function UserZoneLinking() {
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
           onSearch={handleSearch}
-          style={{ width: 400 }}
-          size="large"
+          style={{ width: 320 }}
         />
         <div style={{ color: "#666", fontSize: 14 }}>
           {filteredData.length > 0 ? (
@@ -464,11 +626,11 @@ function UserZoneLinking() {
         isLoading={isLoadingActiveShifts}
         handleTableChange={() => {}}
         handlePaginationChange={() => {}}
-        tableSize="middle"
+        tableSize="small"
         state={{ columnFilters: {} }}
         showPagination={false}
         rowKey={(record: InspectorData) => record.key}
-        scroll={{ x: "max-content" }}
+        scroll={{ x: 1600 }}
       />
 
       {/* Custom Pagination */}

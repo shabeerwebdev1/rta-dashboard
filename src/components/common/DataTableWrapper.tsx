@@ -7,7 +7,8 @@ import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { STATUS_COLORS } from "../../constants/ui";
 import type { PageConfig } from "../../types/config";
-import { MoreOutlined } from "@ant-design/icons";
+import { EditOutlined, MoreOutlined } from "@ant-design/icons";
+import { formatDateDisplay } from "../../utils/dateFormatter";
 
 interface DataTableWrapperProps {
   pageConfig: PageConfig;
@@ -56,6 +57,20 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const { token } = theme.useToken();
+
+  const hasEditIcon = React.useCallback((icon: any) => {
+    if (!React.isValidElement(icon)) return false;
+    return icon.type === EditOutlined || icon.type?.displayName === "EditOutlined" || icon.type?.name === "EditOutlined";
+  }, []);
+
+  const normalizeActionItems = React.useCallback(
+    (items: any[]) =>
+      (items || []).map((item) => ({
+        ...item,
+        label: hasEditIcon(item?.icon) ? t("common.edit") : item?.label,
+      })),
+    [hasEditIcon, t],
+  );
 
   const getRowKey = React.useCallback(
     (record: any, index: number) => {
@@ -181,7 +196,7 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
 
           switch (col.type) {
             case "date":
-              return dayjs(text as string).isValid() ? dayjs(text as string).format("DD MMM YYYY") : String(text);
+              return dayjs(text as string).isValid() ? formatDateDisplay(text as string, i18n.language) : String(text);
 
             case "tag": {
               const statusKey = String(text).toLowerCase();
@@ -215,20 +230,21 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
 
       generatedColumns.push({
         key: "action",
+        title: <span style={{ whiteSpace: "nowrap" }}>{t("common.action")}</span>,
         align: "center" as const,
         fixed: "right",
-        width: useIconWithMenu ? 90 : 50,
+        width: useIconWithMenu ? 110 : 110,
+        onHeaderCell: () => ({
+          style: {
+            whiteSpace: "nowrap",
+          },
+        }),
         render: (_: any, record: any) => {
-          const items = actionMenuItems(record);
+          const items = normalizeActionItems(actionMenuItems(record));
           if (!items || items.length === 0) return null;
 
           // ✅ DEFAULT BEHAVIOR (FINES, OTHERS)
           if (!useIconWithMenu) {
-            if (items.length === 1) {
-              const single = items[0];
-              return <Button type="text" icon={single.icon} onClick={single.onClick} disabled={single.disabled} />;
-            }
-
             return (
               <Dropdown menu={{ items }} trigger={["click"]}>
                 <Button type="text" icon={<MoreOutlined />} />

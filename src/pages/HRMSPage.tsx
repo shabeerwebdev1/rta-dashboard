@@ -24,6 +24,7 @@ import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import HRMSViewDrawer from "../components/hrms/HRMSViewDrawer";
+import { formatDateDisplay } from "../utils/dateFormatter";
 // import { usePermission } from "../hooks/usePermission";
 
 // Import config and mock data
@@ -383,7 +384,7 @@ const HRMSPage: React.FC = () => {
         if (column.key === "date") {
           return {
             ...column,
-            render: (value: any) => (value ? dayjs(value).format("DD MMM YYYY") : ""),
+            render: (value: any) => (value ? formatDateDisplay(value, i18n.language) : ""),
           };
         }
 

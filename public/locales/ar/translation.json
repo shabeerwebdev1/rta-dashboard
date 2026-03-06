@@ -60,6 +60,7 @@
   },
   "info": {
     "basicDetails": "التفاصيل الأساسية",
+    "eTrafficVehicleDetails": "تفاصيل مركبة المرور الإلكتروني",
     "allFines": "جميع الغرامات",
     "permitsRequest": "طلبات التصاريح"
   },
@@ -260,6 +261,7 @@
     "disputesubreason": "سبب النزاع الفرعي",
     "Shift": "الوردية",
     "AssignmentType": "نوع التكليف",
+    "SpecialZone": "المنطقة الخاصة",
     "WeekOffs": "أيام العطلة الأسبوعية",
     "Actions": "الإجراءات",
     "employeeName": "اسم الموظف",
@@ -484,6 +486,7 @@
     "searchPlaceholder": "بحث...",
     "location": "الموقع",
     "noData": "لا توجد بيانات",
+    "notAvailable": "غير متاح",
     "selectFile": "اختر ملف",
     "share": "مشاركة",
     "activeFilters": "الفلاتر النشطة",
@@ -548,7 +551,8 @@
     "resubmit": "إعادة الإرسال",
     "aed": "درهم إماراتي",
     "day": "يوم",
-    "days": "أيام"
+    "days": "أيام",
+    "open": "مفتوح"
   },
   "entity": {
     "plate": "لوحة",
@@ -630,6 +634,7 @@
     "plateCode": "اختر رمز اللوحة",
     "selectShift": "اختر الوردية",
     "selectZones": "اختر المنطقة (المناطق)",
+    "selectAreas": "اختر المنطقة الفرعية (المناطق)",
     "selectAssignmentTypes": "اختر نوع التكليف (الأنواع)",
     "selectRole": "اختر الدور",
     "enterComments": "أدخل التعليقات",

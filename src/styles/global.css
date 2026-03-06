@@ -85,3 +85,85 @@ body {
   padding: 0px 0px;
 }
 
+/* Modal button standardization:
+   Submit/Save (primary) = Green
+   Cancel (default) = Gray
+   Delete (danger) = Red
+*/
+.ant-modal .ant-modal-footer .ant-btn-primary {
+  background-color: #00a967 !important;
+  border-color: #00a967 !important;
+  color: #ffffff !important;
+}
+
+.ant-modal .ant-modal-footer .ant-btn-primary:hover,
+.ant-modal .ant-modal-footer .ant-btn-primary:focus {
+  background-color: #00965c !important;
+  border-color: #00965c !important;
+}
+
+.ant-modal .ant-modal-body .ant-btn-primary:not(.ant-btn-text):not(.ant-btn-link) {
+  background-color: #00a967 !important;
+  border-color: #00a967 !important;
+  color: #ffffff !important;
+}
+
+.ant-modal .ant-modal-body .ant-btn-primary:not(.ant-btn-text):not(.ant-btn-link):hover,
+.ant-modal .ant-modal-body .ant-btn-primary:not(.ant-btn-text):not(.ant-btn-link):focus {
+  background-color: #00965c !important;
+  border-color: #00965c !important;
+}
+
+.ant-modal .ant-modal-footer .ant-btn-default {
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  color: #4b5563 !important;
+}
+
+.ant-modal .ant-modal-footer .ant-btn-default:hover,
+.ant-modal .ant-modal-footer .ant-btn-default:focus {
+  background-color: #e5e7eb !important;
+  border-color: #9ca3af !important;
+  color: #374151 !important;
+}
+
+.ant-modal .ant-modal-body .ant-btn-default:not(.ant-btn-text):not(.ant-btn-link) {
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  color: #4b5563 !important;
+}
+
+.ant-modal .ant-modal-body .ant-btn-default:not(.ant-btn-text):not(.ant-btn-link):hover,
+.ant-modal .ant-modal-body .ant-btn-default:not(.ant-btn-text):not(.ant-btn-link):focus {
+  background-color: #e5e7eb !important;
+  border-color: #9ca3af !important;
+  color: #374151 !important;
+}
+
+.ant-modal .ant-modal-footer .ant-btn-dangerous,
+.ant-modal .ant-modal-footer .ant-btn-dangerous.ant-btn-default,
+.ant-modal .ant-modal-footer .ant-btn-dangerous.ant-btn-primary {
+  background-color: #ff4d4f !important;
+  border-color: #ff4d4f !important;
+  color: #ffffff !important;
+}
+
+.ant-modal .ant-modal-footer .ant-btn-dangerous:hover,
+.ant-modal .ant-modal-footer .ant-btn-dangerous:focus {
+  background-color: #e03131 !important;
+  border-color: #e03131 !important;
+}
+
+.ant-modal .ant-modal-body .ant-btn-dangerous:not(.ant-btn-text):not(.ant-btn-link),
+.ant-modal .ant-modal-body .ant-btn-dangerous.ant-btn-default:not(.ant-btn-text):not(.ant-btn-link),
+.ant-modal .ant-modal-body .ant-btn-dangerous.ant-btn-primary:not(.ant-btn-text):not(.ant-btn-link) {
+  background-color: #ff4d4f !important;
+  border-color: #ff4d4f !important;
+  color: #ffffff !important;
+}
+
+.ant-modal .ant-modal-body .ant-btn-dangerous:not(.ant-btn-text):not(.ant-btn-link):hover,
+.ant-modal .ant-modal-body .ant-btn-dangerous:not(.ant-btn-text):not(.ant-btn-link):focus {
+  background-color: #e03131 !important;
+  border-color: #e03131 !important;
+}

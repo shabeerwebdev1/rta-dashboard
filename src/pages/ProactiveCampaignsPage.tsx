@@ -36,6 +36,7 @@ import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
 import StatsDisplay from "../components/common/StatsDisplay";
+import { formatDateByLocale } from "../utils/dateFormatter";
 import {
   proactiveCampaignsConfig,
   staticProactiveCampaigns,
@@ -370,10 +371,10 @@ const ProactiveCampaignsPage: React.FC = () => {
                 <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>{c.titleEn}</td>
                 <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>{getLabel(c.location, "locations")}</td>
                 <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>
-                  {dayjs(c.startTime).format("DD/MM/YYYY HH:mm")}
+                  {formatDateByLocale(c.startTime, { en: "DD/MM/YYYY HH:mm", ar: "DD/MM/YYYY HH:mm" }, i18n.language)}
                 </td>
                 <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>
-                  {dayjs(c.endTime).format("DD/MM/YYYY HH:mm")}
+                  {formatDateByLocale(c.endTime, { en: "DD/MM/YYYY HH:mm", ar: "DD/MM/YYYY HH:mm" }, i18n.language)}
                 </td>
                 <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>
                   {(c.violationTypes || []).map((vt: string) => (

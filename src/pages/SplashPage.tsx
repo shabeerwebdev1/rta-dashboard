@@ -9,7 +9,7 @@ import { EXTERNAL_LOGIN_URL } from "../config/envConfig";
 
 // 20260205ED7F72A095154944BCB7F249  sr senior
 
-const FALLBACK_CODE = "2026030236C8120CD7134FFFA4253B10";
+const FALLBACK_CODE = "20260306E686BF9D7C43446EB2B4D30C";
 
 const SPLASH_DELAY = 1300;
 // const EXTERNAL_LOGIN_URL = "https://sso.kandaprojects.live/webapp/ui/common/login.aspx";

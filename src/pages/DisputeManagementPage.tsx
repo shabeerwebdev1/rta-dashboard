@@ -42,8 +42,10 @@ import { pageConfigs } from "../config/pageConfigs";
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import DisputeViewModal from "../components/dispute/DisputeViewModal";
+import FinesViewDrawer from "../components/fines/FinesViewDrawer";
 import { usePermission } from "../hooks/usePermission";
 import { useAuth } from "../contexts/AuthContext";
+import { formatDateTimeDisplay } from "../utils/dateFormatter";
 
 const { Option } = Select;
 const pageKey = "dispute-management";
@@ -88,6 +90,9 @@ const DisputeManagementPage: React.FC = () => {
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any>(null);
+  const [isFineDrawerOpen, setIsFineDrawerOpen] = useState(false);
+  const [selectedFine, setSelectedFine] = useState<any>(null);
+  const [hideFineLocation, setHideFineLocation] = useState(false);
   const [tableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
@@ -117,6 +122,8 @@ const DisputeManagementPage: React.FC = () => {
 
   // State for Pending Disputes filter
   const [showPendingDisputes, setShowPendingDisputes] = useState(false);
+  const [rowDetailsLoading, setRowDetailsLoading] = useState(false);
+  const [resolvedDetailCodes, setResolvedDetailCodes] = useState<Record<string, boolean>>({});
 
   // Helper function to normalize GUIDs (convert to lowercase)
   const normalizeGuid = (guid: string | null | undefined): string | null => {
@@ -356,6 +363,68 @@ const DisputeManagementPage: React.FC = () => {
       observer.disconnect();
     };
   }, [filteredData, hoverDetails, loadingHoverId, handleFineHover]);
+
+  // Ensure dispute row details are loaded before showing grid values like Vehicle Exit and Approved By.
+  useEffect(() => {
+    const codes = (filteredData || []).map((r: any) => r?.disputeCode).filter(Boolean);
+    if (codes.length === 0) {
+      setRowDetailsLoading(false);
+      return;
+    }
+
+    const unresolvedCodes = codes.filter((code: string) => !resolvedDetailCodes[code]);
+    if (unresolvedCodes.length === 0) {
+      setRowDetailsLoading(false);
+      return;
+    }
+
+    let isCancelled = false;
+    setRowDetailsLoading(true);
+
+    const loadBatch = async () => {
+      const results = await Promise.all(
+        unresolvedCodes.map(async (code: string) => {
+          try {
+            const result = await triggerGetDisputeById(code).unwrap();
+            return { code, data: result?.data || null };
+          } catch {
+            return { code, data: null };
+          }
+        }),
+      );
+
+      if (isCancelled) return;
+
+      const fetchedDetails: Record<string, any> = {};
+      const resolvedBatch: Record<string, boolean> = {};
+
+      results.forEach(({ code, data }) => {
+        resolvedBatch[code] = true;
+        if (data) {
+          fetchedDetails[code] = data;
+        }
+      });
+
+      if (Object.keys(fetchedDetails).length > 0) {
+        setHoverDetails((prev) => ({
+          ...prev,
+          ...fetchedDetails,
+        }));
+      }
+
+      setResolvedDetailCodes((prev) => ({
+        ...prev,
+        ...resolvedBatch,
+      }));
+      setRowDetailsLoading(false);
+    };
+
+    loadBatch();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [filteredData, resolvedDetailCodes, triggerGetDisputeById]);
 
   // Add scroll listener for table
   useEffect(() => {
@@ -668,6 +737,62 @@ const DisputeManagementPage: React.FC = () => {
     setIsDrawerOpen(true);
   };
 
+  const handleOpenFineView = async (record: any) => {
+    try {
+      const result = await triggerGetDisputeById(record.disputeCode).unwrap();
+      const dispute = result?.data;
+      const details = dispute?.fineDetails;
+      const vehicle = dispute?.vehicle;
+
+      if (!dispute || !details) {
+        notification.error({ data: { en_Msg: "Fine details not found" } }, "Load Failed");
+        return;
+      }
+
+      const mappedFine = {
+        ...details,
+        inspectionGUID: details.inspectionId || details.inspectionGUID || dispute.inspectionGUID || dispute.inspectionId,
+        entityCode: details.entityCode || dispute.entityCode || "parking-parkonic-fines",
+        entityNo: details.fineNo || record.fineId,
+        fineAmount: details.fineAmount,
+        inspectionStatus: details.fineStatus,
+        inspectionType: details.inspectionType,
+        inspectionCategory: details.inspectionCategory,
+        actualDateTime: details.entryDateTime || record.created_At,
+        paymentType: dispute.payment_Type,
+        inspectorNameEn: details.reviewerName || dispute.approvedBy || record.approvedBy,
+        inspectorNameAr: details.reviewerName || dispute.approvedBy || record.approvedBy,
+        plateNumber: vehicle?.plateNumber || details.plateNumber,
+        plateCodeValue: vehicle?.plateColor || details.plateCodeValue,
+        plateSourceValue: vehicle?.plateSource || details.plateSourceValue,
+        plateCategoryValue: vehicle?.plateType || details.plateCategoryValue || details.plateType,
+        vehicleColor: vehicle?.vehicleColor || details.vehicleColor,
+        vehicleType: vehicle?.vehicleType || details.vehicleType,
+        vehicleBrand: vehicle?.vehicleBrand || details.vehicleBrand,
+        manufacturerYear: vehicle?.manufacturerYear || details.manufacturerYear,
+        vehicleOwnerName: vehicle?.ownerName || details.vehicleOwnerName,
+        vehicleOwnerEmail: vehicle?.ownerEmail || details.vehicleOwnerEmail,
+        vehicleOwnerMobile: vehicle?.ownerMobile || details.vehicleOwnerMobile,
+        latitude: Number.isFinite(parseFloat(dispute?.lat))
+          ? parseFloat(dispute.lat)
+          : Number.isFinite(parseFloat(record?.lat))
+            ? parseFloat(record.lat)
+            : undefined,
+        longitude: Number.isFinite(parseFloat(dispute?.lng))
+          ? parseFloat(dispute.lng)
+          : Number.isFinite(parseFloat(record?.lng))
+            ? parseFloat(record.lng)
+            : undefined,
+      };
+
+      setSelectedFine(mappedFine);
+      setHideFineLocation(String(mappedFine?.entityCode || "").toLowerCase().includes("parkonic"));
+      setIsFineDrawerOpen(true);
+    } catch (error) {
+      notification.error({ data: { en_Msg: "Failed to load fine details" } }, "Load Failed");
+    }
+  };
+
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
@@ -792,7 +917,7 @@ const DisputeManagementPage: React.FC = () => {
                   mouseEnterDelay={0.3} // Slight delay to avoid flickering
                 >
                   <Typography.Text
-                    style={{ cursor: "help" }}
+                    style={{ cursor: "pointer", textDecoration: "underline" }}
                     onMouseEnter={() => {
                       // Only trigger hover if not already loaded or loading
                       if (!hoverDetails[record.disputeCode] && loadingHoverId !== record.disputeCode) {
@@ -805,6 +930,7 @@ const DisputeManagementPage: React.FC = () => {
                         }, 100);
                       }
                     }}
+                    onClick={() => handleOpenFineView(record)}
                     data-dispute-code={record.disputeCode}
                   >
                     {record?.fineId || "—"}
@@ -858,6 +984,27 @@ const DisputeManagementPage: React.FC = () => {
           };
         }
 
+        if (column.key === "vehicleExitDateTime") {
+          return {
+            ...column,
+            render: (_: any, record: any) => {
+              const details = hoverDetails[record.disputeCode]?.fineDetails;
+              const value = details?.exitDateTime || record?.vehicleExitDateTime || record?.exitDateTime;
+              return value ? formatDateTimeDisplay(value, i18n.language) : t("common.noData");
+            },
+          };
+        }
+
+        if (column.key === "approvedBy") {
+          return {
+            ...column,
+            render: (_: any, record: any) => {
+              const details = hoverDetails[record.disputeCode]?.fineDetails;
+              return details?.reviewerName || record?.approvedBy || record?.reviewerName || t("common.noData");
+            },
+          };
+        }
+
         const categoryId = columnToCategoryMap[column.key];
         if (categoryId) {
           const options = filterOptionsByCategory(lookupOptions, categoryId);
@@ -883,8 +1030,6 @@ const DisputeManagementPage: React.FC = () => {
   );
 
   const actionMenuItems = (record: any) => {
-    const roleGUIDFromStorage = localStorage.getItem("roleGUID");
-
     return [
       {
         key: "view",
@@ -1008,7 +1153,7 @@ const DisputeManagementPage: React.FC = () => {
           pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
           data={filteredData}
           total={totalCount}
-          isLoading={isLoading || isFetching}
+          isLoading={isLoading || isFetching || rowDetailsLoading}
           apiParams={apiParams}
           handleTableChange={handleTableChange}
           handlePaginationChange={handlePaginationChange}
@@ -1311,6 +1456,18 @@ const DisputeManagementPage: React.FC = () => {
             onStatusUpdate={refetch}
           />
         )}
+
+        <FinesViewDrawer
+          open={isFineDrawerOpen}
+          onClose={() => {
+            setIsFineDrawerOpen(false);
+            setSelectedFine(null);
+            setHideFineLocation(false);
+          }}
+          fine={selectedFine}
+          readOnly={true}
+          hideLocation={hideFineLocation}
+        />
       </Space>
     </>
   );

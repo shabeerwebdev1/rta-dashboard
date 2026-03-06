@@ -6,6 +6,7 @@ import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
 import dayjs from "dayjs";
 import { searchConfig } from "../config/searchConfig";
+import { formatDateDisplay } from "../utils/dateFormatter";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -54,14 +55,14 @@ const PermitsPage: React.FC = () => {
       title: t("form.fromDate"),
       dataIndex: "validFrom",
       key: "validFrom",
-      render: (text: string) => dayjs(text).format("YYYY-MM-DD"),
+      render: (text: string) => formatDateDisplay(text),
       sorter: true,
     },
     {
       title: t("form.toDate"),
       dataIndex: "validTo",
       key: "validTo",
-      render: (text: string) => dayjs(text).format("YYYY-MM-DD"),
+      render: (text: string) => formatDateDisplay(text),
       sorter: true,
     },
     { title: t("form.authorizedAreas"), dataIndex: "authorizedAreas", key: "authorizedAreas" },

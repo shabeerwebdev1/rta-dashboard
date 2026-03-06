@@ -686,7 +686,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                             <Text strong>{t("form.fineNumber")}:</Text>
                           </Col>
                           <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                            {dispute.fineId || t("common.noData")}
+                            {dispute.fineId || t("common.notAvailable")}
                           </Col>
 
                           <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
@@ -867,7 +867,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                           <Text strong>{t("form.fineNumber")}:</Text>
                         </Col>
                         <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                          {dispute.fineDetails.fineNo || t("common.noData")}
+                          {dispute.fineDetails.fineNo || t("common.notAvailable")}
                         </Col>
 
                         {/* Fine Amount */}

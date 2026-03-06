@@ -4,6 +4,7 @@ import { Space, Tag, Tooltip, Typography } from "antd";
 import UAEPlate from "../../components/UAEPlate";
 import dayjs from "dayjs";
 import "dayjs/locale/ar";
+import { formatDateTimeDisplay } from "../../utils/dateFormatter";
 
 const formatDateTime = (value: number) => {
   if (!value) return "";
@@ -113,7 +114,6 @@ export const PLATE_COLOR: Record<number, string> = {
 export const parkonicPageConfig: PageConfig = {
   key: "parkonic",
   title: "page.title.parkonic",
-  actionLayout: "icon+menu",
   name: { singular: "Parkonic Record", plural: "Parkonic Records" },
   api: { get: "/api/Parkonic", post: "", put: "/api/Parkonic/Review", delete: "" },
   searchConfig: {
@@ -275,7 +275,7 @@ export const parkonicPageConfig: PageConfig = {
         title: "form.reviewedDate",
         type: "string",
         sortable: true,
-        render: (value) => (value ? dayjs(value).format("DD MMM YYYY, hh:mm A") : ""),
+        render: (value) => (value ? formatDateTimeDisplay(value) : ""),
       },
       {
         key: "review_updateback_status",
