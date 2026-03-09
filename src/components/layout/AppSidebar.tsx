@@ -306,12 +306,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         //   labelText: t("sidebar.shiftplan"),
         //   permission: "ShiftManagement",
         // },
-        // {
-        //   key: FULL_PATHS.DND_SHIFT_MANAGEMENT,
-        //   icon: <AuditOutlined />,
-        //   labelText: t("sidebar.dndShiftManagement"),
-        //   permission: "ShiftManagement",
-        // },
+
       ],
     },
   ];
