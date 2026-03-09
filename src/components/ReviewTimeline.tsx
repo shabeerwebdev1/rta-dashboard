@@ -113,14 +113,15 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
             <Tag color={actionColor} style={{ marginInlineEnd: 0, border: "none", fontWeight: 600 }}>
               {actionText}
             </Tag>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              {item.ActionDateTime || item.Date
-                ? dayjs(item.ActionDateTime || item.Date)
-                    .locale(isRTL ? "ar" : "en")
-                    .format(isRTL ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, h:mm A")
-                : "—"}
-            </Text>
           </div>
+
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {item.ActionDateTime || item.Date
+              ? dayjs(item.ActionDateTime || item.Date)
+                  .locale(isRTL ? "ar" : "en")
+                  .format(isRTL ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, h:mm A")
+              : "—"}
+          </Text>
 
           {/* <Text style={{ fontSize: technical ? 12 : 13, color: token.colorTextSecondary }}>{toPreview(item)}</Text> */}
         </div>

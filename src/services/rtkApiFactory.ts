@@ -803,8 +803,10 @@ export const {
   // Search
   useSearchPermitsQuery,
   useSearchFinesQuery,
+  useLazySearchFinesQuery,
   useUpdateFineCancelStatusMutation,
   useSearchTradeQuery,
+  useLazySearchTradeQuery,
 
   //Adhoc new
   useLazyGetAdhocShiftsQuery,

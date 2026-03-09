@@ -18,7 +18,6 @@ import {
   Tag,
   Upload,
   Image,
-  Tooltip,
   Typography,
 } from "antd";
 import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined, UserOutlined } from "@ant-design/icons";
@@ -33,6 +32,9 @@ import {
   useUpdateDisputeMutation,
   useLazyGetLookupsQuery,
   useLazyGetDisputeByIdQuery,
+  useLazyGetParkonicByIdQuery,
+  useLazySearchFinesQuery,
+  useLazySearchTradeQuery,
 } from "../services/rtkApiFactory";
 import { getFileUrl, useUploadFilesMutation } from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
@@ -43,6 +45,7 @@ import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import DisputeViewModal from "../components/dispute/DisputeViewModal";
 import FinesViewDrawer from "../components/fines/FinesViewDrawer";
+import ParkonicViewDrawer from "../components/parkonic/ParkonicViewDrawer";
 import { usePermission } from "../hooks/usePermission";
 import { useAuth } from "../contexts/AuthContext";
 import { formatDateTimeDisplay } from "../utils/dateFormatter";
@@ -93,6 +96,8 @@ const DisputeManagementPage: React.FC = () => {
   const [isFineDrawerOpen, setIsFineDrawerOpen] = useState(false);
   const [selectedFine, setSelectedFine] = useState<any>(null);
   const [hideFineLocation, setHideFineLocation] = useState(false);
+  const [isParkonicFineDrawerOpen, setIsParkonicFineDrawerOpen] = useState(false);
+  const [selectedParkonicFine, setSelectedParkonicFine] = useState<any>(null);
   const [tableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
@@ -158,6 +163,9 @@ const DisputeManagementPage: React.FC = () => {
   const [updateDispute, { isLoading: isUpdating }] = useUpdateDisputeMutation();
   const [triggerGetLookups] = useLazyGetLookupsQuery();
   const [triggerGetDisputeById] = useLazyGetDisputeByIdQuery();
+  const [triggerGetParkonicById] = useLazyGetParkonicByIdQuery();
+  const [triggerSearchFines] = useLazySearchFinesQuery();
+  const [triggerSearchTrade] = useLazySearchTradeQuery();
 
   // Check if error is from cancellation
   const isCancelledError = (error: any): boolean => {
@@ -743,21 +751,40 @@ const DisputeManagementPage: React.FC = () => {
       const dispute = result?.data;
       const details = dispute?.fineDetails;
       const vehicle = dispute?.vehicle;
+      const source = String(dispute?.source || record?.source || "").toLowerCase();
+      const resolvedEntityCode = String(details?.entityCode || dispute?.entityCode || record?.entityCode || "");
+      const normalizedEntityCode = resolvedEntityCode.toLowerCase();
+      const isParkonicFine = normalizedEntityCode.includes("parkonic") || source.includes("parkonic");
 
       if (!dispute || !details) {
         notification.error({ data: { en_Msg: "Fine details not found" } }, "Load Failed");
         return;
       }
 
+      const mappedReviewStatus =
+        details?.reviewStatus === 0 || details?.reviewStatus === 1 || details?.reviewStatus === 2
+          ? details.reviewStatus
+          : 0;
+
       const mappedFine = {
         ...details,
         inspectionGUID: details.inspectionId || details.inspectionGUID || dispute.inspectionGUID || dispute.inspectionId,
-        entityCode: details.entityCode || dispute.entityCode || "parking-parkonic-fines",
+        entityCode: resolvedEntityCode,
+        EntityGUID: details.inspectionId || details.inspectionGUID || dispute.inspectionGUID || dispute.inspectionId,
+        EntityCode: resolvedEntityCode,
+        iid: details.iid || details.id || record.id,
         entityNo: details.fineNo || record.fineId,
         fineAmount: details.fineAmount,
         inspectionStatus: details.fineStatus,
         inspectionType: details.inspectionType,
         inspectionCategory: details.inspectionCategory,
+        categoryId: details.categoryId,
+        violationNameEn: details.violationNameEn,
+        violationNameAr: details.violationNameAr,
+        violationAmount: details.violationAmount || details.fineAmount,
+        startDateTime: details.entryDateTime || details.startDateTime,
+        endDateTime: details.exitDateTime || details.endDateTime,
+        reviewStatus: mappedReviewStatus,
         actualDateTime: details.entryDateTime || record.created_At,
         paymentType: dispute.payment_Type,
         inspectorNameEn: details.reviewerName || dispute.approvedBy || record.approvedBy,
@@ -785,9 +812,114 @@ const DisputeManagementPage: React.FC = () => {
             : undefined,
       };
 
-      setSelectedFine(mappedFine);
-      setHideFineLocation(String(mappedFine?.entityCode || "").toLowerCase().includes("parkonic"));
+      if (isParkonicFine) {
+        const parkonicEntityId = mappedFine.EntityGUID || mappedFine.inspectionGUID;
+        let fullParkonicData: any = null;
+
+        if (parkonicEntityId) {
+          try {
+            const parkonicRes = await triggerGetParkonicById(parkonicEntityId).unwrap();
+            fullParkonicData = parkonicRes?.data || parkonicRes;
+          } catch {
+            // Fallback to dispute payload mapping when direct parkonic fetch fails
+          }
+        }
+
+        setSelectedParkonicFine({
+          ...(fullParkonicData || {}),
+          ...mappedFine,
+          fineId: mappedFine.entityNo || mappedFine.fineId || record.fineId,
+          transcationId:
+            fullParkonicData?.transactionId ||
+            fullParkonicData?.transcationId ||
+            details.transactionId ||
+            details.transcationId ||
+            dispute.transactionId ||
+            dispute.transcationId ||
+            record.transactionId ||
+            record.transcationId,
+          reviewerName: details.reviewerName || dispute.approvedBy || record.approvedBy,
+          entryDateTime:
+            fullParkonicData?.entryDateTime || details.entryDateTime || details.startDateTime || record.vehicleEntryDateTime,
+          exitDateTime:
+            fullParkonicData?.exitDateTime || details.exitDateTime || details.endDateTime || record.vehicleExitDateTime,
+          plateNumber: fullParkonicData?.plateNumber || vehicle?.plateNumber || details.plateNumber,
+          plateSource: fullParkonicData?.plateSource || vehicle?.plateSource || details.plateSource || details.plateSourceValue,
+          plateCategory:
+            fullParkonicData?.plateCategory || vehicle?.plateType || details.plateCategory || details.plateCategoryValue,
+          plateCode: fullParkonicData?.plateCode || vehicle?.plateColor || details.plateCode || details.plateCodeValue,
+          vehicleColor: fullParkonicData?.vehicleColor || vehicle?.vehicleColor || details.vehicleColor,
+          vehicleType: fullParkonicData?.vehicleType || vehicle?.vehicleType || details.vehicleType,
+          vehicleBrand: fullParkonicData?.vehicleBrand || vehicle?.vehicleBrand || details.vehicleBrand,
+          manufacturerYear: fullParkonicData?.manufacturerYear || vehicle?.manufacturerYear || details.manufacturerYear,
+          vehicleOwnerName: fullParkonicData?.vehicleOwnerName || vehicle?.ownerName || details.vehicleOwnerName,
+          reviewStatus:
+            fullParkonicData?.reviewStatus === 0 ||
+            fullParkonicData?.reviewStatus === 1 ||
+            fullParkonicData?.reviewStatus === 2
+              ? fullParkonicData.reviewStatus
+              : mappedFine.reviewStatus,
+          notes: details.notes || dispute.comments || record.comments,
+        });
+        setIsParkonicFineDrawerOpen(true);
+        setIsFineDrawerOpen(false);
+        return;
+      }
+
+      let fullFineRecord: any = null;
+      const fineNumber = details.fineNo || record.fineId;
+
+      if (fineNumber) {
+        try {
+          const [tradeResResult, finesResResult] = await Promise.allSettled([
+            triggerSearchTrade({
+              PageNumber: 1,
+              PageSize: 1,
+              orFilters: { entityNo: fineNumber },
+            }).unwrap(),
+            triggerSearchFines({
+              PageNumber: 1,
+              PageSize: 1,
+              orFilters: { entityNo: fineNumber },
+            }).unwrap(),
+          ]);
+
+          const tradeData =
+            tradeResResult.status === "fulfilled" && Array.isArray(tradeResResult.value?.data)
+              ? tradeResResult.value.data
+              : [];
+          const finesData =
+            finesResResult.status === "fulfilled" && Array.isArray(finesResResult.value?.data)
+              ? finesResResult.value.data
+              : [];
+
+          // Prefer trade-inspection payload so trade license details render like parking submenu drawer
+          fullFineRecord = tradeData[0] || finesData[0] || null;
+        } catch {
+          // Keep mappedFine fallback when search endpoint is unavailable
+        }
+      }
+
+      const mergedFine = {
+        ...(fullFineRecord || {}),
+        ...mappedFine,
+        inspectionGUID: fullFineRecord?.inspectionGUID || mappedFine.inspectionGUID,
+        entityCode: fullFineRecord?.entityCode || mappedFine.entityCode,
+        entityNo: fullFineRecord?.entityNo || mappedFine.entityNo,
+        fineAmount: fullFineRecord?.fineAmount ?? mappedFine.fineAmount,
+        inspectionType: fullFineRecord?.inspectionType ?? mappedFine.inspectionType,
+        inspectionCategory: fullFineRecord?.inspectionCategory ?? mappedFine.inspectionCategory,
+        inspectionStatus: fullFineRecord?.inspectionStatus ?? mappedFine.inspectionStatus,
+        inspectorNameEn: fullFineRecord?.inspectorNameEn || mappedFine.inspectorNameEn,
+        inspectorNameAr: fullFineRecord?.inspectorNameAr || mappedFine.inspectorNameAr,
+        manufacturerYear: fullFineRecord?.manufacturerYear || mappedFine.manufacturerYear,
+        vehicleOwnerEmail: fullFineRecord?.vehicleOwnerEmail || mappedFine.vehicleOwnerEmail,
+      };
+
+      setSelectedFine(mergedFine);
+      setHideFineLocation(false);
       setIsFineDrawerOpen(true);
+      setIsParkonicFineDrawerOpen(false);
     } catch (error) {
       notification.error({ data: { en_Msg: "Failed to load fine details" } }, "Load Failed");
     }
@@ -880,62 +1012,14 @@ const DisputeManagementPage: React.FC = () => {
           return {
             ...column,
             render: (_: any, record: any) => {
-              const details = hoverDetails[record.disputeCode];
-              const fineDetails = details?.fineDetails;
-
-              const tooltipContent = fineDetails ? (
-                <div style={{ minWidth: 250 }}>
-                  <div>
-                    <strong>{t("form.violationCategoryId")}:</strong> {fineDetails.categoryId ?? t("common.noData")}
-                  </div>
-
-                  <div>
-                    <strong>{t("form.violationDescription")}:</strong>{" "}
-                    {i18n.language === "ar"
-                      ? fineDetails.violationNameAr || t("common.noData")
-                      : fineDetails.violationNameEn || t("common.noData")}
-                  </div>
-
-                  <div>
-                    <strong>{t("form.approvedBy")}:</strong> {fineDetails.reviewerName || t("common.noData")}
-                  </div>
-                </div>
-              ) : loadingHoverId === record.disputeCode ? (
-                <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                  <Spin size="small" />
-                  {t("common.loading")}...
-                </span>
-              ) : (
-                <span>{t("common.hoverToLoad")}</span>
-              );
-
               return (
-                <Tooltip
-                  key={record.disputeCode + (fineDetails ? "_loaded" : "_loading")}
-                  title={tooltipContent}
-                  placement="topLeft"
-                  mouseEnterDelay={0.3} // Slight delay to avoid flickering
+                <Typography.Text
+                  style={{ cursor: "pointer", textDecoration: "underline" }}
+                  onClick={() => handleOpenFineView(record)}
+                  data-dispute-code={record.disputeCode}
                 >
-                  <Typography.Text
-                    style={{ cursor: "pointer", textDecoration: "underline" }}
-                    onMouseEnter={() => {
-                      // Only trigger hover if not already loaded or loading
-                      if (!hoverDetails[record.disputeCode] && loadingHoverId !== record.disputeCode) {
-                        // Use a small timeout to avoid rapid fire requests
-                        if (hoverTimeoutRef.current) {
-                          clearTimeout(hoverTimeoutRef.current);
-                        }
-                        hoverTimeoutRef.current = setTimeout(() => {
-                          handleFineHover(record);
-                        }, 100);
-                      }
-                    }}
-                    onClick={() => handleOpenFineView(record)}
-                    data-dispute-code={record.disputeCode}
-                  >
-                    {record?.fineId || "—"}
-                  </Typography.Text>
-                </Tooltip>
+                  {record?.fineId || "—"}
+                </Typography.Text>
               );
             },
           };
@@ -1467,6 +1551,15 @@ const DisputeManagementPage: React.FC = () => {
           fine={selectedFine}
           readOnly={true}
           hideLocation={hideFineLocation}
+        />
+
+        <ParkonicViewDrawer
+          open={isParkonicFineDrawerOpen}
+          onClose={() => {
+            setIsParkonicFineDrawerOpen(false);
+            setSelectedParkonicFine(null);
+          }}
+          record={selectedParkonicFine}
         />
       </Space>
     </>

@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Modal, Card, Row, Col, Typography, Divider, Button, Input, Select, Empty, Spin, Tag, Form, App } from "antd";
-import { CloseOutlined } from "@ant-design/icons";
+import { CloseOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import {
   useLazyGetDisputeByIdQuery,
@@ -28,6 +28,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/ar";
 import { PLATE_COLOR, PLATE_TYPE_SHORT } from "../../config/pageConfigs/finesConfig";
 import { plateSources } from "../../config/pageConfigs/finesConfig";
+import UAEPlate from "../UAEPlate";
 import {
   useLazyGetReviewOptionsQuery,
   useLazyGetEntityHistoryQuery, // add this
@@ -520,6 +521,13 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
 
   const getFineStatusColor = (status: number) => fineStatusColorMap[status] || "default";
 
+  const hasMissingVehicleOwnerName = useMemo(() => {
+    const ownerName = dispute?.vehicle?.ownerName;
+    if (ownerName === null || ownerName === undefined) return true;
+    const normalized = String(ownerName).trim().toLowerCase();
+    return normalized === "" || normalized === "no data" || normalized === "—" || normalized === "---";
+  }, [dispute?.vehicle?.ownerName]);
+
   const isParkonicEntity = useMemo(() => {
     return dispute?.entityCode === "parking-parkonic-fine-dispute";
   }, [dispute?.entityCode]);
@@ -772,7 +780,48 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                     {dispute.vehicle && Object.values(dispute.vehicle).some((val) => val !== null && val !== "") && (
                       <Col span={12}>
                         <Card
-                          title={t("form.vehicleDetails")}
+                          title={
+                            <span
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                              }}
+                            >
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                                {t("form.vehicleDetails")}
+                                {hasMissingVehicleOwnerName && (
+                                  <span
+                                    style={{
+                                      background: "#8B1A1A",
+                                      color: "#fff",
+                                      fontSize: 11,
+                                      borderRadius: 2,
+                                      padding: "2px 8px",
+                                      lineHeight: "18px",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: 6,
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    <ExclamationCircleOutlined style={{ fontSize: 11 }} />
+                                    {isRTL
+                                      ? "بيانات المركبة غير موجودة في النظام المروري"
+                                      : "Car Details Not Found in E-traffic"}
+                                  </span>
+                                )}
+                              </span>
+                              <span style={{ paddingTop: "10px", paddingBottom: "10px" }}>
+                                <UAEPlate
+                                  code={PLATE_COLOR[dispute.vehicle?.plateColor] ?? "---"}
+                                  number={dispute.vehicle?.plateNumber ?? "---"}
+                                  emirateEn={plateSources[dispute.vehicle?.plateSource]?.en || ""}
+                                  emirateAr={plateSources[dispute.vehicle?.plateSource]?.ar || ""}
+                                />
+                              </span>
+                            </span>
+                          }
                           size="small"
                           headStyle={{
                             background: token.colorBgContainer,

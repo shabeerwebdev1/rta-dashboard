@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Form, Space, Image } from "antd";
-import { CloseOutlined, ShareAltOutlined } from "@ant-design/icons";
+import { CloseOutlined, ShareAltOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { theme } from "antd";
 import dayjs from "dayjs";
@@ -205,6 +205,13 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
     return fineStatusColorMap[inspectionStatus] || "orange";
   };
 
+  const hasMissingVehicleOwnerName = (() => {
+    const ownerName = mappedFine?.vehicleOwnerName;
+    if (ownerName === null || ownerName === undefined) return true;
+    const normalized = String(ownerName).trim().toLowerCase();
+    return normalized === "" || normalized === "no data" || normalized === "---" || normalized === "—";
+  })();
+
   const handleFormSubmit = async (values: { comment: string }) => {
     if (!mappedFine || !lastAction) return;
 
@@ -397,7 +404,30 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                               alignItems: "center",
                             }}
                           >
-                            {t("form.vehicleDetails")}
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                              {t("form.vehicleDetails")}
+                              {hasMissingVehicleOwnerName && (
+                                <span
+                                  style={{
+                                    background: "#8B1A1A",
+                                    color: "#fff",
+                                    fontSize: 11,
+                                    borderRadius: 2,
+                                    padding: "2px 8px",
+                                    lineHeight: "18px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  <ExclamationCircleOutlined style={{ fontSize: 11 }} />
+                                  {i18n.language.startsWith("ar")
+                                    ? "بيانات المركبة غير موجودة في النظام المروري"
+                                    : "Car Details Not Found in E-traffic"}
+                                </span>
+                              )}
+                            </span>
                             <span style={{ paddingTop: "10px", paddingBottom: "10px" }}>
                               <UAEPlate
                                 code={PLATE_COLOR[mappedFine?.plateCodeValue] ?? "---"}

@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Space, Image, Divider, theme } from "antd";
-import { CloseOutlined } from "@ant-design/icons";
+import { CloseOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import {
   useUpdateParkonicMutation,
@@ -216,6 +216,54 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
     return <Tag color={color}>{label?.[i18n.language === "ar" ? "ar" : "en"]}</Tag>;
   };
 
+  const getPlateSourceLabel = (value: any) => {
+    if (value === null || value === undefined || value === "") return "---";
+    const source = plateSources[value as keyof typeof plateSources];
+    if (source) {
+      return i18n.language === "ar" ? source.ar : source.en;
+    }
+    return String(value);
+  };
+
+  const getPlateSourceLocalized = (value: any) => {
+    if (value === null || value === undefined || value === "") {
+      return { en: "", ar: "" };
+    }
+
+    const direct = plateSources[value as keyof typeof plateSources];
+    if (direct) {
+      return { en: direct.en, ar: direct.ar };
+    }
+
+    const strValue = String(value).trim().toLowerCase();
+    const matched = Object.values(plateSources).find(
+      (item) => item.en.toLowerCase() === strValue || item.ar.toLowerCase() === strValue,
+    );
+
+    if (matched) {
+      return { en: matched.en, ar: matched.ar };
+    }
+
+    return { en: String(value), ar: String(value) };
+  };
+
+  const getPlateCategoryLabel = (value: any) => {
+    if (value === null || value === undefined || value === "") return "---";
+    return PLATE_TYPE_SHORT[value as keyof typeof PLATE_TYPE_SHORT] || String(value);
+  };
+
+  const getPlateCodeLabel = (value: any) => {
+    if (value === null || value === undefined || value === "") return "---";
+    return PLATE_COLOR[value as keyof typeof PLATE_COLOR] || String(value);
+  };
+
+  const hasMissingVehicleOwnerName = useMemo(() => {
+    const ownerName = record?.vehicleOwnerName;
+    if (ownerName === null || ownerName === undefined) return true;
+    const normalized = String(ownerName).trim().toLowerCase();
+    return normalized === "" || normalized === "no data" || normalized === "—" || normalized === "---";
+  }, [record?.vehicleOwnerName]);
+
   const handleActionChange = (value: string) => {
     const opt = reviewOptions.find((o: any) => o.ActivityOptionGUID === value);
     setSelectedAction(opt);
@@ -411,13 +459,38 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                             <Text strong style={{ fontSize: "16px" }}>
                               {t("form.vehicleDetails")}
                             </Text>
+                            {hasMissingVehicleOwnerName && (
+                              <div
+                                style={{
+                                  background: "#8B1A1A",
+                                  color: "#fff",
+                                  fontSize: 11,
+                                  borderRadius: 2,
+                                  padding: "2px 8px",
+                                  lineHeight: "18px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  marginInline: 8,
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                <ExclamationCircleOutlined style={{ fontSize: 11 }} />
+                                {isRTL ? "بيانات المركبة غير موجودة في النظام المروري" : "Car Details Not Found in E-traffic"}
+                              </div>
+                            )}
                             <div style={{ marginTop: "4px" }}>
-                              <UAEPlate
-                                code={record?.plateCode ? PLATE_COLOR[record.plateCode] : "---"}
-                                number={record?.plateNumber ?? "---"}
-                                emirateEn={record?.plateSource ? plateSources[record.plateSource]?.en || "" : ""}
-                                emirateAr={record?.plateSource ? plateSources[record.plateSource]?.ar || "" : ""}
-                              />
+                              {(() => {
+                                const localizedSource = getPlateSourceLocalized(record?.plateSource);
+                                return (
+                                  <UAEPlate
+                                    code={getPlateCodeLabel(record?.plateCode)}
+                                    number={record?.plateNumber ?? "---"}
+                                    emirateEn={localizedSource.en}
+                                    emirateAr={localizedSource.ar}
+                                  />
+                                );
+                              })()}
                             </div>
                           </div>
                         }
@@ -441,25 +514,21 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                             <Text strong>{t("form.plateSource")}:</Text>
                           </Col>
                           <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                            {record?.plateSource
-                              ? i18n.language === "ar"
-                                ? plateSources[record.plateSource]?.ar
-                                : plateSources[record.plateSource]?.en
-                              : "---"}
+                            {getPlateSourceLabel(record?.plateSource)}
                           </Col>
 
                           <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
                             <Text strong>{t("form.plateCategory")}:</Text>
                           </Col>
                           <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                            {record?.plateCategory ? PLATE_TYPE_SHORT[record.plateCategory] : "---"}
+                            {getPlateCategoryLabel(record?.plateCategory)}
                           </Col>
 
                           <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
                             <Text strong>{t("form.plateCode")}:</Text>
                           </Col>
                           <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                            {record?.plateCode ? PLATE_COLOR[record.plateCode] : "---"}
+                            {getPlateCodeLabel(record?.plateCode)}
                           </Col>
 
                           <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
