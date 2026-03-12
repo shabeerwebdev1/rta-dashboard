@@ -71,7 +71,7 @@
       "inspection-obstacles": "معوقات التفتيش",
       "pledges": "إدارة التعهدات",
       "permits": "بحث التصاريح",
-      "dispute-management": " إدارة الاعتراضات",
+      "dispute-management": "اعتراضات المركبات",
       "reports": "التقارير",
       "fines": " إدارة المخالفات",
       "parkonic": "باركونيك",
@@ -93,7 +93,8 @@
       "criteria": "المعايير والأوزان",
       "proactive-campaigns": "الحملات الاستباقية",
       "hrms": "سجلات الحضور والانصراف",
-      "shiftplanning": "إنشاء خطة المناوبات"
+      "shiftplanning": "إنشاء خطة المناوبات",
+      "dispute-parking": " اعتراضات مواقف السيارات "
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",

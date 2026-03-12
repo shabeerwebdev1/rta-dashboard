@@ -37,6 +37,7 @@ const CriteriaPage = lazy(() => import("./pages/CriteriaPage"));
 const ProactiveCampaignsPage = lazy(() => import("./pages/ProactiveCampaignsPage"));
 const HRMSPage = lazy(() => import("./pages/HRMSPage"));
 const InboxPage = lazy(() => import("./pages/InboxPage"));
+const ParkingDisputePage = lazy(() => import("./pages/ParkingDisputePage"));
 
 const AppRoutes = () => (
   <Routes>
@@ -105,6 +106,14 @@ const AppRoutes = () => (
           element={
             <ProtectedRoute>
               <DisputeManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={PATHS.PARKING_DISPUTE}
+          element={
+            <ProtectedRoute>
+              <ParkingDisputePage />
             </ProtectedRoute>
           }
         />

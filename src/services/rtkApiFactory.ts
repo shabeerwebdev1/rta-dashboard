@@ -254,6 +254,44 @@ export const dynamicApi = createApi({
       }),
       providesTags: ["Dispute"],
     }),
+    getParkingDisputes: builder.query({
+      query: (params) => ({ url: "/api/Dispute/ParkingDisputes", params }),
+      transformResponse: (response: any) => ({
+        data: response?.data ?? [],
+        total: response?.totalCount ?? 0,
+        totalCount: response?.totalCount ?? 0,
+        pageNumber: response?.pageNumber,
+        pageSize: response?.pageSize,
+        pending: response?.pending ?? 0,
+        approved: response?.approved ?? 0,
+        rejected: response?.rejected ?? 0,
+        inReview: response?.inReview ?? 0,
+        statusCode: response?.statusCode,
+        successful: response?.successful,
+        en_Msg: response?.en_Msg,
+        ar_Msg: response?.ar_Msg,
+      }),
+      providesTags: ["Dispute"],
+    }),
+    getVehicleDisputes: builder.query({
+      query: (params) => ({ url: "/api/Dispute/VehicleDisputes", params }),
+      transformResponse: (response: any) => ({
+        data: response?.data ?? [],
+        total: response?.totalCount ?? 0,
+        totalCount: response?.totalCount ?? 0,
+        pageNumber: response?.pageNumber,
+        pageSize: response?.pageSize,
+        pending: response?.pending ?? 0,
+        approved: response?.approved ?? 0,
+        rejected: response?.rejected ?? 0,
+        inReview: response?.inReview ?? 0,
+        statusCode: response?.statusCode,
+        successful: response?.successful,
+        en_Msg: response?.en_Msg,
+        ar_Msg: response?.ar_Msg,
+      }),
+      providesTags: ["Dispute"],
+    }),
 
     getDisputeById: builder.query({
       query: (id) => `/api/Dispute/GetById/${id}`,
@@ -824,6 +862,8 @@ export const {
 
   // Disputes
   useGetDisputesQuery,
+  useGetParkingDisputesQuery,
+  useGetVehicleDisputesQuery,
   useLazyGetDisputeByIdQuery,
   useAddDisputeMutation,
   useUpdateDisputeMutation,

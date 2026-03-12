@@ -71,7 +71,7 @@
       "inspection-obstacles": "Inspection Obstacles",
       "pledges": "Pledges Management",
       "permits": "Permits Search",
-      "dispute-management": "Dispute Management",
+      "dispute-management": "Vehicle Disputes",
       "reports": "Reports",
       "fines": "Fines Management",
       "parkonic": "Parkonic",
@@ -93,7 +93,8 @@
       "criteria": "Criteria & Weights",
       "proactive-campaigns": "Proactive Campaigns",
       "hrms": "HRMS Attendance",
-      "shiftplanning": "Create Shift Plan"
+      "shiftplanning": "Create Shift Plan",
+      "dispute-parking": "Parking Disputes"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",

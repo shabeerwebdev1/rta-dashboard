@@ -142,7 +142,7 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
 
           {!technical && (
             <div>
-              <Text strong>{L("Comments", "التعليقات")}:</Text>
+              <Text strong>{L("User Comments", "تعليقات المستخدم")}:</Text>
               <div
                 style={{
                   background: token.colorBgLayout,

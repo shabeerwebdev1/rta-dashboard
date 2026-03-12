@@ -67,10 +67,17 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
   const inboxCount = inboxSummary?.data ?? 0;
   const totalInboxCount = inboxMenus.reduce((sum: number, item: any) => sum + (item.AW || 0), 0);
 
-  const sanitizeInboxTitle = (title?: string) => {
-    if (!title) return "";
-    return title.replace(/^Parking\s*-\s*/i, "").trim();
-  };
+  // const sanitizeInboxTitle = (title?: string) => {
+  //   if (!title) return "";
+
+  //   let text = title.replace(/^Parking\s*-\s*/i, "").trim();
+
+  //   if (/Parkonic\s*Fine\s*-\s*Dispute/i.test(text)) {
+  //     text = "Parkonic Disputes";
+  //   }
+
+  //   return text;
+  // };
 
   // Filter reports based on current language
   const filteredReports = useMemo(() => {
@@ -94,7 +101,8 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           key: `${FULL_PATHS.INBOX}?code=${item.NotificationCode}`,
           labelText: (
             <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
-              <span>{sanitizeInboxTitle(item.NotificationName)}</span>
+              {/* <span>{sanitizeInboxTitle(item.NotificationName)}</span> */}
+              <span>{item.NotificationName}</span>
               <span style={{ color: "#ff4d4f", fontWeight: 600 }}>{item.AW ?? 0}</span>
             </div>
           ),
@@ -228,11 +236,30 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       ],
     },
     {
-      key: FULL_PATHS.DISPUTE,
+      key: "Diputes",
       icon: <ExclamationCircleOutlined />,
       labelText: t("sidebar.dispute"),
-      permission: "Dispute",
+      children: [
+        {
+          key: FULL_PATHS.DISPUTE,
+          icon: <CarFilled />,
+          labelText: t("sidebar.Vehicle"),
+          permission: "Dispute",
+        },
+        {
+          key: FULL_PATHS.PARKING_DISPUTE,
+          icon: <IdcardOutlined />,
+          labelText: t("sidebar.Parkings"),
+          permission: "Dispute",
+        },
+      ],
     },
+    // {
+    //   key: FULL_PATHS.DISPUTE,
+    //   icon: <ExclamationCircleOutlined />,
+    //   labelText: t("sidebar.dispute"),
+    //   permission: "Dispute",
+    // },
     {
       key: FULL_PATHS.TOWING,
       icon: <CarOutlined />,
@@ -306,7 +333,6 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         //   labelText: t("sidebar.shiftplan"),
         //   permission: "ShiftManagement",
         // },
-
       ],
     },
   ];

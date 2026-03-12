@@ -1,17 +1,16 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo, useEffect } from "react";
-import { Card, Dropdown, Button } from "antd";
+import { Dropdown, Button } from "antd";
 import { EyeOutlined, MoreOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import { useGetInboxListQuery, useGetInboxSummaryMenuQuery } from "../services/rtkApiFactory";
+import UAEPlate from "../components/UAEPlate";
 
 import { usePage } from "../contexts/PageContext";
-
-// Import the dynamic entity handler
 import { DynamicEntityHandler, useEntityHandler } from "../components/common/DynamicEntityHandler";
 import { formatDateTimeDisplay } from "../utils/dateFormatter";
 
@@ -38,19 +37,26 @@ const InboxPage = () => {
     setPageTitle(notificationName);
   }, [notificationName, setPageTitle]);
 
-  // Pagination
+  // Client-side pagination state
   const [apiParams, setApiParams] = useState({
     PageNumber: 1,
     PageSize: 10,
   });
 
+  // Fetch full dataset
   const { data, isLoading } = useGetInboxListQuery({
-    PageNumber: apiParams.PageNumber,
-    PageSize: apiParams.PageSize,
     notificationCode,
   });
 
-  // Use the unified entity handler
+  const fullData = data?.DataTable ?? [];
+
+  // Slice data for current page
+  const paginatedData = useMemo(() => {
+    const start = (apiParams.PageNumber - 1) * apiParams.PageSize;
+    const end = start + apiParams.PageSize;
+    return fullData.slice(start, end);
+  }, [fullData, apiParams]);
+
   const {
     open,
     record,
@@ -61,15 +67,62 @@ const InboxPage = () => {
     closeEntity,
   } = useEntityHandler();
 
-  // SLNO Column
+  const renderTextCell = (value: any) => {
+    const displayValue = value === null || value === undefined || value === "" ? "-" : String(value);
+
+    return (
+      <span
+        style={{
+          display: "inline-block",
+          maxWidth: "100%",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {displayValue}
+      </span>
+    );
+  };
+
+  const renderPlateInfoCell = (value: any) => {
+    const plateInfo = value === null || value === undefined ? "" : String(value).trim();
+    if (!plateInfo) return "-";
+
+    const [plateNumber, sourceEn, _categoryEn, plateColorCodeEn, sourceAr] = plateInfo.split("|");
+
+    return (
+      <UAEPlate
+        code={plateColorCodeEn || ""}
+        number={plateNumber || "-"}
+        emirateEn={sourceEn || ""}
+        emirateAr={sourceAr || ""}
+      />
+    );
+  };
+
+  // SL.No Column
+  // const slNoColumn = {
+  //   key: "slno",
+  //   title: "SL.No",
+  //   width: 100,
+  //   render: (_: any, __: any, index: number) => (apiParams.PageNumber - 1) * apiParams.PageSize + index + 1,
+  // };
+
   const slNoColumn = {
     key: "slno",
     title: "SL.No",
-    width: 80,
+    width: 100,
+    onHeaderCell: () => ({
+      style: { paddingLeft: 16 },
+    }),
+    onCell: () => ({
+      style: { paddingLeft: 16 },
+    }),
     render: (_: any, __: any, index: number) => (apiParams.PageNumber - 1) * apiParams.PageSize + index + 1,
   };
 
-  // Action Column with unified button
+  // Action column
   const actionColumn = {
     key: "actions",
     title: "Action",
@@ -82,7 +135,7 @@ const InboxPage = () => {
             {
               key: "view",
               icon: <EyeOutlined />,
-              label: t("common.open"),
+              label: t("common.edit"),
               onClick: () => openEntity(row.EntityCode, row),
             },
           ],
@@ -99,23 +152,51 @@ const InboxPage = () => {
 
     const dynamicColumns = data.Columns.filter((col: any) => col.Visible)
       .sort((a: any, b: any) => a.Position - b.Position)
-      .filter((col: any) => {
-        const name = String(col.DisplayName || "").toLowerCase();
-        const field = String(col.Field || "").toLowerCase();
-        const blockedNames = ["actor name", "supervisor name", "activity name", "notification name", "payment type"];
-        return !blockedNames.some((v) => name.includes(v) || field.includes(v.replace(/\s+/g, "")));
-      })
       .map((col: any) => ({
         key: col.Field,
         dataIndex: col.Field,
-        title:
-          String(col.DisplayName || "").toLowerCase() === "last updated date time" ? "Last Updated" : col.DisplayName,
+        title: col.DisplayName,
         sortable: col.AllowSorting === "true",
-        render: col.Type === "datetime" ? (value: any) => (value ? formatDateTimeDisplay(value) : "-") : undefined,
+        width: String(col.Name || "").toLowerCase() === "_$v$_$plateinfo" ? 180 : undefined,
+        ellipsis: true,
+        render:
+          String(col.Name || "").toLowerCase() === "_$v$_$plateinfo" ||
+          String(col.DisplayName || "").toLowerCase() === "plate no"
+            ? (value: any) => renderPlateInfoCell(value)
+            : col.Type === "datetime"
+              ? (value: any) => renderTextCell(value ? formatDateTimeDisplay(value) : "-")
+              : (value: any) => renderTextCell(value),
       }));
 
     return [slNoColumn, ...dynamicColumns, actionColumn];
   }, [data, apiParams]);
+
+  // const columns = useMemo(() => {
+  //   if (!data?.Columns) return [];
+
+  //   const hiddenColumns = ["Notification Name", "Activity Name", "Actor Name"];
+
+  //   const dynamicColumns = data.Columns.filter((col: any) => col.Visible)
+  //     .sort((a: any, b: any) => a.Position - b.Position)
+  //     .filter((col: any) => !hiddenColumns.includes(col.DisplayName)) // hide columns
+  //     .map((col: any) => ({
+  //       key: col.Field,
+  //       dataIndex: col.Field,
+  //       title: col.DisplayName === "Last Updated DateTime" ? "Last Updated" : col.DisplayName, // rename column
+  //       sortable: col.AllowSorting === "true",
+  //       width: String(col.Name || "").toLowerCase() === "_$v$_$plateinfo" ? 180 : undefined,
+  //       ellipsis: true,
+  //       render:
+  //         String(col.Name || "").toLowerCase() === "_$v$_$plateinfo" ||
+  //         String(col.DisplayName || "").toLowerCase() === "plate no"
+  //           ? (value: any) => renderPlateInfoCell(value)
+  //           : col.Type === "datetime"
+  //             ? (value: any) => renderTextCell(value ? formatDateTimeDisplay(value) : "-")
+  //             : (value: any) => renderTextCell(value),
+  //     }));
+
+  //   return [slNoColumn, ...dynamicColumns, actionColumn];
+  // }, [data, apiParams]);
 
   const pageConfig = {
     tableConfig: { columns },
@@ -130,21 +211,18 @@ const InboxPage = () => {
 
   return (
     <>
-      <Card variant="borderless" title="">
-        <DataTableWrapper
-          pageConfig={pageConfig}
-          data={data?.DataTable ?? []}
-          total={data?.TotalRecords ?? 0}
-          isLoading={isLoading}
-          apiParams={apiParams}
-          handleTableChange={() => {}}
-          handlePaginationChange={handlePaginationChange}
-          tableSize="middle"
-          state={{ columnFilters: {} }}
-        />
-      </Card>
+      <DataTableWrapper
+        pageConfig={pageConfig}
+        data={paginatedData}
+        total={fullData.length}
+        isLoading={isLoading}
+        apiParams={apiParams}
+        handlePaginationChange={handlePaginationChange}
+        handleTableChange={() => {}}
+        tableSize="small"
+        state={{ columnFilters: {} }}
+      />
 
-      {/* Single Dynamic Entity Handler - replaces all separate drawers/modals */}
       <DynamicEntityHandler
         entityCode={entityCode}
         record={record}

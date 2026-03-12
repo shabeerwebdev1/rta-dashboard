@@ -1,3 +1,1581 @@
+// /* eslint-disable react-hooks/exhaustive-deps */
+// /* eslint-disable @typescript-eslint/no-unused-vars */
+// /* eslint-disable @typescript-eslint/no-explicit-any */
+// import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+// import {
+//   Space,
+//   Card,
+//   Input,
+//   Button,
+//   Modal,
+//   Form,
+//   Row,
+//   Col,
+//   Select,
+//   App,
+//   DatePicker,
+//   Spin,
+//   Tag,
+//   Upload,
+//   Image,
+//   Typography,
+// } from "antd";
+// import { PlusOutlined, EyeOutlined, DownloadOutlined } from "@ant-design/icons";
+// import { useTranslation } from "react-i18next";
+// import { usePage } from "../contexts/PageContext";
+// import { useTableParams } from "../hooks/useTableParams";
+// import { useDebounce } from "../hooks/useDebounce";
+// import { useAppNotification } from "../utils/notificationManager";
+// import {
+//   useGetDisputesQuery,
+//   useAddDisputeMutation,
+//   useUpdateDisputeMutation,
+//   useLazyGetLookupsQuery,
+//   useLazyGetDisputeByIdQuery,
+//   useLazyGetParkonicByIdQuery,
+//   useLazySearchFinesQuery,
+//   useLazySearchTradeQuery,
+// } from "../services/rtkApiFactory";
+// import { getFileUrl, useUploadFilesMutation } from "../services/rtkApiFactory";
+// import { exportToCsv } from "../utils/csvExporter";
+// import StatsDisplay from "../components/common/StatsDisplay";
+// import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
+// import { pageConfigs } from "../config/pageConfigs";
+// import dayjs from "dayjs";
+// import DataTableWrapper from "../components/common/DataTableWrapper";
+// import DisputeViewModal from "../components/dispute/DisputeViewModal";
+// import FinesViewDrawer from "../components/fines/FinesViewDrawer";
+// import ParkonicViewDrawer from "../components/parkonic/ParkonicViewDrawer";
+// import { usePermission } from "../hooks/usePermission";
+// import { useAuth } from "../contexts/AuthContext";
+// import { formatDateTimeDisplay } from "../utils/dateFormatter";
+
+// const { Option } = Select;
+// const pageKey = "dispute-management";
+
+// const filterOptionsByCategory = (options: any[], categoryId: number) => {
+//   return options.filter((option) => option.categoryId === categoryId);
+// };
+
+// const columnToCategoryMap: Record<string, number> = {
+//   department: 1000,
+//   payment_Type: 1100,
+//   dispute_Status: 1002,
+//   dispute_Reason: 1600,
+//   dispute_SubReason: 1600,
+// };
+
+// const DisputeManagementPage: React.FC = () => {
+//   const { canCreate, canEdit } = usePermission();
+//   const menuName = "Dispute";
+//   const { t, i18n } = useTranslation();
+//   const { setPageTitle } = usePage();
+//   const { modal } = App.useApp();
+//   const notification = useAppNotification();
+//   const config = pageConfigs[pageKey];
+//   const { user } = useAuth();
+
+//   const {
+//     apiParams,
+//     handleTableChange,
+//     handlePaginationChange,
+//     setGlobalSearch,
+//     setDateRange,
+//     clearFilter,
+//     clearAll,
+//     state,
+//     setColumnFilter,
+//   } = useTableParams(config.searchConfig!);
+//   const [form] = Form.useForm();
+
+//   const [isModalOpen, setIsModalOpen] = useState(false);
+//   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+//   const [selectedRecord, setSelectedRecord] = useState<any>(null);
+//   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+//   const [viewRecord, setViewRecord] = useState<any>(null);
+//   const [isFineDrawerOpen, setIsFineDrawerOpen] = useState(false);
+//   const [selectedFine, setSelectedFine] = useState<any>(null);
+//   const [hideFineLocation, setHideFineLocation] = useState(false);
+//   const [isParkonicFineDrawerOpen, setIsParkonicFineDrawerOpen] = useState(false);
+//   const [selectedParkonicFine, setSelectedParkonicFine] = useState<any>(null);
+//   const [tableSize] = useState<"middle" | "small">("small");
+//   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+//   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
+//   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
+//   const [disputeSubReasonOptions, setDisputeSubReasonOptions] = useState<any[]>([]);
+//   const [statsMetadata, setStatsMetadata] = useState<any>({});
+
+//   const [previewOpen, setPreviewOpen] = useState(false);
+//   const [previewImage, setPreviewImage] = useState("");
+//   const [isUploading, setIsUploading] = useState(false);
+
+//   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
+//   const debouncedSearchValue = useDebounce(searchValue, 500);
+
+//   // Enhanced hover state management
+//   const [hoverDetails, setHoverDetails] = useState<Record<string, any>>({});
+//   const [loadingHoverId, setLoadingHoverId] = useState<string | null>(null);
+
+//   // Prefetch management refs
+//   const prefetchQueue = useRef<Set<string>>(new Set());
+//   const prefetchTimeoutRef = useRef<NodeJS.Timeout>();
+//   const hoverTimeoutRef = useRef<NodeJS.Timeout>();
+//   const abortControllers = useRef<Map<string, AbortController>>(new Map());
+
+//   // State to maintain the rows data for downloading
+//   const [selectedRows, setSelectedRows] = useState([]);
+
+//   // State for Pending Disputes filter
+//   const [showPendingDisputes, setShowPendingDisputes] = useState(false);
+//   const [rowDetailsLoading, setRowDetailsLoading] = useState(false);
+//   const [resolvedDetailCodes, setResolvedDetailCodes] = useState<Record<string, boolean>>({});
+
+//   // Helper function to normalize GUIDs (convert to lowercase)
+//   const normalizeGuid = (guid: string | null | undefined): string | null => {
+//     if (!guid) return null;
+//     return guid.toLowerCase().trim();
+//   };
+
+//   // Get user's roleGUID (primary from user context, fallback from localStorage)
+//   const getUserRoleGUID = () => {
+//     // Primary: from user context
+//     if (user?.roleGUID) {
+//       return normalizeGuid(user.roleGUID);
+//     }
+
+//     // Fallback: from localStorage
+//     const roleGUIDFromStorage = localStorage.getItem("roleGUID");
+//     if (roleGUIDFromStorage) {
+//       return normalizeGuid(roleGUIDFromStorage);
+//     }
+
+//     return null;
+//   };
+
+//   const userRoleGUID = getUserRoleGUID();
+
+//   // Fetch all disputes (no backend filtering for pending disputes)
+//   const { data, currentData, isLoading, isFetching, refetch } = useGetDisputesQuery(apiParams, {
+//     refetchOnMountOrArgChange: true,
+//   });
+
+//   const [addDispute, { isLoading: isAdding }] = useAddDisputeMutation();
+//   const [updateDispute, { isLoading: isUpdating }] = useUpdateDisputeMutation();
+//   const [triggerGetLookups] = useLazyGetLookupsQuery();
+//   const [triggerGetDisputeById] = useLazyGetDisputeByIdQuery();
+//   const [triggerGetParkonicById] = useLazyGetParkonicByIdQuery();
+//   const [triggerSearchFines] = useLazySearchFinesQuery();
+//   const [triggerSearchTrade] = useLazySearchTradeQuery();
+
+//   // Check if error is from cancellation
+//   const isCancelledError = (error: any): boolean => {
+//     return error?.name === "AbortError" || error?.message?.includes("aborted");
+//   };
+
+//   // Filter data locally for pending disputes - with case-insensitive comparison
+//   const filteredData = useMemo(() => {
+//     if (showPendingDisputes && userRoleGUID && data?.data) {
+//       return data.data.filter((record: any) => {
+//         // Check if record is assigned to user's role (case-insensitive)
+//         const isAssigned = isRowAssignedToUserRole(record);
+
+//         // Check if status is pending or in review
+//         const isPendingOrInReview = record.dispute_Status === 1 || record.dispute_Status === 4;
+
+//         return isAssigned && isPendingOrInReview;
+//       });
+//     }
+//     return data?.data || [];
+//   }, [data?.data, showPendingDisputes, userRoleGUID]);
+
+//   // Function to check if row is assigned to current user's role - case-insensitive
+//   const isRowAssignedToUserRole = useCallback(
+//     (record: any) => {
+//       if (!userRoleGUID) return false;
+
+//       // Check if record has assignedToRole field
+//       if (record.assignedToRole) {
+//         const assignedRole = normalizeGuid(record.assignedToRole);
+//         return assignedRole === userRoleGUID;
+//       }
+
+//       return false;
+//     },
+//     [userRoleGUID],
+//   );
+
+//   // Custom row class name function
+//   const getRowClassName = useCallback(
+//     (record: any, index: number) => {
+//       return isRowAssignedToUserRole(record) ? "assigned-to-user-row" : "";
+//     },
+//     [isRowAssignedToUserRole],
+//   );
+
+//   // Get total count for pagination (use original data total when not filtering)
+//   const totalCount = useMemo(() => {
+//     if (showPendingDisputes && userRoleGUID) {
+//       // When showing pending disputes, we're filtering locally
+//       return filteredData.length;
+//     }
+//     return data?.total || 0;
+//   }, [data?.total, filteredData.length, showPendingDisputes, userRoleGUID]);
+
+//   // Optimized hover handler with caching and abort controller
+//   const handleFineHover = useCallback(
+//     async (record: any) => {
+//       const disputeCode = record.disputeCode;
+
+//       // Immediate return if already have data or currently loading
+//       if (hoverDetails[disputeCode] || loadingHoverId === disputeCode) {
+//         return;
+//       }
+
+//       // Cancel any existing request for this disputeCode
+//       if (abortControllers.current.has(disputeCode)) {
+//         abortControllers.current.get(disputeCode)?.abort();
+//         abortControllers.current.delete(disputeCode);
+//       }
+
+//       try {
+//         setLoadingHoverId(disputeCode);
+
+//         // Create new abort controller for this request
+//         const controller = new AbortController();
+//         abortControllers.current.set(disputeCode, controller);
+
+//         const result = await triggerGetDisputeById(disputeCode).unwrap();
+
+//         // Only update if not aborted
+//         if (!controller.signal.aborted && result?.data) {
+//           setHoverDetails((prev) => ({
+//             ...prev,
+//             [disputeCode]: result.data,
+//           }));
+//         }
+//       } catch (err) {
+//         if (!isCancelledError(err)) {
+//           console.error("Failed to load hover details for:", disputeCode);
+//         }
+//       } finally {
+//         setLoadingHoverId(null);
+//         abortControllers.current.delete(disputeCode);
+//       }
+//     },
+//     [hoverDetails, loadingHoverId, triggerGetDisputeById],
+//   );
+
+//   // Prefetch visible rows with priority queue - NOW DEFINED AFTER filteredData
+//   const prefetchVisibleRows = useCallback(() => {
+//     if (!filteredData || filteredData.length === 0) return;
+
+//     const rowsToPrefetch = filteredData.filter((record: any) => {
+//       // Only prefetch if not already loaded and not in queue and not currently loading
+//       return (
+//         !hoverDetails[record.disputeCode] &&
+//         !prefetchQueue.current.has(record.disputeCode) &&
+//         loadingHoverId !== record.disputeCode
+//       );
+//     });
+
+//     // Add to queue
+//     rowsToPrefetch.forEach((record: any) => {
+//       prefetchQueue.current.add(record.disputeCode);
+//     });
+
+//     // Process queue with delay to avoid blocking UI
+//     if (prefetchTimeoutRef.current) {
+//       clearTimeout(prefetchTimeoutRef.current);
+//     }
+
+//     prefetchTimeoutRef.current = setTimeout(() => {
+//       const processQueue = async () => {
+//         const batch = Array.from(prefetchQueue.current).slice(0, 3); // Process 3 at a time
+
+//         for (const disputeCode of batch) {
+//           const record = filteredData.find((r: any) => r.disputeCode === disputeCode);
+//           if (record) {
+//             await handleFineHover(record);
+//             prefetchQueue.current.delete(disputeCode);
+//           }
+//         }
+
+//         // Process next batch if queue still has items
+//         if (prefetchQueue.current.size > 0) {
+//           prefetchTimeoutRef.current = setTimeout(processQueue, 200);
+//         }
+//       };
+
+//       processQueue();
+//     }, 300); // Wait 300ms after last trigger
+//   }, [filteredData, hoverDetails, loadingHoverId, handleFineHover]);
+
+//   // Prefetch first page immediately
+//   useEffect(() => {
+//     if (filteredData && filteredData.length > 0) {
+//       // Immediately prefetch first 5 records
+//       const initialRecords = filteredData.slice(0, 5);
+//       initialRecords.forEach((record: any) => {
+//         if (!hoverDetails[record.disputeCode] && loadingHoverId !== record.disputeCode) {
+//           // Use requestIdleCallback for non-blocking prefetch
+//           if ("requestIdleCallback" in window) {
+//             (window as any).requestIdleCallback(() => handleFineHover(record), { timeout: 1000 });
+//           } else {
+//             setTimeout(() => handleFineHover(record), 100);
+//           }
+//         }
+//       });
+
+//       // Then prefetch remaining visible rows
+//       prefetchVisibleRows();
+//     }
+//   }, [filteredData, hoverDetails, loadingHoverId, handleFineHover, prefetchVisibleRows]);
+
+//   // Set up Intersection Observer for rows as they become visible
+//   useEffect(() => {
+//     if (!filteredData || filteredData.length === 0) return;
+
+//     const observer = new IntersectionObserver(
+//       (entries) => {
+//         entries.forEach((entry) => {
+//           if (entry.isIntersecting) {
+//             const row = entry.target;
+//             const disputeCode = row.getAttribute("data-dispute-code");
+
+//             if (disputeCode && !hoverDetails[disputeCode] && loadingHoverId !== disputeCode) {
+//               const record = filteredData.find((r: any) => r.disputeCode === disputeCode);
+//               if (record) {
+//                 // Use requestIdleCallback or setTimeout for non-urgent prefetch
+//                 if ("requestIdleCallback" in window) {
+//                   (window as any).requestIdleCallback(() => handleFineHover(record), { timeout: 500 });
+//                 } else {
+//                   setTimeout(() => handleFineHover(record), 50);
+//                 }
+//               }
+//             }
+//           }
+//         });
+//       },
+//       { threshold: 0.1, rootMargin: "100px" }, // Start loading when within 100px of viewport
+//     );
+
+//     // Observe all table rows after they're rendered
+//     const timeoutId = setTimeout(() => {
+//       document.querySelectorAll("[data-dispute-code]").forEach((el) => {
+//         observer.observe(el);
+//       });
+//     }, 100);
+
+//     return () => {
+//       clearTimeout(timeoutId);
+//       observer.disconnect();
+//     };
+//   }, [filteredData, hoverDetails, loadingHoverId, handleFineHover]);
+
+//   // Ensure dispute row details are loaded before showing grid values like Vehicle Exit and Approved By.
+//   useEffect(() => {
+//     const codes = (filteredData || []).map((r: any) => r?.disputeCode).filter(Boolean);
+//     if (codes.length === 0) {
+//       setRowDetailsLoading(false);
+//       return;
+//     }
+
+//     const unresolvedCodes = codes.filter((code: string) => !resolvedDetailCodes[code]);
+//     if (unresolvedCodes.length === 0) {
+//       setRowDetailsLoading(false);
+//       return;
+//     }
+
+//     let isCancelled = false;
+//     setRowDetailsLoading(true);
+
+//     const loadBatch = async () => {
+//       const results = await Promise.all(
+//         unresolvedCodes.map(async (code: string) => {
+//           try {
+//             const result = await triggerGetDisputeById(code).unwrap();
+//             return { code, data: result?.data || null };
+//           } catch {
+//             return { code, data: null };
+//           }
+//         }),
+//       );
+
+//       if (isCancelled) return;
+
+//       const fetchedDetails: Record<string, any> = {};
+//       const resolvedBatch: Record<string, boolean> = {};
+
+//       results.forEach(({ code, data }) => {
+//         resolvedBatch[code] = true;
+//         if (data) {
+//           fetchedDetails[code] = data;
+//         }
+//       });
+
+//       if (Object.keys(fetchedDetails).length > 0) {
+//         setHoverDetails((prev) => ({
+//           ...prev,
+//           ...fetchedDetails,
+//         }));
+//       }
+
+//       setResolvedDetailCodes((prev) => ({
+//         ...prev,
+//         ...resolvedBatch,
+//       }));
+//       setRowDetailsLoading(false);
+//     };
+
+//     loadBatch();
+
+//     return () => {
+//       isCancelled = true;
+//     };
+//   }, [filteredData, resolvedDetailCodes, triggerGetDisputeById]);
+
+//   // Add scroll listener for table
+//   useEffect(() => {
+//     const tableContainer = document.querySelector(".ant-table-body");
+//     if (tableContainer) {
+//       const handleScroll = () => {
+//         prefetchVisibleRows();
+//       };
+
+//       tableContainer.addEventListener("scroll", handleScroll);
+//       return () => tableContainer.removeEventListener("scroll", handleScroll);
+//     }
+//   }, [prefetchVisibleRows]);
+
+//   // Cleanup on unmount
+//   useEffect(() => {
+//     return () => {
+//       if (prefetchTimeoutRef.current) {
+//         clearTimeout(prefetchTimeoutRef.current);
+//       }
+//       if (hoverTimeoutRef.current) {
+//         clearTimeout(hoverTimeoutRef.current);
+//       }
+//       // Abort any ongoing requests
+//       abortControllers.current.forEach((controller) => controller.abort());
+//       abortControllers.current.clear();
+//     };
+//   }, []);
+
+//   const [uploadFiles, { isLoading: isUploadingFiles }] = useUploadFilesMutation();
+
+//   const searchInputRef = useRef<any>(null);
+
+//   const handleShowPendingDisputes = () => {
+//     if (!userRoleGUID) {
+//       notification.error({ data: { en_Msg: "User role information not available" } }, "Error");
+//       return;
+//     }
+
+//     if (showPendingDisputes) {
+//       // Clear the filter
+//       setShowPendingDisputes(false);
+//     } else {
+//       // Apply the filter
+//       setShowPendingDisputes(true);
+//     }
+//   };
+
+//   const getBase64 = (file: File) =>
+//     new Promise<string>((resolve, reject) => {
+//       const reader = new FileReader();
+//       reader.readAsDataURL(file);
+//       reader.onload = () => resolve(reader.result as string);
+//       reader.onerror = (error) => reject(error);
+//     });
+
+//   const getSourceUserName = () => {
+//     return i18n.language === "ar"
+//       ? localStorage.getItem("displayNameAr") || ""
+//       : localStorage.getItem("displayNameEn") || "";
+//   };
+
+//   const getLabelFromValue = (value: number, options: any[], i18n: any) => {
+//     const option = options.find((opt) => opt.value === value);
+//     if (!option) return value;
+//     return i18n.language === "ar" ? option.labelAr : option.labelEn;
+//   };
+
+//   const getDisputeReasonByCode = React.useCallback(
+//     (value: number) => {
+//       if (!lookupOptions) return null;
+
+//       const option = lookupOptions.find((opt) => opt.value === value);
+//       if (option) {
+//         return {
+//           categoryName: option.categoryName,
+//           englishText: option.labelEn,
+//           arabicText: option.labelAr,
+//           fullData: option,
+//         };
+//       }
+//       return null;
+//     },
+//     [lookupOptions],
+//   );
+
+//   const handleDisputeReasonChange = (categoryId: number) => {
+//     const subReasons = filterOptionsByCategory(lookupOptions, categoryId);
+//     const subOptions = subReasons.map((sub: any) => ({
+//       label: i18n.language === "ar" ? sub.labelAr : sub.labelEn,
+//       value: sub.value,
+//     }));
+//     setDisputeSubReasonOptions(subOptions);
+//     form.setFieldsValue({ DisputeSubReason: undefined });
+//   };
+
+//   useEffect(() => {
+//     fetchLookupData();
+//   }, [i18n.language]);
+
+//   const fetchLookupData = async () => {
+//     setIsLoadingLookups(true);
+//     try {
+//       const categoryIds = Object.values(columnToCategoryMap);
+//       const result = await triggerGetLookups([...categoryIds, 16001, 16002]).unwrap();
+//       setLookupOptions(result);
+//     } catch (error) {
+//       notification.error({ data: { en_Msg: "Failed to load dropdown options" } }, "Load Failed");
+//     } finally {
+//       setIsLoadingLookups(false);
+//     }
+//   };
+
+//   const departmentOptions = useMemo(() => {
+//     const filtered = filterOptionsByCategory(lookupOptions, 1000);
+//     return filtered.map((option) => ({
+//       label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+//       value: option.value,
+//     }));
+//   }, [lookupOptions, i18n.language]);
+
+//   const paymentTypeOptions = useMemo(() => {
+//     const filtered = filterOptionsByCategory(lookupOptions, 1100);
+//     return filtered.map((option) => ({
+//       label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+//       value: option.value,
+//     }));
+//   }, [lookupOptions, i18n.language]);
+
+//   const disputeReasonOptions = useMemo(() => {
+//     const categories = new Map();
+//     lookupOptions.forEach((option) => {
+//       if ((option.categoryId === 16001 || option.categoryId === 16002) && !categories.has(option.categoryId)) {
+//         categories.set(option.categoryId, {
+//           label: option.categoryName,
+//           value: option.categoryId,
+//         });
+//       }
+//     });
+//     const mainReasons = Array.from(categories.values());
+//     return mainReasons;
+//   }, [lookupOptions]);
+
+//   const disputeStatusEnum = useMemo(
+//     () => [
+//       { value: 1, labelEn: "Pending", labelAr: "قيد الانتظار" },
+//       { value: 2, labelEn: "Approved", labelAr: "موافقة" },
+//       { value: 3, labelEn: "Rejected", labelAr: "مرفوض" },
+//       { value: 4, labelEn: "In Review", labelAr: "قيد المراجعة" },
+//     ],
+//     [],
+//   );
+
+//   useEffect(() => {
+//     setPageTitle(t(config.title));
+//   }, [setPageTitle, t, config.title, i18n.language]);
+
+//   useEffect(() => {
+//     setGlobalSearch(state.searchKey, debouncedSearchValue);
+//   }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
+
+//   useEffect(() => {
+//     setSearchValue(state.searchValue);
+//   }, [state.searchValue]);
+
+//   const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
+//     if (type === "search") {
+//       setSearchValue("");
+//     }
+//     if (type === "column" && key === "assignedToRole") {
+//       setShowPendingDisputes(false);
+//     }
+
+//     clearFilter(type, key, value);
+//   };
+
+//   const handleClearAll = () => {
+//     setSearchValue("");
+//     setShowPendingDisputes(false);
+//     clearAll();
+//   };
+
+//   const handleModalOpen = async (mode: "add" | "edit", record?: any) => {
+//     setModalMode(mode);
+//     setSelectedRecord(record || null);
+//     setIsModalOpen(true);
+
+//     const sourceUserName = getSourceUserName();
+//     form.setFieldValue("SourceUser", sourceUserName);
+
+//     if (mode === "edit" && record) {
+//       try {
+//         const result = await triggerGetDisputeById(record.disputeCode).unwrap();
+//         if (result.data) {
+//           let fileList: any[] = [];
+//           if (result.data.evidencePath) {
+//             const files = result.data.evidencePath.split(";");
+//             fileList = files.map((file: string, index: number) => ({
+//               uid: String(index),
+//               name: file.split("/").pop() || `file-${index}`,
+//               status: "done",
+//               url: getFileUrl(file),
+//             }));
+//           }
+
+//           form.setFieldsValue({
+//             FineId: result.data.fineId || result.data.fine_Number,
+//             Name: result.data.name,
+//             Department: result.data.department,
+//             Payment_Type: result.data.payment_Type,
+//             Comments: result.data.comments,
+//             crm_Ref: result.data.crm_Ref,
+//             Email: result.data.email,
+//             Phone: result.data.phone,
+//             Address: result.data.address,
+//             SourceUser: sourceUserName,
+//             Source: result.data.source || "sTafteesh_parking",
+//             DisputeMainReason: result.data.disputeMainReason || result.data.dispute_Reason,
+//             DisputeSubReason: result.data.disputeSubReason || result.data.dispute_SubReason,
+//             ActualDisputeDate: result.data.actualDisputeDate
+//               ? dayjs(result.data.actualDisputeDate, "YYYY-MM-DD")
+//               : null,
+//             Evidence: fileList,
+//           });
+
+//           if (result.data.disputeMainReason || result.data.dispute_Reason) {
+//             const mainReasonId = result.data.disputeMainReason || result.data.dispute_Reason;
+//             handleDisputeReasonChange(mainReasonId);
+//             setTimeout(() => {
+//               form.setFieldsValue({
+//                 DisputeSubReason: result.data.disputeSubReason || result.data.dispute_SubReason,
+//               });
+//             }, 100);
+//           }
+//         }
+//       } catch (error) {
+//         notification.error({ data: { en_Msg: "Failed to load dispute details" } }, "Load Failed");
+//       }
+//     }
+//   };
+
+//   const handleModalClose = () => {
+//     setIsModalOpen(false);
+//     setSelectedRecord(null);
+//     setDisputeSubReasonOptions([]);
+//     form.resetFields();
+//   };
+
+//   const handleFormSubmit = async (values: any) => {
+//     try {
+//       const formData = new FormData();
+
+//       const cleanedFineId = values.FineId ? values.FineId.replace(/\s+/g, "") : "";
+
+//       formData.append("FineId", cleanedFineId);
+//       formData.append("Department", values.Department || "0");
+//       formData.append("Payment_Type", values.Payment_Type || "0");
+//       formData.append("Comments", values.Comments || "");
+//       formData.append("crm_Ref", values.crm_Ref || "");
+//       formData.append("Name", values.Name || "");
+//       formData.append("Email", values.Email || "");
+//       formData.append("Phone", values.Phone || "");
+//       formData.append("Address", values.Address || "");
+
+//       formData.append("ActualDisputeDate", values.ActualDisputeDate ? values.ActualDisputeDate.toISOString() : "");
+
+//       formData.append("DisputeMainReason", values.DisputeMainReason || "0");
+//       formData.append("DisputeSubReason", values.DisputeSubReason || "0");
+
+//       const displayName =
+//         i18n.language === "ar"
+//           ? localStorage.getItem("displayNameAr") || ""
+//           : localStorage.getItem("displayNameEn") || "";
+
+//       formData.append("SourceUser", displayName);
+//       formData.append("Source", values.Source || "sTafteesh_parking");
+
+//       // ✅ MULTIPLE FILES
+//       if (values.Attachment && values.Attachment.length > 0) {
+//         values.Attachment.forEach((file: any) => {
+//           if (file.originFileObj) {
+//             formData.append("Attachement", file.originFileObj);
+//           }
+//         });
+//       }
+
+//       let response;
+
+//       if (modalMode === "add") {
+//         response = await addDispute(formData).unwrap();
+//       } else {
+//         formData.append("dispute_Id", selectedRecord.dispute_Id);
+//         response = await updateDispute(formData).unwrap();
+//       }
+
+//       notification.success(
+//         response,
+//         t(modalMode === "add" ? "messages.addSuccess" : "messages.updateSuccess", { entity: t(config.name.singular) }),
+//       );
+
+//       handleModalClose();
+//       refetch();
+//     } catch (error: any) {
+//       notification.error(error, "Operation Failed");
+//     }
+//   };
+
+//   const handleView = (record: any) => {
+//     setViewRecord(record);
+//     setIsDrawerOpen(true);
+//   };
+
+//   const handleOpenFineView = async (record: any) => {
+//     try {
+//       const result = await triggerGetDisputeById(record.disputeCode).unwrap();
+//       const dispute = result?.data;
+//       const details = dispute?.fineDetails;
+//       const vehicle = dispute?.vehicle;
+//       const source = String(dispute?.source || record?.source || "").toLowerCase();
+//       const resolvedEntityCode = String(details?.entityCode || dispute?.entityCode || record?.entityCode || "");
+//       const normalizedEntityCode = resolvedEntityCode.toLowerCase();
+//       const isParkonicFine = normalizedEntityCode.includes("parkonic") || source.includes("parkonic");
+
+//       if (!dispute || !details) {
+//         notification.error({ data: { en_Msg: "Fine details not found" } }, "Load Failed");
+//         return;
+//       }
+
+//       const mappedReviewStatus =
+//         details?.reviewStatus === 0 || details?.reviewStatus === 1 || details?.reviewStatus === 2
+//           ? details.reviewStatus
+//           : 0;
+
+//       const mappedFine = {
+//         ...details,
+//         inspectionGUID:
+//           details.inspectionId || details.inspectionGUID || dispute.inspectionGUID || dispute.inspectionId,
+//         entityCode: resolvedEntityCode,
+//         EntityGUID: details.inspectionId || details.inspectionGUID || dispute.inspectionGUID || dispute.inspectionId,
+//         EntityCode: resolvedEntityCode,
+//         iid: details.iid || details.id || record.id,
+//         entityNo: details.fineNo || record.fineId,
+//         fineAmount: details.fineAmount,
+//         inspectionStatus: details.fineStatus,
+//         inspectionType: details.inspectionType,
+//         inspectionCategory: details.inspectionCategory,
+//         categoryId: details.categoryId,
+//         violationNameEn: details.violationNameEn,
+//         violationNameAr: details.violationNameAr,
+//         violationAmount: details.violationAmount || details.fineAmount,
+//         startDateTime: details.entryDateTime || details.startDateTime,
+//         endDateTime: details.exitDateTime || details.endDateTime,
+//         reviewStatus: mappedReviewStatus,
+//         actualDateTime: details.entryDateTime || record.created_At,
+//         paymentType: dispute.payment_Type,
+//         inspectorNameEn: details.reviewerName || dispute.approvedBy || record.approvedBy,
+//         inspectorNameAr: details.reviewerName || dispute.approvedBy || record.approvedBy,
+//         plateNumber: vehicle?.plateNumber || details.plateNumber,
+//         plateCodeValue: vehicle?.plateColor || details.plateCodeValue,
+//         plateSourceValue: vehicle?.plateSource || details.plateSourceValue,
+//         plateCategoryValue: vehicle?.plateType || details.plateCategoryValue || details.plateType,
+//         vehicleColor: vehicle?.vehicleColor || details.vehicleColor,
+//         vehicleType: vehicle?.vehicleType || details.vehicleType,
+//         vehicleBrand: vehicle?.vehicleBrand || details.vehicleBrand,
+//         manufacturerYear: vehicle?.manufacturerYear || details.manufacturerYear,
+//         vehicleOwnerName: vehicle?.ownerName || details.vehicleOwnerName,
+//         vehicleOwnerEmail: vehicle?.ownerEmail || details.vehicleOwnerEmail,
+//         vehicleOwnerMobile: vehicle?.ownerMobile || details.vehicleOwnerMobile,
+//         latitude: Number.isFinite(parseFloat(dispute?.lat))
+//           ? parseFloat(dispute.lat)
+//           : Number.isFinite(parseFloat(record?.lat))
+//             ? parseFloat(record.lat)
+//             : undefined,
+//         longitude: Number.isFinite(parseFloat(dispute?.lng))
+//           ? parseFloat(dispute.lng)
+//           : Number.isFinite(parseFloat(record?.lng))
+//             ? parseFloat(record.lng)
+//             : undefined,
+//       };
+
+//       if (isParkonicFine) {
+//         const parkonicEntityId = mappedFine.EntityGUID || mappedFine.inspectionGUID;
+//         let fullParkonicData: any = null;
+
+//         if (parkonicEntityId) {
+//           try {
+//             const parkonicRes = await triggerGetParkonicById(parkonicEntityId).unwrap();
+//             fullParkonicData = parkonicRes?.data || parkonicRes;
+//           } catch {
+//             // Fallback to dispute payload mapping when direct parkonic fetch fails
+//           }
+//         }
+
+//         setSelectedParkonicFine({
+//           ...(fullParkonicData || {}),
+//           ...mappedFine,
+//           fineId: mappedFine.entityNo || mappedFine.fineId || record.fineId,
+//           transcationId:
+//             fullParkonicData?.transactionId ||
+//             fullParkonicData?.transcationId ||
+//             details.transactionId ||
+//             details.transcationId ||
+//             dispute.transactionId ||
+//             dispute.transcationId ||
+//             record.transactionId ||
+//             record.transcationId,
+//           reviewerName: details.reviewerName || dispute.approvedBy || record.approvedBy,
+//           entryDateTime:
+//             fullParkonicData?.entryDateTime ||
+//             details.entryDateTime ||
+//             details.startDateTime ||
+//             record.vehicleEntryDateTime,
+//           exitDateTime:
+//             fullParkonicData?.exitDateTime || details.exitDateTime || details.endDateTime || record.vehicleExitDateTime,
+//           plateNumber: fullParkonicData?.plateNumber || vehicle?.plateNumber || details.plateNumber,
+//           plateSource:
+//             fullParkonicData?.plateSource || vehicle?.plateSource || details.plateSource || details.plateSourceValue,
+//           plateCategory:
+//             fullParkonicData?.plateCategory ||
+//             vehicle?.plateType ||
+//             details.plateCategory ||
+//             details.plateCategoryValue,
+//           plateCode: fullParkonicData?.plateCode || vehicle?.plateColor || details.plateCode || details.plateCodeValue,
+//           vehicleColor: fullParkonicData?.vehicleColor || vehicle?.vehicleColor || details.vehicleColor,
+//           vehicleType: fullParkonicData?.vehicleType || vehicle?.vehicleType || details.vehicleType,
+//           vehicleBrand: fullParkonicData?.vehicleBrand || vehicle?.vehicleBrand || details.vehicleBrand,
+//           manufacturerYear: fullParkonicData?.manufacturerYear || vehicle?.manufacturerYear || details.manufacturerYear,
+//           vehicleOwnerName: fullParkonicData?.vehicleOwnerName || vehicle?.ownerName || details.vehicleOwnerName,
+//           reviewStatus:
+//             fullParkonicData?.reviewStatus === 0 ||
+//             fullParkonicData?.reviewStatus === 1 ||
+//             fullParkonicData?.reviewStatus === 2
+//               ? fullParkonicData.reviewStatus
+//               : mappedFine.reviewStatus,
+//           notes: details.notes || dispute.comments || record.comments,
+//         });
+//         setIsParkonicFineDrawerOpen(true);
+//         setIsFineDrawerOpen(false);
+//         return;
+//       }
+
+//       let fullFineRecord: any = null;
+//       const fineNumber = details.fineNo || record.fineId;
+
+//       if (fineNumber) {
+//         try {
+//           const [tradeResResult, finesResResult] = await Promise.allSettled([
+//             triggerSearchTrade({
+//               PageNumber: 1,
+//               PageSize: 1,
+//               orFilters: { entityNo: fineNumber },
+//             }).unwrap(),
+//             triggerSearchFines({
+//               PageNumber: 1,
+//               PageSize: 1,
+//               orFilters: { entityNo: fineNumber },
+//             }).unwrap(),
+//           ]);
+
+//           const tradeData =
+//             tradeResResult.status === "fulfilled" && Array.isArray(tradeResResult.value?.data)
+//               ? tradeResResult.value.data
+//               : [];
+//           const finesData =
+//             finesResResult.status === "fulfilled" && Array.isArray(finesResResult.value?.data)
+//               ? finesResResult.value.data
+//               : [];
+
+//           // Prefer trade-inspection payload so trade license details render like parking submenu drawer
+//           fullFineRecord = tradeData[0] || finesData[0] || null;
+//         } catch {
+//           // Keep mappedFine fallback when search endpoint is unavailable
+//         }
+//       }
+
+//       const mergedFine = {
+//         ...(fullFineRecord || {}),
+//         ...mappedFine,
+//         inspectionGUID: fullFineRecord?.inspectionGUID || mappedFine.inspectionGUID,
+//         entityCode: fullFineRecord?.entityCode || mappedFine.entityCode,
+//         entityNo: fullFineRecord?.entityNo || mappedFine.entityNo,
+//         fineAmount: fullFineRecord?.fineAmount ?? mappedFine.fineAmount,
+//         inspectionType: fullFineRecord?.inspectionType ?? mappedFine.inspectionType,
+//         inspectionCategory: fullFineRecord?.inspectionCategory ?? mappedFine.inspectionCategory,
+//         inspectionStatus: fullFineRecord?.inspectionStatus ?? mappedFine.inspectionStatus,
+//         inspectorNameEn: fullFineRecord?.inspectorNameEn || mappedFine.inspectorNameEn,
+//         inspectorNameAr: fullFineRecord?.inspectorNameAr || mappedFine.inspectorNameAr,
+//         manufacturerYear: fullFineRecord?.manufacturerYear || mappedFine.manufacturerYear,
+//         vehicleOwnerEmail: fullFineRecord?.vehicleOwnerEmail || mappedFine.vehicleOwnerEmail,
+//       };
+
+//       setSelectedFine(mergedFine);
+//       setHideFineLocation(false);
+//       setIsFineDrawerOpen(true);
+//       setIsParkonicFineDrawerOpen(false);
+//     } catch (error) {
+//       notification.error({ data: { en_Msg: "Failed to load fine details" } }, "Load Failed");
+//     }
+//   };
+
+//   const handleDownloadCsv = () => {
+//     if (selectedRowKeys.length === 0) {
+//       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
+//       return;
+//     }
+
+//     modal.confirm({
+//       title: t("messages.csvConfirmTitle"),
+//       content: t("messages.csvConfirmContent"),
+//       okText: t("common.ok"),
+//       cancelText: t("common.cancel"),
+//       onOk: () => {
+//         try {
+//           if (selectedRows.length === 0) {
+//             notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
+//             return;
+//           }
+
+//           const csvData = selectedRows.map((item: any, index: number) => ({
+//             [t("form.Sl.No")]: index + 1,
+//             [t("form.fineNumber")]: item.fine_Number || item.fineId || "-",
+//             [t("form.disputenumber")]: item.dispute_Id || "-",
+//             [t("form.name")]: item.name || "-",
+//             [t("form.department")]: getLabelFromValue(
+//               item.department,
+//               filterOptionsByCategory(lookupOptions, 1000),
+//               i18n,
+//             ),
+//             [t("form.paymentType")]: getLabelFromValue(
+//               item.payment_Type,
+//               filterOptionsByCategory(lookupOptions, 1100),
+//               i18n,
+//             ),
+
+//             [t("form.status")]: disputeStatusEnum.find((s) => s.value === item.dispute_Status)
+//               ? i18n.language === "ar"
+//                 ? disputeStatusEnum.find((s) => s.value === item.dispute_Status)?.labelAr
+//                 : disputeStatusEnum.find((s) => s.value === item.dispute_Status)?.labelEn
+//               : "-",
+//             [t("form.actualDisputeDate")]: item.actualDisputeDate
+//               ? dayjs(item.actualDisputeDate).format("DD MMM YYYY")
+//               : "-",
+//             [t("form.crmReference")]: item.crm_Ref || "-",
+//             [t("form.email")]: item.email || "-",
+//             [t("form.phoneNumber")]: item.phone || "-",
+//             [t("form.address")]: item.address || "-",
+//           }));
+
+//           const filename =
+//             i18n.language === "ar"
+//               ? `النزاعات${showPendingDisputes ? "_المعلقة" : ""}.csv`
+//               : `Disputes${showPendingDisputes ? "_Pending" : ""}.csv`;
+
+//           exportToCsv(csvData, filename);
+
+//           notification.success(
+//             { data: { en_Msg: t("messages.csvDownloaded", { count: selectedRows.length }) } },
+//             t("messages.exportSuccess"),
+//           );
+
+//           setSelectedRowKeys([]);
+//           setSelectedRows([]);
+//         } catch (error) {
+//           notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
+//         }
+//       },
+//     });
+//   };
+
+//   const columnLabels = useMemo(
+//     () =>
+//       Object.fromEntries(
+//         config.formConfig.fields
+//           .map((f) => [f.name, t(f.label)])
+//           .concat(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
+//       ),
+//     [t, config, i18n.language],
+//   );
+
+//   const enhancedTableConfig = useMemo(
+//     () => ({
+//       ...config.tableConfig,
+//       columns: config.tableConfig.columns.map((column) => {
+//         if (column.key === "fineId") {
+//           return {
+//             ...column,
+//             render: (_: any, record: any) => {
+//               return (
+//                 <Typography.Text
+//                   style={{ cursor: "pointer", textDecoration: "underline" }}
+//                   onClick={() => handleOpenFineView(record)}
+//                   data-dispute-code={record.disputeCode}
+//                 >
+//                   {record?.fineId || "—"}
+//                 </Typography.Text>
+//               );
+//             },
+//           };
+//         }
+//         if (column.key === "dispute_Status") {
+//           return {
+//             ...column,
+//             filterable: true,
+//             render: (value: number) => {
+//               const label =
+//                 i18n.language === "ar"
+//                   ? disputeStatusEnum.find((s) => s.value === value)?.labelAr
+//                   : disputeStatusEnum.find((s) => s.value === value)?.labelEn;
+
+//               switch (value) {
+//                 case 1:
+//                   return <Tag color="orange">{label}</Tag>;
+//                 case 2:
+//                   return <Tag color="green">{label}</Tag>;
+//                 case 3:
+//                   return <Tag color="red">{label}</Tag>;
+//                 case 4:
+//                   return <Tag color="blue">{label}</Tag>;
+//                 default:
+//                   return <Tag>{label || "-"}</Tag>;
+//               }
+//             },
+//             filters: disputeStatusEnum.map((status) => ({
+//               text: i18n.language === "ar" ? status.labelAr : status.labelEn,
+//               value: status.value,
+//             })),
+//             onFilter: (value: any, record: any) => record.dispute_Status === value,
+//           };
+//         }
+
+//         if (column.key === "dispute_Reason" || column.key === "dispute_SubReason") {
+//           return {
+//             ...column,
+//             render: (value: any) => {
+//               const reason = getDisputeReasonByCode(value);
+//               if (reason) {
+//                 return i18n.language === "ar" ? reason.arabicText : reason.englishText;
+//               }
+//               return value;
+//             },
+//           };
+//         }
+
+//         if (column.key === "vehicleExitDateTime") {
+//           return {
+//             ...column,
+//             render: (_: any, record: any) => {
+//               const details = hoverDetails[record.disputeCode]?.fineDetails;
+//               const value = details?.exitDateTime || record?.vehicleExitDateTime || record?.exitDateTime;
+//               return value ? formatDateTimeDisplay(value, i18n.language) : t("common.noData");
+//             },
+//           };
+//         }
+
+//         if (column.key === "approvedBy") {
+//           return {
+//             ...column,
+//             render: (_: any, record: any) => {
+//               const details = hoverDetails[record.disputeCode]?.fineDetails;
+//               return details?.reviewerName || record?.approvedBy || record?.reviewerName || t("common.noData");
+//             },
+//           };
+//         }
+
+//         const categoryId = columnToCategoryMap[column.key];
+//         if (categoryId) {
+//           const options = filterOptionsByCategory(lookupOptions, categoryId);
+//           return {
+//             ...column,
+//             render: (value: any) => getLabelFromValue(value, options, i18n),
+//           };
+//         }
+//         return column;
+//       }),
+//     }),
+//     [
+//       config.tableConfig,
+//       lookupOptions,
+//       i18n,
+//       disputeStatusEnum,
+//       getDisputeReasonByCode,
+//       hoverDetails,
+//       loadingHoverId,
+//       t,
+//       handleFineHover,
+//     ],
+//   );
+
+//   const actionMenuItems = (record: any) => {
+//     return [
+//       {
+//         key: "view",
+//         label: t("common.view"),
+//         icon: <EyeOutlined />,
+//         onClick: () => handleView(record),
+//       },
+//     ];
+//   };
+
+//   const handleSearchKeyChange = (newKey: string) => {
+//     const currentValue = searchValue;
+//     setTimeout(() => {
+//       setSearchValue("");
+//     }, 0);
+//     if (currentValue.trim()) {
+//       setGlobalSearch(state.searchKey, currentValue);
+//     }
+//     setGlobalSearch(newKey, "");
+//   };
+
+//   const searchAddon = (
+//     <Select value={state.searchKey} onChange={handleSearchKeyChange} style={{ width: 150 }}>
+//       {config.searchConfig?.globalSearchKeys.map((key) => (
+//         <Option key={key} value={key}>
+//           {columnLabels[key]}
+//         </Option>
+//       ))}
+//     </Select>
+//   );
+
+//   const statusLabels: Record<number, string> = Object.fromEntries(
+//     disputeStatusEnum.map((status) => [status.value, i18n.language === "ar" ? status.labelAr : status.labelEn]),
+//   );
+
+//   useEffect(() => {
+//     const loadStatsMetadata = async () => {
+//       try {
+//         const response = await refetch().unwrap();
+
+//         setStatsMetadata({
+//           totalCount: response.totalCount,
+//           pending: response.pending,
+//           approved: response.approved,
+//           rejected: response.rejected,
+//           inReview: response.inReview,
+//         });
+//       } catch {
+//         setStatsMetadata({});
+//       }
+//     };
+
+//     loadStatsMetadata();
+//   }, [refetch]);
+
+//   return (
+//     <>
+//       <Space direction="vertical" size="large" style={{ width: "100%" }}>
+//         <StatsDisplay
+//           statsConfig={config.statsConfig}
+//           data={filteredData}
+//           metadata={statsMetadata}
+//           loading={isLoading}
+//         />
+//         <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
+//           <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
+//             <Col>
+//               <Space>
+//                 <Input
+//                   ref={searchInputRef}
+//                   addonBefore={searchAddon}
+//                   placeholder={t("common.searchPlaceholder")}
+//                   value={searchValue}
+//                   onChange={(e) => setSearchValue(e.target.value)}
+//                   style={{ width: 450 }}
+//                   allowClear
+//                 />
+//                 <span>{t("common.filterBycreatedDate")}</span>
+
+//                 <DatePicker.RangePicker
+//                   value={state.dateRange}
+//                   format={"DD MMM YYYY"}
+//                   placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
+//                   onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
+//                 />
+//               </Space>
+//             </Col>
+//             <Col>
+//               <Space>
+//                 <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
+//                   {t("common.downloadCsv")}
+//                 </Button>
+
+//                 {/* <Button
+//                   type="primary"
+//                   icon={<PlusOutlined />}
+//                   onClick={() => handleModalOpen("add")}
+//                   disabled={!canCreate(menuName)}
+//                 >
+//                   {t("common.addNew")}
+//                 </Button> */}
+//               </Space>
+//             </Col>
+//           </Row>
+//           <ActiveFiltersDisplay
+//             state={state}
+//             onClearFilter={handleClearFilter}
+//             onClearAll={handleClearAll}
+//             columnLabels={columnLabels}
+//             lookupOptions={lookupOptions}
+//             getLabelFromValue={getLabelFromValue}
+//             statusLabels={statusLabels}
+//             showPendingDisputes={showPendingDisputes}
+//             onClearPendingDisputes={() => {
+//               setShowPendingDisputes(false);
+//             }}
+//           />
+//         </Card>
+
+//         <DataTableWrapper
+//           pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
+//           data={filteredData}
+//           total={totalCount}
+//           isLoading={isLoading || isFetching || rowDetailsLoading}
+//           apiParams={apiParams}
+//           handleTableChange={handleTableChange}
+//           handlePaginationChange={handlePaginationChange}
+//           rowSelection={{
+//             selectedRowKeys,
+//             onChange: (keys: React.Key[], selectedRows: any[]) => {
+//               setSelectedRowKeys(keys);
+//               setSelectedRows((prev) => {
+//                 const remaining = prev.filter((p) => keys.includes(p.id));
+//                 const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+//                 return [...remaining, ...newSelected];
+//               });
+//             },
+//           }}
+//           actionMenuItems={actionMenuItems}
+//           tableSize={tableSize}
+//           rowKey={config.tableConfig.rowKey}
+//           state={state}
+//           lookupOptions={lookupOptions}
+//           getLabelFromValue={getLabelFromValue}
+//           filterOptions={{
+//             dispute_Status: disputeStatusEnum.map((status) => ({
+//               text: i18n.language === "ar" ? status.labelAr : status.labelEn,
+//               value: status.value,
+//             })),
+//           }}
+//           rowClassName={getRowClassName}
+//         />
+
+//         <Modal
+//           open={isModalOpen}
+//           title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
+//           onCancel={handleModalClose}
+//           width="720px"
+//           style={{ top: 20 }}
+//           footer={[
+//             <Button key="reset" onClick={() => form.resetFields()}>
+//               {t("common.reset")}
+//             </Button>,
+//             <Button key="back" onClick={handleModalClose}>
+//               {t("common.cancel")}
+//             </Button>,
+//             <Button
+//               key="submit"
+//               type="primary"
+//               loading={isAdding || isUpdating || isLoadingLookups || isUploading}
+//               onClick={() => form.submit()}
+//             >
+//               {t(modalMode === "add" ? "common.submit" : "common.update")}
+//             </Button>,
+//           ]}
+//         >
+//           <Spin spinning={isLoadingLookups}>
+//             <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
+//               <Row gutter={24}>
+//                 <Col span={12}>
+//                   <Form.Item
+//                     name="FineId"
+//                     label={t("form.fineNumber")}
+//                     rules={[{ required: true, message: t("validation.required", { field: t("form.fineNumber") }) }]}
+//                     validateFirst
+//                   >
+//                     <Input placeholder={t("placeholders.fineNumber")} maxLength={50} />
+//                   </Form.Item>
+//                 </Col>
+//                 <Col span={12}>
+//                   <Form.Item
+//                     name="Name"
+//                     label={t("form.name")}
+//                     rules={[{ required: true, message: t("validation.required", { field: t("form.name") }) }]}
+//                   >
+//                     <Input placeholder={t("placeholders.name")} />
+//                   </Form.Item>
+//                 </Col>
+
+//                 <Col span={12}>
+//                   <Form.Item
+//                     name="Department"
+//                     label={t("form.department")}
+//                     rules={[
+//                       { required: true, message: t("validation.selectRequired", { field: t("form.department") }) },
+//                     ]}
+//                   >
+//                     <Select
+//                       placeholder={t("placeholders.department")}
+//                       loading={isLoadingLookups}
+//                       showSearch
+//                       optionFilterProp="label"
+//                       filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
+//                       options={departmentOptions}
+//                     />
+//                   </Form.Item>
+//                 </Col>
+
+//                 <Col span={12}>
+//                   <Form.Item
+//                     name="DisputeMainReason"
+//                     label={t("form.disputereason")}
+//                     rules={[
+//                       { required: true, message: t("validation.selectRequired", { field: t("form.disputereason") }) },
+//                     ]}
+//                   >
+//                     <Select
+//                       placeholder={t("placeholders.reason")}
+//                       loading={isLoadingLookups}
+//                       showSearch
+//                       optionFilterProp="label"
+//                       onChange={handleDisputeReasonChange}
+//                       filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
+//                       options={disputeReasonOptions}
+//                     />
+//                   </Form.Item>
+//                 </Col>
+
+//                 <Col span={12}>
+//                   <Form.Item
+//                     name="DisputeSubReason"
+//                     label={t("form.disputesubreason")}
+//                     rules={[
+//                       {
+//                         required: true,
+//                         message: t("validation.selectRequired", { field: t("form.disputesubreason") }),
+//                       },
+//                     ]}
+//                   >
+//                     <Select
+//                       placeholder={t("placeholders.subreason")}
+//                       loading={isLoadingLookups}
+//                       showSearch
+//                       optionFilterProp="label"
+//                       disabled={disputeSubReasonOptions.length === 0}
+//                       filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
+//                       options={disputeSubReasonOptions}
+//                     />
+//                   </Form.Item>
+//                 </Col>
+
+//                 <Col span={12}>
+//                   <Form.Item
+//                     name="Payment_Type"
+//                     label={t("form.paymentType")}
+//                     rules={[
+//                       { required: true, message: t("validation.selectRequired", { field: t("form.paymentType") }) },
+//                     ]}
+//                   >
+//                     <Select
+//                       placeholder={t("placeholders.paymentType")}
+//                       loading={isLoadingLookups}
+//                       showSearch
+//                       optionFilterProp="label"
+//                       filterOption={(input, option) => option?.label.toLowerCase().includes(input.toLowerCase())}
+//                       options={paymentTypeOptions}
+//                     />
+//                   </Form.Item>
+//                 </Col>
+
+//                 <Col span={12}>
+//                   <Form.Item
+//                     name="crm_Ref"
+//                     label={t("form.crmReference")}
+//                     rules={[{ required: true, message: t("validation.required", { field: t("form.crmReference") }) }]}
+//                   >
+//                     <Input placeholder={t("placeholders.crmReference")} maxLength={20} />
+//                   </Form.Item>
+//                 </Col>
+
+//                 <Col span={12}>
+//                   <Form.Item
+//                     name="Email"
+//                     label={t("form.email")}
+//                     rules={[
+//                       {
+//                         required: true,
+//                         message: t("validation.required", { field: t("form.email") }),
+//                       },
+//                       {
+//                         type: "email",
+//                         message: t("validation.invalidEmail"),
+//                       },
+//                     ]}
+//                   >
+//                     <Input placeholder={t("placeholders.email")} />
+//                   </Form.Item>
+//                 </Col>
+
+//                 <Col span={12}>
+//                   <Form.Item
+//                     name="Phone"
+//                     label={t("form.phoneNumber")}
+//                     rules={[
+//                       {
+//                         required: true,
+//                         message: t("validation.required", { field: t("form.phoneNumber") }),
+//                       },
+//                       {
+//                         pattern: /^[0-9]+$/,
+//                         message: t("validation.onlyNumbers"),
+//                       },
+//                     ]}
+//                   >
+//                     <Input placeholder={t("placeholders.phoneNumber")} maxLength={10} />
+//                   </Form.Item>
+//                 </Col>
+
+//                 <Col span={12}>
+//                   <Form.Item
+//                     name="ActualDisputeDate"
+//                     label={t("form.actualDisputeDate")}
+//                     rules={[
+//                       {
+//                         required: true,
+//                         message: t("validation.selectRequired", { field: t("form.actualDisputeDate") }),
+//                       },
+//                     ]}
+//                   >
+//                     <DatePicker
+//                       style={{ width: "100%" }}
+//                       format="DD MMM YYYY"
+//                       disabledDate={(current) => current && current > dayjs().endOf("day")}
+//                     />
+//                   </Form.Item>
+//                 </Col>
+
+//                 <Col span={12}>
+//                   <Form.Item
+//                     name="Address"
+//                     label={t("form.address")}
+//                     rules={[{ required: true, message: t("validation.required", { field: t("form.address") }) }]}
+//                   >
+//                     <Input.TextArea placeholder={t("placeholders.address")} rows={2} maxLength={200} />
+//                   </Form.Item>
+//                 </Col>
+
+//                 <Col span={12}>
+//                   <Form.Item
+//                     name="Comments"
+//                     label={t("form.comments")}
+//                     rules={[{ required: true, message: t("validation.required", { field: t("form.comments") }) }]}
+//                   >
+//                     <Input.TextArea placeholder={t("placeholders.comments")} rows={2} maxLength={500} />
+//                   </Form.Item>
+//                 </Col>
+
+//                 <Col span={24}>
+//                   <Form.Item
+//                     name="Attachment"
+//                     label={t("form.evidence")}
+//                     rules={[{ required: true, message: t("validation.uploadRequired", { field: t("form.evidence") }) }]}
+//                     valuePropName="fileList"
+//                     getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+//                   >
+//                     <Upload
+//                       listType="picture-card"
+//                       beforeUpload={() => false}
+//                       multiple={true}
+//                       accept=".jpg,.jpeg,image/jpeg"
+//                       onPreview={async (file) => {
+//                         let src = file.url;
+//                         if (!src && file.originFileObj) {
+//                           src = await getBase64(file.originFileObj);
+//                         }
+//                         setPreviewImage(src || "");
+//                         setPreviewOpen(true);
+//                       }}
+//                     >
+//                       <div>
+//                         <PlusOutlined />
+//                         <div style={{ marginTop: 8 }}>{t("form.upload")}</div>
+//                       </div>
+//                     </Upload>
+//                   </Form.Item>
+
+//                   {previewImage && (
+//                     <Image
+//                       style={{ display: "none" }}
+//                       preview={{
+//                         visible: previewOpen,
+//                         src: previewImage,
+//                         onVisibleChange: (visible) => setPreviewOpen(visible),
+//                         afterClose: () => setPreviewImage(""),
+//                       }}
+//                       src={previewImage}
+//                     />
+//                   )}
+//                 </Col>
+//               </Row>
+//             </Form>
+//           </Spin>
+//         </Modal>
+
+//         {viewRecord && (
+//           <DisputeViewModal
+//             open={isDrawerOpen}
+//             onClose={() => {
+//               setIsDrawerOpen(false);
+//               setViewRecord(null);
+//             }}
+//             disputeId={viewRecord.disputeCode}
+//             record={viewRecord}
+//             onStatusUpdate={refetch}
+//           />
+//         )}
+
+//         <FinesViewDrawer
+//           open={isFineDrawerOpen}
+//           onClose={() => {
+//             setIsFineDrawerOpen(false);
+//             setSelectedFine(null);
+//             setHideFineLocation(false);
+//           }}
+//           fine={selectedFine}
+//           readOnly={true}
+//           hideLocation={hideFineLocation}
+//         />
+
+//         <ParkonicViewDrawer
+//           open={isParkonicFineDrawerOpen}
+//           onClose={() => {
+//             setIsParkonicFineDrawerOpen(false);
+//             setSelectedParkonicFine(null);
+//           }}
+//           record={selectedParkonicFine}
+//         />
+//       </Space>
+//     </>
+//   );
+// };
+
+// export default DisputeManagementPage;
+
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -20,7 +1598,7 @@ import {
   Image,
   Typography,
 } from "antd";
-import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined, UserOutlined } from "@ant-design/icons";
+import { PlusOutlined, EyeOutlined, DownloadOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -35,6 +1613,7 @@ import {
   useLazyGetParkonicByIdQuery,
   useLazySearchFinesQuery,
   useLazySearchTradeQuery,
+  useGetVehicleDisputesQuery,
 } from "../services/rtkApiFactory";
 import { getFileUrl, useUploadFilesMutation } from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
@@ -155,7 +1734,7 @@ const DisputeManagementPage: React.FC = () => {
   const userRoleGUID = getUserRoleGUID();
 
   // Fetch all disputes (no backend filtering for pending disputes)
-  const { data, currentData, isLoading, isFetching, refetch } = useGetDisputesQuery(apiParams, {
+  const { data, currentData, isLoading, isFetching, refetch } = useGetVehicleDisputesQuery(apiParams, {
     refetchOnMountOrArgChange: true,
   });
 
@@ -714,7 +2293,7 @@ const DisputeManagementPage: React.FC = () => {
       if (values.Attachment && values.Attachment.length > 0) {
         values.Attachment.forEach((file: any) => {
           if (file.originFileObj) {
-            formData.append("Attachment", file.originFileObj);
+            formData.append("Attachement", file.originFileObj);
           }
         });
       }
@@ -768,7 +2347,8 @@ const DisputeManagementPage: React.FC = () => {
 
       const mappedFine = {
         ...details,
-        inspectionGUID: details.inspectionId || details.inspectionGUID || dispute.inspectionGUID || dispute.inspectionId,
+        inspectionGUID:
+          details.inspectionId || details.inspectionGUID || dispute.inspectionGUID || dispute.inspectionId,
         entityCode: resolvedEntityCode,
         EntityGUID: details.inspectionId || details.inspectionGUID || dispute.inspectionGUID || dispute.inspectionId,
         EntityCode: resolvedEntityCode,
@@ -840,13 +2420,20 @@ const DisputeManagementPage: React.FC = () => {
             record.transcationId,
           reviewerName: details.reviewerName || dispute.approvedBy || record.approvedBy,
           entryDateTime:
-            fullParkonicData?.entryDateTime || details.entryDateTime || details.startDateTime || record.vehicleEntryDateTime,
+            fullParkonicData?.entryDateTime ||
+            details.entryDateTime ||
+            details.startDateTime ||
+            record.vehicleEntryDateTime,
           exitDateTime:
             fullParkonicData?.exitDateTime || details.exitDateTime || details.endDateTime || record.vehicleExitDateTime,
           plateNumber: fullParkonicData?.plateNumber || vehicle?.plateNumber || details.plateNumber,
-          plateSource: fullParkonicData?.plateSource || vehicle?.plateSource || details.plateSource || details.plateSourceValue,
+          plateSource:
+            fullParkonicData?.plateSource || vehicle?.plateSource || details.plateSource || details.plateSourceValue,
           plateCategory:
-            fullParkonicData?.plateCategory || vehicle?.plateType || details.plateCategory || details.plateCategoryValue,
+            fullParkonicData?.plateCategory ||
+            vehicle?.plateType ||
+            details.plateCategory ||
+            details.plateCategoryValue,
           plateCode: fullParkonicData?.plateCode || vehicle?.plateColor || details.plateCode || details.plateCodeValue,
           vehicleColor: fullParkonicData?.vehicleColor || vehicle?.vehicleColor || details.vehicleColor,
           vehicleType: fullParkonicData?.vehicleType || vehicle?.vehicleType || details.vehicleType,
@@ -1074,7 +2661,8 @@ const DisputeManagementPage: React.FC = () => {
             render: (_: any, record: any) => {
               const details = hoverDetails[record.disputeCode]?.fineDetails;
               const value = details?.exitDateTime || record?.vehicleExitDateTime || record?.exitDateTime;
-              return value ? formatDateTimeDisplay(value, i18n.language) : t("common.noData");
+
+              return value ? formatDateTimeDisplay(value, i18n.language) : "";
             },
           };
         }
@@ -1084,11 +2672,12 @@ const DisputeManagementPage: React.FC = () => {
             ...column,
             render: (_: any, record: any) => {
               const details = hoverDetails[record.disputeCode]?.fineDetails;
-              return details?.reviewerName || record?.approvedBy || record?.reviewerName || t("common.noData");
+              const value = details?.reviewerName || record?.approvedBy || record?.reviewerName;
+
+              return value || "";
             },
           };
         }
-
         const categoryId = columnToCategoryMap[column.key];
         if (categoryId) {
           const options = filterOptionsByCategory(lookupOptions, categoryId);

@@ -19,6 +19,7 @@ export const PATHS = {
 
   PARKONIC: "parkonic",
   DISPUTE: "dispute",
+  PARKING_DISPUTE: "parking-dispute",
   GENERAL: "general",
 
   INSPECTOR_MANAGEMENT: "inspector-management",
@@ -69,6 +70,7 @@ export const FULL_PATHS = {
   PARKONIC: "/parkonic",
   FINES: "/fines",
   DISPUTE: "/dispute",
+  PARKING_DISPUTE: "/parking-dispute",
   FINES_INSPECTIONS: "/fines-inspections",
   TRADE_LICENSE_INSPECTIONS: "/trade-license-inspections", // ✅ renamed
 
