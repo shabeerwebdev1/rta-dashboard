@@ -3,6 +3,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { serializeParams } from "../hooks/useTableParams";
 import { RTA_API_TARGET, EXTERNAL_FILES_URL } from "../config/envConfig";
+import { getCurrentLang } from "../utils/getCurrentLang";
 
 // const RTA_API_TARGET = "https://devparkingapi.kandaprojects.live";
 
@@ -81,6 +82,7 @@ export const dynamicApi = createApi({
     "Files",
     "InboxSummary",
     "InboxSummaryMenu",
+    "Inbox",
   ],
 
   endpoints: (builder) => ({
@@ -701,9 +703,10 @@ export const dynamicApi = createApi({
           url: "/api/work-item/count",
           method: "GET",
           param: "",
+          lag: getCurrentLang(),
         },
       }),
-      providesTags: ["InboxSummary"], // 🔥 ADD THIS
+      providesTags: ["InboxSummary", "Inbox"], // 🔥 ADD THIS
     }),
 
     getInboxList: builder.query<any, { PageNumber: number; PageSize: number; notificationCode?: string }>({
@@ -713,6 +716,8 @@ export const dynamicApi = createApi({
         body: {
           url: "/api/work-item/list?notificationCode=" + (notificationCode || ""),
           method: "GET",
+          lag: getCurrentLang(),
+
           param: {
             PageNumber,
             PageSize,
@@ -730,30 +735,36 @@ export const dynamicApi = createApi({
           TotalRecords: result?.TotalRecords || 0,
         };
       },
-      providesTags: ["InboxSummary"], // 🔥 ADD THIS
+      providesTags: ["InboxSummary", "Inbox"], // 🔥 ADD THIS
     }),
 
     getInboxSummaryMenu: builder.query<any[], void>({
       query: () => ({
         url: "/api/CallIntegration/inboxNotifications",
         method: "POST",
+
         body: {
           url: "/api/work-item/summary",
           method: "GET",
+          lag: getCurrentLang(),
+
           param: "",
         },
       }),
       transformResponse: (response: any) => response?.data || [],
-      providesTags: ["InboxSummaryMenu"], // 🔥 ADD THIS
+      providesTags: ["InboxSummaryMenu", "Inbox"], // 🔥 ADD THIS
     }),
 
     getReviewOptions: builder.query<any, string>({
       query: (rcwiuri) => ({
         url: "/api/CallIntegration/inboxNotifications",
         method: "POST",
+
         body: {
           url: `/api/work-item/review-options?rcwiuri=${rcwiuri}`,
           method: "GET",
+          lag: getCurrentLang(),
+
           param: "", // ✅ Changed from {} to ""
         },
       }),
@@ -761,15 +772,19 @@ export const dynamicApi = createApi({
       transformResponse: (response: any) => {
         return response?.data || null;
       },
+      providesTags: ["Inbox"], // 🔥 ADD THIS
     }),
 
     getReviewHistory: builder.query<any[], { entityCode: string; entityId: string }>({
       query: ({ entityCode, entityId }) => ({
         url: "/api/CallIntegration/inboxNotifications",
         method: "POST",
+
         body: {
           url: `/api/work-item/review-history/${entityCode}?id=${entityId}`,
           method: "GET",
+          lag: getCurrentLang(),
+
           param: "", // empty string - same pattern as review-options
         },
       }),
@@ -779,15 +794,19 @@ export const dynamicApi = createApi({
         // Adjust this if your actual response structure is different
         return response?.data || [];
       },
+      providesTags: ["Inbox"], // 🔥 ADD THIS
     }),
 
     getEntityHistory: builder.query<any[], { entityCode: string; entityId: string }>({
       query: ({ entityCode, entityId }) => ({
         url: "/api/CallIntegration/inboxNotifications",
         method: "POST",
+
         body: {
           url: `/api/entity/${entityCode}/history?id=${entityId}`,
           method: "GET",
+          lag: getCurrentLang(),
+
           param: "", // keep same pattern
         },
       }),
@@ -795,6 +814,7 @@ export const dynamicApi = createApi({
       transformResponse: (response: any) => {
         return response?.data || [];
       },
+      providesTags: ["Inbox"], // 🔥 ADD THIS
     }),
   }),
 });
