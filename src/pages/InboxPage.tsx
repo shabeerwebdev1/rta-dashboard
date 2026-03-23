@@ -135,7 +135,7 @@ const InboxPage = () => {
             {
               key: "view",
               icon: <EyeOutlined />,
-              label: t("common.edit"),
+              label: t("common.open"),
               onClick: () => openEntity(row.EntityCode, row),
             },
           ],
