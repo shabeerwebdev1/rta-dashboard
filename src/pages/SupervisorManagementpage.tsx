@@ -1,6 +1,6 @@
 // SupervisorManagement.tsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Space, Select, Checkbox, Button, Spin, Pagination, Input, Tooltip } from "antd";
+import { Space, Select, Checkbox, Button, Spin, Pagination, Input, Tooltip, Radio } from "antd";
 import { SearchOutlined, SyncOutlined } from "@ant-design/icons";
 import { SupervisorManagemnetConfig } from "../config/pageConfigs/SupervisorManagementConfig";
 import { useTranslation } from "react-i18next";
@@ -26,7 +26,7 @@ interface SupervisorData {
   shift?: string;
   weekOffs?: number[];
   assignmentType?: number[];
-  specialZones?: string[];
+  specialZone?: string | null;
   addOnMeta?: Record<string, unknown>;
   role: string;
   employeeId: string;
@@ -82,6 +82,7 @@ interface ActiveShiftData {
   isActive: boolean;
   assignmentTypes: number[];
   zoneIds: number[];
+  specialZone?: boolean | null;
   addOn: string;
 }
 
@@ -141,6 +142,23 @@ function SupervisorManagement() {
     return [String(value)];
   };
 
+  const normalizeSearchValue = (value: unknown): string =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  const specialZoneFlagToSelection = (specialZone?: boolean | null): string | null => {
+    if (specialZone === true) return "G9";
+    if (specialZone === false) return "GX";
+    return null;
+  };
+
+  const specialZoneSelectionToFlag = (specialZone?: string | null): boolean | null => {
+    if (specialZone === "G9") return true;
+    if (specialZone === "GX") return false;
+    return null;
+  };
+
   useEffect(() => {
     if (activeShiftsResponse) {
       const activeShiftsData = Array.isArray(activeShiftsResponse)
@@ -157,6 +175,8 @@ function SupervisorManagement() {
             addOnData.areaIds ?? addOnData.areasIds ?? addOnData.areaId ?? addOnData.assignedAreaIds,
           );
           const parsedSpecialZones = toStringArray(addOnData.specialZones ?? addOnData.specialZoneCodes);
+          const resolvedSpecialZone =
+            parsedSpecialZones.length > 0 ? parsedSpecialZones[0] : specialZoneFlagToSelection(item.specialZone);
           const addOnMeta = { ...addOnData };
           delete addOnMeta.areaIds;
           delete addOnMeta.areasIds;
@@ -173,7 +193,7 @@ function SupervisorManagement() {
             shift: isValidShift ? item.shiftId : undefined,
             weekOffs: item.wO_Days ? item.wO_Days.split(",").map((d) => parseInt(d)) : [],
             assignmentType: item.assignmentTypes || [],
-            specialZones: parsedSpecialZones,
+            specialZone: resolvedSpecialZone,
             addOnMeta,
             role: item.role,
             employeeId: item.employeeId,
@@ -188,16 +208,29 @@ function SupervisorManagement() {
 
   // ===== Search & Filter Logic =====
   const filteredData = useMemo(() => {
-    if (!searchTerm.trim()) return data;
+    const normalizedSearchTerm = normalizeSearchValue(searchTerm);
+    if (!normalizedSearchTerm) return data;
 
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    return data.filter(
-      (item) =>
-        item.SupervisorName.toLowerCase().includes(lowerSearchTerm) ||
-        item.employeeId.toLowerCase().includes(lowerSearchTerm) ||
-        item.uswMcode.toLowerCase().includes(lowerSearchTerm),
+    return data.filter((item) =>
+      [
+        item.SupervisorName,
+        item.employeeId,
+        item.uswMcode,
+        item.role,
+        item.shift,
+        ...(item.zone || []),
+      ]
+        .map(normalizeSearchValue)
+        .some((value) => value.includes(normalizedSearchTerm)),
     );
   }, [data, searchTerm]);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [filteredData.length, pageSize, currentPage]);
 
   // ===== Pagination Logic =====
   const paginatedData = useMemo(() => {
@@ -338,8 +371,8 @@ function SupervisorManagement() {
     setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, assignmentType: value } : item)));
   };
 
-  const handleSpecialZoneChange = (checkedValues: string[], record: SupervisorData) => {
-    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, specialZones: checkedValues } : item)));
+  const handleSpecialZoneChange = (value: string | null, record: SupervisorData) => {
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, specialZone: value } : item)));
   };
 
   // === Update Handler ===
@@ -348,9 +381,9 @@ function SupervisorManagement() {
       setUpdatingRowKey(record.key);
 
       const zoneIds = record.zone?.map((zoneId) => zoneId) || [];
-      const areaIds = record.area || [];
-      const specialZones = record.specialZones || [];
+      const selectedSpecialZone = record.specialZone ?? null;
       const assignmentTypes = record.assignmentType || [];
+      const specialZone = specialZoneSelectionToFlag(selectedSpecialZone);
 
       const updateData = {
         employeeId: record.employeeId,
@@ -359,11 +392,7 @@ function SupervisorManagement() {
         role: "Supervisor",
         assignmentTypes,
         zoneIds,
-        addOn: JSON.stringify({
-          ...record.addOnMeta,
-          areaIds,
-          specialZones,
-        }),
+        specialZone,
       };
 
       await updateShiftManagement(updateData).unwrap();
@@ -487,12 +516,17 @@ function SupervisorManagement() {
         return {
           ...col,
           render: (_: any, record: SupervisorData) => (
-            <Checkbox.Group
-              options={specialZoneOptions}
-              value={record.specialZones || []}
-              onChange={(vals) => handleSpecialZoneChange(vals as string[], record)}
-              style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-            />
+            <Radio.Group value={record.specialZone ?? null} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {specialZoneOptions.map((option) => (
+                <Radio
+                  key={option}
+                  value={option}
+                  onClick={() => handleSpecialZoneChange(record.specialZone === option ? null : option, record)}
+                >
+                  {option}
+                </Radio>
+              ))}
+            </Radio.Group>
           ),
         };
       }

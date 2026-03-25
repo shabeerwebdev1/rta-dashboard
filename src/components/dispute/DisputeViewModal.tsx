@@ -790,10 +790,10 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                             >
                               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                                 {t("form.vehicleDetails")}
-                                {hasMissingVehicleOwnerName && (
+                                {/* {hasMissingVehicleOwnerName && (
                                   <span
                                     style={{
-                                      background: "#8B1A1A",
+                                      background: "#eb2630",
                                       color: "#fff",
                                       fontSize: 11,
                                       borderRadius: 2,
@@ -810,7 +810,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                                       ? "بيانات المركبة غير موجودة في النظام المروري"
                                       : "Car Details Not Found in E-traffic"}
                                   </span>
-                                )}
+                                )} */}
                               </span>
                               <span style={{ paddingTop: "10px", paddingBottom: "10px" }}>
                                 <UAEPlate
@@ -892,6 +892,63 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                             </Col>
                             <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
                               {dispute.vehicle.ownerName || t("common.noData")}
+                            </Col>
+                            <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              <Text strong>{isRTL ? "تفاصيل المرور الإلكتروني:" : "E-Traffic Details:"}</Text>
+                            </Col>
+
+                            <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              {hasMissingVehicleOwnerName ? (
+                                // <Text type="danger"> ✖{" "} {isRTL ? "بيانات المركبة غير موجودة في نظام المرور" : "Car Details Not Found in E-Traffic"} </Text>
+                                <Text
+                                  type="danger"
+                                  style={{
+                                    background: "#eb2630",
+                                    color: "#fff",
+                                    fontSize: 11,
+                                    borderRadius: 2,
+                                    padding: "2px 8px",
+                                    lineHeight: "18px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                    marginInline: 8,
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  ✖{" "}
+                                  {isRTL
+                                    ? "بيانات المركبة غير موجودة في نظام المرور"
+                                    : "Car Details Not Found in E-Traffic"}
+                                </Text>
+                              ) : (
+                                // <Text type="success" style={{ color: "#389e0d" }}>
+                                //   ✔{" "}
+                                //   {isRTL
+                                //     ? "تم العثور على بيانات المركبة في نظام المرور"
+                                //     : "Car Details Found in E-Traffic"}
+                                // </Text>
+                                <Text
+                                  style={{
+                                    background: "#51c41a",
+                                    color: "#fff",
+                                    fontSize: 11,
+                                    borderRadius: 2,
+                                    padding: "2px 8px",
+                                    lineHeight: "18px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                    marginInline: 8,
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  ✔{" "}
+                                  {isRTL
+                                    ? "تم العثور على بيانات المركبة في نظام المرور"
+                                    : "Car Details Found in E-Traffic"}
+                                </Text>
+                              )}
                             </Col>
                           </Row>
                         </Card>

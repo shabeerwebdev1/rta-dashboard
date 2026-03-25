@@ -47,7 +47,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
   const [getReviewHistory, { data: reviewHistory = [], isLoading: historyLoading }] = useLazyGetReviewHistoryQuery();
 
   const [getEntityHistory, { data: entityHistory = [], isLoading: entityHistoryLoading }] =
-  useLazyGetEntityHistoryQuery();
+    useLazyGetEntityHistoryQuery();
 
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
     record
@@ -58,12 +58,11 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
       : skipToken,
   );
 
-
   useEffect(() => {
     if (open && record) {
       const entityId = record.EntityGUID || record.inspectionGUID;
       const entityCode = record.EntityCode || record.entityCode;
-  
+
       if (record?.$SKWorkItemData) {
         getReviewOptions(record.$SKWorkItemData);
         getReviewHistory({ entityCode, entityId });
@@ -72,7 +71,6 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
       }
     }
   }, [open, record]);
-  
 
   const [selectedAction, setSelectedAction] = useState<any>(null);
   const [comments, setComments] = useState("");
@@ -364,7 +362,9 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                           </Col>
 
                           <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                            {mappedRecord.reviewStatus === 1 ? (mappedRecord.fineId ?? t("common.notAvailable")) : t("common.notAvailable")}
+                            {mappedRecord.reviewStatus === 1
+                              ? (mappedRecord.fineId ?? t("common.notAvailable"))
+                              : t("common.notAvailable")}
                           </Col>
 
                           <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
@@ -459,10 +459,10 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                             <Text strong style={{ fontSize: "16px" }}>
                               {t("form.vehicleDetails")}
                             </Text>
-                            {hasMissingVehicleOwnerName && (
+                            {/* {hasMissingVehicleOwnerName && (
                               <div
                                 style={{
-                                  background: "#8B1A1A",
+                                  background: "#eb2630",
                                   color: "#fff",
                                   fontSize: 11,
                                   borderRadius: 2,
@@ -476,9 +476,11 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                                 }}
                               >
                                 <ExclamationCircleOutlined style={{ fontSize: 11 }} />
-                                {isRTL ? "بيانات المركبة غير موجودة في النظام المروري" : "Car Details Not Found in E-traffic"}
+                                {isRTL
+                                  ? "بيانات المركبة غير موجودة في النظام المروري"
+                                  : "Car Details Not Found in E-traffic"}
                               </div>
-                            )}
+                            )} */}
                             <div style={{ marginTop: "4px" }}>
                               {(() => {
                                 const localizedSource = getPlateSourceLocalized(record?.plateSource);
@@ -565,6 +567,64 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                           <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
                             {record?.vehicleOwnerName || "No Data"}
                           </Col>
+
+                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <Text strong>{isRTL ? "تفاصيل المرور الإلكتروني:" : "E-Traffic Details:"}</Text>
+                          </Col>
+
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            {hasMissingVehicleOwnerName ? (
+                              // <Text type="danger"> ✖{" "} {isRTL ? "بيانات المركبة غير موجودة في نظام المرور" : "Car Details Not Found in E-Traffic"} </Text>
+                              <Text
+                                type="danger"
+                                style={{
+                                  background: "#eb2630",
+                                  color: "#fff",
+                                  fontSize: 11,
+                                  borderRadius: 2,
+                                  padding: "2px 8px",
+                                  lineHeight: "18px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  marginInline: 8,
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                ✖{" "}
+                                {isRTL
+                                  ? "بيانات المركبة غير موجودة في نظام المرور"
+                                  : "Car Details Not Found in E-Traffic"}
+                              </Text>
+                            ) : (
+                              // <Text type="success" style={{ color: "#389e0d" }}>
+                              //   ✔{" "}
+                              //   {isRTL
+                              //     ? "تم العثور على بيانات المركبة في نظام المرور"
+                              //     : "Car Details Found in E-Traffic"}
+                              // </Text>
+                              <Text
+                                style={{
+                                  background: "#52c41a",
+                                  color: "#fff",
+                                  fontSize: 11,
+                                  borderRadius: 2,
+                                  padding: "2px 8px",
+                                  lineHeight: "18px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  marginInline: 8,
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                ✔{" "}
+                                {isRTL
+                                  ? "تم العثور على بيانات المركبة في نظام المرور"
+                                  : "Car Details Found in E-Traffic"}
+                              </Text>
+                            )}
+                          </Col>
                         </Row>
                       </Card>
                     </Col>
@@ -645,7 +705,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
 
                 {/* Right Column - Review Timeline */}
                 <Col span={6}>
-                <ReviewTimeline data={record?.$SKWorkItemData ? reviewHistory : entityHistory} />
+                  <ReviewTimeline data={record?.$SKWorkItemData ? reviewHistory : entityHistory} />
                 </Col>
               </Row>
             )}

@@ -1,6 +1,6 @@
 // UserZoneLinking.tsx
 import React, { useEffect, useState, useMemo } from "react";
-import { Space, Select, Checkbox, Spin, Button, Pagination, Input, Tooltip } from "antd";
+import { Space, Select, Checkbox, Spin, Button, Pagination, Input, Tooltip, Radio } from "antd";
 import { SearchOutlined, SyncOutlined } from "@ant-design/icons";
 import { UserZoneLinkingConfig } from "../config/pageConfigs/userZoneLinkingConfig";
 import { useTranslation } from "react-i18next";
@@ -26,7 +26,7 @@ interface InspectorData {
   shift?: string;
   weekOffs?: string[];
   assignmentType?: number[];
-  specialZones?: string[];
+  specialZone?: string | null;
   addOnMeta?: Record<string, unknown>;
   role: string;
   roleGUID: string;
@@ -82,6 +82,7 @@ interface ActiveShiftData {
   isActive: boolean;
   assignmentTypes: number[];
   zoneIds: number[];
+  specialZone?: boolean | null;
   addOn: string;
 }
 
@@ -141,6 +142,23 @@ function UserZoneLinking() {
     return [String(value)];
   };
 
+  const normalizeSearchValue = (value: unknown): string =>
+    String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+  const specialZoneFlagToSelection = (specialZone?: boolean | null): string | null => {
+    if (specialZone === true) return "G9";
+    if (specialZone === false) return "GX";
+    return null;
+  };
+
+  const specialZoneSelectionToFlag = (specialZone?: string | null): boolean | null => {
+    if (specialZone === "G9") return true;
+    if (specialZone === "GX") return false;
+    return null;
+  };
+
   useEffect(() => {
     if (activeShiftsResponse) {
       const activeShiftsData = Array.isArray(activeShiftsResponse)
@@ -157,6 +175,8 @@ function UserZoneLinking() {
             addOnData.areaIds ?? addOnData.areasIds ?? addOnData.areaId ?? addOnData.assignedAreaIds,
           );
           const parsedSpecialZones = toStringArray(addOnData.specialZones ?? addOnData.specialZoneCodes);
+          const resolvedSpecialZone =
+            parsedSpecialZones.length > 0 ? parsedSpecialZones[0] : specialZoneFlagToSelection(item.specialZone);
 
           const weekOffDays = item.wO_Days ? item.wO_Days.split(",").filter(Boolean) : [];
           const weekOffNumbers = weekOffDays.map((day) => {
@@ -196,7 +216,7 @@ function UserZoneLinking() {
             shift: isValidShift ? item.shiftId : undefined,
             weekOffs: weekOffNumbers,
             assignmentType: assignmentTypes,
-            specialZones: parsedSpecialZones,
+            specialZone: resolvedSpecialZone,
             addOnMeta,
             role: item.role,
             roleGUID: item.roleGUID,
@@ -212,16 +232,22 @@ function UserZoneLinking() {
 
   // ===== Search & Filter Logic =====
   const filteredData = useMemo(() => {
-    if (!searchTerm.trim()) return data;
+    const normalizedSearchTerm = normalizeSearchValue(searchTerm);
+    if (!normalizedSearchTerm) return data;
 
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    return data.filter(
-      (item) =>
-        item.InspectorName.toLowerCase().includes(lowerSearchTerm) ||
-        item.employeeId.toLowerCase().includes(lowerSearchTerm) ||
-        item.uswMcode.toLowerCase().includes(lowerSearchTerm),
+    return data.filter((item) =>
+      [item.InspectorName, item.employeeId, item.uswMcode, item.role, item.shift, ...(item.zone || [])]
+        .map(normalizeSearchValue)
+        .some((value) => value.includes(normalizedSearchTerm)),
     );
   }, [data, searchTerm]);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [filteredData.length, pageSize, currentPage]);
 
   // ===== Pagination Logic =====
   const paginatedData = useMemo(() => {
@@ -361,18 +387,18 @@ function UserZoneLinking() {
     setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, assignmentType: value } : item)));
   };
 
-  const handleSpecialZoneChange = (checkedValues: string[], record: InspectorData) => {
-    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, specialZones: checkedValues } : item)));
+  const handleSpecialZoneChange = (value: string | null, record: InspectorData) => {
+    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, specialZone: value } : item)));
   };
 
   // === Update Handler ===
   const handleUpdate = async (record: InspectorData) => {
     try {
       const zoneIds = record.zone || [];
-      const areaIds = record.area || [];
       const assignmentTypes = record.assignmentType || [];
       const weekOffsString = (record.weekOffs || []).join(",");
-      const specialZones = record.specialZones || [];
+      const selectedSpecialZone = record.specialZone ?? null;
+      const specialZone = specialZoneSelectionToFlag(selectedSpecialZone);
 
       const updateData = {
         employeeId: record.employeeId,
@@ -381,11 +407,7 @@ function UserZoneLinking() {
         role: "Inspector",
         assignmentTypes,
         zoneIds,
-        addOn: JSON.stringify({
-          ...record.addOnMeta,
-          areaIds,
-          specialZones,
-        }),
+        specialZone,
       };
 
       await updateShiftManagement(updateData).unwrap();
@@ -505,12 +527,17 @@ function UserZoneLinking() {
         return {
           ...col,
           render: (_: any, record: InspectorData) => (
-            <Checkbox.Group
-              options={specialZoneOptions}
-              value={record.specialZones || []}
-              onChange={(vals) => handleSpecialZoneChange(vals as string[], record)}
-              style={{ display: "flex", gap: 8, flexWrap: "wrap" }}
-            />
+            <Radio.Group value={record.specialZone ?? null} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {specialZoneOptions.map((option) => (
+                <Radio
+                  key={option}
+                  value={option}
+                  onClick={() => handleSpecialZoneChange(record.specialZone === option ? null : option, record)}
+                >
+                  {option}
+                </Radio>
+              ))}
+            </Radio.Group>
           ),
         };
       }

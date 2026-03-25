@@ -409,7 +409,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                               {hasMissingVehicleOwnerName && (
                                 <span
                                   style={{
-                                    background: "#8B1A1A",
+                                    background: "#eb2630",
                                     color: "#fff",
                                     fontSize: 11,
                                     borderRadius: 2,
