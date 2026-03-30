@@ -93,6 +93,10 @@ const ParkonicLocationPage: React.FC = () => {
       .format(isArabic ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
   };
 
+  const resolveLocationGuid = (record: any) => {
+    return record?.locationGUID || record?.LocationGuid || record?.locationGuid || record?.EntityGUID || record?.id || "";
+  };
+
   useEffect(() => {
     const recordId = state.viewRecordId;
     if (recordId && !isDrawerOpen) {
@@ -102,7 +106,16 @@ const ParkonicLocationPage: React.FC = () => {
 
   useEffect(() => {
     if (isSingleRecordSuccess && singleRecordData) {
-      setViewRecord(singleRecordData.data);
+      const record = singleRecordData.data || singleRecordData;
+      const locationGuid = resolveLocationGuid(record) || state.viewRecordId || "";
+
+      setViewRecord({
+        ...record,
+        locationGUID: record?.locationGUID || record?.LocationGuid || record?.locationGuid || locationGuid,
+        LocationGuid: record?.LocationGuid || record?.locationGUID || record?.locationGuid || locationGuid,
+        EntityGUID: record?.EntityGUID || locationGuid,
+        EntityCode: record?.EntityCode || record?.entityCode || "parking-parkonic-location",
+      });
       setIsDrawerOpen(true);
     }
   }, [isSingleRecordSuccess, singleRecordData]);
@@ -244,12 +257,12 @@ const ParkonicLocationPage: React.FC = () => {
   );
 
   const actionMenuItems = (record: any) => [
-    // {
-    //   key: "view",
-    //   label: t("common.view"),
-    //   icon: <EyeOutlined />,
-    //   onClick: () => handleView(record),
-    // },
+    {
+      key: "view",
+      label: t("common.view"),
+      icon: <EyeOutlined />,
+      onClick: () => handleView(record),
+    },
   ];
 
   const statusLabels = useMemo(() => {
@@ -295,7 +308,14 @@ const ParkonicLocationPage: React.FC = () => {
   }, [data]);
 
   const handleView = (record: any) => {
-    setViewRecord(record);
+    const locationGuid = resolveLocationGuid(record);
+    setViewRecord({
+      ...record,
+      locationGUID: record?.locationGUID || record?.LocationGuid || record?.locationGuid || locationGuid,
+      LocationGuid: record?.LocationGuid || record?.locationGUID || record?.locationGuid || locationGuid,
+      EntityGUID: record?.EntityGUID || locationGuid,
+      EntityCode: record?.EntityCode || record?.entityCode || "parking-parkonic-location",
+    });
     setIsDrawerOpen(true);
   };
 
@@ -388,6 +408,7 @@ const ParkonicLocationPage: React.FC = () => {
         open={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         record={viewRecord}
+        locationGuid={resolveLocationGuid(viewRecord)}
         config={config}
       />
     </Space>

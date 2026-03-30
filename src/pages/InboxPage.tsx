@@ -15,10 +15,11 @@ import { DynamicEntityHandler, useEntityHandler } from "../components/common/Dyn
 import { formatDateTimeDisplay } from "../utils/dateFormatter";
 
 const InboxPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const [searchParams] = useSearchParams();
   const notificationCode = searchParams.get("code") || "";
+  const isRTL = i18n.language === "ar";
 
   const { data: inboxMenus = [] } = useGetInboxSummaryMenuQuery();
 
@@ -111,7 +112,7 @@ const InboxPage = () => {
 
   const slNoColumn = {
     key: "slno",
-    title: "SL.No",
+    title: isRTL ? "التسلسل" : "SL.No",
     width: 100,
     onHeaderCell: () => ({
       style: { paddingLeft: 16 },
@@ -125,7 +126,7 @@ const InboxPage = () => {
   // Action column
   const actionColumn = {
     key: "actions",
-    title: "Action",
+    title: isRTL ? "الإجراء" : "Action",
     width: 100,
     render: (_: any, row: any) => (
       <Dropdown

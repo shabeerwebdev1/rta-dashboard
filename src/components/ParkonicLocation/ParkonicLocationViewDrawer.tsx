@@ -26,6 +26,7 @@ interface ParkonicLocationViewDrawerProps {
   open: boolean;
   onClose: () => void;
   record: any | null;
+  locationGuid?: string;
   config: any;
   isLoading?: boolean;
 }
@@ -34,6 +35,7 @@ const ParkonicLocationViewDrawer: React.FC<ParkonicLocationViewDrawerProps> = ({
   open,
   onClose,
   record,
+  locationGuid,
   config,
   isLoading = false,
 }) => {
@@ -58,26 +60,26 @@ const ParkonicLocationViewDrawer: React.FC<ParkonicLocationViewDrawerProps> = ({
   const [getEntityHistory, { data: entityHistory = [], isLoading: entityHistoryLoading }] =
     useLazyGetEntityHistoryQuery();
 
-  useEffect(() => {
-    if (open && record?.$SKWorkItemData) {
-      getReviewOptions(record.$SKWorkItemData);
-    }
-  }, [open, record]);
+  const resolvedLocationGuid =
+    locationGuid || record?.locationGUID || record?.LocationGuid || record?.locationGuid || record?.EntityGUID || "";
+
+  const resolvedEntityCode = record?.EntityCode || record?.entityCode || "parking-parkonic-location";
 
   useEffect(() => {
     if (!open || !record) return;
 
-    const entityId = record.EntityGUID;
-    const entityCode = record.EntityCode;
+    if (record?.$SKWorkItemData) {
+      getReviewOptions(record.$SKWorkItemData);
+    }
 
-    if (!entityId || !entityCode) return;
+    if (!resolvedLocationGuid || !resolvedEntityCode) return;
 
     if (record?.$SKWorkItemData) {
-      getReviewHistory({ entityCode, entityId });
+      getReviewHistory({ entityCode: resolvedEntityCode, entityId: resolvedLocationGuid });
     } else {
-      getEntityHistory({ entityCode, entityId });
+      getEntityHistory({ entityCode: resolvedEntityCode, entityId: resolvedLocationGuid });
     }
-  }, [open, record]);
+  }, [open, record, resolvedLocationGuid, resolvedEntityCode]);
 
   useEffect(() => {
     if (!open) {
@@ -104,6 +106,8 @@ const ParkonicLocationViewDrawer: React.FC<ParkonicLocationViewDrawerProps> = ({
     return status ? <Tag color="green">{t("status.approved")}</Tag> : <Tag color="orange">{t("status.pending")}</Tag>;
   };
 
+  const hideFooterActions = !record?.$SKWorkItemData;
+
   const handleActionChange = (value: string) => {
     const opt = reviewOptions.find((o: any) => o.ActivityOptionGUID === value);
     setSelectedAction(opt);
@@ -127,12 +131,12 @@ const ParkonicLocationViewDrawer: React.FC<ParkonicLocationViewDrawerProps> = ({
       }
 
       const payload = {
-        locationGUID: record.EntityGUID,
+        locationGUID: resolvedLocationGuid,
         review: {
           reviewStatusCode: selectedAction.ReviewStatusCode,
           activityCode: record.ActivityCode || "",
-          entityCode: record.EntityCode,
-          entityGUID: record.EntityGUID,
+          entityCode: resolvedEntityCode,
+          entityGUID: resolvedLocationGuid,
           activityOptionGUID: selectedAction.ActivityOptionGUID,
           reviewComments: comments || "",
           rcwuri: record.$SKWorkItemData,
@@ -204,52 +208,53 @@ const ParkonicLocationViewDrawer: React.FC<ParkonicLocationViewDrawerProps> = ({
                   </Row>
                 </Card>
 
-                {/* Actions */}
-                <Card size="small" headStyle={{ background: colorBgContainer, fontWeight: 600 }}>
-                  <Form form={form} layout="vertical">
-                    <Form.Item
-                      name="action"
-                      label={<Text strong>{isRTL ? "الإجراء" : "Action"}</Text>}
-                      rules={[{ required: true, message: "Please select an action" }]}
-                    >
-                      <Select
-                        placeholder="Select action"
-                        onChange={handleActionChange}
-                        value={selectedAction?.ActivityOptionGUID}
-                        loading={loadingOptions}
+                {!hideFooterActions && (
+                  <Card size="small" headStyle={{ background: colorBgContainer, fontWeight: 600 }}>
+                    <Form form={form} layout="vertical">
+                      <Form.Item
+                        name="action"
+                        label={<Text strong>{isRTL ? "الإجراء" : "Action"}</Text>}
+                        rules={[{ required: true, message: "Please select an action" }]}
                       >
-                        {reviewOptions.map((opt: any) => (
-                          <Select.Option key={opt.ActivityOptionGUID} value={opt.ActivityOptionGUID}>
-                            {opt.ReviewStatus}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
+                        <Select
+                          placeholder="Select action"
+                          onChange={handleActionChange}
+                          value={selectedAction?.ActivityOptionGUID}
+                          loading={loadingOptions}
+                        >
+                          {reviewOptions.map((opt: any) => (
+                            <Select.Option key={opt.ActivityOptionGUID} value={opt.ActivityOptionGUID}>
+                              {opt.ReviewStatus}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
 
-                    <Form.Item name="comments" label={<Text strong>{t("form.comments")}</Text>}>
-                      <TextArea rows={3} value={comments} onChange={(e) => setComments(e.target.value)} />
-                    </Form.Item>
+                      <Form.Item name="comments" label={<Text strong>{t("form.comments")}</Text>}>
+                        <TextArea rows={3} value={comments} onChange={(e) => setComments(e.target.value)} />
+                      </Form.Item>
 
-                    <Space>
-                      <Button type="primary" onClick={handleSubmit} loading={isSubmitting}>
-                        {isRTL ? "إرسال" : "Submit"}
-                      </Button>
+                      <Space>
+                        <Button type="primary" onClick={handleSubmit} loading={isSubmitting}>
+                          {isRTL ? "إرسال" : "Submit"}
+                        </Button>
 
-                      <Button danger onClick={onClose}>
-                        {isRTL ? "إلغاء" : "Cancel"}
-                      </Button>
-                    </Space>
-                  </Form>
-                </Card>
+                        <Button danger onClick={onClose}>
+                          {isRTL ? "إلغاء" : "Cancel"}
+                        </Button>
+                      </Space>
+                    </Form>
+                  </Card>
+                )}
               </div>
             </Col>
 
-            {/* RIGHT SIDE TIMELINE */}
-            <Col span={6}>
-              <ReviewTimeline data={record?.$SKWorkItemData ? reviewHistory : entityHistory} />
-            </Col>
-          </Row>
-        )}
+                {/* RIGHT SIDE TIMELINE */}
+                <Col span={6}>
+                  <ReviewTimeline data={record?.$SKWorkItemData ? reviewHistory : entityHistory} />
+                </Col>
+              </Row>
+            )}
       </Spin>
     </Modal>
   );
