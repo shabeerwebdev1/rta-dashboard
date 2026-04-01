@@ -30,9 +30,21 @@ const InboxPage = () => {
 
   const notificationName = useMemo(() => {
     if (!notificationCode) return "Inbox";
-    const match = inboxMenus.find((item: any) => item.NotificationCode === notificationCode);
-    return sanitizeInboxTitle(match?.NotificationName || "Inbox");
-  }, [notificationCode, inboxMenus]);
+
+    const isArabic = i18n.language === "ar";
+
+    const matches = inboxMenus.filter((item: any) => item.NotificationCode === notificationCode);
+
+    const arabicItem = matches.find((m: any) => /[\u0600-\u06FF]/.test(m.NotificationName));
+
+    const englishItem = matches.find((m: any) => !/[\u0600-\u06FF]/.test(m.NotificationName));
+
+    const selected = isArabic
+      ? arabicItem || englishItem 
+      : englishItem || arabicItem; 
+
+    return sanitizeInboxTitle(selected?.NotificationName || "Inbox");
+  }, [notificationCode, inboxMenus, i18n.language]);
 
   useEffect(() => {
     setPageTitle(notificationName);

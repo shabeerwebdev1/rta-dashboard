@@ -249,12 +249,12 @@ const ParkonicLocationViewDrawer: React.FC<ParkonicLocationViewDrawerProps> = ({
               </div>
             </Col>
 
-                {/* RIGHT SIDE TIMELINE */}
-                <Col span={6}>
-                  <ReviewTimeline data={record?.$SKWorkItemData ? reviewHistory : entityHistory} />
-                </Col>
-              </Row>
-            )}
+            {/* RIGHT SIDE TIMELINE */}
+            <Col span={6}>
+              <ReviewTimeline data={record?.$SKWorkItemData ? reviewHistory : entityHistory} />
+            </Col>
+          </Row>
+        )}
       </Spin>
     </Modal>
   );

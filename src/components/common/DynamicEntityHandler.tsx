@@ -6,11 +6,33 @@ import { FolderOpenFilled } from "@ant-design/icons";
 
 import ParkonicViewDrawer from "../parkonic/ParkonicViewDrawer";
 import ParkonicLocationViewDrawer from "../ParkonicLocation/ParkonicLocationViewDrawer";
+import LeaveViewDrawer from "../Leaves/LeaveViewDrawer";
 import DisputeViewModal from "../dispute/DisputeViewModal";
 
-import { useLazyGetParkonicByIdQuery, useLazyGetParkonicsLocationByIdQuery } from "../../services/rtkApiFactory";
+import {
+  useLazyGetLeaveDetailsByIdQuery,
+  useLazyGetParkonicByIdQuery,
+  useLazyGetParkonicsLocationByIdQuery,
+} from "../../services/rtkApiFactory";
 
 const ENTITY_CONFIG: Record<string, any> = {
+  // Leave request
+  "parking-user-leave-request": {
+    component: LeaveViewDrawer,
+    type: "drawer",
+    fetchData: true,
+    fetcher: "getLeaveById",
+    getFetchId: (record: any) => record?.leaveId || record?.id,
+    mergeRecord: (apiRes: any, original: any) => ({
+      ...(apiRes?.data || apiRes),
+      ...original,
+      leaveId: original.leaveId || original.id || apiRes?.data?.leaveId || apiRes?.data?.id,
+      id: original.id || apiRes?.data?.id,
+      EntityCode: original.EntityCode,
+      entityCode: original.entityCode,
+    }),
+  },
+
   // Parkonic Fines
   "parking-parkonic-fines": {
     component: ParkonicViewDrawer,
@@ -61,17 +83,19 @@ export const useEntityHandler = () => {
     fetchedData: null as any,
   });
 
+  const [getLeaveById] = useLazyGetLeaveDetailsByIdQuery();
   const [getParkonicById] = useLazyGetParkonicByIdQuery();
   const [getLocationById] = useLazyGetParkonicsLocationByIdQuery();
 
   // Map fetchers to their functions
   const fetchers: Record<string, any> = {
+    getLeaveById,
     getParkonicById,
     getLocationById,
     // Add more fetchers here as needed
   };
 
-  const fetchEntityData = useCallback(async (entityCode: string, entityGuid: string) => {
+  const fetchEntityData = useCallback(async (entityCode: string, entityId: string | number) => {
     const config = ENTITY_CONFIG[entityCode];
     if (!config?.fetchData || !config.fetcher) return null;
 
@@ -82,7 +106,7 @@ export const useEntityHandler = () => {
     }
 
     try {
-      const res = await fetcher(entityGuid).unwrap();
+      const res = await fetcher(entityId).unwrap();
       return res;
     } catch (error) {
       console.error(`Error fetching data for ${entityCode}:`, error);
@@ -105,7 +129,15 @@ export const useEntityHandler = () => {
         let fetchedData = null;
 
         if (config.fetchData) {
-          fetchedData = await fetchEntityData(entityCode, record.EntityGUID);
+          const fetchId = config.getFetchId ? config.getFetchId(record) : record.EntityGUID;
+
+          if (fetchId === undefined || fetchId === null || fetchId === "") {
+            console.warn(`No fetch id found for entity: ${entityCode}`);
+            setState((prev) => ({ ...prev, isLoading: false }));
+            return;
+          }
+
+          fetchedData = await fetchEntityData(entityCode, fetchId);
 
           if (config.mergeRecord) {
             fetchedData = config.mergeRecord(fetchedData, record);

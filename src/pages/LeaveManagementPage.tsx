@@ -16,7 +16,11 @@ import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import { useLeaveManagementPageConfig } from "../config/pageConfigs/leaveManagementConfig";
 import LeaveViewDrawer from "../components/Leaves/LeaveViewDrawer";
-import { useGetLeaveDetailsQuery, useLazyGetLookupsQuery } from "../services/rtkApiFactory";
+import {
+  useGetLeaveDetailsQuery,
+  useLazyGetLeaveDetailsByIdQuery,
+  useLazyGetLookupsQuery,
+} from "../services/rtkApiFactory";
 
 const { Option } = Select;
 
@@ -48,6 +52,8 @@ const LeaveManagementPage: React.FC = () => {
 
   const { data, isFetching } = useGetLeaveDetailsQuery(apiParams);
   const [getLookups, { data: lookupData }] = useLazyGetLookupsQuery();
+
+  const [getLeaveById, { isFetching: isFetchingLeave }] = useLazyGetLeaveDetailsByIdQuery();
 
   //state to maintain the rows data for downlaoding
   const [selectedRows, setSelectedRows] = useState([]);
@@ -260,11 +266,19 @@ const LeaveManagementPage: React.FC = () => {
   const actionMenuItems = (record: any) => [
     {
       key: "view",
-      icon: record.status === 0 ? <EditOutlined /> : <EyeOutlined />,
+      icon: <EyeOutlined />,
       label: t("common.view"),
-      onClick: () => {
-        setSelectedRecord(record);
-        setDrawerOpen(true);
+      onClick: async () => {
+        try {
+          const leaveId = record?.leaveId || record?.id;
+
+          const result = await getLeaveById(leaveId).unwrap();
+
+          setSelectedRecord(result?.data || result);
+          setDrawerOpen(true);
+        } catch (error) {
+          notification.error({ data: { en_Msg: t("messages.failedToLoad") } }, t("messages.error"));
+        }
       },
     },
   ];

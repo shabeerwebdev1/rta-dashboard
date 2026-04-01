@@ -547,6 +547,11 @@ export const dynamicApi = createApi({
       providesTags: ["LeaveDetails"],
     }),
 
+    getLeaveDetailsById: builder.query({
+      query: (id) => `/api/Leave/${id}`,
+      providesTags: ["LeaveDetails"],
+    }),
+
     updateLeaveStatus: builder.mutation({
       query: (body) => ({
         url: "/api/Leave",
@@ -912,6 +917,7 @@ export const {
 
   // Leave Management
   useGetLeaveDetailsQuery,
+  useLazyGetLeaveDetailsByIdQuery,
   useUpdateLeaveStatusMutation,
 
   // General Search
