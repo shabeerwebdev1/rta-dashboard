@@ -25,7 +25,7 @@ const InboxPage = () => {
 
   const sanitizeInboxTitle = (title?: string) => {
     if (!title) return "Inbox";
-    return title.replace(/^Parking\s*-\s*/i, "").trim();
+    return title.replace(/[\u200E\u200F]/g, "").trim();
   };
 
   const notificationName = useMemo(() => {
@@ -39,9 +39,7 @@ const InboxPage = () => {
 
     const englishItem = matches.find((m: any) => !/[\u0600-\u06FF]/.test(m.NotificationName));
 
-    const selected = isArabic
-      ? arabicItem || englishItem 
-      : englishItem || arabicItem; 
+    const selected = isArabic ? arabicItem || englishItem : englishItem || arabicItem;
 
     return sanitizeInboxTitle(selected?.NotificationName || "Inbox");
   }, [notificationCode, inboxMenus, i18n.language]);

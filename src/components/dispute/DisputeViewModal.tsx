@@ -88,6 +88,12 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
       .format(isRTL ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
   };
 
+  const hasDisplayValue = (value: unknown) => {
+    if (value === null || value === undefined) return false;
+    if (typeof value === "string") return value.trim() !== "";
+    return true;
+  };
+
   const reviewOptions = useMemo(() => {
     return reviewResponse?.ActivityOption
       ? [...reviewResponse.ActivityOption].sort((a: any, b: any) => a.SequenceNo - b.SequenceNo)
@@ -529,7 +535,9 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
   }, [dispute?.vehicle?.ownerName]);
 
   const isParkonicEntity = useMemo(() => {
-    return dispute?.entityCode === "parking-parkonic-fine-dispute";
+    return ["parking-parkonic-fine-dispute", "parking-vehicle-fine-dispute", "parking-parking-fine-dispute"].includes(
+      dispute?.entityCode,
+    );
   }, [dispute?.entityCode]);
 
   const isDisputeApprovedOrRejected = dispute?.dispute_Status === 2 || dispute?.dispute_Status === 3;
@@ -1005,54 +1013,74 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                         </Col>
 
                         {/* Violation Category ID */}
-                        <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
-                          <Text strong>{t("form.violationCategoryId")}:</Text>
-                        </Col>
-                        <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                          {dispute.fineDetails.categoryId ?? t("common.noData")}
-                        </Col>
-
-                        {/* Violation Description */}
-                        <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
-                          <Text strong>{t("form.violationDescription")}:</Text>
-                        </Col>
-                        <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                          {i18n.language === "ar"
-                            ? dispute.fineDetails.violationNameAr || t("common.noData")
-                            : dispute.fineDetails.violationNameEn || t("common.noData")}
-                        </Col>
-
-                        {isParkonicEntity && (
+                        {hasDisplayValue(dispute.fineDetails.categoryId) && (
                           <>
-                            {/* Vehicle Entry DateTime */}
                             <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
-                              <Text strong>{t("form.vehicleEntryDateTime")}:</Text>
+                              <Text strong>{t("form.violationCategoryId")}:</Text>
                             </Col>
                             <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                              {dispute.fineDetails.entryDateTime
-                                ? formatDate(dispute.fineDetails.entryDateTime)
-                                : t("common.noData")}
-                            </Col>
-
-                            {/* Vehicle Exit DateTime */}
-                            <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
-                              <Text strong>{t("form.vehicleExitDateTime")}:</Text>
-                            </Col>
-                            <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                              {dispute.fineDetails.exitDateTime
-                                ? formatDate(dispute.fineDetails.exitDateTime)
-                                : t("common.noData")}
+                              {dispute.fineDetails.categoryId}
                             </Col>
                           </>
                         )}
 
+                        {/* Violation Description */}
+                        {hasDisplayValue(
+                          i18n.language === "ar"
+                            ? dispute.fineDetails.violationNameAr
+                            : dispute.fineDetails.violationNameEn,
+                        ) && (
+                          <>
+                            <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              <Text strong>{t("form.violationDescription")}:</Text>
+                            </Col>
+                            <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              {i18n.language === "ar"
+                                ? dispute.fineDetails.violationNameAr
+                                : dispute.fineDetails.violationNameEn}
+                            </Col>
+                          </>
+                        )}
+
+                        {isParkonicEntity && (
+                          <>
+                            {/* Vehicle Entry DateTime */}
+                            {hasDisplayValue(dispute.fineDetails.entryDateTime) && (
+                              <>
+                                <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                                  <Text strong>{t("form.vehicleEntryDateTime")}:</Text>
+                                </Col>
+                                <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                                  {formatDate(dispute.fineDetails.entryDateTime)}
+                                </Col>
+                              </>
+                            )}
+
+                            {/* Vehicle Exit DateTime */}
+                            {hasDisplayValue(dispute.fineDetails.exitDateTime) && (
+                              <>
+                                <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                                  <Text strong>{t("form.vehicleExitDateTime")}:</Text>
+                                </Col>
+                                <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                                  {formatDate(dispute.fineDetails.exitDateTime)}
+                                </Col>
+                              </>
+                            )}
+                          </>
+                        )}
+
                         {/* Reviewed By */}
-                        <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
-                          <Text strong>{t("form.approvedBy")}:</Text>
-                        </Col>
-                        <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                          {dispute.fineDetails.reviewerName || t("common.noData")}
-                        </Col>
+                        {hasDisplayValue(dispute.fineDetails.reviewerName) && (
+                          <>
+                            <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              <Text strong>{t("form.approvedBy")}:</Text>
+                            </Col>
+                            <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                              {dispute.fineDetails.reviewerName}
+                            </Col>
+                          </>
+                        )}
                       </Row>
                     ) : (
                       <Empty description={t("common.noData")} />

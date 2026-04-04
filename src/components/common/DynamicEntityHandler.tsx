@@ -7,7 +7,9 @@ import { FolderOpenFilled } from "@ant-design/icons";
 import ParkonicViewDrawer from "../parkonic/ParkonicViewDrawer";
 import ParkonicLocationViewDrawer from "../ParkonicLocation/ParkonicLocationViewDrawer";
 import LeaveViewDrawer from "../Leaves/LeaveViewDrawer";
+import FinesViewDrawer from "../fines/FinesViewDrawer";
 import DisputeViewModal from "../dispute/DisputeViewModal";
+import TowingViewDrawer from "../Towing/TowingViewDrawer";
 
 import {
   useLazyGetLeaveDetailsByIdQuery,
@@ -22,14 +24,24 @@ const ENTITY_CONFIG: Record<string, any> = {
     type: "drawer",
     fetchData: true,
     fetcher: "getLeaveById",
-    getFetchId: (record: any) => record?.leaveId || record?.id,
+    getFetchId: (record: any) => record?.EntityGUID || record?.entityGUID || record?.leaveId || record?.id,
     mergeRecord: (apiRes: any, original: any) => ({
       ...(apiRes?.data || apiRes),
       ...original,
-      leaveId: original.leaveId || original.id || apiRes?.data?.leaveId || apiRes?.data?.id,
-      id: original.id || apiRes?.data?.id,
+      leaveId:
+        original.leaveId ||
+        original.id ||
+        apiRes?.data?.leaveId ||
+        apiRes?.data?.id ||
+        apiRes?.data?.EntityGUID ||
+        apiRes?.data?.entityId,
+      id: original.id || apiRes?.data?.EntityGUID,
       EntityCode: original.EntityCode,
       entityCode: original.entityCode,
+      EntityGUID: original.EntityGUID || original.entityGUID || apiRes?.data?.EntityGUID || apiRes?.data?.entityGUID,
+      $SKWorkItemData: original.$SKWorkItemData || apiRes?.data?.$SKWorkItemData,
+      ActivityCode:
+        original.ActivityCode || original.nvarchar3 || apiRes?.data?.ActivityCode || apiRes?.data?.nvarchar3 || "",
     }),
   },
 
@@ -65,10 +77,39 @@ const ENTITY_CONFIG: Record<string, any> = {
     }),
   },
 
+  // Fine cancel request
+  "parking-fine-cancel-request": {
+    component: FinesViewDrawer,
+    type: "drawer",
+    fetchData: false,
+    mergeRecord: (_apiRes: any, original: any) => ({
+      ...original,
+      inspectionStatus: 15003,
+    }),
+  },
+
   // Dispute
   "parking-parkonic-fine-dispute": {
     component: DisputeViewModal,
     type: "modal",
+    fetchData: false,
+    mergeRecord: (_apiRes: any, original: any) => original,
+  },
+  "parking-vehicle-fine-dispute": {
+    component: DisputeViewModal,
+    type: "modal",
+    fetchData: false,
+    mergeRecord: (_apiRes: any, original: any) => original,
+  },
+  "parking-parking-fine-dispute": {
+    component: DisputeViewModal,
+    type: "modal",
+    fetchData: false,
+    mergeRecord: (_apiRes: any, original: any) => original,
+  },
+  "parking-towing": {
+    component: TowingViewDrawer,
+    type: "drawer",
     fetchData: false,
     mergeRecord: (_apiRes: any, original: any) => original,
   },

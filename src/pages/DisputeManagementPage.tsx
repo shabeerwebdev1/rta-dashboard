@@ -2796,14 +2796,14 @@ const DisputeManagementPage: React.FC = () => {
                   {t("common.downloadCsv")}
                 </Button>
 
-                {/* <Button
+                <Button
                   type="primary"
                   icon={<PlusOutlined />}
                   onClick={() => handleModalOpen("add")}
                   disabled={!canCreate(menuName)}
                 >
                   {t("common.addNew")}
-                </Button> */}
+                </Button>
               </Space>
             </Col>
           </Row>

@@ -885,63 +885,102 @@ export default function CreateShiftPlan() {
   };
 
   /* Build scheduleEntries from ALL data or edits */
+  // const buildScheduleEntriesFromEdits = () => {
+  //   const entries: any[] = [];
+  //   const start = dateRange[0]?.startOf("day");
+  //   if (!start) return entries;
+
+  //   if (Object.keys(editsMap).length === 0 && hasValidData) {
+  //     tableData.forEach((row) => {
+  //       Object.keys(row._raw || {}).forEach((dayIdx) => {
+  //         const e = row._raw[dayIdx];
+  //         const entryDate = start.add(Number(dayIdx), "day");
+
+  //         entries.push({
+  //           id: 0,
+  //           rosterId: e.rosterId,
+  //           date: toUTCStartOfDay(entryDate),
+  //           inspectorId: e.inspectorId,
+  //           inspectorName: e.inspectorName,
+  //           inspectorNameAr: e.inspectorName,
+  //           zoneId: e.zoneId,
+  //           zoneCode: e.zoneCode,
+  //           areaId: e.areasIds[0],
+  //           areasIds: e.areasIds,
+  //           areaCode: e.areaCode,
+  //           shiftId: e.shiftId,
+  //           shiftCode: e.shiftCode,
+  //           batchId: e.batchId,
+  //           isOff: e.isOff || false,
+  //           offType: e.offType || "",
+  //           offTypeAr: e.offTypeAr || "",
+  //         });
+  //       });
+  //     });
+  //   } else {
+  //     Object.values(editsMap).forEach((e: any) => {
+  //       const entryDate = start.add(e.dayIndex, "day");
+
+  //       entries.push({
+  //         id: 0,
+  //         rosterId: e.rosterId,
+  //         date: toUTCStartOfDay(entryDate),
+  //         inspectorId: e.inspectorId,
+  //         inspectorName: e.inspectorName,
+  //         inspectorNameAr: e.inspectorName,
+  //         zoneId: e.zoneId,
+  //         zoneCode: e.zoneCode,
+  //         areaId: e.areasIds[0],
+  //         areasIds: e.areasIds,
+  //         areaCode: e.areaCode,
+  //         shiftId: e.shiftId,
+  //         shiftCode: e.shiftCode,
+  //         batchId: e.batchId,
+  //         isOff: false,
+  //         offType: "",
+  //         offTypeAr: "",
+  //       });
+  //     });
+  //   }
+
+  //   return entries;
+  // };
+
   const buildScheduleEntriesFromEdits = () => {
     const entries: any[] = [];
     const start = dateRange[0]?.startOf("day");
+
     if (!start) return entries;
 
-    if (Object.keys(editsMap).length === 0 && hasValidData) {
-      tableData.forEach((row) => {
-        Object.keys(row._raw || {}).forEach((dayIdx) => {
-          const e = row._raw[dayIdx];
-          const entryDate = start.add(Number(dayIdx), "day");
-
-          entries.push({
-            id: 0,
-            rosterId: e.rosterId,
-            date: toUTCStartOfDay(entryDate),
-            inspectorId: e.inspectorId,
-            inspectorName: e.inspectorName,
-            inspectorNameAr: e.inspectorName,
-            zoneId: e.zoneId,
-            zoneCode: e.zoneCode,
-            areaId: e.areasIds[0],
-            areasIds: e.areasIds,
-            areaCode: e.areaCode,
-            shiftId: e.shiftId,
-            shiftCode: e.shiftCode,
-            batchId: e.batchId,
-            isOff: e.isOff || false,
-            offType: e.offType || "",
-            offTypeAr: e.offTypeAr || "",
-          });
-        });
-      });
-    } else {
-      Object.values(editsMap).forEach((e: any) => {
-        const entryDate = start.add(e.dayIndex, "day");
-
-        entries.push({
-          id: 0,
-          rosterId: e.rosterId,
-          date: toUTCStartOfDay(entryDate),
-          inspectorId: e.inspectorId,
-          inspectorName: e.inspectorName,
-          inspectorNameAr: e.inspectorName,
-          zoneId: e.zoneId,
-          zoneCode: e.zoneCode,
-          areaId: e.areasIds[0],
-          areasIds: e.areasIds,
-          areaCode: e.areaCode,
-          shiftId: e.shiftId,
-          shiftCode: e.shiftCode,
-          batchId: e.batchId,
-          isOff: false,
-          offType: "",
-          offTypeAr: "",
-        });
-      });
+    // ✅ If user didn't change anything
+    if (Object.keys(editsMap).length === 0) {
+      return [];
     }
+
+    // ✅ Send only edited entries
+    Object.values(editsMap).forEach((e: any) => {
+      const entryDate = start.add(e.dayIndex, "day");
+
+      entries.push({
+        id: 0,
+        rosterId: e.rosterId,
+        date: toUTCStartOfDay(entryDate),
+        inspectorId: e.inspectorId,
+        inspectorName: e.inspectorName,
+        inspectorNameAr: e.inspectorName,
+        zoneId: e.zoneId,
+        zoneCode: e.zoneCode,
+        areaId: e.areasIds[0],
+        areasIds: e.areasIds,
+        areaCode: e.areaCode,
+        shiftId: e.shiftId,
+        shiftCode: e.shiftCode,
+        batchId: e.batchId,
+        isOff: e.isOff || false,
+        offType: e.offType || "",
+        offTypeAr: e.offTypeAr || "",
+      });
+    });
 
     return entries;
   };
@@ -954,10 +993,10 @@ export default function CreateShiftPlan() {
     }
 
     const scheduleEntries = buildScheduleEntriesFromEdits();
-    if (scheduleEntries.length === 0) {
-      message.warning(publish ? "No data to publish" : "No data to save as draft");
-      return;
-    }
+    // if (scheduleEntries.length === 0) {
+    //   message.warning(publish ? "No data to publish" : "No data to save as draft");
+    //   return;
+    // }
 
     const payload = {
       batch: {

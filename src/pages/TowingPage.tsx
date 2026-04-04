@@ -198,7 +198,7 @@ const TowingPage: React.FC = () => {
   const actionMenuItems = (record: any) => [
     {
       key: "view",
-      icon: record.towing_Status?.toLowerCase() === "pending" ? <EditOutlined /> : <EyeOutlined />,
+      icon: <EyeOutlined />,
       label: t("common.view"),
       onClick: () => {
         setSelectedRecord(record);

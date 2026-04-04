@@ -77,6 +77,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
   const hasExternalLookupOptions = Array.isArray(externalLookupOptions) && externalLookupOptions.length > 0;
   const lookupOptionsToUse = hasExternalLookupOptions ? externalLookupOptions : internalLookupOptions;
   const getLabelFunction = externalGetLabelFromValue || getLabelFromValue;
+  const isFineCancelRequest = fine?.entityCode === "parking-fine-cancel-request";
   const isStatus15003 = !readOnly && mappedFine?.inspectionStatus === 15003;
 
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
@@ -121,6 +122,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
   const mapFineToLabels = () => {
     if (!fine) return;
 
+    const effectiveInspectionStatus = isFineCancelRequest ? 15003 : fine.inspectionStatus;
     const inspectionTypeOptions = filterOptionsByCategory(lookupOptionsToUse, 1400);
     const inspectionCategoryOptions = filterOptionsByCategory(lookupOptionsToUse, 1300);
     const inspectionStatusOptions = filterOptionsByCategory(lookupOptionsToUse, 1500);
@@ -134,9 +136,10 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
       inspectionCategoryLabel: fine.inspectionCategory
         ? getLabelFunction(fine.inspectionCategory, inspectionCategoryOptions, i18n)
         : fine.inspectionCategory || "No Data",
-      inspectionStatusLabel: fine.inspectionStatus
-        ? getLabelFunction(fine.inspectionStatus, inspectionStatusOptions, i18n)
-        : fine.inspectionStatus || "No Data",
+      inspectionStatus: effectiveInspectionStatus,
+      inspectionStatusLabel: effectiveInspectionStatus
+        ? getLabelFunction(effectiveInspectionStatus, inspectionStatusOptions, i18n)
+        : effectiveInspectionStatus || "No Data",
       inspectionDateFormatted: formatDate(fine.actualDateTime),
       fineAmountFormatted: (fine.fineAmount ?? fine.fineAmount === 0) ? `${fine.fineAmount} AED` : "No Data",
       totalAmountFormatted:
@@ -144,8 +147,8 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
       paymentTypeLabel: fine.paymentType !== undefined && fine.paymentType !== null
         ? getLabelFunction(fine.paymentType, paymentTypeOptions, i18n)
         : getPaymentTypeLabel(fine.paymentType),
-      statusLabel: getStatusLabel(fine.isPaid, fine.inspectionStatus),
-      statusColor: getStatusColor(fine.isPaid, fine.inspectionStatus),
+      statusLabel: getStatusLabel(fine.isPaid, effectiveInspectionStatus),
+      statusColor: getStatusColor(fine.isPaid, effectiveInspectionStatus),
       blackPointsFormatted: (fine.blackPoint ?? fine.blackPoint === 0) ? fine.blackPoint : "0",
       inspectorName:
         i18n.language === "ar"

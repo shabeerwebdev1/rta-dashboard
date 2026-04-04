@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Card, Typography, Tag, Empty, theme, Collapse } from "antd";
-import { ClockCircleOutlined, UserOutlined } from "@ant-design/icons";
+import { UserOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import "dayjs/locale/ar";
@@ -15,14 +15,25 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
   const { i18n } = useTranslation();
   const { token } = theme.useToken();
   const isRTL = i18n.language === "ar";
+
   const [activeKeys, setActiveKeys] = useState<string[]>([]);
 
   const L = (en: string, ar: string) => (isRTL ? ar : en);
 
   const timelineData = useMemo(() => {
     if (!data?.length) return [];
+
     return [...data].sort((a, b) => dayjs(b.ActionDateTime).valueOf() - dayjs(a.ActionDateTime).valueOf());
   }, [data]);
+
+  /* ✅ AUTO EXPAND LATEST ENTRY */
+  useEffect(() => {
+    if (timelineData.length) {
+      const first = timelineData[0];
+      const key = String(first.HistoryGUID || first.ReviewId || 0);
+      setActiveKeys([key]);
+    }
+  }, [timelineData]);
 
   const getActionColor = (action: string) => {
     const key = action.toLowerCase();
@@ -46,21 +57,6 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
       comments.includes("stack") ||
       comments.includes("timeout")
     );
-  };
-
-  const toPreview = (item: any) => {
-    const action = item.ReviewStatus || item.ActionType || "—";
-    const comments = item.ReviewComments || item.Comments || "";
-
-    if (isTechnicalEntry(item)) {
-      return action;
-    }
-
-    if (!comments) {
-      return action;
-    }
-
-    return String(comments).slice(0, 90) + (String(comments).length > 90 ? "..." : "");
   };
 
   if (!timelineData.length) {
@@ -95,6 +91,7 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
     const actionText = item.ReviewStatus || item.ActionType || "—";
     const actionColor = getActionColor(String(actionText));
     const technical = isTechnicalEntry(item);
+
     const panelKey = String(item.HistoryGUID || item.ReviewId || index);
 
     return {
@@ -107,14 +104,36 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
             gap: 6,
             width: "100%",
             direction: isRTL ? "rtl" : "ltr",
+            cursor: "pointer",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <Tag color={actionColor} style={{ marginInlineEnd: 0, border: "none", fontWeight: 600 }}>
+          {/* Activity Name */}
+          <Text strong style={{ fontSize: 14 }}>
+            {item.ActivityName || "—"}
+          </Text>
+
+          {/* Status Tag */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8,
+            }}
+          >
+            <Tag
+              color={actionColor}
+              style={{
+                marginInlineEnd: 0,
+                border: "none",
+                fontWeight: 600,
+              }}
+            >
               {actionText}
             </Tag>
           </div>
 
+          {/* Date */}
           <Text type="secondary" style={{ fontSize: 12 }}>
             {item.ActionDateTime || item.Date
               ? dayjs(item.ActionDateTime || item.Date)
@@ -122,17 +141,29 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
                   .format(isRTL ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, h:mm A")
               : "—"}
           </Text>
-
-          {/* <Text style={{ fontSize: technical ? 12 : 13, color: token.colorTextSecondary }}>{toPreview(item)}</Text> */}
         </div>
       ),
-      children: (
-        <div style={{ direction: isRTL ? "rtl" : "ltr", display: "grid", gap: 10 }}>
-          <div>
-            <Text strong>{L("Action", "الإجراء")}:</Text> <Text>{actionText}</Text>
-          </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexDirection: isRTL ? "row-reverse" : "row" }}>
+      children: (
+        <div
+          style={{
+            direction: isRTL ? "rtl" : "ltr",
+            display: "grid",
+            gap: 10,
+          }}
+        >
+          {/* <div>
+            <Text strong>{L("Action", "الإجراء")}:</Text> <Text>{actionText}</Text>
+          </div> */}
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              flexDirection: isRTL ? "row-reverse" : "row",
+            }}
+          >
             <UserOutlined />
             <Text>
               <Text strong>{L("Actor", "المنفذ")}: </Text>
@@ -143,6 +174,7 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
           {!technical && (
             <div>
               <Text strong>{L("User Comments", "تعليقات المستخدم")}:</Text>
+
               <div
                 style={{
                   background: token.colorBgLayout,
@@ -157,8 +189,9 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
             </div>
           )}
 
-          <div>
+          {/* <div>
             <ClockCircleOutlined />
+
             <Text style={{ marginInlineStart: 6 }}>
               {item.ActionDateTime || item.Date
                 ? dayjs(item.ActionDateTime || item.Date)
@@ -166,9 +199,10 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
                     .format(isRTL ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, h:mm A")
                 : "—"}
             </Text>
-          </div>
+          </div> */}
         </div>
       ),
+
       style: {
         marginBottom: 10,
         borderRadius: 10,
