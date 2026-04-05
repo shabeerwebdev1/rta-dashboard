@@ -1,14 +1,20 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect } from "react";
-import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Form, Space, Image } from "antd";
+import React, { useState, useEffect, useMemo } from "react";
+import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Form, Space, Image, Select } from "antd";
 import { CloseOutlined, ShareAltOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { theme } from "antd";
 import dayjs from "dayjs";
 
-import { useLazyGetLookupsQuery, useGetViolationDetailsQuery } from "../../services/rtkApiFactory";
+import {
+  useLazyGetLookupsQuery,
+  useGetViolationDetailsQuery,
+  useLazyGetReviewOptionsQuery,
+  useLazyGetReviewHistoryQuery,
+  useLazyGetEntityHistoryQuery,
+} from "../../services/rtkApiFactory";
 import {
   useUpdateFineCancelStatusMutation,
   useGetInspectionAttachmentsQuery,
@@ -18,6 +24,7 @@ import { useAppNotification } from "../../utils/notificationManager";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../../components/common/ArcGISMap";
 import { plateSources, PLATE_COLOR, PLATE_TYPE_SHORT } from "../../config/pageConfigs/finesConfig";
+import ReviewTimeline from "../ReviewTimeline";
 import UAEPlate from "../UAEPlate";
 
 const { Title, Text } = Typography;
@@ -71,14 +78,23 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
   const [mappedFine, setMappedFine] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastAction, setLastAction] = useState<"approve" | "reject" | null>(null);
+  const [selectedAction, setSelectedAction] = useState<any>(null);
+  const [comments, setComments] = useState("");
   const [triggerGetLookups] = useLazyGetLookupsQuery();
+  const [getReviewOptions, { data: reviewResponse, isLoading: loadingOptions }] = useLazyGetReviewOptionsQuery();
+  const [getReviewHistory, { data: reviewHistory = [], isLoading: historyLoading }] = useLazyGetReviewHistoryQuery();
+  const [getEntityHistory, { data: entityHistory = [], isLoading: entityHistoryLoading }] =
+    useLazyGetEntityHistoryQuery();
   const [updateFineCancelStatus] = useUpdateFineCancelStatusMutation();
 
   const hasExternalLookupOptions = Array.isArray(externalLookupOptions) && externalLookupOptions.length > 0;
   const lookupOptionsToUse = hasExternalLookupOptions ? externalLookupOptions : internalLookupOptions;
   const getLabelFunction = externalGetLabelFromValue || getLabelFromValue;
   const isFineCancelRequest = fine?.entityCode === "parking-fine-cancel-request";
+  const showInboxReviewWorkflow = isFineCancelRequest && !!fine?.$SKWorkItemData;
   const isStatus15003 = !readOnly && mappedFine?.inspectionStatus === 15003;
+  const entityIdForReview = fine?.EntityGUID || fine?.entityGUID || fine?.inspectionGUID || fine?.id || "";
+  const entityCodeForReview = fine?.EntityCode || fine?.entityCode || "parking-fine-cancel-request";
 
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
     fine ? { inspectionGUID: fine.inspectionGUID, entityCode: fine.entityCode } : skipToken,
@@ -99,13 +115,37 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
   }, [fine, lookupOptionsToUse, i18n.language]);
 
   useEffect(() => {
+    if (!open || !fine) return;
+
+    if (showInboxReviewWorkflow) {
+      getReviewOptions(fine.$SKWorkItemData);
+    }
+
+    if (!entityIdForReview || !entityCodeForReview) return;
+
+    if (showInboxReviewWorkflow) {
+      getReviewHistory({ entityCode: entityCodeForReview, entityId: entityIdForReview });
+    } else {
+      getEntityHistory({ entityCode: entityCodeForReview, entityId: entityIdForReview });
+    }
+  }, [open, fine, showInboxReviewWorkflow, entityIdForReview, entityCodeForReview]);
+
+  useEffect(() => {
     if (open) {
       if (!readOnly) {
         form.resetFields();
       }
       setLastAction(null);
+      setSelectedAction(null);
+      setComments("");
     }
   }, [open, fine, form, readOnly]);
+
+  const reviewOptions = useMemo(() => {
+    return reviewResponse?.ActivityOption
+      ? [...reviewResponse.ActivityOption].sort((a: any, b: any) => a.SequenceNo - b.SequenceNo)
+      : [];
+  }, [reviewResponse]);
 
   const fetchLookupData = async () => {
     setIsLoadingLookups(true);
@@ -266,6 +306,61 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
       .catch(() => {});
   };
 
+  const handleActionChange = (value: string) => {
+    const opt = reviewOptions.find((item: any) => item.ActivityOptionGUID === value);
+    setSelectedAction(opt);
+  };
+
+  const handleInboxReviewSubmit = async () => {
+    try {
+      await form.validateFields();
+
+      if (!selectedAction) {
+        notification.error({ data: { en_Msg: "Please select an action", ar_Msg: "الرجاء تحديد إجراء" } }, "");
+        return;
+      }
+
+      if (selectedAction.IsCommentMandatory && !comments.trim()) {
+        notification.error(
+          { data: { en_Msg: "Comments are required for this action", ar_Msg: "التعليقات مطلوبة لهذا الإجراء" } },
+          "",
+        );
+        return;
+      }
+
+      const normalizedStatus = String(selectedAction?.ReviewStatusCode ?? selectedAction?.reviewStatusCode ?? "")
+        .toLowerCase()
+        .trim();
+      const fineCancelStatus =
+        selectedAction?.StatusCode ??
+        (normalizedStatus.includes("approve") || normalizedStatus.includes("accept") ? 1 : 2);
+
+      const payload = {
+        entityNo: mappedFine?.entityNo,
+        fineCancelStatus,
+        review: {
+          reviewStatusCode: selectedAction.ReviewStatusCode,
+          activityCode: mappedFine?.ActivityCode ?? mappedFine?.nvarchar3 ?? "",
+          entityCode: mappedFine?.EntityCode ?? mappedFine?.entityCode ?? "parking-fine-cancel-request",
+          entityGUID: mappedFine?.EntityGUID ?? mappedFine?.inspectionGUID ?? "",
+          activityOptionGUID: selectedAction.ActivityOptionGUID,
+          reviewComments: comments || "",
+          rcwuri: mappedFine?.$SKWorkItemData || "",
+        },
+      };
+
+      const response = await updateFineCancelStatus(payload).unwrap();
+      notification.success(response, "");
+      form.resetFields();
+      setSelectedAction(null);
+      setComments("");
+      onClose();
+    } catch (error: any) {
+      if (error?.errorFields) return;
+      notification.error(error, "");
+    }
+  };
+
   const handleViewLocation = () => {
     if (onViewLocation && mappedFine) {
       onViewLocation(mappedFine);
@@ -287,7 +382,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
 
   return (
     <Modal open={open} onCancel={onClose} width={1000} footer={null} title={null} closable={false}>
-      <Spin spinning={isLoading || isLoadingLookups || isProcessing}>
+      <Spin spinning={isLoading || isLoadingLookups || isProcessing || loadingOptions || historyLoading || entityHistoryLoading}>
         {/* Header */}
         <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
           <Col>
@@ -506,6 +601,56 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                             <Text strong>{t("form.vehicleOwnerMobile")}:</Text>
                           </Col>
                           <Col span={14}>{mappedFine.vehicleOwnerMobile || "No Data"}</Col>
+
+                          <Col span={10}>
+                            <Text strong>{i18n.language.startsWith("ar") ? "تفاصيل المرور الإلكتروني:" : "E-Traffic Details:"}</Text>
+                          </Col>
+                          <Col span={14}>
+                            {hasMissingVehicleOwnerName ? (
+                              <Text
+                                type="danger"
+                                style={{
+                                  background: "#eb2630",
+                                  color: "#fff",
+                                  fontSize: 11,
+                                  borderRadius: 2,
+                                  padding: "2px 8px",
+                                  lineHeight: "18px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  marginInline: 8,
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                ✖{" "}
+                                {i18n.language.startsWith("ar")
+                                  ? "بيانات المركبة غير موجودة في نظام المرور"
+                                  : "Car Details Not Found in E-Traffic"}
+                              </Text>
+                            ) : (
+                              <Text
+                                style={{
+                                  background: "#52c41a",
+                                  color: "#fff",
+                                  fontSize: 11,
+                                  borderRadius: 2,
+                                  padding: "2px 8px",
+                                  lineHeight: "18px",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  marginInline: 8,
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                ✔{" "}
+                                {i18n.language.startsWith("ar")
+                                  ? "تم العثور على بيانات المركبة في نظام المرور"
+                                  : "Car Details Found in E-Traffic"}
+                              </Text>
+                            )}
+                          </Col>
                         </Row>
                       </Card>
                     </Col>
@@ -556,53 +701,140 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                   )}
                 </Card>
 
-            {/* Approval Actions */}
-            {isStatus15003 && (
-              <Card
-                title={t("form.approvalActions")}
-                size="small"
-                style={{ marginBottom: 16, borderRadius: 12 }}
-                headStyle={{ background: colorBgContainer, fontWeight: 600 }}
-              >
-                <Form
-                  form={form}
-                  onFinish={handleFormSubmit}
-                  layout="vertical"
-                  disabled={isProcessing}
-                  style={{ marginBottom: 0 }}
-                >
-                  <Form.Item
-                    name="comment"
-                    rules={[{ required: true, message: t("placeholders.enterComments") }]}
-                    style={{ marginBottom: 8 }}
-                  >
-                    <TextArea rows={3} placeholder={t("placeholders.comments")} />
-                  </Form.Item>
+                {/* Inbox Review Workflow */}
+                {showInboxReviewWorkflow ? (
+                  <>
+                    <Card
+                      title={t("form.reviewTimeline")}
+                      size="small"
+                      style={{ marginBottom: 16, borderRadius: 12 }}
+                      headStyle={{ background: colorBgContainer, fontWeight: 600 }}
+                    >
+                      <ReviewTimeline data={record?.$SKWorkItemData ? reviewHistory : entityHistory} />
+                    </Card>
 
-                  {/* Actions */}
-                  <Row justify={"end"}>
-                    <Space style={{ marginTop: 0, marginBottom: 0 }}>
-                      <Button
-                        type="primary"
-                        onClick={handleApproveClick}
+                    <Card
+                      title={t("form.approvalActions")}
+                      size="small"
+                      style={{ marginBottom: 16, borderRadius: 12 }}
+                      headStyle={{ background: colorBgContainer, fontWeight: 600 }}
+                    >
+                      <Form form={form} layout="vertical" disabled={isProcessing} style={{ marginBottom: 0 }}>
+                        <Form.Item
+                          name="action"
+                          label={<Text strong>{t("form.action")}</Text>}
+                          rules={[{ required: true, message: t("placeholders.selectAction") }]}
+                          style={{ marginBottom: 8 }}
+                        >
+                          <Select
+                            placeholder={t("placeholders.selectAction")}
+                            onChange={(value) => {
+                              if (value) {
+                                handleActionChange(value);
+                              } else {
+                                setSelectedAction(null);
+                              }
+                            }}
+                            loading={loadingOptions}
+                            allowClear
+                          >
+                            {reviewOptions.map((opt: any) => (
+                              <Select.Option key={opt.ActivityOptionGUID} value={opt.ActivityOptionGUID}>
+                                {opt.ReviewStatus}
+                              </Select.Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+
+                        <Form.Item
+                          name="reviewComments"
+                          label={<Text strong>{t("form.comments")}</Text>}
+                          rules={[
+                            {
+                              required: selectedAction?.IsCommentMandatory || false,
+                              message: t("placeholders.enterComments"),
+                            },
+                          ]}
+                          style={{ marginBottom: 8 }}
+                        >
+                          <TextArea
+                            rows={3}
+                            placeholder={
+                              selectedAction?.IsCommentMandatory
+                                ? t("placeholders.enterComments")
+                                : t("placeholders.comments")
+                            }
+                            onChange={(e) => setComments(e.target.value)}
+                          />
+                        </Form.Item>
+
+                        <Row justify={"end"}>
+                          <Space style={{ marginTop: 0, marginBottom: 0 }}>
+                            <Button type="primary" onClick={handleInboxReviewSubmit} disabled={isProcessing}>
+                              {t("form.submit")}
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                form.resetFields();
+                                setSelectedAction(null);
+                                setComments("");
+                              }}
+                            >
+                              {t("common.cancel")}
+                            </Button>
+                          </Space>
+                        </Row>
+                      </Form>
+                    </Card>
+                  </>
+                ) : (
+                  isStatus15003 && (
+                    <Card
+                      title={t("form.approvalActions")}
+                      size="small"
+                      style={{ marginBottom: 16, borderRadius: 12 }}
+                      headStyle={{ background: colorBgContainer, fontWeight: 600 }}
+                    >
+                      <Form
+                        form={form}
+                        onFinish={handleFormSubmit}
+                        layout="vertical"
                         disabled={isProcessing}
-                        loading={isProcessing && lastAction === "approve"}
+                        style={{ marginBottom: 0 }}
                       >
-                        {t("form.approve")}
-                      </Button>
-                      <Button
-                        danger
-                        onClick={handleRejectClick}
-                        disabled={isProcessing}
-                        loading={isProcessing && lastAction === "reject"}
-                      >
-                        {t("form.reject")}
-                      </Button>
-                    </Space>
-                  </Row>
-                </Form>
-              </Card>
-            )}
+                        <Form.Item
+                          name="comment"
+                          rules={[{ required: true, message: t("placeholders.enterComments") }]}
+                          style={{ marginBottom: 8 }}
+                        >
+                          <TextArea rows={3} placeholder={t("placeholders.comments")} />
+                        </Form.Item>
+
+                        {/* Actions */}
+                        <Row justify={"end"}>
+                          <Space style={{ marginTop: 0, marginBottom: 0 }}>
+                            <Button
+                              type="primary"
+                              onClick={handleApproveClick}
+                              disabled={isProcessing}
+                              loading={isProcessing && lastAction === "approve"}
+                            >
+                              {t("form.approve")}
+                            </Button>
+                            <Button
+                              danger
+                              onClick={handleRejectClick}
+                              disabled={isProcessing}
+                              loading={isProcessing && lastAction === "reject"}
+                            >
+                              {t("form.reject")}
+                            </Button>
+                          </Space>
+                        </Row>
+                      </Form>
+                    </Card>
+                  )
+                )}
 
                 <Row gutter={16}>
                   {!hideLocation && (

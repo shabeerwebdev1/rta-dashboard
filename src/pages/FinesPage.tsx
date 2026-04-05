@@ -9,7 +9,7 @@ import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
-import { useSearchFinesQuery, useLazyGetLookupsQuery } from "../services/rtkApiFactory";
+import { useSearchFinesQuery, useLazyGetLookupsQuery, useLazyGetCarInspectionByIdQuery } from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
@@ -55,6 +55,7 @@ const FinesPage: React.FC = () => {
 
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedFineData, setSelectedFineData] = useState<any>(null);
+  const [viewLoading, setViewLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [mapModalVisible, setMapModalVisible] = useState(false);
@@ -67,6 +68,7 @@ const FinesPage: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState([]);
 
   const [triggerGetLookups] = useLazyGetLookupsQuery();
+  const [triggerGetCarInspectionById] = useLazyGetCarInspectionByIdQuery();
 
   const fineStatusColorMap: Record<number, string> = {
     15001: "orange",
@@ -165,9 +167,28 @@ const FinesPage: React.FC = () => {
     clearAll();
   };
 
-  const handleView = (record: any) => {
-    setSelectedFineData(record);
-    setDrawerVisible(true);
+  const mergeFineDetails = (record: any, response: any) => {
+    const payload = response?.data ?? response ?? {};
+
+    return {
+      ...record,
+      ...(payload && !Array.isArray(payload) ? payload : {}),
+    };
+  };
+
+  const handleView = async (record: any) => {
+    try {
+      setViewLoading(true);
+      const response = await triggerGetCarInspectionById(record.inspectionGUID).unwrap();
+      setSelectedFineData(mergeFineDetails(record, response));
+      setDrawerVisible(true);
+    } catch (error) {
+      notification.error({ data: { en_Msg: "Failed to load fine details" } }, "Load Failed");
+      setSelectedFineData(record);
+      setDrawerVisible(true);
+    } finally {
+      setViewLoading(false);
+    }
   };
 
   const handleViewLocation = (record: any) => {
@@ -467,7 +488,7 @@ const FinesPage: React.FC = () => {
         lookupOptions={modifiedLookupOptions} // ✅ Use modified lookup options
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
         columnLookupMap={{ inspectionType: 1700, inspectionCategory: 1300 }}
-      />
+        />
 
       <FinesViewDrawer
         open={drawerVisible}
@@ -476,7 +497,7 @@ const FinesPage: React.FC = () => {
           setSelectedFineData(null);
         }}
         fine={selectedFineData}
-        isLoading={isFetching}
+        isLoading={viewLoading}
         lookupOptions={lookupOptions}
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
       />

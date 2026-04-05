@@ -9,7 +9,7 @@ import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
-import { useSearchTradeQuery, useLazyGetLookupsQuery } from "../services/rtkApiFactory";
+import { useSearchTradeQuery, useLazyGetLookupsQuery, useLazyGetTLInspectionByIdQuery } from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
@@ -55,6 +55,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
 
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedFineData, setSelectedFineData] = useState<any>(null);
+  const [viewLoading, setViewLoading] = useState(false);
   const [mapModalVisible, setMapModalVisible] = useState(false);
   const [attachmentsModalVisible, setAttachmentsModalVisible] = useState(false);
   const [selectedFineForModal, setSelectedFineForModal] = useState<any>(null);
@@ -68,6 +69,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
   const [selectedRows, setSelectedRows] = useState([]);
 
   const [triggerGetLookups] = useLazyGetLookupsQuery();
+  const [triggerGetTLInspectionById] = useLazyGetTLInspectionByIdQuery();
 
   useEffect(() => {
     fetchLookupData();
@@ -155,9 +157,28 @@ const TradeLicenseInspectionPage: React.FC = () => {
     clearAll();
   };
 
-  const handleView = (record: any) => {
-    setSelectedFineData(record);
-    setDrawerVisible(true);
+  const mergeFineDetails = (record: any, response: any) => {
+    const payload = response?.data ?? response ?? {};
+
+    return {
+      ...record,
+      ...(payload && !Array.isArray(payload) ? payload : {}),
+    };
+  };
+
+  const handleView = async (record: any) => {
+    try {
+      setViewLoading(true);
+      const response = await triggerGetTLInspectionById(record.inspectionGUID).unwrap();
+      setSelectedFineData(mergeFineDetails(record, response));
+      setDrawerVisible(true);
+    } catch (error) {
+      notification.error({ data: { en_Msg: "Failed to load fine details" } }, "Load Failed");
+      setSelectedFineData(record);
+      setDrawerVisible(true);
+    } finally {
+      setViewLoading(false);
+    }
   };
 
   const handleViewLocation = (record: any) => {
@@ -475,7 +496,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
           setSelectedFineData(null);
         }}
         fine={selectedFineData}
-        isLoading={isFetching}
+        isLoading={viewLoading}
         lookupOptions={lookupOptions}
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
       />

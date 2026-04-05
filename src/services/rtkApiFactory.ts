@@ -386,6 +386,22 @@ export const dynamicApi = createApi({
       },
     }),
 
+    getCarInspectionById: builder.query<any, string>({
+      query: (inspectionGUID) => ({
+        url: `/api/Inspection/CarInspections/${inspectionGUID}`,
+        method: "GET",
+      }),
+      transformResponse: (response: any) => response?.data || response || null,
+    }),
+
+    getTLInspectionById: builder.query<any, string>({
+      query: (inspectionGUID) => ({
+        url: `/api/Inspection/TLInspections/${inspectionGUID}`,
+        method: "GET",
+      }),
+      transformResponse: (response: any) => response?.data || response || null,
+    }),
+
     getViolationDetails: builder.query<any[], { inspectionGUID: string; entityCode: string }>({
       query: ({ inspectionGUID, entityCode }) => ({
         url: `/api/Inspection/${inspectionGUID}/${entityCode}`,
@@ -877,6 +893,10 @@ export const {
 
   //Inspection Violation
   useGetViolationDetailsQuery,
+  useGetCarInspectionByIdQuery,
+  useGetTLInspectionByIdQuery,
+  useLazyGetCarInspectionByIdQuery,
+  useLazyGetTLInspectionByIdQuery,
 
   // Parkonics
   useGetParkonicsQuery,

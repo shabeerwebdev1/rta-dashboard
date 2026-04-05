@@ -13,6 +13,8 @@ import TowingViewDrawer from "../Towing/TowingViewDrawer";
 
 import {
   useLazyGetLeaveDetailsByIdQuery,
+  useLazyGetCarInspectionByIdQuery,
+  useLazyGetTLInspectionByIdQuery,
   useLazyGetParkonicByIdQuery,
   useLazyGetParkonicsLocationByIdQuery,
 } from "../../services/rtkApiFactory";
@@ -81,9 +83,16 @@ const ENTITY_CONFIG: Record<string, any> = {
   "parking-fine-cancel-request": {
     component: FinesViewDrawer,
     type: "drawer",
-    fetchData: false,
-    mergeRecord: (_apiRes: any, original: any) => ({
+    fetchData: true,
+    fetcher: "getFineById",
+    getFetchId: (record: any) => record?.EntityGUID || record?.entityGUID || record?.inspectionGUID || record?.id,
+    mergeRecord: (apiRes: any, original: any) => ({
       ...original,
+      ...(apiRes?.data || apiRes),
+      inspectionGUID: original.EntityGUID || original.entityGUID || original.inspectionGUID || original.id,
+      EntityGUID: original.EntityGUID || original.entityGUID || original.inspectionGUID || original.id,
+      entityCode: original.entityCode || original.EntityCode,
+      EntityCode: original.EntityCode || original.entityCode,
       inspectionStatus: 15003,
     }),
   },
@@ -125,12 +134,25 @@ export const useEntityHandler = () => {
   });
 
   const [getLeaveById] = useLazyGetLeaveDetailsByIdQuery();
+  const [getCarInspectionById] = useLazyGetCarInspectionByIdQuery();
+  const [getTLInspectionById] = useLazyGetTLInspectionByIdQuery();
   const [getParkonicById] = useLazyGetParkonicByIdQuery();
   const [getLocationById] = useLazyGetParkonicsLocationByIdQuery();
 
   // Map fetchers to their functions
   const fetchers: Record<string, any> = {
     getLeaveById,
+    getFineById: async (entityId: string | number) => {
+      try {
+        const carRes = await getCarInspectionById(String(entityId)).unwrap();
+        if (carRes) return carRes;
+      } catch {
+        // Try TL inspection if car inspection is unavailable for this GUID.
+      }
+
+      const tlRes = await getTLInspectionById(String(entityId)).unwrap();
+      return tlRes;
+    },
     getParkonicById,
     getLocationById,
     // Add more fetchers here as needed
@@ -179,10 +201,10 @@ export const useEntityHandler = () => {
           }
 
           fetchedData = await fetchEntityData(entityCode, fetchId);
+        }
 
-          if (config.mergeRecord) {
-            fetchedData = config.mergeRecord(fetchedData, record);
-          }
+        if (config.mergeRecord) {
+          fetchedData = config.mergeRecord(fetchedData, record);
         }
 
         setState({

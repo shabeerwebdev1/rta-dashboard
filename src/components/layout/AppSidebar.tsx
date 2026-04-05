@@ -89,8 +89,8 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       key: FULL_PATHS.INBOX,
       icon: <InboxOutlined />,
       labelText: (
-        <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
-          <span>{t("sidebar.inbox")}</span>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", gap: 8 }}>
+          <span style={{ flex: 1, minWidth: 0 }}>{t("sidebar.inbox")}</span>
           <span style={{ color: "#ff4d4f", fontWeight: 600 }}>{inboxLoading ? 0 : totalInboxCount}</span>
         </div>
       ),
@@ -100,9 +100,19 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         ...inboxMenus.map((item: any) => ({
           key: `${FULL_PATHS.INBOX}?code=${item.NotificationCode}`,
           labelText: (
-            <div style={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", gap: 8 }}>
               {/* <span>{sanitizeInboxTitle(item.NotificationName)}</span> */}
-              <span>{item.NotificationName}</span>
+              <span
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  whiteSpace: "normal",
+                  lineHeight: 1.3,
+                  wordBreak: "break-word",
+                }}
+              >
+                {item.NotificationName}
+              </span>
               <span style={{ color: "#ff4d4f", fontWeight: 600 }}>{item.AW ?? 0}</span>
             </div>
           ),
