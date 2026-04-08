@@ -391,7 +391,15 @@ export const dynamicApi = createApi({
         url: `/api/Inspection/CarInspections/${inspectionGUID}`,
         method: "GET",
       }),
-      transformResponse: (response: any) => response?.data || response || null,
+      transformResponse: (response: any) => {
+        const data = response?.data || response || null;
+        if (!data) return null;
+
+        return {
+          ...data,
+          inspectionCategory: data.inspectionCategory ? parseInt(data.inspectionCategory, 10) : null,
+        };
+      },
     }),
 
     getTLInspectionById: builder.query<any, string>({
@@ -399,9 +407,16 @@ export const dynamicApi = createApi({
         url: `/api/Inspection/TLInspections/${inspectionGUID}`,
         method: "GET",
       }),
-      transformResponse: (response: any) => response?.data || response || null,
-    }),
+      transformResponse: (response: any) => {
+        const data = response?.data || response || null;
+        if (!data) return null;
 
+        return {
+          ...data,
+          inspectionCategory: data.inspectionCategory ? parseInt(data.inspectionCategory, 10) : null,
+        };
+      },
+    }),
     getViolationDetails: builder.query<any[], { inspectionGUID: string; entityCode: string }>({
       query: ({ inspectionGUID, entityCode }) => ({
         url: `/api/Inspection/${inspectionGUID}/${entityCode}`,
@@ -574,7 +589,11 @@ export const dynamicApi = createApi({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["LeaveDetails"],
+      invalidatesTags: [
+        "LeaveDetails",
+        "InboxSummary", // refresh count + list
+        "InboxSummaryMenu",
+      ],
     }),
 
     // General Search
@@ -620,7 +639,11 @@ export const dynamicApi = createApi({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["Towing"],
+      invalidatesTags: [
+        "Towing",
+        "InboxSummary", // refresh count + list
+        "InboxSummaryMenu",
+      ],
     }),
 
     //Towing Evidence

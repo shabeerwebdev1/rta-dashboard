@@ -80,21 +80,28 @@ const ENTITY_CONFIG: Record<string, any> = {
   },
 
   // Fine cancel request
+  // "parking-fine-cancel-request": {
+  //   component: DisputeViewModal,
+  //   type: "drawer",
+  //   fetchData: true,
+  //   fetcher: "getFineById",
+  //   getFetchId: (record: any) => record?.EntityGUID || record?.entityGUID || record?.inspectionGUID || record?.id,
+  //   mergeRecord: (apiRes: any, original: any) => ({
+  //     ...original,
+  //     ...(apiRes?.data || apiRes),
+  //     inspectionGUID: original.EntityGUID || original.entityGUID || original.inspectionGUID || original.id,
+  //     EntityGUID: original.EntityGUID || original.entityGUID || original.inspectionGUID || original.id,
+  //     entityCode: original.entityCode || original.EntityCode,
+  //     EntityCode: original.EntityCode || original.entityCode,
+  //     inspectionStatus: 15003,
+  //   }),
+  // },
+
   "parking-fine-cancel-request": {
-    component: FinesViewDrawer,
-    type: "drawer",
-    fetchData: true,
-    fetcher: "getFineById",
-    getFetchId: (record: any) => record?.EntityGUID || record?.entityGUID || record?.inspectionGUID || record?.id,
-    mergeRecord: (apiRes: any, original: any) => ({
-      ...original,
-      ...(apiRes?.data || apiRes),
-      inspectionGUID: original.EntityGUID || original.entityGUID || original.inspectionGUID || original.id,
-      EntityGUID: original.EntityGUID || original.entityGUID || original.inspectionGUID || original.id,
-      entityCode: original.entityCode || original.EntityCode,
-      EntityCode: original.EntityCode || original.entityCode,
-      inspectionStatus: 15003,
-    }),
+    component: DisputeViewModal,
+    type: "modal",
+    fetchData: false,
+    mergeRecord: (_apiRes: any, original: any) => original,
   },
 
   // Dispute

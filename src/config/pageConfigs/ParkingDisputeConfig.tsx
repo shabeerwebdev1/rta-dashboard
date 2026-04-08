@@ -88,8 +88,8 @@ export const parkingDisputeConfig: PageConfig = {
         type: "select",
       },
       { key: "source", title: "form.source", type: "string" },
-      { key: "vehicleExitDateTime", title: "form.vehicleExit", type: "string" },
-      { key: "approvedBy", title: "form.approvedBy", type: "string" },
+      // { key: "vehicleExitDateTime", title: "form.vehicleExit", type: "string" },
+      // { key: "approvedBy", title: "form.approvedBy", type: "string" },
       {
         key: "created_At",
         title: "form.createdAt",
