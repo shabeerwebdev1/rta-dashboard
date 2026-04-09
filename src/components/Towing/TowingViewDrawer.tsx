@@ -500,7 +500,7 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
                         {L("Submit", "إرسال")}
                       </Button>
 
-                      <Button onClick={handleCancel}>{L("Cancel", "إلغاء")}</Button>
+                      <Button danger  onClick={handleCancel}>{L("Cancel", "إلغاء")}</Button>
                     </Space>
                   </Form>
                 </>

@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/ar";
 
 const { Text } = Typography;
+const EMPTY_TIMELINE_DATA: any[] = [];
 
 interface ReviewTimelineProps {
   data: any[];
@@ -20,20 +21,53 @@ const ReviewTimeline: React.FC<ReviewTimelineProps> = ({ data }) => {
 
   const L = (en: string, ar: string) => (isRTL ? ar : en);
 
+  const normalizeStatus = (value: unknown) =>
+    String(value ?? "")
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .replace(/[^\w\s]/g, "")
+      .trim();
+
+  const expandableStatuses = useMemo(
+    () =>
+      new Set([
+        "accpet",
+        "acceoeted",
+        "accept",
+        "accepted",
+        "reject",
+        "rejected",
+        "approve",
+        "approved",
+        "submit feedback",
+        "send to senior supervisor review",
+        "send to senior supervior review",
+        "senior supervisor review",
+      ]),
+    [],
+  );
+
   const timelineData = useMemo(() => {
-    if (!data?.length) return [];
+    if (!data?.length) return EMPTY_TIMELINE_DATA;
 
     return [...data].sort((a, b) => dayjs(b.ActionDateTime).valueOf() - dayjs(a.ActionDateTime).valueOf());
   }, [data]);
 
-  /* ✅ AUTO EXPAND LATEST ENTRY */
+  const expandableKeys = useMemo(() => {
+    if (!timelineData.length) return [];
+
+    return timelineData
+      .map((item, index) => {
+        const actionText = normalizeStatus(item.ReviewStatus || item.ActionType);
+        const panelKey = String(item.HistoryGUID || item.ReviewId || index);
+        return expandableStatuses.has(actionText) ? panelKey : null;
+      })
+      .filter((key): key is string => Boolean(key));
+  }, [expandableStatuses, timelineData]);
+
   useEffect(() => {
-    if (timelineData.length) {
-      const first = timelineData[0];
-      const key = String(first.HistoryGUID || first.ReviewId || 0);
-      setActiveKeys([key]);
-    }
-  }, [timelineData]);
+    setActiveKeys(expandableKeys);
+  }, [expandableKeys]);
 
   const getActionColor = (action: string) => {
     const key = action.toLowerCase();

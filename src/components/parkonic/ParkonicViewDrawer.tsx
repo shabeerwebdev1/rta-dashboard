@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Space, Image, Divider, theme } from "antd";
-import { CloseOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import { CloseOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import {
   useUpdateParkonicMutation,

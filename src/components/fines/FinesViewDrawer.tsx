@@ -184,9 +184,10 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
       fineAmountFormatted: (fine.fineAmount ?? fine.fineAmount === 0) ? `${fine.fineAmount} AED` : "No Data",
       totalAmountFormatted:
         (fine.totalFineAmount ?? fine.totalFineAmount === 0) ? `${fine.totalFineAmount} AED` : "No Data",
-      paymentTypeLabel: fine.paymentType !== undefined && fine.paymentType !== null
-        ? getLabelFunction(fine.paymentType, paymentTypeOptions, i18n)
-        : getPaymentTypeLabel(fine.paymentType),
+      paymentTypeLabel:
+        fine.paymentType !== undefined && fine.paymentType !== null
+          ? getLabelFunction(fine.paymentType, paymentTypeOptions, i18n)
+          : getPaymentTypeLabel(fine.paymentType),
       statusLabel: getStatusLabel(fine.isPaid, effectiveInspectionStatus),
       statusColor: getStatusColor(fine.isPaid, effectiveInspectionStatus),
       blackPointsFormatted: (fine.blackPoint ?? fine.blackPoint === 0) ? fine.blackPoint : "0",
@@ -382,7 +383,12 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
 
   return (
     <Modal open={open} onCancel={onClose} width={1000} footer={null} title={null} closable={false}>
-      <Spin spinning={isLoading || isLoadingLookups || isProcessing || loadingOptions || historyLoading || entityHistoryLoading}>
+      <Spin
+        spinning={
+          isLoading || isLoadingLookups || isProcessing || loadingOptions || historyLoading || entityHistoryLoading
+        }
+      >
+        <Form form={form} component={false} />
         {/* Header */}
         <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
           <Col>
@@ -431,7 +437,9 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                             <Col span={10}>
                               <Text strong>{t("form.tradeLicenseName")}:</Text>
                             </Col>
-                            <Col span={14}>{mappedFine.tradeLicenseNameEn || mappedFine.tradeLicenseNameAr || "---"}</Col>
+                            <Col span={14}>
+                              {mappedFine.tradeLicenseNameEn || mappedFine.tradeLicenseNameAr || "---"}
+                            </Col>
                           </>
                         )}
 
@@ -603,7 +611,9 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                           <Col span={14}>{mappedFine.vehicleOwnerMobile || "No Data"}</Col>
 
                           <Col span={10}>
-                            <Text strong>{i18n.language.startsWith("ar") ? "تفاصيل المرور الإلكتروني:" : "E-Traffic Details:"}</Text>
+                            <Text strong>
+                              {i18n.language.startsWith("ar") ? "تفاصيل المرور الإلكتروني:" : "E-Traffic Details:"}
+                            </Text>
                           </Col>
                           <Col span={14}>
                             {hasMissingVehicleOwnerName ? (
@@ -683,7 +693,9 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                             }}
                           >
                             <Col flex="1">
-                              <Text strong>{i18n.language === "ar" ? value?.violationNameAr : value?.violationNameEn}</Text>
+                              <Text strong>
+                                {i18n.language === "ar" ? value?.violationNameAr : value?.violationNameEn}
+                              </Text>
                             </Col>
                             <Col>
                               <Text strong>{t("form.amount")}:</Text>
@@ -710,7 +722,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                       style={{ marginBottom: 16, borderRadius: 12 }}
                       headStyle={{ background: colorBgContainer, fontWeight: 600 }}
                     >
-                      <ReviewTimeline data={record?.$SKWorkItemData ? reviewHistory : entityHistory} />
+                      <ReviewTimeline data={fine?.$SKWorkItemData ? reviewHistory : entityHistory} />
                     </Card>
 
                     <Card
@@ -787,54 +799,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                       </Form>
                     </Card>
                   </>
-                ) : (
-                  isStatus15003 && (
-                    <Card
-                      title={t("form.approvalActions")}
-                      size="small"
-                      style={{ marginBottom: 16, borderRadius: 12 }}
-                      headStyle={{ background: colorBgContainer, fontWeight: 600 }}
-                    >
-                      <Form
-                        form={form}
-                        onFinish={handleFormSubmit}
-                        layout="vertical"
-                        disabled={isProcessing}
-                        style={{ marginBottom: 0 }}
-                      >
-                        <Form.Item
-                          name="comment"
-                          rules={[{ required: true, message: t("placeholders.enterComments") }]}
-                          style={{ marginBottom: 8 }}
-                        >
-                          <TextArea rows={3} placeholder={t("placeholders.comments")} />
-                        </Form.Item>
-
-                        {/* Actions */}
-                        <Row justify={"end"}>
-                          <Space style={{ marginTop: 0, marginBottom: 0 }}>
-                            <Button
-                              type="primary"
-                              onClick={handleApproveClick}
-                              disabled={isProcessing}
-                              loading={isProcessing && lastAction === "approve"}
-                            >
-                              {t("form.approve")}
-                            </Button>
-                            <Button
-                              danger
-                              onClick={handleRejectClick}
-                              disabled={isProcessing}
-                              loading={isProcessing && lastAction === "reject"}
-                            >
-                              {t("form.reject")}
-                            </Button>
-                          </Space>
-                        </Row>
-                      </Form>
-                    </Card>
-                  )
-                )}
+                ) : null}
 
                 <Row gutter={16}>
                   {!hideLocation && (

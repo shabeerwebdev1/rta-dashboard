@@ -9,6 +9,7 @@ import ParkonicLocationViewDrawer from "../ParkonicLocation/ParkonicLocationView
 import LeaveViewDrawer from "../Leaves/LeaveViewDrawer";
 import FinesViewDrawer from "../fines/FinesViewDrawer";
 import DisputeViewModal from "../dispute/DisputeViewModal";
+import FineCancelRequestViewModal from "../fines/FineCancelRequestViewModal";
 import TowingViewDrawer from "../Towing/TowingViewDrawer";
 
 import {
@@ -17,6 +18,7 @@ import {
   useLazyGetTLInspectionByIdQuery,
   useLazyGetParkonicByIdQuery,
   useLazyGetParkonicsLocationByIdQuery,
+  useLazyGetDisputeByIdQuery,
 } from "../../services/rtkApiFactory";
 
 const ENTITY_CONFIG: Record<string, any> = {
@@ -79,29 +81,23 @@ const ENTITY_CONFIG: Record<string, any> = {
     }),
   },
 
-  // Fine cancel request
-  // "parking-fine-cancel-request": {
-  //   component: DisputeViewModal,
-  //   type: "drawer",
-  //   fetchData: true,
-  //   fetcher: "getFineById",
-  //   getFetchId: (record: any) => record?.EntityGUID || record?.entityGUID || record?.inspectionGUID || record?.id,
-  //   mergeRecord: (apiRes: any, original: any) => ({
-  //     ...original,
-  //     ...(apiRes?.data || apiRes),
-  //     inspectionGUID: original.EntityGUID || original.entityGUID || original.inspectionGUID || original.id,
-  //     EntityGUID: original.EntityGUID || original.entityGUID || original.inspectionGUID || original.id,
-  //     entityCode: original.entityCode || original.EntityCode,
-  //     EntityCode: original.EntityCode || original.entityCode,
-  //     inspectionStatus: 15003,
-  //   }),
-  // },
-
   "parking-fine-cancel-request": {
-    component: DisputeViewModal,
+    component: FineCancelRequestViewModal,
     type: "modal",
-    fetchData: false,
-    mergeRecord: (_apiRes: any, original: any) => original,
+    fetchData: true,
+    fetcher: "getDisputeById",
+    getFetchId: (record: any) => record?.disputeCode || record?.EntityGUID || record?.entityGUID || record?.id,
+    mergeRecord: (apiRes: any, original: any) => ({
+      ...(apiRes?.data || apiRes || {}),
+      ...original,
+      data: apiRes?.data || apiRes?.data?.data || apiRes,
+      disputeCode: original.disputeCode || apiRes?.data?.disputeCode || original.EntityGUID || original.entityGUID,
+      entityCode: original.entityCode || original.EntityCode || apiRes?.data?.entityCode || "parking-fine-cancel-request",
+      EntityCode: original.EntityCode || original.entityCode || apiRes?.data?.entityCode || "parking-fine-cancel-request",
+      EntityGUID: original.EntityGUID || original.entityGUID || apiRes?.data?.disputeCode || original.disputeCode,
+      $SKWorkItemData: original.$SKWorkItemData || apiRes?.data?.$SKWorkItemData,
+      ActivityCode: original.ActivityCode || original.nvarchar3 || apiRes?.data?.ActivityCode || apiRes?.data?.nvarchar3 || "",
+    }),
   },
 
   // Dispute
@@ -145,6 +141,7 @@ export const useEntityHandler = () => {
   const [getTLInspectionById] = useLazyGetTLInspectionByIdQuery();
   const [getParkonicById] = useLazyGetParkonicByIdQuery();
   const [getLocationById] = useLazyGetParkonicsLocationByIdQuery();
+  const [getDisputeById] = useLazyGetDisputeByIdQuery();
 
   // Map fetchers to their functions
   const fetchers: Record<string, any> = {
@@ -162,6 +159,7 @@ export const useEntityHandler = () => {
     },
     getParkonicById,
     getLocationById,
+    getDisputeById: (entityId: string | number) => getDisputeById(String(entityId)),
     // Add more fetchers here as needed
   };
 
@@ -176,7 +174,8 @@ export const useEntityHandler = () => {
     }
 
     try {
-      const res = await fetcher(entityId).unwrap();
+      const request = fetcher(entityId);
+      const res = typeof request?.unwrap === "function" ? await request.unwrap() : await request;
       return res;
     } catch (error) {
       console.error(`Error fetching data for ${entityCode}:`, error);

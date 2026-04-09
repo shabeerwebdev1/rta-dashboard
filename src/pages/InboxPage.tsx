@@ -84,11 +84,12 @@ const InboxPage = () => {
     return (
       <span
         style={{
-          display: "inline-block",
+          display: "block",
           maxWidth: "100%",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
+          whiteSpace: "normal",
+          wordBreak: "break-word",
+          overflowWrap: "anywhere",
+          lineHeight: 1.35,
         }}
       >
         {displayValue}
@@ -123,12 +124,13 @@ const InboxPage = () => {
   const slNoColumn = {
     key: "slno",
     title: isRTL ? "التسلسل" : "SL.No",
-    width: 100,
+    width: 56,
+    align: "center" as const,
     onHeaderCell: () => ({
-      style: { paddingLeft: 16 },
+      style: { textAlign: "center", paddingInline: 8 },
     }),
     onCell: () => ({
-      style: { paddingLeft: 16 },
+      style: { textAlign: "center", paddingInline: 8 },
     }),
     render: (_: any, __: any, index: number) => (apiParams.PageNumber - 1) * apiParams.PageSize + index + 1,
   };
@@ -169,7 +171,13 @@ const InboxPage = () => {
         title: col.DisplayName,
         sortable: col.AllowSorting === "true",
         width: String(col.Name || "").toLowerCase() === "_$v$_$plateinfo" ? 180 : undefined,
-        ellipsis: true,
+        onCell: () => ({
+          style: {
+            whiteSpace: "normal",
+            wordBreak: "break-word",
+            overflowWrap: "anywhere",
+          },
+        }),
         render:
           String(col.Name || "").toLowerCase() === "_$v$_$plateinfo" ||
           String(col.DisplayName || "").toLowerCase() === "plate no"
@@ -232,6 +240,7 @@ const InboxPage = () => {
         handleTableChange={() => {}}
         tableSize="small"
         state={{ columnFilters: {} }}
+        tableLayout="fixed"
       />
 
       <DynamicEntityHandler
