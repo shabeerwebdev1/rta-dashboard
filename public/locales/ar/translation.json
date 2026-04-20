@@ -671,7 +671,8 @@
     "plotNumber": "أدخل رقم القطعة",
     "tradeLicense_EN_Name": "أدخل اسم الرخصة التجارية باللغة الإنجليزية",
     "tradeLicense_AR_Name": "أدخل اسم الرخصة التجارية باللغة العربية",
-    "sendToEmail": "أدخل البريد الإلكتروني للإرسال"
+    "sendToEmail": "أدخل البريد الإلكتروني للإرسال",
+    "selectSupervisor": "اختر المشرف"
   },
 
   "dashboard": {

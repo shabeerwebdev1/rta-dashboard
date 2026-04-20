@@ -671,7 +671,8 @@
     "plotNumber": "Enter the plot number",
     "tradeLicense_EN_Name": "Enter the trade license name in English",
     "tradeLicense_AR_Name": "Enter the trade license name in Arabic",
-    "sendToEmail": "Enter email to send the report"
+    "sendToEmail": "Enter email to send the report",
+    "selectSupervisor": "Select supervisor "
   },
   "dashboard": {
     "totalInspectors": "Total Inspectors",

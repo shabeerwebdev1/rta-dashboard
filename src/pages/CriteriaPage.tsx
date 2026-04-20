@@ -63,9 +63,6 @@ const CriteriaPage: React.FC = () => {
       );
     }
 
-    if (filters.objectiveType) {
-      list = list.filter((c) => c.objectiveType === filters.objectiveType);
-    }
     if (filters.isActive !== undefined && filters.isActive !== null && filters.isActive !== "") {
       list = list.filter((c) => c.isActive === filters.isActive);
     }
@@ -132,9 +129,9 @@ const CriteriaPage: React.FC = () => {
   const tableColumns = [
     { key: "descriptionEn", title: t("form.descriptionEn") },
     { key: "descriptionAr", title: t("form.descriptionAr") },
-    { key: "objectiveType", title: t("form.objectiveType") },
+    // { key: "objectiveType", title: t("form.objectiveType") },
     { key: "weight", title: t("form.weight") },
-    { key: "ratingScale", title: t("form.ratingScale") },
+    // { key: "ratingScale", title: t("form.ratingScale") },
     { key: "isActive", title: t("form.isActive") },
     { key: "actions", title: t("common.actions") },
   ];
@@ -154,7 +151,7 @@ const CriteriaPage: React.FC = () => {
                 onChange={(e) => setSearchValue(e.target.value)}
                 style={{ width: 300 }}
               />
-              <Select
+              {/* <Select
                 allowClear
                 placeholder={t("form.objectiveType")}
                 style={{ width: 180 }}
@@ -165,7 +162,7 @@ const CriteriaPage: React.FC = () => {
                     {i18n.language === "ar" ? ot.labelAr : ot.labelEn}
                   </Option>
                 ))}
-              </Select>
+              </Select> */}
 
               <Select
                 allowClear
@@ -215,13 +212,13 @@ const CriteriaPage: React.FC = () => {
               <tr key={row.id} style={{ borderBottom: `1px solid ${token.colorBorderSecondary}` }}>
                 <td style={{ padding: 12, color: token.colorText }}>{row.descriptionEn}</td>
                 <td style={{ padding: 12, color: token.colorText }}>{row.descriptionAr}</td>
-                <td style={{ padding: 12 }}>
+                {/* <td style={{ padding: 12 }}>
                   <Tag>{getLabel(row.objectiveType, "objectiveTypes")}</Tag>
-                </td>
+                </td> */}
                 <td style={{ padding: 12, color: token.colorText }}>
                   <strong>{row.weight}%</strong>
                 </td>
-                <td style={{ padding: 12, color: token.colorText }}>{getLabel(row.ratingScale, "ratingScales")}</td>
+                {/* <td style={{ padding: 12, color: token.colorText }}>{getLabel(row.ratingScale, "ratingScales")}</td> */}
                 <td style={{ padding: 12 }}>
                   {row.isActive ? (
                     <Tag color="green">{t("common.active")}</Tag>
@@ -287,7 +284,7 @@ const CriteriaPage: React.FC = () => {
               </Form.Item>
             </Col>
 
-            <Col span={12}>
+            {/* <Col span={12}>
               <Form.Item name="objectiveType" label={t("form.objectiveType")} rules={[{ required: true }]}>
                 <Select placeholder={t("placeholders.selectObjective")}>
                   {lookups.objectiveTypes?.map((ot: any) => (
@@ -297,9 +294,9 @@ const CriteriaPage: React.FC = () => {
                   ))}
                 </Select>
               </Form.Item>
-            </Col>
+            </Col> */}
 
-            <Col span={12}>
+            {/* <Col span={12}>
               <Form.Item name="ratingScale" label={t("form.ratingScale")} rules={[{ required: true }]}>
                 <Select placeholder={t("placeholders.selectRatingScale")}>
                   {lookups.ratingScales?.map((rs: any) => (
@@ -309,7 +306,7 @@ const CriteriaPage: React.FC = () => {
                   ))}
                 </Select>
               </Form.Item>
-            </Col>
+            </Col> */}
 
             <Col span={12}>
               <Form.Item name="isActive" label={t("form.isActive")} valuePropName="checked">
@@ -320,12 +317,7 @@ const CriteriaPage: React.FC = () => {
         </Form>
       </Modal>
 
-      <CriteriaViewDrawer
-        open={isViewOpen}
-        onClose={() => setIsViewOpen(false)}
-        record={viewRecord}
-        getLabel={getLabel}
-      />
+      <CriteriaViewDrawer open={isViewOpen} onClose={() => setIsViewOpen(false)} record={viewRecord} />
     </Space>
   );
 };

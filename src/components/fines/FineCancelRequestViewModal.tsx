@@ -289,14 +289,15 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
 
   const handleSubmit = async () => {
     try {
-      await form.validateFields();
+      const values = await form.validateFields();
+      const reviewComments = values?.review_Comments?.trim?.() || "";
 
       if (!selectedAction) {
         notification.error({ data: { en_Msg: "Please select an action", ar_Msg: "الرجاء تحديد إجراء" } }, "");
         return;
       }
 
-      if (selectedAction.IsCommentMandatory && !comments.trim()) {
+      if (selectedAction.IsCommentMandatory && !reviewComments) {
         notification.error(
           { data: { en_Msg: "Comments are required for this action", ar_Msg: "التعليقات مطلوبة لهذا الإجراء" } },
           "",
@@ -320,7 +321,7 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
           entityCode: mappedFine?.EntityCode ?? mappedFine?.entityCode ?? "parking-fine-cancel-request",
           entityGUID: mappedFine?.EntityGUID ?? mappedFine?.inspectionGUID ?? "",
           activityOptionGUID: selectedAction.ActivityOptionGUID,
-          reviewComments: comments || "",
+          reviewComments,
           rcwuri: mappedFine?.$SKWorkItemData || "",
         },
       };
@@ -924,12 +925,17 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                             label={<Text strong>{t("form.comments")}</Text>}
                             rules={[
                               {
-                                required: true,
+                                required: !!selectedAction?.IsCommentMandatory,
                                 message: isRTL ? "الرجاء إدخال التعليقات" : "Please enter comments",
                               },
                             ]}
                           >
-                            <TextArea rows={2} placeholder={isRTL ? "أدخل التعليقات" : "Enter comments"} />
+                            <TextArea
+                              rows={2}
+                              placeholder={isRTL ? "أدخل التعليقات" : "Enter comments"}
+                              value={comments}
+                              onChange={(e) => setComments(e.target.value)}
+                            />
                           </Form.Item>
                         </Col>
 

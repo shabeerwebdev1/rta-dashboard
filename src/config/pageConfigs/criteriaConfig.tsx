@@ -95,7 +95,7 @@ export const criteriaConfig: PageConfig = {
 
   searchConfig: {
     globalSearchKeys: ["descriptionEn", "descriptionAr"],
-    columnFilterKeys: ["objectiveType", "isActive"],
+    columnFilterKeys: ["isActive"],
   },
 
   statsConfig: [
@@ -130,13 +130,13 @@ export const criteriaConfig: PageConfig = {
         sortable: true,
         filterable: true,
       },
-      {
-        key: "objectiveType",
-        title: "form.objectiveType",
-        dataIndex: "objectiveType",
-        type: "tag",
-        filterable: true,
-      },
+      // {
+      //   key: "objectiveType",
+      //   title: "form.objectiveType",
+      //   dataIndex: "objectiveType",
+      //   type: "tag",
+      //   filterable: true,
+      // },
       {
         key: "weight",
         title: "form.weight",
@@ -144,12 +144,12 @@ export const criteriaConfig: PageConfig = {
         type: "number",
         sortable: true,
       },
-      {
-        key: "ratingScale",
-        title: "form.ratingScale",
-        dataIndex: "ratingScale",
-        type: "string",
-      },
+      // {
+      //   key: "ratingScale",
+      //   title: "form.ratingScale",
+      //   dataIndex: "ratingScale",
+      //   type: "string",
+      // },
       {
         key: "isActive",
         title: "form.isActive",
@@ -186,20 +186,20 @@ export const criteriaConfig: PageConfig = {
         span: 12,
         props: { min: 0, max: 100 },
       },
-      {
-        name: "objectiveType",
-        label: "form.objectiveType",
-        type: "select",
-        required: true,
-        span: 12,
-      },
-      {
-        name: "ratingScale",
-        label: "form.ratingScale",
-        type: "select",
-        required: true,
-        span: 12,
-      },
+      // {
+      //   name: "objectiveType",
+      //   label: "form.objectiveType",
+      //   type: "select",
+      //   required: true,
+      //   span: 12,
+      // },
+      // {
+      //   name: "ratingScale",
+      //   label: "form.ratingScale",
+      //   type: "select",
+      //   required: true,
+      //   span: 12,
+      // },
       {
         name: "isActive",
         label: "form.isActive",

@@ -2,7 +2,7 @@
 import { Drawer, Descriptions, Tag } from "antd";
 import { useTranslation } from "react-i18next";
 
-const CriteriaViewDrawer = ({ open, onClose, record, getLabel }) => {
+const CriteriaViewDrawer = ({ open, onClose, record }) => {
   const { t } = useTranslation();
 
   if (!record) return null;
@@ -23,17 +23,17 @@ const CriteriaViewDrawer = ({ open, onClose, record, getLabel }) => {
           {record.descriptionAr}
         </Descriptions.Item>
 
-        <Descriptions.Item label={t("form.objectiveType")}>
+        {/* <Descriptions.Item label={t("form.objectiveType")}>
           <Tag>{getLabel(record.objectiveType, "objectiveTypes")}</Tag>
-        </Descriptions.Item>
+        </Descriptions.Item> */}
 
         <Descriptions.Item label={t("form.weight")}>
           {record.weight}%
         </Descriptions.Item>
 
-        <Descriptions.Item label={t("form.ratingScale")}>
+        {/* <Descriptions.Item label={t("form.ratingScale")}>
           {record.ratingScale}
-        </Descriptions.Item>
+        </Descriptions.Item> */}
 
         <Descriptions.Item label={t("form.isActive")}>
           {record.isActive ? (

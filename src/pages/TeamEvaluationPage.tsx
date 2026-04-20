@@ -61,6 +61,44 @@ const { Panel } = Collapse;
 const { TextArea } = Input;
 
 const MAX_SCORE_PER_CRITERION = 5;
+const SCORE_OPTIONS = [
+  {
+    value: 1,
+    labelEn: "Poor",
+    labelAr: "ضعيف",
+    descriptionEn: "Does not meet expectations",
+    descriptionAr: "لا يلبي التوقعات",
+  },
+  {
+    value: 2,
+    labelEn: "Below Average",
+    labelAr: "أقل من المتوسط",
+    descriptionEn: "Needs improvement",
+    descriptionAr: "يحتاج إلى تحسين",
+  },
+  {
+    value: 3,
+    labelEn: "Average",
+    labelAr: "متوسط",
+    descriptionEn: "Meets expectations",
+    descriptionAr: "يلبي التوقعات",
+  },
+  {
+    value: 4,
+    labelEn: "Good",
+    labelAr: "جيد",
+    descriptionEn: "Often exceeds expectations",
+    descriptionAr: "غالبا ما يتجاوز التوقعات",
+  },
+
+  {
+    value: 5,
+    labelEn: "Excellent",
+    labelAr: "ممتاز",
+    descriptionEn: "Exceeds expectations consistently",
+    descriptionAr: "يتجاوز التوقعات باستمرار",
+  },
+];
 
 const TeamEvaluationPage: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -348,7 +386,20 @@ const TeamEvaluationPage: React.FC = () => {
                     label={t("form.score")}
                     rules={[{ required: true, message: t("validation.required", { field: t("form.score") }) }]}
                   >
-                    <Input type="number" min={0} max={MAX_SCORE_PER_CRITERION} placeholder={t("placeholders.score")} />
+                    <Select placeholder={t("placeholders.score")}>
+                      {SCORE_OPTIONS.map((option) => (
+                        <Option key={option.value} value={option.value}>
+                          <div>
+                            <text>
+                              {option.value} - {i18n.language === "ar" ? option.labelAr : option.labelEn}
+                            </text>
+                            {/* <div style={{ fontSize: 12, color: "rgba(0, 0, 0, 0.45)" }}>
+                              {i18n.language === "ar" ? option.descriptionAr : option.descriptionEn}
+                            </div> */}
+                          </div>
+                        </Option>
+                      ))}
+                    </Select>
                   </Form.Item>
                 </Col>
 
