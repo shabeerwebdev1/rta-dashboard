@@ -210,7 +210,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
 
   const getStatusTag = (status: number) => {
     const label = statusLabels[status];
-    const color = status === 1 ? "green" : status === 0 ? "blue" : "red";
+    const color = status === 1 ? "green" : status === 0 ? "orange" : "red";
     return <Tag color={color}>{label?.[i18n.language === "ar" ? "ar" : "en"]}</Tag>;
   };
 

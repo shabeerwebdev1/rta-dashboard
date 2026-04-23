@@ -30,8 +30,16 @@ import {
   Divider,
   message,
   Descriptions,
+  Dropdown,
 } from "antd";
-import { PlusOutlined, EyeOutlined, EditOutlined, FileTextOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import {
+  PlusOutlined,
+  EyeOutlined,
+  EditOutlined,
+  FileTextOutlined,
+  EnvironmentOutlined,
+  MoreOutlined,
+} from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
@@ -371,10 +379,14 @@ const ProactiveCampaignsPage: React.FC = () => {
                 <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>{c.titleEn}</td>
                 <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>{getLabel(c.location, "locations")}</td>
                 <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>
-                  {formatDateByLocale(c.startTime, { en: "DD/MM/YYYY HH:mm", ar: "DD/MM/YYYY HH:mm" }, i18n.language)}
+                  {formatDateByLocale(
+                    c.startTime,
+                    { en: "DD MMM  YYYY HH:mm", ar: "DD MMM YYYY HH:mm" },
+                    i18n.language,
+                  )}
                 </td>
                 <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>
-                  {formatDateByLocale(c.endTime, { en: "DD/MM/YYYY HH:mm", ar: "DD/MM/YYYY HH:mm" }, i18n.language)}
+                  {formatDateByLocale(c.endTime, { en: "DD MMM  YYYY HH:mm", ar: "DD MMM YYYY HH:mm" }, i18n.language)}
                 </td>
                 <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>
                   {(c.violationTypes || []).map((vt: string) => (
@@ -392,15 +404,27 @@ const ProactiveCampaignsPage: React.FC = () => {
                   </Tag>
                 </td>
                 <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>
-                  <Space>
-                    <Button icon={<EyeOutlined />} size="small" onClick={() => handleView(c)}>
-                      {t("common.view")}
-                    </Button>
-                    <Button icon={<EditOutlined />} size="small" onClick={() => openModal("edit", c)}>
-                      {t("common.edit")}
-                    </Button>
-                    {/* No delete */}
-                  </Space>
+                  <Dropdown
+                    menu={{
+                      items: [
+                        {
+                          key: "view",
+                          label: t("common.view"),
+                          icon: <EyeOutlined />,
+                          onClick: () => handleView(c),
+                        },
+                        {
+                          key: "edit",
+                          label: t("common.edit"),
+                          icon: <EditOutlined />,
+                          onClick: () => openModal("edit", c),
+                        },
+                      ],
+                    }}
+                    trigger={["click"]}
+                  >
+                    <Button icon={<MoreOutlined />} size="small" />
+                  </Dropdown>
                 </td>
               </tr>
             ))}

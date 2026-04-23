@@ -31,6 +31,7 @@ import {
   Descriptions,
   Progress,
   Table,
+  Dropdown,
 } from "antd";
 import {
   PlusOutlined,
@@ -41,6 +42,7 @@ import {
   ClockCircleOutlined,
   TeamOutlined,
   FileTextOutlined,
+  MoreOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
@@ -426,7 +428,7 @@ const TeamEvaluationPage: React.FC = () => {
       title: t("form.evaluationDate"),
       dataIndex: "evaluationDate",
       key: "evaluationDate",
-      render: (d: string) => formatDateByLocale(d, { en: "DD/MM/YYYY", ar: "DD/MM/YYYY" }, i18n.language),
+      render: (d: string) => formatDateByLocale(d, { en: "DD MMM YYYY", ar: "DD MMM YYYY" }, i18n.language),
     },
     {
       title: t("form.evaluationType"),
@@ -490,23 +492,29 @@ const TeamEvaluationPage: React.FC = () => {
     {
       title: t("common.actions"),
       key: "actions",
-      render: (
-        _: any,
-        record: any, // FIXED: Proper signature to receive record
-      ) => (
-        <Space>
-          <Button icon={<EyeOutlined />} size="small" onClick={() => handleView(record)}>
-            {t("common.view")}
-          </Button>
-          <Button
-            icon={<EditOutlined />}
-            size="small"
-            onClick={() => openModal("edit", record)}
-            disabled={record?.status === "approved"}
-          >
-            {t("common.edit")}
-          </Button>
-        </Space>
+      render: (_: any, record: any) => (
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: "view",
+                label: t("common.view"),
+                icon: <EyeOutlined />,
+                onClick: () => handleView(record),
+              },
+              {
+                key: "edit",
+                label: t("common.edit"),
+                icon: <EditOutlined />,
+                disabled: record?.status === "approved",
+                onClick: () => openModal("edit", record),
+              },
+            ],
+          }}
+          trigger={["click"]}
+        >
+          <Button type="text" icon={<MoreOutlined />} />
+        </Dropdown>
       ),
     },
   ];
@@ -584,6 +592,7 @@ const TeamEvaluationPage: React.FC = () => {
         <Table
           dataSource={filteredEvaluations}
           columns={tableColumns}
+          size="small"
           rowKey="id"
           pagination={{
             pageSize: 10,

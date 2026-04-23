@@ -2,8 +2,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useMemo, useState } from "react";
-import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Tag, Switch, message, theme } from "antd";
-import { PlusOutlined, EyeOutlined, EditOutlined, FileTextOutlined } from "@ant-design/icons";
+import {
+  Space,
+  Card,
+  Input,
+  Button,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Select,
+  App,
+  Tag,
+  Switch,
+  message,
+  theme,
+  Dropdown,
+} from "antd";
+import { PlusOutlined, EyeOutlined, EditOutlined, FileTextOutlined, MoreOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import StatsDisplay from "../components/common/StatsDisplay";
@@ -226,15 +242,28 @@ const CriteriaPage: React.FC = () => {
                     <Tag color="red">{t("common.inactive")}</Tag>
                   )}
                 </td>
-                <td style={{ padding: 12 }}>
-                  <Space>
-                    <Button icon={<EyeOutlined />} size="small" onClick={() => handleView(row)}>
-                      {t("common.view")}
-                    </Button>
-                    <Button icon={<EditOutlined />} size="small" onClick={() => openModal("edit", row)}>
-                      {t("common.edit")}
-                    </Button>
-                  </Space>
+                <td>
+                  <Dropdown
+                    menu={{
+                      items: [
+                        {
+                          key: "view",
+                          label: t("common.view"),
+                          icon: <EyeOutlined />,
+                          onClick: () => handleView(row),
+                        },
+                        {
+                          key: "edit",
+                          label: t("common.edit"),
+                          icon: <EditOutlined />,
+                          onClick: () => openModal("edit", row),
+                        },
+                      ],
+                    }}
+                    trigger={["click"]}
+                  >
+                    <Button type="text" icon={<MoreOutlined />} />
+                  </Dropdown>
                 </td>
               </tr>
             ))}

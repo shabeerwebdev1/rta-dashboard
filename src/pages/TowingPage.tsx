@@ -62,12 +62,12 @@ const TowingPage: React.FC = () => {
 
   const statusLabels = useMemo(() => {
     const statusMap: Record<string, React.ReactNode> = {
-      pending: <Tag color="blue">{t("status.pending")}</Tag>,
+      pending: <Tag color="orange">{t("status.pending")}</Tag>,
       Approved: <Tag color="green">{t("status.approved")}</Tag>,
       Rejected: <Tag color="red">{t("status.rejected")}</Tag>,
-      cancelled: <Tag color="orange">{t("status.cancelled")}</Tag>,
-      IN_TOWING: <Tag color="cyan">{t("status.inProgress")}</Tag>,
-      completed: <Tag color="purple">{t("status.completed")}</Tag>,
+      cancelled: <Tag color="default">{t("status.cancelled")}</Tag>,
+      IN_TOWING: <Tag color="blue">{t("status.inProgress")}</Tag>,
+      completed: <Tag color="cyan">{t("status.completed")}</Tag>,
     };
     return statusMap;
   }, [t]);

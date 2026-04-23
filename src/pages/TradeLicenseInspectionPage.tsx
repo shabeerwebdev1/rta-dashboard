@@ -9,7 +9,11 @@ import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
-import { useSearchTradeQuery, useLazyGetLookupsQuery, useLazyGetTLInspectionByIdQuery } from "../services/rtkApiFactory";
+import {
+  useSearchTradeQuery,
+  useLazyGetLookupsQuery,
+  useLazyGetTLInspectionByIdQuery,
+} from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
@@ -238,7 +242,8 @@ const TradeLicenseInspectionPage: React.FC = () => {
                     ? t("common.noData")
                     : getLabelFromValue(displayValue, inspectionCategoryOptions, i18n);
               } else if (columnKey === "fineAmount") {
-                displayValue = displayValue == null || displayValue === "" ? t("common.noData") : ` AED ${displayValue} `;
+                displayValue =
+                  displayValue == null || displayValue === "" ? t("common.noData") : ` AED ${displayValue} `;
               } else if (columnKey === "inspectionStatus") {
                 displayValue =
                   displayValue == null ? t("common.noData") : getLabelFromValue(displayValue, lookupOptions, i18n);
@@ -318,12 +323,12 @@ const TradeLicenseInspectionPage: React.FC = () => {
   );
 
   const fineStatusColorMap: Record<number, string> = {
-    15001: "orange",
-    15002: "green",
-    15003: "red",
-    15004: "blue",
-    15005: "purple",
-    15006: "indigo",
+    15001: "green",
+    15002: "blue",
+    15003: "orange",
+    15004: "green",
+    15005: "red",
+    15006: "green",
   };
 
   const tableData = useMemo(() => {

@@ -65,7 +65,9 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
   useEffect(() => {
     if (record) {
       const status = String(record.towing_Status || record.towing_status || record.status || "").toUpperCase();
-      setCurrentStatus((Object.values(TowingStatus).includes(status as TowingStatus) ? (status as TowingStatus) : TowingStatus.Pending));
+      setCurrentStatus(
+        Object.values(TowingStatus).includes(status as TowingStatus) ? (status as TowingStatus) : TowingStatus.Pending,
+      );
       setResolvedInspectionGUID(record?.EntityGUID || record?.entityGUID || record?.inspectionGUID || "");
       setComments("");
       setSelectedAction(null);
@@ -124,11 +126,11 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
       case TowingStatus.Rejected:
         return "red";
       case TowingStatus.Cancelled:
-        return "orange";
+        return "default";
       case TowingStatus.InProgress:
-        return "cyan";
+        return "blue";
       case TowingStatus.Completed:
-        return "purple";
+        return "cyan";
       default:
         return "blue";
     }
@@ -171,7 +173,11 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
       return 1;
     }
 
-    if (reviewStatusCode.includes("reject") || reviewStatusCode.includes("send-back") || reviewStatus.includes("reject")) {
+    if (
+      reviewStatusCode.includes("reject") ||
+      reviewStatusCode.includes("send-back") ||
+      reviewStatus.includes("reject")
+    ) {
       return 3;
     }
 
@@ -283,7 +289,16 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
       {!record ? (
         <Empty description={t("common.noData")} />
       ) : (
-        <Spin spinning={isLoading || loadingOptions || historyLoading || entityHistoryLoading || loadingAttachments || loadingEvidence}>
+        <Spin
+          spinning={
+            isLoading ||
+            loadingOptions ||
+            historyLoading ||
+            entityHistoryLoading ||
+            loadingAttachments ||
+            loadingEvidence
+          }
+        >
           <div style={{ display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 120px)" }}>
             <div
               style={{
@@ -313,197 +328,206 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
                     {t("form.location")}
                   </Title>
 
-              <ArcGISMap
-                inspectors={
-                  !isCompleted
-                    ? [
-                        {
-                          id: 1,
-                          name: "Towing Location",
-                          lat: record.latitude,
-                          lng: record.longitude,
-                          status: "Towing",
-                        },
-                      ]
-                    : []
-                }
-                center={mapCenter}
-                height="400px"
-                zoom={isCompleted ? 13 : 16}
-                showTowingRoute={isCompleted && towingStart && towingEnd}
-                towingStartPoint={towingStart || undefined}
-                towingEndPoint={towingEnd || undefined}
-              />
+                  <ArcGISMap
+                    inspectors={
+                      !isCompleted
+                        ? [
+                            {
+                              id: 1,
+                              name: "Towing Location",
+                              lat: record.latitude,
+                              lng: record.longitude,
+                              status: "Towing",
+                            },
+                          ]
+                        : []
+                    }
+                    center={mapCenter}
+                    height="400px"
+                    zoom={isCompleted ? 13 : 16}
+                    showTowingRoute={isCompleted && towingStart && towingEnd}
+                    towingStartPoint={towingStart || undefined}
+                    towingEndPoint={towingEnd || undefined}
+                  />
 
-              <Descriptions bordered column={1} size="small" style={{ marginTop: 20 }}>
-                <Descriptions.Item label={t("form.plateNumber")}>{record.plateNumber}</Descriptions.Item>
-                <Descriptions.Item label={t("form.vehicleName")}>{record.vehicleBrand}</Descriptions.Item>
-                <Descriptions.Item label={t("form.vehicleColor")}>{record.vehicleColor}</Descriptions.Item>
-                <Descriptions.Item label={t("form.vehicleOwnerName")}>{record.vehicleOwnerName}</Descriptions.Item>
-                <Descriptions.Item label={t("form.vehicleOwnerMobile")}>{record.vehicleOwnerMobile}</Descriptions.Item>
+                  <Descriptions bordered column={1} size="small" style={{ marginTop: 20 }}>
+                    <Descriptions.Item label={t("form.plateNumber")}>{record.plateNumber}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.vehicleName")}>{record.vehicleBrand}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.vehicleColor")}>{record.vehicleColor}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.vehicleOwnerName")}>{record.vehicleOwnerName}</Descriptions.Item>
+                    <Descriptions.Item label={t("form.vehicleOwnerMobile")}>
+                      {record.vehicleOwnerMobile}
+                    </Descriptions.Item>
 
-                <Descriptions.Item label={t("form.towingDate")}>
-                  {formatDateDisplay(record.entityDateTime || record.datetime1 || record.createdDateTime, i18n.language)}
-                </Descriptions.Item>
+                    <Descriptions.Item label={t("form.towingDate")}>
+                      {formatDateDisplay(
+                        record.entityDateTime || record.datetime1 || record.createdDateTime,
+                        i18n.language,
+                      )}
+                    </Descriptions.Item>
 
-                <Descriptions.Item label={t("form.status")}>
-                  <Tag color={getStatusColor(currentStatus)}>{getStatusLabel(currentStatus)}</Tag>
-                </Descriptions.Item>
+                    <Descriptions.Item label={t("form.status")}>
+                      <Tag color={getStatusColor(currentStatus)}>{getStatusLabel(currentStatus)}</Tag>
+                    </Descriptions.Item>
 
-                {record.lastReviewComments && (
-                  <Descriptions.Item label={t("form.lastReviewComments")}>{record.lastReviewComments}</Descriptions.Item>
-                )}
-              </Descriptions>
+                    {record.lastReviewComments && (
+                      <Descriptions.Item label={t("form.lastReviewComments")}>
+                        {record.lastReviewComments}
+                      </Descriptions.Item>
+                    )}
+                  </Descriptions>
 
-              <Title level={5} style={{ marginTop: 20 }}>
-                {t("form.AttachedPhotos")}
-              </Title>
-
-              <Spin spinning={loadingAttachments}>
-                {attachments.length ? (
-                  <Image.PreviewGroup>
-                    <Space wrap>
-                      {attachments.map((file) => (
-                        <Image
-                          key={file.attachmentGUID}
-                          width={100}
-                          height={100}
-                          src={getMobileFileUrl(file.filePath)}
-                          style={{ objectFit: "cover", borderRadius: 8 }}
-                        />
-                      ))}
-                    </Space>
-                  </Image.PreviewGroup>
-                ) : (
-                  <Empty />
-                )}
-              </Spin>
-
-              {/* ----------- VIDEO SECTION ----------- */}
-              {shouldShowVideo && (
-                <>
-                  <Title level={5} style={{ marginTop: 25 }}>
-                    {t("form.towingVideo")}
-                  </Title>
-
-                  <video
-                    width="100%"
-                    height="360"
-                    controls
-                    autoPlay={false}
-                    style={{
-                      border: "1px solid #ccc",
-                      borderRadius: 8,
-                      background: "#000",
-                      marginBottom: 10,
-                    }}
-                  >
-                    <source src={videoUrl} type="video/mp4" />
-                  </video>
-                </>
-              )}
-
-              {/* ----------- EVIDENCE DOCUMENTS ----------- */}
-              {isCompleted && towingDocuments.length > 0 && (
-                <>
                   <Title level={5} style={{ marginTop: 20 }}>
-                    {t("form.towingDocuments")}
+                    {t("form.AttachedPhotos")}
                   </Title>
 
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
-                    {towingDocuments.map((p, i) => {
-                      const title = getDocumentTitle(p);
+                  <Spin spinning={loadingAttachments}>
+                    {attachments.length ? (
+                      <Image.PreviewGroup>
+                        <Space wrap>
+                          {attachments.map((file) => (
+                            <Image
+                              key={file.attachmentGUID}
+                              width={100}
+                              height={100}
+                              src={getMobileFileUrl(file.filePath)}
+                              style={{ objectFit: "cover", borderRadius: 8 }}
+                            />
+                          ))}
+                        </Space>
+                      </Image.PreviewGroup>
+                    ) : (
+                      <Empty />
+                    )}
+                  </Spin>
 
-                      return (
-                        <div key={i} style={{ width: 120, textAlign: "center" }}>
-                          <div
-                            style={{
-                              marginBottom: 6,
-                              fontSize: 13,
-                              fontWeight: 600,
-                            }}
-                          >
-                            {title}
-                          </div>
+                  {/* ----------- VIDEO SECTION ----------- */}
+                  {shouldShowVideo && (
+                    <>
+                      <Title level={5} style={{ marginTop: 25 }}>
+                        {t("form.towingVideo")}
+                      </Title>
 
-                          <Image
-                            width={120}
-                            height={120}
-                            src={getFileUrl(p)}
-                            style={{
-                              objectFit: "cover",
-                              borderRadius: 8,
-                              border: "1px solid #ddd",
-                              padding: 4,
-                              background: "#fff",
-                            }}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
+                      <video
+                        width="100%"
+                        height="360"
+                        controls
+                        autoPlay={false}
+                        style={{
+                          border: "1px solid #ccc",
+                          borderRadius: 8,
+                          background: "#000",
+                          marginBottom: 10,
+                        }}
+                      >
+                        <source src={videoUrl} type="video/mp4" />
+                      </video>
+                    </>
+                  )}
+
+                  {/* ----------- EVIDENCE DOCUMENTS ----------- */}
+                  {isCompleted && towingDocuments.length > 0 && (
+                    <>
+                      <Title level={5} style={{ marginTop: 20 }}>
+                        {t("form.towingDocuments")}
+                      </Title>
+
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+                        {towingDocuments.map((p, i) => {
+                          const title = getDocumentTitle(p);
+
+                          return (
+                            <div key={i} style={{ width: 120, textAlign: "center" }}>
+                              <div
+                                style={{
+                                  marginBottom: 6,
+                                  fontSize: 13,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {title}
+                              </div>
+
+                              <Image
+                                width={120}
+                                height={120}
+                                src={getFileUrl(p)}
+                                style={{
+                                  objectFit: "cover",
+                                  borderRadius: 8,
+                                  border: "1px solid #ddd",
+                                  padding: 4,
+                                  background: "#fff",
+                                }}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
 
                   {!hideFooterActions && (
                     <>
                       <Title level={5} style={{ marginTop: 20 }}>
                         {L("Approval Actions", "إجراءات الاعتماد")}
-                  </Title>
+                      </Title>
 
-                  <Form form={form} layout="vertical">
-                    <Row gutter={16}>
-                      <Col span={24}>
-                        <Form.Item
-                          name="action"
-                          label={<Text strong>{L("Action", "الإجراء")}</Text>}
-                          rules={[{ required: true, message: L("Please select an action", "الرجاء اختيار إجراء") }]}
-                        >
-                          <Select
-                            placeholder={L("Select action", "اختر إجراء")}
-                            onChange={handleActionChange}
-                            allowClear
-                            loading={loadingOptions}
-                          >
-                            {reviewOptions.map((opt: any) => (
-                              <Select.Option key={opt.ActivityOptionGUID} value={opt.ActivityOptionGUID}>
-                                {opt.ReviewStatus}
-                              </Select.Option>
-                            ))}
-                          </Select>
-                        </Form.Item>
-                      </Col>
+                      <Form form={form} layout="vertical">
+                        <Row gutter={16}>
+                          <Col span={24}>
+                            <Form.Item
+                              name="action"
+                              label={<Text strong>{L("Action", "الإجراء")}</Text>}
+                              rules={[{ required: true, message: L("Please select an action", "الرجاء اختيار إجراء") }]}
+                            >
+                              <Select
+                                placeholder={L("Select action", "اختر إجراء")}
+                                onChange={handleActionChange}
+                                allowClear
+                                loading={loadingOptions}
+                              >
+                                {reviewOptions.map((opt: any) => (
+                                  <Select.Option key={opt.ActivityOptionGUID} value={opt.ActivityOptionGUID}>
+                                    {opt.ReviewStatus}
+                                  </Select.Option>
+                                ))}
+                              </Select>
+                            </Form.Item>
+                          </Col>
 
-                      <Col span={24}>
-                        <Form.Item
-                          name="review_comments"
-                          label={<Text strong>{L("Comments", "التعليقات")}</Text>}
-                          rules={[
-                            {
-                              required: selectedAction?.IsCommentMandatory || false,
-                              message: L("Please enter comments", "الرجاء إدخال التعليقات"),
-                            },
-                          ]}
-                        >
-                          <TextArea
-                            rows={3}
-                            value={comments}
-                            onChange={(e) => setComments(e.target.value)}
-                            placeholder={L("Enter comments", "أدخل التعليقات")}
-                          />
-                        </Form.Item>
-                      </Col>
-                    </Row>
+                          <Col span={24}>
+                            <Form.Item
+                              name="review_comments"
+                              label={<Text strong>{L("Comments", "التعليقات")}</Text>}
+                              rules={[
+                                {
+                                  required: selectedAction?.IsCommentMandatory || false,
+                                  message: L("Please enter comments", "الرجاء إدخال التعليقات"),
+                                },
+                              ]}
+                            >
+                              <TextArea
+                                rows={3}
+                                value={comments}
+                                onChange={(e) => setComments(e.target.value)}
+                                placeholder={L("Enter comments", "أدخل التعليقات")}
+                              />
+                            </Form.Item>
+                          </Col>
+                        </Row>
 
-                    <Space style={{ marginTop: 10 }}>
-                      <Button type="primary" loading={isLoading} onClick={handleSubmit}>
-                        {L("Submit", "إرسال")}
-                      </Button>
+                        <Space style={{ marginTop: 10 }}>
+                          <Button type="primary" loading={isLoading} onClick={handleSubmit}>
+                            {L("Submit", "إرسال")}
+                          </Button>
 
-                      <Button danger  onClick={handleCancel}>{L("Cancel", "إلغاء")}</Button>
-                    </Space>
-                  </Form>
-                </>
+                          <Button danger onClick={handleCancel}>
+                            {L("Cancel", "إلغاء")}
+                          </Button>
+                        </Space>
+                      </Form>
+                    </>
                   )}
                 </Col>
 

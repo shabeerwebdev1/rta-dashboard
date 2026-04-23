@@ -42,7 +42,7 @@ const getStatusTag = (value: number, label: string) => {
     return <Tag color="green">{label}</Tag>;
   }
   if (value === 5002) {
-    return <Tag color="orange">{label}</Tag>;
+    return <Tag color="default">{label}</Tag>;
   }
   if (value === 5003) {
     return <Tag color="red">{label}</Tag>;

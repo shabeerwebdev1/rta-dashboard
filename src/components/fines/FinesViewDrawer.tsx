@@ -245,12 +245,12 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
   };
 
   const fineStatusColorMap: Record<number, string> = {
-    15001: "orange",
-    15002: "green",
-    15003: "red",
-    15004: "blue",
-    15005: "purple",
-    15006: "indigo",
+    15001: "green",
+    15002: "blue",
+    15003: "orange",
+    15004: "green",
+    15005: "red",
+    15006: "green",
   };
 
   const getStatusColor = (isPaid: boolean, inspectionStatus: number) => {

@@ -18,8 +18,8 @@ const ProactiveCampaignViewDrawer = ({ open, onClose, record, getLabel }) => {
         <Descriptions.Item label={t("form.location")}>{getLabel(record.location, "locations")}</Descriptions.Item>
 
         <Descriptions.Item label={t("form.timeInterval")}>
-          {formatDateByLocale(record.startTime, { en: "DD/MM/YYYY HH:mm", ar: "DD/MM/YYYY HH:mm" }, i18n.language)} -{" "}
-          {formatDateByLocale(record.endTime, { en: "DD/MM/YYYY HH:mm", ar: "DD/MM/YYYY HH:mm" }, i18n.language)}
+          {formatDateByLocale(record.startTime, { en: "DD MMM YYYY HH:mm", ar: "DD MMM YYYY HH:mm" }, i18n.language)} -{" "}
+          {formatDateByLocale(record.endTime, { en: "DD MMM YYYY HH:mm", ar: "DD MMM YYYY HH:mm" }, i18n.language)}
         </Descriptions.Item>
 
         <Descriptions.Item label={t("form.violationTypes")}>
@@ -51,7 +51,7 @@ const ProactiveCampaignViewDrawer = ({ open, onClose, record, getLabel }) => {
         <Descriptions.Item label={t("form.createdBy")}>{record.createdBy}</Descriptions.Item>
 
         <Descriptions.Item label={t("form.createdAt")}>
-          {formatDateByLocale(record.createdAt, { en: "DD/MM/YYYY HH:mm", ar: "DD/MM/YYYY HH:mm" }, i18n.language)}
+          {formatDateByLocale(record.createdAt, { en: "DD MMM YYYY HH:mm", ar: "DD MMM YYYY HH:mm" }, i18n.language)}
         </Descriptions.Item>
       </Descriptions>
     </Drawer>

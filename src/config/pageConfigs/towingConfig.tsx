@@ -12,7 +12,6 @@ export enum TowingStatus {
   Completed = "COMPLETED",
 }
 
-
 const formatDate = (value: string) => {
   if (!value) return "";
 
@@ -44,12 +43,12 @@ export const mapTowingStatus = (statusString: string): TowingStatus => {
 };
 
 const statusMap: Record<string, { text: string; color: string }> = {
-  [TowingStatus.Pending]: { text: "Pending", color: "blue" },
+  [TowingStatus.Pending]: { text: "Pending", color: "orange" },
   [TowingStatus.Approved]: { text: "Approved", color: "green" },
-  [TowingStatus.Cancelled]: { text: "Cancelled", color: "orange" },
+  [TowingStatus.Cancelled]: { text: "Cancelled", color: "default" },
   [TowingStatus.Rejected]: { text: "Rejected", color: "red" },
-  [TowingStatus.InProgress]: { text: "In Progress", color: "cyan" },
-  [TowingStatus.Completed]: { text: "Completed", color: "purple" },
+  [TowingStatus.InProgress]: { text: "In Progress", color: "blue" },
+  [TowingStatus.Completed]: { text: "Completed", color: "cyan" },
 };
 
 export const towingConfig: PageConfig = {

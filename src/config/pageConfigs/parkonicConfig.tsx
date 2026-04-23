@@ -156,13 +156,13 @@ export const parkonicPageConfig: PageConfig = {
         type: "custom",
         render: (_: any, record: any) => {
           if (record.reviewStatus === 1) {
-            return record.entityNo || "-";   // Approved
+            return record.entityNo || "-"; // Approved
           }
-      
+
           return record.transcationId || "-"; // Pending or Rejected
         },
       },
-      
+
       {
         key: "plateNumber",
         title: "form.vehiclePlate",
@@ -229,7 +229,6 @@ export const parkonicPageConfig: PageConfig = {
         key: "reviewStatus",
         title: "form.reviewtatus",
         type: "custom",
-        sortable: true,
         filterable: true,
         render: (status: number) => {
           const getCurrentLanguage = () => {
@@ -244,7 +243,7 @@ export const parkonicPageConfig: PageConfig = {
           const isArabic = language.startsWith("ar");
 
           const statusMap: Record<number, { en: string; ar: string; color: string }> = {
-            0: { en: "Pending", ar: "قيد الانتظار", color: "blue" },
+            0: { en: "Pending", ar: "قيد الانتظار", color: "orange" },
             1: { en: "Approved", ar: "مُوافق عليه", color: "green" },
             2: { en: "Rejected", ar: "مُرفوض", color: "red" },
           };

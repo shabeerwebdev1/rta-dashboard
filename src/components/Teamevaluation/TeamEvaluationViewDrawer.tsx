@@ -49,7 +49,7 @@ const TeamEvaluationViewDrawer: React.FC<TeamEvaluationViewDrawerProps> = ({
         </Descriptions.Item>
 
         <Descriptions.Item label={t("form.evaluationDate")}>
-          {formatDateByLocale(record.evaluationDate, { en: "DD/MM/YYYY", ar: "DD/MM/YYYY" }, i18n.language)}
+          {formatDateByLocale(record.evaluationDate, { en: "DD MMM YYYY", ar: "DD MMM YYYY" }, i18n.language)}
         </Descriptions.Item>
 
         <Descriptions.Item label={t("form.evaluationType")}>
@@ -57,8 +57,8 @@ const TeamEvaluationViewDrawer: React.FC<TeamEvaluationViewDrawerProps> = ({
         </Descriptions.Item>
 
         <Descriptions.Item label={t("form.evaluationPeriod")}>
-          {formatDateByLocale(record.periodFrom, { en: "DD/MM/YYYY", ar: "DD/MM/YYYY" }, i18n.language)} -{" "}
-          {formatDateByLocale(record.periodTo, { en: "DD/MM/YYYY", ar: "DD/MM/YYYY" }, i18n.language)}
+          {formatDateByLocale(record.periodFrom, { en: "DD MMM YYYY", ar: "DD MMM YYYY" }, i18n.language)} -{" "}
+          {formatDateByLocale(record.periodTo, { en: "DD MMM YYYY", ar: "DD MMM YYYY" }, i18n.language)}
         </Descriptions.Item>
 
         <Descriptions.Item label={t("form.zone")}>
