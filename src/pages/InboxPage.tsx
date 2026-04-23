@@ -138,7 +138,7 @@ const InboxPage = () => {
   // Action column
   const actionColumn = {
     key: "actions",
-    title: isRTL ? "الإجراء" : "Action",
+    title: isRTL ? "الإجراءات" : "Actions",
     width: 100,
     render: (_: any, row: any) => (
       <Dropdown

@@ -3,7 +3,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, useState } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Form, Space, Select, Image } from "antd";
-import { CloseOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import {
+  CarOutlined,
+  CheckCircleFilled,
+  CloseCircleFilled,
+  CloseOutlined,
+  ExclamationCircleOutlined,
+} from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { theme } from "antd";
 import dayjs from "dayjs";
@@ -188,13 +194,13 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
       statusColor: getStatusColor(Boolean(inspection.isPaid), effectiveInspectionStatus),
       fineAmountFormatted:
         inspection.fineAmount !== null && inspection.fineAmount !== undefined
-          ? `${inspection.fineAmount} AED`
+          ? ` AED ${inspection.fineAmount} `
           : fineDetails.fineAmount !== null && fineDetails.fineAmount !== undefined
-            ? `${fineDetails.fineAmount} AED`
+            ? ` AED ${fineDetails.fineAmount}`
             : t("common.noData"),
       totalAmountFormatted:
         inspection.totalFineAmount !== null && inspection.totalFineAmount !== undefined
-          ? `${inspection.totalFineAmount} AED`
+          ? ` AED ${inspection.totalFineAmount} `
           : t("common.noData"),
       inspectionDateFormatted: formatDateTime(inspection.actualDateTime),
       inspectorName: isRTL
@@ -580,27 +586,6 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                               <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                 <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                                   {t("form.vehicleDetails")}
-                                  {hasMissingVehicleOwnerName && (
-                                    <span
-                                      style={{
-                                        background: "#eb2630",
-                                        color: "#fff",
-                                        fontSize: 11,
-                                        borderRadius: 2,
-                                        padding: "2px 8px",
-                                        lineHeight: "18px",
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                        gap: 6,
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
-                                      <ExclamationCircleOutlined style={{ fontSize: 11 }} />
-                                      {isRTLText
-                                        ? "بيانات المركبة غير موجودة في النظام المروري"
-                                        : "Car Details Not Found in E-traffic"}
-                                    </span>
-                                  )}
                                 </span>
                                 <span style={{ paddingTop: 10, paddingBottom: 10 }}>
                                   <UAEPlate
@@ -688,49 +673,67 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                               <Col span={10} style={{ textAlign: isRTLText ? "right" : "left" }}>
                                 <Text strong>{isRTLText ? "تفاصيل المرور الإلكتروني:" : "E-Traffic Details:"}</Text>
                               </Col>
-                              <Col span={14} style={{ textAlign: isRTLText ? "right" : "left" }}>
-                                {hasMissingVehicleOwnerName ? (
-                                  <Text
-                                    type="danger"
+
+                              <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                                <span
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                    borderRadius: 999,
+                                    background: hasMissingVehicleOwnerName ? "#fff0f1" : "#f0f7eb",
+                                  }}
+                                >
+                                  {/* Car icon in circle */}
+                                  <span
                                     style={{
-                                      background: "#eb2630",
-                                      color: "#fff",
-                                      fontSize: 11,
-                                      borderRadius: 2,
-                                      padding: "2px 8px",
-                                      lineHeight: "18px",
                                       display: "inline-flex",
                                       alignItems: "center",
-                                      gap: 6,
-                                      whiteSpace: "nowrap",
+                                      justifyContent: "center",
+                                      width: 30,
+                                      height: 30,
+                                      borderRadius: "50%",
+                                      border: `2px solid ${hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d"}`,
+                                      flexShrink: 0,
                                     }}
                                   >
-                                    ✖{" "}
-                                    {isRTLText
-                                      ? "بيانات المركبة غير موجودة في نظام المرور"
-                                      : "Car Details Not Found in E-Traffic"}
-                                  </Text>
-                                ) : (
-                                  <Text
+                                    <CarOutlined
+                                      style={{
+                                        fontSize: 15,
+                                        color: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
+                                      }}
+                                    />
+                                  </span>
+
+                                  {/* Label */}
+                                  <span
                                     style={{
-                                      background: "#52c41a",
-                                      color: "#fff",
-                                      fontSize: 11,
-                                      borderRadius: 2,
-                                      padding: "2px 8px",
-                                      lineHeight: "18px",
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: 6,
-                                      whiteSpace: "nowrap",
+                                      fontSize: 13,
+                                      fontWeight: 700,
+                                      color: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
                                     }}
                                   >
-                                    ✔{" "}
-                                    {isRTLText
-                                      ? "تم العثور على بيانات المركبة في نظام المرور"
-                                      : "Car Details Found in E-Traffic"}
-                                  </Text>
-                                )}
+                                    {isRTL ? "المرور الإلكتروني" : "E-traffic"}
+                                  </span>
+
+                                  {/* Divider */}
+                                  <span
+                                    style={{
+                                      width: 1,
+                                      height: 18,
+                                      background: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
+                                      opacity: 0.35,
+                                      display: "inline-block",
+                                    }}
+                                  />
+
+                                  {/* Check / X icon */}
+                                  {hasMissingVehicleOwnerName ? (
+                                    <CloseCircleFilled style={{ fontSize: 20, color: "#eb2630" }} />
+                                  ) : (
+                                    <CheckCircleFilled style={{ fontSize: 20, color: "#389e0d" }} />
+                                  )}
+                                </span>
                               </Col>
                             </Row>
                           </Card>
@@ -948,6 +951,7 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                           }}
                         >
                           <Space>
+                            <Button onClick={onClose}>{isRTL ? "إلغاء" : "Cancel"}</Button>
                             <Button
                               type="primary"
                               loading={isUpdating}
@@ -955,10 +959,6 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                               disabled={!selectedAction}
                             >
                               {isRTL ? "إرسال" : "Submit"}
-                            </Button>
-
-                            <Button danger onClick={onClose}>
-                              {isRTL ? "إلغاء" : "Cancel"}
                             </Button>
                           </Space>
                         </Col>

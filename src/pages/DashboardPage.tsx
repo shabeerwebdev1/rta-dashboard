@@ -175,7 +175,7 @@ const SupervisorViewPage: React.FC = () => {
       lng: 55.298172,
       status: "Fine Issued",
       statusAr: "تم إصدار غرامة",
-      details: { zone: "Zone A", amount: "200 AED" },
+      details: { zone: "Zone A", amount: " AED 200 " },
     },
     {
       id: 202,
@@ -185,7 +185,7 @@ const SupervisorViewPage: React.FC = () => {
       lng: 55.292494,
       status: "Fine Issued",
       statusAr: "تم إصدار غرامة",
-      details: { zone: "Zone B", amount: "150 AED" },
+      details: { zone: "Zone B", amount: " AED 150 " },
     },
   ];
 
@@ -606,7 +606,7 @@ const SupervisorViewPage: React.FC = () => {
                   <Statistic
                     title={t("dashboard.amount", "Amount")}
                     value={dashboardData?.data?.fineAmount || 0}
-                    suffix="AED"
+                    prefix="AED"
                     valueStyle={{ fontSize: isMobile ? "18px" : "24px" }}
                   />
                 </Col>

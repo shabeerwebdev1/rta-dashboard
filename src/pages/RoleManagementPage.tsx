@@ -213,14 +213,6 @@ const RoleManagementPage: React.FC = () => {
               })}
             </Select>
           </Col>
-
-          <Col>
-            {selectedRoleId !== "default" && (
-              <Button type="primary" onClick={handleUpdate} loading={isUpdating} disabled={isLoadingPermissions}>
-                {t("common.update")}
-              </Button>
-            )}
-          </Col>
         </Row>
 
         {permissionsError && (
@@ -239,25 +231,45 @@ const RoleManagementPage: React.FC = () => {
         ) : (
           //  Show table only when role is selected
           selectedRoleId !== "default" && (
-            <DataTableWrapper
-              pageConfig={{
-                ...roleManagementConfig,
-                tableConfig: {
-                  ...roleManagementConfig.tableConfig,
-                  columns: tableColumns,
-                },
-              }}
-              data={tableData}
-              total={tableData.length}
-              isLoading={isLoadingPermissions}
-              handleTableChange={() => {}}
-              handlePaginationChange={() => {}}
-              tableSize="middle"
-              state={{ columnFilters: {} }}
-              showPagination={false}
-              rowSelection={null}
-              rowKey={(record: TableRow) => record.key ?? record.roleGUID ?? Math.random()}
-            />
+            <>
+              <DataTableWrapper
+                pageConfig={{
+                  ...roleManagementConfig,
+                  tableConfig: {
+                    ...roleManagementConfig.tableConfig,
+                    columns: tableColumns,
+                  },
+                }}
+                data={tableData}
+                total={tableData.length}
+                isLoading={isLoadingPermissions}
+                handleTableChange={() => {}}
+                handlePaginationChange={() => {}}
+                tableSize="middle"
+                state={{ columnFilters: {} }}
+                showPagination={false}
+                rowSelection={null}
+                rowKey={(record: TableRow) => record.key ?? record.roleGUID ?? Math.random()}
+              />
+
+              <Row justify="end" style={{ width: "100%" }}>
+                <Col>
+                  <Button
+                    type="primary"
+                    onClick={handleUpdate}
+                    loading={isUpdating}
+                    disabled={isLoadingPermissions}
+                    style={{
+                      backgroundColor: "#00a967",
+                      borderColor: "#00a967",
+                      color: "#ffffff",
+                    }}
+                  >
+                    {t("common.update")}
+                  </Button>
+                </Col>
+              </Row>
+            </>
           )
         )}
       </Space>

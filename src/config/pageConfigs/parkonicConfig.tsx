@@ -222,7 +222,7 @@ export const parkonicPageConfig: PageConfig = {
         key: "violationAmount",
         title: "form.violationAmount",
         type: "number",
-        render: (value?: number) => <Typography.Text type="danger">{value ?? "—"} AED</Typography.Text>,
+        render: (value?: number) => <Typography.Text type="danger"> AED {value ?? "—"} </Typography.Text>,
       },
 
       {

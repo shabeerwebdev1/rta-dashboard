@@ -100,7 +100,9 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         ...inboxMenus.map((item: any) => ({
           key: `${FULL_PATHS.INBOX}?code=${item.NotificationCode}`,
           labelText: (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", gap: 8 }}>
+            <div
+              style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", gap: 8 }}
+            >
               {/* <span>{sanitizeInboxTitle(item.NotificationName)}</span> */}
               <span
                 style={{
@@ -398,17 +400,26 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
     const fullPath = path + search;
 
     const currentReportParam = searchParams.get("report");
+    const currentCodeParam = searchParams.get("code");
     const lang = i18n.language === "ar" ? "arb" : "eng";
 
     const flatten = (items: any[]): any[] => items.flatMap((item) => (item.children ? flatten(item.children) : [item]));
-
     const flatItems = flatten(menuItems as any[]);
 
-    // 💡 If on REPORTS page → match by base report key dynamically
+    // Inbox: always return parent key (with or without ?code=)
+    if (path === FULL_PATHS.INBOX) {
+      if (currentCodeParam) {
+        const targetKey = `${FULL_PATHS.INBOX}?code=${currentCodeParam}`;
+        const match = flatItems.find((item) => item.key === targetKey);
+        if (match) return [match.key]; // highlight the child
+      }
+      return [FULL_PATHS.INBOX]; // highlight the parent
+    }
+
+    // Reports match
     if (path === FULL_PATHS.REPORTS && currentReportParam) {
       const base = currentReportParam.replace(/(_eng|_arb)$/, "");
       const targetKey = `${FULL_PATHS.REPORTS}?report=${base}_${lang}`;
-
       const match = flatItems.find((item) => item.key === targetKey);
       if (match) return [match.key];
     }
@@ -429,7 +440,6 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
 
     return [bestMatch || FULL_PATHS.DASHBOARD];
   };
-
   const getDefaultOpenKeys = () => {
     const path = location.pathname;
     const search = location.search;

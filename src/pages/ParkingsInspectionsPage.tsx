@@ -9,7 +9,11 @@ import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
-import { useSearchTradeQuery, useLazyGetLookupsQuery, useLazyGetTLInspectionByIdQuery } from "../services/rtkApiFactory";
+import {
+  useSearchTradeQuery,
+  useLazyGetLookupsQuery,
+  useLazyGetTLInspectionByIdQuery,
+} from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import dayjs from "dayjs";
@@ -202,7 +206,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
             value = getLabelFromValue(value, inspectionCategoryOptions, i18n);
             break;
           case "fineAmount":
-            value = value != null && value !== "" ? `${value} AED` : t("common.noData");
+            value = value != null && value !== "" ? `AED ${value} ` : t("common.noData");
             break;
           case "inspectionStatus":
             value = getLabelFromValue(value, lookupOptions, i18n);
@@ -359,7 +363,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
             render: (value: any) => {
               if (value == null || value === "") return t("common.noData");
 
-              return <Typography.Text type="danger">{value} AED</Typography.Text>;
+              return <Typography.Text type="danger"> AED {value} </Typography.Text>;
             },
           };
         }

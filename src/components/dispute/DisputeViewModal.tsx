@@ -3,7 +3,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Modal, Card, Row, Col, Typography, Divider, Button, Input, Select, Empty, Spin, Tag, Form, App } from "antd";
-import { CloseOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import {
+  CarOutlined,
+  CheckCircleFilled,
+  CloseCircleFilled,
+  CloseOutlined,
+  ExclamationCircleOutlined,
+} from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import {
   useLazyGetDisputeByIdQuery,
@@ -798,27 +804,6 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                             >
                               <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                                 {t("form.vehicleDetails")}
-                                {/* {hasMissingVehicleOwnerName && (
-                                  <span
-                                    style={{
-                                      background: "#eb2630",
-                                      color: "#fff",
-                                      fontSize: 11,
-                                      borderRadius: 2,
-                                      padding: "2px 8px",
-                                      lineHeight: "18px",
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: 6,
-                                      whiteSpace: "nowrap",
-                                    }}
-                                  >
-                                    <ExclamationCircleOutlined style={{ fontSize: 11 }} />
-                                    {isRTL
-                                      ? "بيانات المركبة غير موجودة في النظام المروري"
-                                      : "Car Details Not Found in E-traffic"}
-                                  </span>
-                                )} */}
                               </span>
                               <span style={{ paddingTop: "10px", paddingBottom: "10px" }}>
                                 <UAEPlate
@@ -906,57 +891,65 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                             </Col>
 
                             <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                              {hasMissingVehicleOwnerName ? (
-                                // <Text type="danger"> ✖{" "} {isRTL ? "بيانات المركبة غير موجودة في نظام المرور" : "Car Details Not Found in E-Traffic"} </Text>
-                                <Text
-                                  type="danger"
+                              <span
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 8,
+                                  borderRadius: 999,
+                                  background: hasMissingVehicleOwnerName ? "#fff0f1" : "#f0f7eb",
+                                }}
+                              >
+                                {/* Car icon in circle */}
+                                <span
                                   style={{
-                                    background: "#eb2630",
-                                    color: "#fff",
-                                    fontSize: 11,
-                                    borderRadius: 2,
-                                    padding: "2px 8px",
-                                    lineHeight: "18px",
                                     display: "inline-flex",
                                     alignItems: "center",
-                                    gap: 6,
-                                    marginInline: 8,
-                                    whiteSpace: "nowrap",
+                                    justifyContent: "center",
+                                    width: 30,
+                                    height: 30,
+                                    borderRadius: "50%",
+                                    border: `2px solid ${hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d"}`,
+                                    flexShrink: 0,
                                   }}
                                 >
-                                  ✖{" "}
-                                  {isRTL
-                                    ? "بيانات المركبة غير موجودة في نظام المرور"
-                                    : "Car Details Not Found in E-Traffic"}
-                                </Text>
-                              ) : (
-                                // <Text type="success" style={{ color: "#389e0d" }}>
-                                //   ✔{" "}
-                                //   {isRTL
-                                //     ? "تم العثور على بيانات المركبة في نظام المرور"
-                                //     : "Car Details Found in E-Traffic"}
-                                // </Text>
-                                <Text
+                                  <CarOutlined
+                                    style={{
+                                      fontSize: 15,
+                                      color: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
+                                    }}
+                                  />
+                                </span>
+
+                                {/* Label */}
+                                <span
                                   style={{
-                                    background: "#51c41a",
-                                    color: "#fff",
-                                    fontSize: 11,
-                                    borderRadius: 2,
-                                    padding: "2px 8px",
-                                    lineHeight: "18px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                    marginInline: 8,
-                                    whiteSpace: "nowrap",
+                                    fontSize: 13,
+                                    fontWeight: 700,
+                                    color: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
                                   }}
                                 >
-                                  ✔{" "}
-                                  {isRTL
-                                    ? "تم العثور على بيانات المركبة في نظام المرور"
-                                    : "Car Details Found in E-Traffic"}
-                                </Text>
-                              )}
+                                  {isRTL ? "المرور الإلكتروني" : "E-traffic"}
+                                </span>
+
+                                {/* Divider */}
+                                <span
+                                  style={{
+                                    width: 1,
+                                    height: 18,
+                                    background: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
+                                    opacity: 0.35,
+                                    display: "inline-block",
+                                  }}
+                                />
+
+                                {/* Check / X icon */}
+                                {hasMissingVehicleOwnerName ? (
+                                  <CloseCircleFilled style={{ fontSize: 20, color: "#eb2630" }} />
+                                ) : (
+                                  <CheckCircleFilled style={{ fontSize: 20, color: "#389e0d" }} />
+                                )}
+                              </span>
                             </Col>
                           </Row>
                         </Card>
@@ -991,7 +984,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                         <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
                           {dispute.fineDetails.fineAmount !== null && dispute.fineDetails.fineAmount !== undefined ? (
                             <Text type="danger" strong>
-                              {dispute.fineDetails.fineAmount} {t("common.aed")}
+                              {t("common.aed")} {dispute.fineDetails.fineAmount}
                             </Text>
                           ) : (
                             t("common.noData")
@@ -1285,11 +1278,9 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                       }}
                     >
                       <Space>
+                        <Button onClick={onClose}>{isRTL ? "إلغاء" : "Cancel"}</Button>
                         <Button type="primary" loading={isUpdating} onClick={handleSubmit} disabled={!selectedAction}>
                           {isRTL ? "إرسال" : "Submit"}
-                        </Button>
-                        <Button danger onClick={onClose}>
-                          {isRTL ? "إلغاء" : "Cancel"}
                         </Button>
                       </Space>
                     </Col>

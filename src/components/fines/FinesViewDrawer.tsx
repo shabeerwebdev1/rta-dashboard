@@ -3,7 +3,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Form, Space, Image, Select } from "antd";
-import { CloseOutlined, ShareAltOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import {
+  CloseOutlined,
+  ShareAltOutlined,
+  ExclamationCircleOutlined,
+  CloseCircleFilled,
+  CheckCircleFilled,
+  CarOutlined,
+} from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { theme } from "antd";
 import dayjs from "dayjs";
@@ -104,6 +111,8 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
     fine ? { inspectionGUID: fine.inspectionGUID, entityCode: fine.entityCode } : skipToken,
   );
 
+  const isRTL = i18n.language === "ar";
+
   useEffect(() => {
     if (!hasExternalLookupOptions && open && internalLookupOptions.length === 0) {
       fetchLookupData();
@@ -181,9 +190,9 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
         ? getLabelFunction(effectiveInspectionStatus, inspectionStatusOptions, i18n)
         : effectiveInspectionStatus || "No Data",
       inspectionDateFormatted: formatDate(fine.actualDateTime),
-      fineAmountFormatted: (fine.fineAmount ?? fine.fineAmount === 0) ? `${fine.fineAmount} AED` : "No Data",
+      fineAmountFormatted: (fine.fineAmount ?? fine.fineAmount === 0) ? ` AED ${fine.fineAmount} ` : "No Data",
       totalAmountFormatted:
-        (fine.totalFineAmount ?? fine.totalFineAmount === 0) ? `${fine.totalFineAmount} AED` : "No Data",
+        (fine.totalFineAmount ?? fine.totalFineAmount === 0) ? ` AED ${fine.totalFineAmount} ` : "No Data",
       paymentTypeLabel:
         fine.paymentType !== undefined && fine.paymentType !== null
           ? getLabelFunction(fine.paymentType, paymentTypeOptions, i18n)
@@ -512,27 +521,6 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                           >
                             <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                               {t("form.vehicleDetails")}
-                              {hasMissingVehicleOwnerName && (
-                                <span
-                                  style={{
-                                    background: "#eb2630",
-                                    color: "#fff",
-                                    fontSize: 11,
-                                    borderRadius: 2,
-                                    padding: "2px 8px",
-                                    lineHeight: "18px",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  <ExclamationCircleOutlined style={{ fontSize: 11 }} />
-                                  {i18n.language.startsWith("ar")
-                                    ? "بيانات المركبة غير موجودة في النظام المروري"
-                                    : "Car Details Not Found in E-traffic"}
-                                </span>
-                              )}
                             </span>
                             <span style={{ paddingTop: "10px", paddingBottom: "10px" }}>
                               <UAEPlate
@@ -615,51 +603,67 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                               {i18n.language.startsWith("ar") ? "تفاصيل المرور الإلكتروني:" : "E-Traffic Details:"}
                             </Text>
                           </Col>
-                          <Col span={14}>
-                            {hasMissingVehicleOwnerName ? (
-                              <Text
-                                type="danger"
+
+                          <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 8,
+                                borderRadius: 999,
+                                background: hasMissingVehicleOwnerName ? "#fff0f1" : "#f0f7eb",
+                              }}
+                            >
+                              {/* Car icon in circle */}
+                              <span
                                 style={{
-                                  background: "#eb2630",
-                                  color: "#fff",
-                                  fontSize: 11,
-                                  borderRadius: 2,
-                                  padding: "2px 8px",
-                                  lineHeight: "18px",
                                   display: "inline-flex",
                                   alignItems: "center",
-                                  gap: 6,
-                                  marginInline: 8,
-                                  whiteSpace: "nowrap",
+                                  justifyContent: "center",
+                                  width: 30,
+                                  height: 30,
+                                  borderRadius: "50%",
+                                  border: `2px solid ${hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d"}`,
+                                  flexShrink: 0,
                                 }}
                               >
-                                ✖{" "}
-                                {i18n.language.startsWith("ar")
-                                  ? "بيانات المركبة غير موجودة في نظام المرور"
-                                  : "Car Details Not Found in E-Traffic"}
-                              </Text>
-                            ) : (
-                              <Text
+                                <CarOutlined
+                                  style={{
+                                    fontSize: 15,
+                                    color: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
+                                  }}
+                                />
+                              </span>
+
+                              {/* Label */}
+                              <span
                                 style={{
-                                  background: "#52c41a",
-                                  color: "#fff",
-                                  fontSize: 11,
-                                  borderRadius: 2,
-                                  padding: "2px 8px",
-                                  lineHeight: "18px",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: 6,
-                                  marginInline: 8,
-                                  whiteSpace: "nowrap",
+                                  fontSize: 13,
+                                  fontWeight: 700,
+                                  color: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
                                 }}
                               >
-                                ✔{" "}
-                                {i18n.language.startsWith("ar")
-                                  ? "تم العثور على بيانات المركبة في نظام المرور"
-                                  : "Car Details Found in E-Traffic"}
-                              </Text>
-                            )}
+                                {isRTL ? "المرور الإلكتروني" : "E-traffic"}
+                              </span>
+
+                              {/* Divider */}
+                              <span
+                                style={{
+                                  width: 1,
+                                  height: 18,
+                                  background: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
+                                  opacity: 0.35,
+                                  display: "inline-block",
+                                }}
+                              />
+
+                              {/* Check / X icon */}
+                              {hasMissingVehicleOwnerName ? (
+                                <CloseCircleFilled style={{ fontSize: 20, color: "#eb2630" }} />
+                              ) : (
+                                <CheckCircleFilled style={{ fontSize: 20, color: "#389e0d" }} />
+                              )}
+                            </span>
                           </Col>
                         </Row>
                       </Card>
@@ -703,7 +707,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                             <Col style={{ textAlign: "right" }}>
                               <Text type="danger" strong>
                                 {" "}
-                                {value?.totalFineAmount} AED{" "}
+                                AED {value?.totalFineAmount}
                               </Text>
                             </Col>
                           </Row>

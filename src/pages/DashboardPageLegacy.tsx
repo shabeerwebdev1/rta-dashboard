@@ -354,7 +354,7 @@ const SupervisorViewPage: React.FC = () => {
                     <Statistic
                       title={t("dashboard.amount", "Amount")}
                       value={dashboardData?.data?.fineAmount || 0}
-                      suffix="AED"
+                      prefix="AED"
                     />
                   </Col>
                   <Col>

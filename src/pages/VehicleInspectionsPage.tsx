@@ -9,7 +9,11 @@ import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
-import { useSearchFinesQuery, useLazyGetLookupsQuery, useLazyGetCarInspectionByIdQuery } from "../services/rtkApiFactory";
+import {
+  useSearchFinesQuery,
+  useLazyGetLookupsQuery,
+  useLazyGetCarInspectionByIdQuery,
+} from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 
@@ -231,7 +235,8 @@ const VehicleInspectionsPage: React.FC = () => {
                     ? t("common.noData")
                     : getLabelFromValue(displayValue, inspectionCategoryOptions, i18n);
               } else if (columnKey === "fineAmount") {
-                displayValue = displayValue == null || displayValue === "" ? t("common.noData") : `${displayValue} AED`;
+                displayValue =
+                  displayValue == null || displayValue === "" ? t("common.noData") : ` AED ${displayValue} `;
               } else if (columnKey === "inspectionStatus") {
                 // For CSV, we just want the label text without the Tag component
                 displayValue =
@@ -360,7 +365,7 @@ const VehicleInspectionsPage: React.FC = () => {
             render: (value: any) => {
               if (value == null || value === "") return t("common.noData");
 
-              return <Typography.Text type="danger">{value} AED</Typography.Text>;
+              return <Typography.Text type="danger"> AED {value} </Typography.Text>;
             },
           };
         }

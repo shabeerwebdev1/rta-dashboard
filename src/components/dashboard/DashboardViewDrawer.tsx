@@ -100,7 +100,7 @@ const DashboardViewDrawer: React.FC<DashboardViewDrawerProps> = ({ open, onClose
               <Statistic
                 title="Fines Issued"
                 value={inspectorData.finesIssued}
-                suffix="AED"
+                prefix="AED"
                 valueStyle={{ color: "#cf1322" }}
               />
             </Card>

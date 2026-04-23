@@ -235,12 +235,9 @@ const ParkonicLocationViewDrawer: React.FC<ParkonicLocationViewDrawerProps> = ({
                       </Form.Item>
 
                       <Space>
+                        <Button onClick={onClose}>{isRTL ? "إلغاء" : "Cancel"}</Button>
                         <Button type="primary" onClick={handleSubmit} loading={isSubmitting}>
                           {isRTL ? "إرسال" : "Submit"}
-                        </Button>
-
-                        <Button danger onClick={onClose}>
-                          {isRTL ? "إلغاء" : "Cancel"}
                         </Button>
                       </Space>
                     </Form>

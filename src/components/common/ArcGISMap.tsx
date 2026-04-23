@@ -349,7 +349,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
           popupTemplate: {
             title: `Fine: ${fine.plateNumber}`,
             content: `
-              <b>Amount:</b> ${fine.fineAmount} AED<br>
+              <b>Amount:</b> AED ${fine.fineAmount} <br>
               <b>Time:</b> ${fine.timestamp}<br>
               <b>Plate:</b> ${fine.plateNumber}
             `,

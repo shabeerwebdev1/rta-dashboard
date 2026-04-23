@@ -76,15 +76,29 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
     const reviewStatus = String(action?.ReviewStatus ?? action?.reviewStatus ?? "").toLowerCase();
     const explicitStatus = action?.StatusCode ?? action?.LeaveStatusCode;
 
-    if (reviewStatusCode.includes("approve") || reviewStatusCode.includes("accept") || reviewStatus.includes("approve") || reviewStatus.includes("accept")) {
+    if (
+      reviewStatusCode.includes("approve") ||
+      reviewStatusCode.includes("accept") ||
+      reviewStatus.includes("approve") ||
+      reviewStatus.includes("accept")
+    ) {
       return LeaveStatus.Approved;
     }
 
-    if (reviewStatusCode.includes("reject") || reviewStatusCode.includes("send-back") || reviewStatus.includes("reject")) {
+    if (
+      reviewStatusCode.includes("reject") ||
+      reviewStatusCode.includes("send-back") ||
+      reviewStatus.includes("reject")
+    ) {
       return LeaveStatus.Rejected;
     }
 
-    if (explicitStatus === LeaveStatus.Approved || explicitStatus === LeaveStatus.Rejected || explicitStatus === LeaveStatus.Pending || explicitStatus === LeaveStatus.Cancelled) {
+    if (
+      explicitStatus === LeaveStatus.Approved ||
+      explicitStatus === LeaveStatus.Rejected ||
+      explicitStatus === LeaveStatus.Pending ||
+      explicitStatus === LeaveStatus.Cancelled
+    ) {
       return explicitStatus;
     }
 
@@ -307,12 +321,9 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
                             </Form.Item>
 
                             <Space>
+                              <Button onClick={onClose}>{isRTL ? "إلغاء" : "Cancel"}</Button>
                               <Button type="primary" onClick={handleSubmit} loading={isSubmitting}>
                                 {isRTL ? "إرسال" : "Submit"}
-                              </Button>
-
-                              <Button danger onClick={onClose}>
-                                {isRTL ? "إلغاء" : "Cancel"}
                               </Button>
                             </Space>
                           </Form>

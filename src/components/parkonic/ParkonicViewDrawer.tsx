@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Space, Image, Divider, theme } from "antd";
-import { CloseOutlined } from "@ant-design/icons";
+import { CarOutlined, CheckCircleFilled, CloseCircleFilled, CloseOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import {
   useUpdateParkonicMutation,
@@ -433,7 +433,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                             </Col>
                             <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
                               <Text strong type="danger" style={{ fontSize: "16px", fontWeight: 600 }}>
-                                {violationDetails[0].violationAmount} AED
+                                AED {violationDetails[0].violationAmount}
                               </Text>
                             </Col>
                           </Row>
@@ -459,28 +459,6 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                             <Text strong style={{ fontSize: "16px" }}>
                               {t("form.vehicleDetails")}
                             </Text>
-                            {/* {hasMissingVehicleOwnerName && (
-                              <div
-                                style={{
-                                  background: "#eb2630",
-                                  color: "#fff",
-                                  fontSize: 11,
-                                  borderRadius: 2,
-                                  padding: "2px 8px",
-                                  lineHeight: "18px",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: 6,
-                                  marginInline: 8,
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                <ExclamationCircleOutlined style={{ fontSize: 11 }} />
-                                {isRTL
-                                  ? "بيانات المركبة غير موجودة في النظام المروري"
-                                  : "Car Details Not Found in E-traffic"}
-                              </div>
-                            )} */}
                             <div style={{ marginTop: "4px" }}>
                               {(() => {
                                 const localizedSource = getPlateSourceLocalized(record?.plateSource);
@@ -573,57 +551,65 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                           </Col>
 
                           <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
-                            {hasMissingVehicleOwnerName ? (
-                              // <Text type="danger"> ✖{" "} {isRTL ? "بيانات المركبة غير موجودة في نظام المرور" : "Car Details Not Found in E-Traffic"} </Text>
-                              <Text
-                                type="danger"
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 8,
+                                borderRadius: 999,
+                                background: hasMissingVehicleOwnerName ? "#fff0f1" : "#f0f7eb",
+                              }}
+                            >
+                              {/* Car icon in circle */}
+                              <span
                                 style={{
-                                  background: "#eb2630",
-                                  color: "#fff",
-                                  fontSize: 11,
-                                  borderRadius: 2,
-                                  padding: "2px 8px",
-                                  lineHeight: "18px",
                                   display: "inline-flex",
                                   alignItems: "center",
-                                  gap: 6,
-                                  marginInline: 8,
-                                  whiteSpace: "nowrap",
+                                  justifyContent: "center",
+                                  width: 30,
+                                  height: 30,
+                                  borderRadius: "50%",
+                                  border: `2px solid ${hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d"}`,
+                                  flexShrink: 0,
                                 }}
                               >
-                                ✖{" "}
-                                {isRTL
-                                  ? "بيانات المركبة غير موجودة في نظام المرور"
-                                  : "Car Details Not Found in E-Traffic"}
-                              </Text>
-                            ) : (
-                              // <Text type="success" style={{ color: "#389e0d" }}>
-                              //   ✔{" "}
-                              //   {isRTL
-                              //     ? "تم العثور على بيانات المركبة في نظام المرور"
-                              //     : "Car Details Found in E-Traffic"}
-                              // </Text>
-                              <Text
+                                <CarOutlined
+                                  style={{
+                                    fontSize: 15,
+                                    color: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
+                                  }}
+                                />
+                              </span>
+
+                              {/* Label */}
+                              <span
                                 style={{
-                                  background: "#52c41a",
-                                  color: "#fff",
-                                  fontSize: 11,
-                                  borderRadius: 2,
-                                  padding: "2px 8px",
-                                  lineHeight: "18px",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: 6,
-                                  marginInline: 8,
-                                  whiteSpace: "nowrap",
+                                  fontSize: 13,
+                                  fontWeight: 700,
+                                  color: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
                                 }}
                               >
-                                ✔{" "}
-                                {isRTL
-                                  ? "تم العثور على بيانات المركبة في نظام المرور"
-                                  : "Car Details Found in E-Traffic"}
-                              </Text>
-                            )}
+                                {isRTL ? "المرور الإلكتروني" : "E-traffic"}
+                              </span>
+
+                              {/* Divider */}
+                              <span
+                                style={{
+                                  width: 1,
+                                  height: 18,
+                                  background: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
+                                  opacity: 0.35,
+                                  display: "inline-block",
+                                }}
+                              />
+
+                              {/* Check / X icon */}
+                              {hasMissingVehicleOwnerName ? (
+                                <CloseCircleFilled style={{ fontSize: 20, color: "#eb2630" }} />
+                              ) : (
+                                <CheckCircleFilled style={{ fontSize: 20, color: "#389e0d" }} />
+                              )}
+                            </span>
                           </Col>
                         </Row>
                       </Card>
@@ -775,11 +761,9 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                       }}
                     >
                       <Space>
+                        <Button onClick={onClose}>{isRTL ? "إلغاء" : "Cancel"}</Button>
                         <Button type="primary" loading={isSubmitting} onClick={submitReview} disabled={!selectedAction}>
                           {isRTL ? "إرسال" : "Submit"}
-                        </Button>
-                        <Button danger onClick={onClose}>
-                          {isRTL ? "إلغاء" : "Cancel"}
                         </Button>
                       </Space>
                     </Col>

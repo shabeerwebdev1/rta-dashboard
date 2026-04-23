@@ -248,7 +248,7 @@ const FinesPage: React.FC = () => {
                     ? t("common.noData")
                     : getLabelFromValue(displayValue, inspectionCategoryOptions, i18n);
               } else if (columnKey === "fineAmount") {
-                displayValue = displayValue == null || displayValue === "" ? t("common.noData") : `${displayValue} AED`;
+                displayValue = displayValue == null || displayValue === "" ? t("common.noData") : ` AED ${displayValue} `;
               } else if (columnKey === "inspectionStatus") {
                 displayValue =
                   displayValue == null ? t("common.noData") : getLabelFromValue(displayValue, lookupOptions, i18n);
@@ -377,7 +377,7 @@ const FinesPage: React.FC = () => {
             ...column,
             render: (value: any) => {
               if (value == null || value === "") return t("common.noData");
-              return `${value} AED`;
+              return ` AED ${value} `;
             },
           };
         }

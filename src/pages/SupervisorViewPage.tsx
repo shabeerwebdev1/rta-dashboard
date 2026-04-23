@@ -604,7 +604,7 @@ const SupervisorViewPage: React.FC = () => {
                   <div style={{ flex: 1 }}>
                     <Text type="secondary">Total Amount</Text>
                     <br />
-                    <Text strong>100,000 AED</Text>
+                    <Text strong> AED 100,000 </Text>
                   </div>
                   <div style={{ flex: 1 }}>
                     <Text type="secondary">Disputes</Text>
