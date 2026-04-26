@@ -549,6 +549,15 @@ export const dynamicApi = createApi({
       invalidatesTags: ["ShiftManagement"],
     }),
 
+    updateSpecialZone: builder.mutation({
+      query: (body) => ({
+        url: "/api/ShiftManagement/update-specialzone",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["ShiftManagement"],
+    }),
+
     // Role Management
     getRoles: builder.query({
       query: () => "/api/RolePermission/allrole",
@@ -949,6 +958,7 @@ export const {
   useLazyGetShiftsQuery,
   useGetActiveShiftsQuery,
   useUpdateShiftManagementMutation,
+  useUpdateSpecialZoneMutation,
 
   // User code validation
   useValidatecodeQuery,

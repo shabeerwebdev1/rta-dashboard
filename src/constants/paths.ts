@@ -30,6 +30,7 @@ export const PATHS = {
   TOWING: "towing",
   ADHOCSHIFTPLAN: "adhocshiftplan",
   SHIFT_MANAGEMENT: "shift-management",
+  INSPECTION_MANAGEMENT: "inspection-management",
 
   FINES_VEHICLES: "vehicles",
   FINES_PARKINGS: "parkings",
@@ -81,6 +82,7 @@ export const FULL_PATHS = {
   TEAM_EVALUATION: "/team-assessment/evaluation",
   TEAM_TRAINING: "/team-assessment/training",
   SHIFT_MANAGEMENT: "/shift-management",
+  INSPECTION_MANAGEMENT: "/inspection-management",
 
   FINES_VEHICLES: "/fines/vehicles",
   FINES_PARKINGS: "/fines/parkings",

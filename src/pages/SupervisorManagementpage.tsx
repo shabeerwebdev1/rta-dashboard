@@ -1,6 +1,6 @@
 // SupervisorManagement.tsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Space, Select, Checkbox, Button, Spin, Pagination, Input, Tooltip, Radio } from "antd";
+import { Space, Select, Checkbox, Button, Spin, Pagination, Input, Tooltip } from "antd";
 import { SearchOutlined, SyncOutlined } from "@ant-design/icons";
 import { SupervisorManagemnetConfig } from "../config/pageConfigs/SupervisorManagementConfig";
 import { useTranslation } from "react-i18next";
@@ -26,7 +26,6 @@ interface SupervisorData {
   shift?: string;
   weekOffs?: number[];
   assignmentType?: number[];
-  specialZone?: string | null;
   addOnMeta?: Record<string, unknown>;
   role: string;
   employeeId: string;
@@ -82,7 +81,6 @@ interface ActiveShiftData {
   isActive: boolean;
   assignmentTypes: number[];
   zoneIds: number[];
-  specialZone?: boolean | null;
   addOn: string;
 }
 
@@ -124,7 +122,6 @@ function SupervisorManagement() {
   }, [i18n.language]);
 
   const availableShiftIds = useMemo(() => shifts.map((shift) => shift.shiftTypeGUID), [shifts]);
-  const specialZoneOptions = useMemo(() => ["G9", "GX"], []);
 
   const parseAddOnData = (rawAddOn?: string): Record<string, unknown> => {
     if (!rawAddOn) return {};
@@ -147,18 +144,6 @@ function SupervisorManagement() {
       .trim()
       .toLowerCase();
 
-  const specialZoneFlagToSelection = (specialZone?: boolean | null): string | null => {
-    if (specialZone === true) return "G9";
-    if (specialZone === false) return "GX";
-    return null;
-  };
-
-  const specialZoneSelectionToFlag = (specialZone?: string | null): boolean | null => {
-    if (specialZone === "G9") return true;
-    if (specialZone === "GX") return false;
-    return null;
-  };
-
   useEffect(() => {
     if (activeShiftsResponse) {
       const activeShiftsData = Array.isArray(activeShiftsResponse)
@@ -174,9 +159,6 @@ function SupervisorManagement() {
           const parsedAreaIds = toStringArray(
             addOnData.areaIds ?? addOnData.areasIds ?? addOnData.areaId ?? addOnData.assignedAreaIds,
           );
-          const parsedSpecialZones = toStringArray(addOnData.specialZones ?? addOnData.specialZoneCodes);
-          const resolvedSpecialZone =
-            parsedSpecialZones.length > 0 ? parsedSpecialZones[0] : specialZoneFlagToSelection(item.specialZone);
           const addOnMeta = { ...addOnData };
           delete addOnMeta.areaIds;
           delete addOnMeta.areasIds;
@@ -193,7 +175,6 @@ function SupervisorManagement() {
             shift: isValidShift ? item.shiftId : undefined,
             weekOffs: item.wO_Days ? item.wO_Days.split(",").map((d) => parseInt(d)) : [],
             assignmentType: item.assignmentTypes || [],
-            specialZone: resolvedSpecialZone,
             addOnMeta,
             role: item.role,
             employeeId: item.employeeId,
@@ -371,19 +352,13 @@ function SupervisorManagement() {
     setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, assignmentType: value } : item)));
   };
 
-  const handleSpecialZoneChange = (value: string | null, record: SupervisorData) => {
-    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, specialZone: value } : item)));
-  };
-
   // === Update Handler ===
   const handleUpdate = async (record: SupervisorData) => {
     try {
       setUpdatingRowKey(record.key);
 
       const zoneIds = record.zone?.map((zoneId) => zoneId) || [];
-      const selectedSpecialZone = record.specialZone ?? null;
       const assignmentTypes = record.assignmentType || [];
-      const specialZone = specialZoneSelectionToFlag(selectedSpecialZone);
 
       const updateData = {
         employeeId: record.employeeId,
@@ -392,7 +367,6 @@ function SupervisorManagement() {
         role: "Supervisor",
         assignmentTypes,
         zoneIds,
-        specialZone,
       };
 
       await updateShiftManagement(updateData).unwrap();
@@ -512,25 +486,6 @@ function SupervisorManagement() {
         };
       }
 
-      if (col.key === "SpecialZone") {
-        return {
-          ...col,
-          render: (_: any, record: SupervisorData) => (
-            <Radio.Group value={record.specialZone ?? null} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {specialZoneOptions.map((option) => (
-                <Radio
-                  key={option}
-                  value={option}
-                  onClick={() => handleSpecialZoneChange(record.specialZone === option ? null : option, record)}
-                >
-                  {option}
-                </Radio>
-              ))}
-            </Radio.Group>
-          ),
-        };
-      }
-
       if (col.key === "weekOffs") {
         return {
           ...col,
@@ -572,6 +527,11 @@ function SupervisorManagement() {
                   icon={<SyncOutlined />}
                   onClick={() => handleUpdate(record)}
                   loading={updatingRowKey === record.key}
+                  style={{
+                    backgroundColor: "#00a967",
+                    borderColor: "#00a967",
+                    color: "#ffffff",
+                  }}
                 />
               </Tooltip>
             </div>
@@ -593,7 +553,6 @@ function SupervisorManagement() {
     weekDayOptions,
     areaOptions,
     assignmentTypeOptions,
-    specialZoneOptions,
     t,
   ]);
 

@@ -1072,6 +1072,11 @@ export default function AdhocShiftPlan() {
                 onClick={handlePlan}
                 disabled={!dateRange[0] || !dateRange[1]}
                 loading={isLoadingShifts || loadingLocal}
+                style={{
+                  backgroundColor: "#00a967",
+                  borderColor: "#00a967",
+                  color: "#ffffff",
+                }}
               >
                 {t("form.replan", "Plan")}
               </Button>
@@ -1083,7 +1088,11 @@ export default function AdhocShiftPlan() {
                   type="primary"
                   onClick={handlePublish}
                   loading={isPublishing || loadingLocal}
-                  style={{ background: "#52c41a" }}
+                  style={{
+                    backgroundColor: "#00a967",
+                    borderColor: "#00a967",
+                    color: "#ffffff",
+                  }}
                   disabled={modifiedEntries.size === 0}
                 >
                   {t("adhocShiftPlan.publish", "Publish")} {modifiedEntries.size > 0 && `(${modifiedEntries.size})`}

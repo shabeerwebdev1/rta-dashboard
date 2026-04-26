@@ -62,13 +62,13 @@ export const UserZoneLinkingConfig: PageConfig = {
         sortable: false,
         width: 170,
       },
-      {
-        key: "SpecialZone",
-        title: "form.SpecialZone",
-        type: "string",
-        sortable: false,
-        width: 170,
-      },
+      // {
+      //   key: "SpecialZone",
+      //   title: "form.SpecialZone",
+      //   type: "string",
+      //   sortable: false,
+      //   width: 170,
+      // },
       {
         key: "WeekOffs",
         title: "form.WeekOffs",

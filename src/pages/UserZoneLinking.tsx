@@ -1,6 +1,6 @@
 // UserZoneLinking.tsx
 import React, { useEffect, useState, useMemo } from "react";
-import { Space, Select, Checkbox, Spin, Button, Pagination, Input, Tooltip, Radio } from "antd";
+import { Space, Select, Checkbox, Spin, Button, Pagination, Input, Tooltip } from "antd";
 import { SearchOutlined, SyncOutlined } from "@ant-design/icons";
 import { UserZoneLinkingConfig } from "../config/pageConfigs/userZoneLinkingConfig";
 import { useTranslation } from "react-i18next";
@@ -26,7 +26,6 @@ interface InspectorData {
   shift?: string;
   weekOffs?: string[];
   assignmentType?: number[];
-  specialZone?: string | null;
   addOnMeta?: Record<string, unknown>;
   role: string;
   roleGUID: string;
@@ -82,7 +81,6 @@ interface ActiveShiftData {
   isActive: boolean;
   assignmentTypes: number[];
   zoneIds: number[];
-  specialZone?: boolean | null;
   addOn: string;
 }
 
@@ -124,7 +122,6 @@ function UserZoneLinking() {
   }, [i18n.language]);
 
   const availableShiftIds = useMemo(() => shifts.map((shift) => shift.shiftTypeGUID), [shifts]);
-  const specialZoneOptions = useMemo(() => ["G9", "GX"], []);
 
   const parseAddOnData = (rawAddOn?: string): Record<string, unknown> => {
     if (!rawAddOn) return {};
@@ -147,18 +144,6 @@ function UserZoneLinking() {
       .trim()
       .toLowerCase();
 
-  const specialZoneFlagToSelection = (specialZone?: boolean | null): string | null => {
-    if (specialZone === true) return "G9";
-    if (specialZone === false) return "GX";
-    return null;
-  };
-
-  const specialZoneSelectionToFlag = (specialZone?: string | null): boolean | null => {
-    if (specialZone === "G9") return true;
-    if (specialZone === "GX") return false;
-    return null;
-  };
-
   useEffect(() => {
     if (activeShiftsResponse) {
       const activeShiftsData = Array.isArray(activeShiftsResponse)
@@ -174,10 +159,6 @@ function UserZoneLinking() {
           const parsedAreaIds = toStringArray(
             addOnData.areaIds ?? addOnData.areasIds ?? addOnData.areaId ?? addOnData.assignedAreaIds,
           );
-          const parsedSpecialZones = toStringArray(addOnData.specialZones ?? addOnData.specialZoneCodes);
-          const resolvedSpecialZone =
-            parsedSpecialZones.length > 0 ? parsedSpecialZones[0] : specialZoneFlagToSelection(item.specialZone);
-
           const weekOffDays = item.wO_Days ? item.wO_Days.split(",").filter(Boolean) : [];
           const weekOffNumbers = weekOffDays.map((day) => {
             const dayMap: Record<string, string> = {
@@ -216,7 +197,6 @@ function UserZoneLinking() {
             shift: isValidShift ? item.shiftId : undefined,
             weekOffs: weekOffNumbers,
             assignmentType: assignmentTypes,
-            specialZone: resolvedSpecialZone,
             addOnMeta,
             role: item.role,
             roleGUID: item.roleGUID,
@@ -387,18 +367,12 @@ function UserZoneLinking() {
     setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, assignmentType: value } : item)));
   };
 
-  const handleSpecialZoneChange = (value: string | null, record: InspectorData) => {
-    setData((prev) => prev.map((item) => (item.key === record.key ? { ...item, specialZone: value } : item)));
-  };
-
   // === Update Handler ===
   const handleUpdate = async (record: InspectorData) => {
     try {
       const zoneIds = record.zone || [];
       const assignmentTypes = record.assignmentType || [];
       const weekOffsString = (record.weekOffs || []).join(",");
-      const selectedSpecialZone = record.specialZone ?? null;
-      const specialZone = specialZoneSelectionToFlag(selectedSpecialZone);
 
       const updateData = {
         employeeId: record.employeeId,
@@ -407,7 +381,6 @@ function UserZoneLinking() {
         role: "Inspector",
         assignmentTypes,
         zoneIds,
-        specialZone,
       };
 
       await updateShiftManagement(updateData).unwrap();
@@ -523,25 +496,6 @@ function UserZoneLinking() {
         };
       }
 
-      if (col.key === "SpecialZone") {
-        return {
-          ...col,
-          render: (_: any, record: InspectorData) => (
-            <Radio.Group value={record.specialZone ?? null} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {specialZoneOptions.map((option) => (
-                <Radio
-                  key={option}
-                  value={option}
-                  onClick={() => handleSpecialZoneChange(record.specialZone === option ? null : option, record)}
-                >
-                  {option}
-                </Radio>
-              ))}
-            </Radio.Group>
-          ),
-        };
-      }
-
       if (col.key === "WeekOffs") {
         return {
           ...col,
@@ -585,6 +539,11 @@ function UserZoneLinking() {
                   icon={<SyncOutlined />}
                   onClick={() => handleUpdate(record)}
                   loading={isUpdating}
+                  style={{
+                    backgroundColor: "#00a967",
+                    borderColor: "#00a967",
+                    color: "#ffffff",
+                  }}
                 />
               </Tooltip>
             </div>
@@ -607,7 +566,6 @@ function UserZoneLinking() {
     i18n.language,
     weekDayOptions,
     areaOptions,
-    specialZoneOptions,
     t,
   ]);
 

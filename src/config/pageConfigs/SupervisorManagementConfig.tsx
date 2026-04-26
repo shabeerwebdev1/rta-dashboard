@@ -62,13 +62,13 @@ export const SupervisorManagemnetConfig: PageConfig = {
         sortable: false,
         width: 170,
       },
-      {
-        key: "SpecialZone",
-        title: "form.SpecialZone",
-        type: "string",
-        sortable: false,
-        width: 170,
-      },
+      // {
+      //   key: "SpecialZone",
+      //   title: "form.SpecialZone",
+      //   type: "string",
+      //   sortable: false,
+      //   width: 170,
+      // },
       {
         key: "weekOffs",
         title: "form.WeekOffs",

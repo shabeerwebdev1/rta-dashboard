@@ -1100,7 +1100,16 @@ export default function CreateShiftPlan() {
             </Form.Item>
 
             <Form.Item>
-              <Button type="primary" onClick={handleSubmit} loading={isPlanning}>
+              <Button
+                type="primary"
+                onClick={handleSubmit}
+                loading={isPlanning}
+                style={{
+                  backgroundColor: "#00a967",
+                  borderColor: "#00a967",
+                  color: "#ffffff",
+                }}
+              >
                 {t("shiftPlanning.plan", "Plan")}
               </Button>
             </Form.Item>
@@ -1218,7 +1227,16 @@ export default function CreateShiftPlan() {
                 <Button onClick={() => handlePublishOrDraft(false)} loading={isPublishing}>
                   {t("shiftPlanning.saveDraft", "Save Draft")}
                 </Button>
-                <Button type="primary" onClick={() => handlePublishOrDraft(true)} loading={isPublishing}>
+                <Button
+                  type="primary"
+                  onClick={() => handlePublishOrDraft(true)}
+                  loading={isPublishing}
+                  style={{
+                    backgroundColor: "#00a967",
+                    borderColor: "#00a967",
+                    color: "#ffffff",
+                  }}
+                >
                   {t("shiftPlanning.publish", "Publish")}
                 </Button>
               </Space>

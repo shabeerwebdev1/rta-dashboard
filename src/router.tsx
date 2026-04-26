@@ -22,6 +22,7 @@ const SplashPage = lazy(() => import("./pages/SplashPage"));
 const CreateShiftPlan = lazy(() => import("./pages/CreateShiftPlan"));
 const AdhocShiftPlan = lazy(() => import("./pages/AdhocShiftPlan"));
 const ShiftManagement = lazy(() => import("./pages/ShiftManagement"));
+const InspectionManagementPage = lazy(() => import("./pages/InspectionManagementPage"));
 const RoleManagementPage = lazy(() => import("./pages/RoleManagementPage"));
 const LeaveManagementPage = lazy(() => import("./pages/LeaveManagementPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
@@ -187,6 +188,14 @@ const AppRoutes = () => (
           element={
             <ProtectedRoute>
               <ShiftManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={PATHS.INSPECTION_MANAGEMENT}
+          element={
+            <ProtectedRoute>
+              <InspectionManagementPage />
             </ProtectedRoute>
           }
         />

@@ -123,10 +123,25 @@ html[lang="ar"] .ant-pagination-total-text {
   border-right: 0;
 }
 
+/* Fix menu item text truncation */
+.app-sidebar .ant-menu-title-content {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+}
+
+.app-sidebar .ant-menu-item {
+  height: auto !important;
+  min-height: 40px !important;
+  line-height: 1.4 !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
 /* Dashboard Stats Cards */
 .dashboard-stat-card .ant-card-body {
   display: flex;
-  align-items: center;      /* vertical center */
+  align-items: center; /* vertical center */
   justify-content: space-between;
   padding: 10px !important;
   border-radius: 12px;

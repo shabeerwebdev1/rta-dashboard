@@ -339,6 +339,12 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           labelText: t("sidebar.shiftmanagement"),
           permission: "ShiftManagement",
         },
+        {
+          key: FULL_PATHS.INSPECTION_MANAGEMENT,
+          icon: <AuditOutlined />,
+          labelText: t("sidebar.inspectionmanagement"),
+          permission: "ShiftManagement",
+        },
         // {
         //   key: FULL_PATHS.SHIFT_PLAN,
         //   icon: <AuditOutlined />,
