@@ -194,6 +194,7 @@ export const parkonicPageConfig: PageConfig = {
       {
         key: "categoryId",
         title: "form.violationCategory",
+        align: "center",
         type: "custom" as const,
         render: (_: any, record: any) => {
           const getCurrentLanguage = () => {
@@ -221,6 +222,7 @@ export const parkonicPageConfig: PageConfig = {
       {
         key: "violationAmount",
         title: "form.violationAmount",
+        align: "center",
         type: "number",
         render: (value?: number) => <Typography.Text type="danger"> AED {value ?? "—"} </Typography.Text>,
       },

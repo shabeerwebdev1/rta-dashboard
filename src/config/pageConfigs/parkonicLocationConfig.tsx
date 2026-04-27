@@ -35,10 +35,10 @@ export const parkonicLocationPageConfig: PageConfig = {
     columnFilterKeys: ["zone", "area", "status"],
     dateRangeKey: "created_At",
     filterKeyMap: {
-      status: "status"
-    }
+      status: "status",
+    },
   },
-  
+
   statsConfig: [
     {
       title: "stats.TotalRecords",
@@ -59,10 +59,10 @@ export const parkonicLocationPageConfig: PageConfig = {
       color: "#faad14",
     },
   ],
-  
+
   tableConfig: {
     columns: [
-      { key: "parkonics_Location_Id", title: "form.parkonicsLocationId", type: "string" },
+      { key: "parkonics_Location_Id", title: "form.parkonicsLocationId", type: "string", align: "center" },
       { key: "parking_Name_En", title: "form.parkingNameEn", type: "string" },
       { key: "parking_Name_Ar", title: "form.parkingNameAr", type: "string" },
       // { key: "zone", title: "form.zone", type: "string" },

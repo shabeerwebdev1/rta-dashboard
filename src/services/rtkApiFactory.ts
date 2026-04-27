@@ -83,6 +83,7 @@ export const dynamicApi = createApi({
     "InboxSummary",
     "InboxSummaryMenu",
     "Inbox",
+    "CriteriaWeight",
   ],
 
   endpoints: (builder) => ({
@@ -748,6 +749,39 @@ export const dynamicApi = createApi({
       }),
     }),
 
+    // Criteria Weight
+    getCriteriaWeights: builder.query({
+      query: (params) => ({ url: "/api/CriteriaWeight", params }),
+      transformResponse: (response: any) => ({
+        data: response?.data || [],
+        total: response?.totalCount || 0,
+      }),
+      providesTags: ["CriteriaWeight"],
+    }),
+
+    getCriteriaWeightById: builder.query({
+      query: (id) => `/api/CriteriaWeight/${id}`,
+      providesTags: ["CriteriaWeight"],
+    }),
+
+    addCriteriaWeight: builder.mutation({
+      query: (body) => ({
+        url: "/api/CriteriaWeight",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["CriteriaWeight"],
+    }),
+
+    updateCriteriaWeight: builder.mutation({
+      query: (body) => ({
+        url: "/api/CriteriaWeight",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["CriteriaWeight"],
+    }),
+
     getInboxSummary: builder.query<any, void>({
       query: () => ({
         url: "/api/CallIntegration/inboxNotifications",
@@ -997,6 +1031,12 @@ export const {
   useGetSavedScheduleDraftQuery,
   useGetLastBatchDetailQuery,
   usePublishShiftPlanMutation,
+
+  // Criteria Weight
+  useGetCriteriaWeightsQuery,
+  useLazyGetCriteriaWeightByIdQuery,
+  useAddCriteriaWeightMutation,
+  useUpdateCriteriaWeightMutation,
 
   // Inbox Summary
   useGetInboxSummaryQuery,

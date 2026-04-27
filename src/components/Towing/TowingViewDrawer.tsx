@@ -1,18 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  Descriptions,
-  Tag,
-  Button,
-  Space,
-  Input,
-  Typography,
-  Image,
-  Empty,
-  Spin,
   Modal,
+  Card,
   Row,
   Col,
+  Typography,
+  Button,
+  Input,
+  Empty,
+  Spin,
+  Tag,
+  Space,
+  Image,
+  Divider,
+  theme,
   Form,
   Select,
 } from "antd";
@@ -45,7 +47,8 @@ interface TowingViewDrawerProps {
 }
 
 const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, record }) => {
-  const { t, i18n } = useTranslation(); // 👈 Includes i18n
+  const { t, i18n } = useTranslation();
+  const { token } = theme.useToken();
   const notification = useAppNotification();
   const [form] = Form.useForm();
   const isRTL = i18n.dir() === "rtl";
@@ -54,6 +57,7 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
   const [updateTowingStatus, { isLoading }] = useUpdateTowingStatusMutation();
   const [comments, setComments] = useState<string>("");
   const [selectedAction, setSelectedAction] = useState<any>(null);
+
   const [getReviewOptions, { data: reviewResponse, isLoading: loadingOptions }] = useLazyGetReviewOptionsQuery();
   const [getReviewHistory, { data: reviewHistory = [], isLoading: historyLoading }] = useLazyGetReviewHistoryQuery();
   const [getEntityHistory, { data: entityHistory = [], isLoading: entityHistoryLoading }] =
@@ -71,7 +75,6 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
       setResolvedInspectionGUID(record?.EntityGUID || record?.entityGUID || record?.inspectionGUID || "");
       setComments("");
       setSelectedAction(null);
-
       if (record?.$SKWorkItemData) {
         getReviewOptions(record.$SKWorkItemData);
       }
@@ -80,12 +83,9 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
 
   useEffect(() => {
     if (!open || !record) return;
-
     const entityId = record?.EntityGUID || record?.entityGUID || record?.inspectionGUID || "";
     const entityCode = record?.EntityCode || record?.entityCode || "parking-towing";
-
     if (!entityId || !entityCode) return;
-
     if (record?.$SKWorkItemData) {
       getReviewHistory({ entityCode, entityId });
     } else {
@@ -93,9 +93,19 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
     }
   }, [open, record, getReviewHistory, getEntityHistory]);
 
+  // Reset on close
+  useEffect(() => {
+    if (!open) {
+      setSelectedAction(null);
+      setComments("");
+      form.resetFields();
+    }
+  }, [open, form]);
+
   const isCompleted = currentStatus === TowingStatus.Completed;
   const isPending = currentStatus === TowingStatus.Pending;
   const hasInboxWorkflow = !!record?.$SKWorkItemData;
+  const hideFooterActions = !hasInboxWorkflow || !isPending;
 
   const { data: attachments = [], isLoading: loadingAttachments } = useGetInspectionAttachmentsQuery(
     resolvedInspectionGUID ? { inspectionGUID: resolvedInspectionGUID, entityCode: "parking-towing" } : skipToken,
@@ -108,18 +118,16 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
   const towingStart = evidenceData?.data?.startLat
     ? { lat: evidenceData.data.startLat, lng: evidenceData.data.startLng }
     : null;
-
   const towingEnd = evidenceData?.data?.endLat
     ? { lat: evidenceData.data.endLat, lng: evidenceData.data.endLng }
     : null;
-
   const mapCenter = towingStart
     ? [towingStart.lng, towingStart.lat]
     : record?.longitude && record?.latitude
       ? [record.longitude, record.latitude]
       : [55.2743, 25.1972];
 
-  const getStatusColor = (status: TowingStatus) => {
+  const getStatusColor = (status: TowingStatus): string => {
     switch (status) {
       case TowingStatus.Approved:
         return "green";
@@ -136,7 +144,7 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
     }
   };
 
-  const getStatusLabel = (status: TowingStatus) => {
+  const getStatusLabel = (status: TowingStatus): string => {
     switch (status) {
       case TowingStatus.Approved:
         return t("status.approved");
@@ -159,49 +167,28 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
       : [];
   }, [reviewResponse]);
 
-  const getTowingStatusFromAction = (action: any) => {
-    const reviewStatusCode = String(action?.ReviewStatusCode ?? action?.reviewStatusCode ?? "").toLowerCase();
-    const reviewStatus = String(action?.ReviewStatus ?? action?.reviewStatus ?? "").toLowerCase();
-    const explicitStatus = action?.StatusCode ?? action?.TowingStatusCode;
-
-    if (
-      reviewStatusCode.includes("approve") ||
-      reviewStatusCode.includes("accept") ||
-      reviewStatus.includes("approve") ||
-      reviewStatus.includes("accept")
-    ) {
+  const getTowingStatusFromAction = (action: any): number => {
+    const code = String(action?.ReviewStatusCode ?? action?.reviewStatusCode ?? "").toLowerCase();
+    const label = String(action?.ReviewStatus ?? action?.reviewStatus ?? "").toLowerCase();
+    const explicit = action?.StatusCode ?? action?.TowingStatusCode;
+    if (code.includes("approve") || code.includes("accept") || label.includes("approve") || label.includes("accept"))
       return 1;
-    }
-
-    if (
-      reviewStatusCode.includes("reject") ||
-      reviewStatusCode.includes("send-back") ||
-      reviewStatus.includes("reject")
-    ) {
-      return 3;
-    }
-
-    if (explicitStatus === 1 || explicitStatus === 3) {
-      return explicitStatus;
-    }
-
+    if (code.includes("reject") || code.includes("send-back") || label.includes("reject")) return 3;
+    if (explicit === 1 || explicit === 3) return explicit;
     return 0;
   };
 
   const handleSubmit = async () => {
     try {
       await form.validateFields();
-
       if (!resolvedInspectionGUID) {
         notification.error({ data: { en_Msg: "Missing inspection GUID", ar_Msg: "معرف الفحص مفقود" } }, "");
         return;
       }
-
       if (!selectedAction) {
         notification.error({ data: { en_Msg: "Please select an action", ar_Msg: "الرجاء تحديد إجراء" } }, "");
         return;
       }
-
       if (selectedAction.IsCommentMandatory && !comments.trim()) {
         notification.error(
           { data: { en_Msg: "Comments are required for this action", ar_Msg: "التعليقات مطلوبة لهذا الإجراء" } },
@@ -209,7 +196,6 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
         );
         return;
       }
-
       const payload = {
         inspectionGUID: resolvedInspectionGUID,
         towing_status: getTowingStatusFromAction(selectedAction),
@@ -223,7 +209,6 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
           rcwuri: record?.$SKWorkItemData || "",
         },
       };
-
       const res = await updateTowingStatus(payload).unwrap();
       notification.success(res, "");
       onClose();
@@ -235,13 +220,7 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
 
   const handleActionChange = (value: string) => {
     const opt = reviewOptions.find((item: any) => item.ActivityOptionGUID === value);
-    setSelectedAction(opt);
-  };
-
-  const hideFooterActions = !hasInboxWorkflow || !isPending;
-
-  const handleCancel = () => {
-    onClose();
+    setSelectedAction(opt || null);
   };
 
   const towingDocuments = useMemo(() => {
@@ -249,243 +228,313 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
     return docs ? docs.split("; ").filter((p: string) => p.trim()) : [];
   }, [evidenceData]);
 
-  // --------- TITLE DETECTION (EN + AR AUTO SWITCH) ----------
-  const getDocumentTitle = (filePath: string) => {
+  const getDocumentTitle = (filePath: string): string => {
     const file = filePath.toLowerCase();
-    const lang = i18n.language;
-    const isAr = lang === "ar";
-
+    const isAr = i18n.language === "ar";
     if (file.includes("driverphoto")) return isAr ? "صورة السائق" : "Driver Photo";
-
     if (file.includes("signature")) return isAr ? "توقيع السائق" : "Driver Signature";
-
     if (file.includes("emiratesid")) return isAr ? "صورة بطاقة الهوية الإماراتية للسائق" : "Driver Emirates ID";
-
     return isAr ? "مستند" : "Document";
   };
 
   const shouldShowVideo = isCompleted || !!record?.evidenceFileName;
-
   const tempVideoUrl =
     "https://media.istockphoto.com/id/1421938947/video/tow-truck-transportation-4k-resolution.mp4?s=mp4-640x640-is&k=20&c=ii_HinNEKIvDOaPHA8bb8a5Nojmb09HVOp3JDLyPDvI=";
+  const videoUrl = record?.evidenceFileName ? getMobileFileUrl(record.evidenceFileName) : tempVideoUrl;
 
-  const realVideoUrl = record?.evidenceFileName ? getMobileFileUrl(record.evidenceFileName) : null;
+  // ─── shared card head style (mirrors Parkonic) ────────────────────────────
+  const cardHeadStyle = {
+    background: token.colorBgContainer,
+    fontWeight: 600 as const,
+    textAlign: (isRTL ? "right" : "left") as "right" | "left",
+  };
 
-  const videoUrl = realVideoUrl || tempVideoUrl;
+  // ─── label/value row helper identical to Parkonic's Col pattern ──────────
+  const LabelCol = ({ label }: { label: string }) => (
+    <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+      <Text strong>{label}:</Text>
+    </Col>
+  );
+  const ValueCol = ({ children }: { children: React.ReactNode }) => (
+    <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+      {children}
+    </Col>
+  );
 
   return (
     <Modal
       open={open}
       onCancel={onClose}
       width={1600}
-      centered
-      title={null}
       footer={null}
+      title={null}
       closable={false}
       style={{ top: 40 }}
       bodyStyle={{ padding: 0 }}
-      dir={i18n.dir()}
+      dir={isRTL ? "rtl" : "ltr"}
     >
-      {!record ? (
-        <Empty description={t("common.noData")} />
-      ) : (
-        <Spin
-          spinning={
-            isLoading ||
-            loadingOptions ||
-            historyLoading ||
-            entityHistoryLoading ||
-            loadingAttachments ||
-            loadingEvidence
-          }
-        >
-          <div style={{ display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 120px)" }}>
-            <div
-              style={{
-                padding: 16,
-                borderBottom: "1px solid #f0f0f0",
-                position: "sticky",
-                top: 0,
-                zIndex: 10,
-                background: "#fff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 12,
-              }}
-            >
-              <Title level={4} style={{ margin: 0 }}>
-                {t("form.towingDetails")}
-              </Title>
-
-              <Button type="text" icon={<CloseOutlined />} onClick={onClose} style={{ fontSize: 18 }} />
-            </div>
-
-            <div style={{ padding: 24, overflowY: "auto", flex: 1 }}>
-              <Row gutter={28} align="top">
-                <Col span={16}>
-                  <Title level={5} style={{ marginTop: 10 }}>
-                    {t("form.location")}
+      <Spin
+        spinning={
+          isLoading || loadingOptions || historyLoading || entityHistoryLoading || loadingAttachments || loadingEvidence
+        }
+      >
+        <div style={{ display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 120px)" }}>
+          {/* ── Fixed Header (identical structure to Parkonic) ───────────── */}
+          <div
+            style={{
+              padding: 10,
+              position: "sticky",
+              top: 0,
+              zIndex: 10,
+              background: token.colorBgContainer,
+              borderBottom: "1px solid #f0f0f0",
+            }}
+          >
+            <Row align="middle" style={{ direction: isRTL ? "rtl" : "ltr" }}>
+              <Col>
+                <Space size="middle" align="center">
+                  <Title level={4} style={{ margin: 0 }}>
+                    {t("form.towingDetails")} <Text type="danger">#{record?.plateNumber || "—"}</Text>
                   </Title>
+                  <Tag color={getStatusColor(currentStatus)}>{getStatusLabel(currentStatus)}</Tag>
+                </Space>
+              </Col>
+              <Col flex="auto" />
+              <Col>
+                <Button type="text" icon={<CloseOutlined />} onClick={onClose} style={{ fontSize: 16 }} />
+              </Col>
+            </Row>
+          </div>
 
-                  <ArcGISMap
-                    inspectors={
-                      !isCompleted
-                        ? [
-                            {
-                              id: 1,
-                              name: "Towing Location",
-                              lat: record.latitude,
-                              lng: record.longitude,
-                              status: "Towing",
-                            },
-                          ]
-                        : []
+          {/* ── Scrollable Body ──────────────────────────────────────────── */}
+          <div style={{ padding: 24, overflowY: "auto", flex: 1 }}>
+            {!record ? (
+              <Empty description={t("common.noData")} />
+            ) : (
+              <Row gutter={24} dir={isRTL ? "rtl" : "ltr"}>
+                {/* ── Left 18 cols – main content ───────────────────────── */}
+                <Col span={18}>
+                  {/* ① TOP ROW: Vehicle Details  |  Towing Details — side by side */}
+                  <Row gutter={16}>
+                    {/* Vehicle Details card */}
+                    <Col span={12}>
+                      <Card
+                        title={
+                          <Text strong style={{ fontSize: "16px" }}>
+                            {L("Vehicle Details", "تفاصيل المركبة")}
+                          </Text>
+                        }
+                        size="small"
+                        style={{ marginBottom: 16 }}
+                        headStyle={cardHeadStyle}
+                      >
+                        <Row gutter={[0, 12]} dir={isRTL ? "rtl" : "ltr"}>
+                          <LabelCol label={t("form.plateNumber")} />
+                          <ValueCol>{record.plateNumber || "—"}</ValueCol>
+
+                          <LabelCol label={t("form.vehicleName")} />
+                          <ValueCol>{record.vehicleBrand || "—"}</ValueCol>
+
+                          <LabelCol label={t("form.vehicleColor")} />
+                          <ValueCol>{record.vehicleColor || "—"}</ValueCol>
+
+                          <LabelCol label={t("form.vehicleOwnerName")} />
+                          <ValueCol>{record.vehicleOwnerName || "—"}</ValueCol>
+
+                          <LabelCol label={t("form.vehicleOwnerMobile")} />
+                          <ValueCol>{record.vehicleOwnerMobile || "—"}</ValueCol>
+                        </Row>
+                      </Card>
+                    </Col>
+
+                    {/* Towing Details card */}
+                    <Col span={12}>
+                      <Card
+                        title={
+                          <Text strong style={{ fontSize: "16px" }}>
+                            {t("form.towingDetails")}
+                          </Text>
+                        }
+                        size="small"
+                        style={{ marginBottom: 16 }}
+                        headStyle={cardHeadStyle}
+                      >
+                        <Row gutter={[0, 12]} dir={isRTL ? "rtl" : "ltr"}>
+                          <LabelCol label={t("form.towingDate")} />
+                          <ValueCol>
+                            {formatDateDisplay(
+                              record.entityDateTime || record.datetime1 || record.createdDateTime,
+                              i18n.language,
+                            )}
+                          </ValueCol>
+
+                          <LabelCol label={t("form.status")} />
+                          <ValueCol>
+                            <Tag color={getStatusColor(currentStatus)}>{getStatusLabel(currentStatus)}</Tag>
+                          </ValueCol>
+
+                          {record.lastReviewComments && (
+                            <>
+                              <LabelCol label={t("form.lastReviewComments")} />
+                              <ValueCol>{record.lastReviewComments}</ValueCol>
+                            </>
+                          )}
+                        </Row>
+                      </Card>
+                    </Col>
+                  </Row>
+
+                  {/* ② Map card */}
+                  <Card
+                    title={
+                      <Text strong style={{ fontSize: "16px" }}>
+                        {t("form.location")}
+                      </Text>
                     }
-                    center={mapCenter}
-                    height="400px"
-                    zoom={isCompleted ? 13 : 16}
-                    showTowingRoute={isCompleted && towingStart && towingEnd}
-                    towingStartPoint={towingStart || undefined}
-                    towingEndPoint={towingEnd || undefined}
-                  />
+                    size="small"
+                    style={{ marginBottom: 16 }}
+                    headStyle={cardHeadStyle}
+                  >
+                    <ArcGISMap
+                      inspectors={
+                        !isCompleted
+                          ? [
+                              {
+                                id: 1,
+                                name: "Towing Location",
+                                lat: record.latitude,
+                                lng: record.longitude,
+                                status: "Towing",
+                              },
+                            ]
+                          : []
+                      }
+                      center={mapCenter}
+                      height="340px"
+                      zoom={isCompleted ? 13 : 16}
+                      showTowingRoute={isCompleted && towingStart && towingEnd}
+                      towingStartPoint={towingStart || undefined}
+                      towingEndPoint={towingEnd || undefined}
+                    />
+                  </Card>
 
-                  <Descriptions bordered column={1} size="small" style={{ marginTop: 20 }}>
-                    <Descriptions.Item label={t("form.plateNumber")}>{record.plateNumber}</Descriptions.Item>
-                    <Descriptions.Item label={t("form.vehicleName")}>{record.vehicleBrand}</Descriptions.Item>
-                    <Descriptions.Item label={t("form.vehicleColor")}>{record.vehicleColor}</Descriptions.Item>
-                    <Descriptions.Item label={t("form.vehicleOwnerName")}>{record.vehicleOwnerName}</Descriptions.Item>
-                    <Descriptions.Item label={t("form.vehicleOwnerMobile")}>
-                      {record.vehicleOwnerMobile}
-                    </Descriptions.Item>
-
-                    <Descriptions.Item label={t("form.towingDate")}>
-                      {formatDateDisplay(
-                        record.entityDateTime || record.datetime1 || record.createdDateTime,
-                        i18n.language,
+                  {/* ③ Attached Photos card */}
+                  <Card
+                    title={
+                      <Text strong style={{ fontSize: "16px" }}>
+                        {t("form.AttachedPhotos")}
+                      </Text>
+                    }
+                    size="small"
+                    style={{ marginBottom: 16 }}
+                    headStyle={cardHeadStyle}
+                  >
+                    <Spin spinning={loadingAttachments}>
+                      {attachments.length > 0 ? (
+                        <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                          <Image.PreviewGroup>
+                            {attachments.map((file: any) => (
+                              <Image
+                                key={file.attachmentGUID}
+                                width={120}
+                                height={120}
+                                src={getMobileFileUrl(file.filePath)}
+                                style={{ objectFit: "cover", borderRadius: 8, border: "1px solid #f0f0f0" }}
+                                preview={{ mask: null }}
+                              />
+                            ))}
+                          </Image.PreviewGroup>
+                        </div>
+                      ) : (
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                          description={t("common.noData")}
+                          style={{ padding: "20px 0" }}
+                        />
                       )}
-                    </Descriptions.Item>
+                    </Spin>
+                  </Card>
 
-                    <Descriptions.Item label={t("form.status")}>
-                      <Tag color={getStatusColor(currentStatus)}>{getStatusLabel(currentStatus)}</Tag>
-                    </Descriptions.Item>
-
-                    {record.lastReviewComments && (
-                      <Descriptions.Item label={t("form.lastReviewComments")}>
-                        {record.lastReviewComments}
-                      </Descriptions.Item>
-                    )}
-                  </Descriptions>
-
-                  <Title level={5} style={{ marginTop: 20 }}>
-                    {t("form.AttachedPhotos")}
-                  </Title>
-
-                  <Spin spinning={loadingAttachments}>
-                    {attachments.length ? (
-                      <Image.PreviewGroup>
-                        <Space wrap>
-                          {attachments.map((file) => (
-                            <Image
-                              key={file.attachmentGUID}
-                              width={100}
-                              height={100}
-                              src={getMobileFileUrl(file.filePath)}
-                              style={{ objectFit: "cover", borderRadius: 8 }}
-                            />
-                          ))}
-                        </Space>
-                      </Image.PreviewGroup>
-                    ) : (
-                      <Empty />
-                    )}
-                  </Spin>
-
-                  {/* ----------- VIDEO SECTION ----------- */}
+                  {/* ④ Towing Video card (completed / evidenceFileName only) */}
                   {shouldShowVideo && (
-                    <>
-                      <Title level={5} style={{ marginTop: 25 }}>
-                        {t("form.towingVideo")}
-                      </Title>
-
+                    <Card
+                      title={
+                        <Text strong style={{ fontSize: "16px" }}>
+                          {t("form.towingVideo")}
+                        </Text>
+                      }
+                      size="small"
+                      style={{ marginBottom: 16 }}
+                      headStyle={cardHeadStyle}
+                    >
                       <video
                         width="100%"
-                        height="360"
+                        height={320}
                         controls
-                        autoPlay={false}
-                        style={{
-                          border: "1px solid #ccc",
-                          borderRadius: 8,
-                          background: "#000",
-                          marginBottom: 10,
-                        }}
+                        style={{ border: "1px solid #ccc", borderRadius: 8, background: "#000", display: "block" }}
                       >
                         <source src={videoUrl} type="video/mp4" />
                       </video>
-                    </>
+                    </Card>
                   )}
 
-                  {/* ----------- EVIDENCE DOCUMENTS ----------- */}
+                  {/* ⑤ Evidence Documents card (completed only) */}
                   {isCompleted && towingDocuments.length > 0 && (
-                    <>
-                      <Title level={5} style={{ marginTop: 20 }}>
-                        {t("form.towingDocuments")}
-                      </Title>
-
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
-                        {towingDocuments.map((p, i) => {
-                          const title = getDocumentTitle(p);
-
-                          return (
-                            <div key={i} style={{ width: 120, textAlign: "center" }}>
-                              <div
-                                style={{
-                                  marginBottom: 6,
-                                  fontSize: 13,
-                                  fontWeight: 600,
-                                }}
-                              >
-                                {title}
-                              </div>
-
-                              <Image
-                                width={120}
-                                height={120}
-                                src={getFileUrl(p)}
-                                style={{
-                                  objectFit: "cover",
-                                  borderRadius: 8,
-                                  border: "1px solid #ddd",
-                                  padding: 4,
-                                  background: "#fff",
-                                }}
-                              />
-                            </div>
-                          );
-                        })}
+                    <Card
+                      title={
+                        <Text strong style={{ fontSize: "16px" }}>
+                          {t("form.towingDocuments")}
+                        </Text>
+                      }
+                      size="small"
+                      style={{ marginBottom: 16 }}
+                      headStyle={cardHeadStyle}
+                    >
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 20 }}>
+                        {towingDocuments.map((p: string, i: number) => (
+                          <div key={i} style={{ width: 120, textAlign: "center" }}>
+                            <div style={{ marginBottom: 6, fontSize: 13, fontWeight: 600 }}>{getDocumentTitle(p)}</div>
+                            <Image
+                              width={120}
+                              height={120}
+                              src={getFileUrl(p)}
+                              style={{
+                                objectFit: "cover",
+                                borderRadius: 8,
+                                border: "1px solid #ddd",
+                                padding: 4,
+                                background: "#fff",
+                              }}
+                            />
+                          </div>
+                        ))}
                       </div>
-                    </>
+                    </Card>
                   )}
 
+                  {/* ⑥ Approval Actions footer (Parkonic pattern) */}
                   {!hideFooterActions && (
                     <>
-                      <Title level={5} style={{ marginTop: 20 }}>
-                        {L("Approval Actions", "إجراءات الاعتماد")}
-                      </Title>
-
-                      <Form form={form} layout="vertical">
-                        <Row gutter={16}>
-                          <Col span={24}>
+                      <Divider />
+                      <Form form={form} layout="vertical" dir={isRTL ? "rtl" : "ltr"}>
+                        <Row gutter={16} align="middle" dir={isRTL ? "rtl" : "ltr"}>
+                          <Col span={6}>
                             <Form.Item
                               name="action"
                               label={<Text strong>{L("Action", "الإجراء")}</Text>}
-                              rules={[{ required: true, message: L("Please select an action", "الرجاء اختيار إجراء") }]}
+                              rules={[
+                                {
+                                  required: true,
+                                  message: L("Please select an action", "الرجاء اختيار إجراء"),
+                                },
+                              ]}
                             >
                               <Select
                                 placeholder={L("Select action", "اختر إجراء")}
                                 onChange={handleActionChange}
                                 allowClear
                                 loading={loadingOptions}
+                                value={selectedAction?.ActivityOptionGUID}
                               >
                                 {reviewOptions.map((opt: any) => (
                                   <Select.Option key={opt.ActivityOptionGUID} value={opt.ActivityOptionGUID}>
@@ -496,10 +545,11 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
                             </Form.Item>
                           </Col>
 
-                          <Col span={24}>
+                          <Col span={12}>
                             <Form.Item
                               name="review_comments"
                               label={<Text strong>{L("Comments", "التعليقات")}</Text>}
+                              style={{ marginBottom: 0 }}
                               rules={[
                                 {
                                   required: selectedAction?.IsCommentMandatory || false,
@@ -508,41 +558,47 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
                               ]}
                             >
                               <TextArea
-                                rows={3}
+                                placeholder={
+                                  selectedAction?.IsCommentMandatory
+                                    ? L("Enter comments (required)", "أدخل التعليقات (مطلوبة)")
+                                    : L("Enter comments (optional)", "أدخل التعليقات (اختياري)")
+                                }
+                                rows={2}
+                                dir={isRTL ? "rtl" : "ltr"}
                                 value={comments}
                                 onChange={(e) => setComments(e.target.value)}
-                                placeholder={L("Enter comments", "أدخل التعليقات")}
                               />
                             </Form.Item>
                           </Col>
+
+                          <Col span={6} style={{ textAlign: isRTL ? "left" : "right", paddingTop: 30 }}>
+                            <Space>
+                              <Button onClick={onClose}>{L("Cancel", "إلغاء")}</Button>
+                              <Button
+                                type="primary"
+                                loading={isLoading}
+                                onClick={handleSubmit}
+                                disabled={!selectedAction}
+                              >
+                                {L("Submit", "إرسال")}
+                              </Button>
+                            </Space>
+                          </Col>
                         </Row>
-
-                        <Space style={{ marginTop: 10 }}>
-                          <Button type="primary" loading={isLoading} onClick={handleSubmit}>
-                            {L("Submit", "إرسال")}
-                          </Button>
-
-                          <Button danger onClick={handleCancel}>
-                            {L("Cancel", "إلغاء")}
-                          </Button>
-                        </Space>
                       </Form>
                     </>
                   )}
                 </Col>
 
-                <Col span={8}>
-                  <div style={{ position: "sticky", top: 16 }}>
-                    {(reviewHistory.length > 0 || entityHistory.length > 0) && (
-                      <ReviewTimeline data={record?.$SKWorkItemData ? reviewHistory : entityHistory} />
-                    )}
-                  </div>
+                {/* ── Right 6 cols – Review Timeline ────────────────────── */}
+                <Col span={6}>
+                  <ReviewTimeline data={record?.$SKWorkItemData ? reviewHistory : entityHistory} />
                 </Col>
               </Row>
-            </div>
+            )}
           </div>
-        </Spin>
-      )}
+        </div>
+      </Spin>
     </Modal>
   );
 };
