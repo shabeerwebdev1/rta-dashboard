@@ -1,344 +1,468 @@
-/* eslint-disable no-shadow-restricted-names */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  Space,
-  Card,
-  Input,
-  Button,
-  Modal,
-  Form,
-  Row,
-  Col,
-  Select,
-  App,
-  Tag,
-  Switch,
-  message,
-  theme,
-  Dropdown,
-} from "antd";
-import { PlusOutlined, EyeOutlined, EditOutlined, FileTextOutlined, MoreOutlined } from "@ant-design/icons";
+import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Switch, Tag } from "antd";
+import { PlusOutlined, EditOutlined, EyeOutlined, DownloadOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
+import { useTableParams } from "../hooks/useTableParams";
+import { useDebounce } from "../hooks/useDebounce";
+import { useAppNotification } from "../utils/notificationManager";
+import { usePermission } from "../hooks/usePermission";
+import { exportToCsv } from "../utils/csvExporter";
+
 import StatsDisplay from "../components/common/StatsDisplay";
-import { criteriaConfig, staticCriteriaData } from "../config/pageConfigs/criteriaConfig";
+import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
+import DataTableWrapper from "../components/common/DataTableWrapper";
 import CriteriaViewDrawer from "../components/Criteria/CriteriaViewDrawer";
 
+import { criteriaConfig } from "../config/pageConfigs/criteriaConfig";
+
+import {
+  useGetCriteriaWeightsQuery,
+  useAddCriteriaWeightMutation,
+  useUpdateCriteriaWeightMutation,
+} from "../services/rtkApiFactory";
+
 const { Option } = Select;
-const { useToken } = theme;
+
+const menuName = "CriteriaWeight";
+
+const objectiveTypeOptions = [
+  { value: "target", labelEn: "Target", labelAr: "هدف" },
+  { value: "competence", labelEn: "Competence", labelAr: "كفاءة" },
+];
 
 const CriteriaPage: React.FC = () => {
+  const { canCreate, canEdit } = usePermission();
   const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
-  const [form] = Form.useForm();
-  const { token } = useToken();
+  const notification = useAppNotification();
+  const config = criteriaConfig;
 
-  // Data state (static only)
-  const [criteria, setCriteria] = useState<any[]>(staticCriteriaData);
-  const [searchValue, setSearchValue] = useState("");
-  const [filters, setFilters] = useState<any>({});
+  const [form] = Form.useForm();
+
+  const {
+    apiParams: rawApiParams,
+    handleTableChange,
+    handlePaginationChange,
+    setGlobalSearch,
+    clearFilter,
+    clearAll,
+    state,
+  } = useTableParams(config.searchConfig!);
+
+  const apiParams = {
+    PageNumber: rawApiParams.PageNumber || 1,
+    PageSize: rawApiParams.PageSize || 10,
+    ...rawApiParams,
+  };
+
+  const [searchValue, setSearchValue] = useState<string>(state.searchValue);
+  const debouncedSearch = useDebounce(searchValue, 500);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
-  const [isViewOpen, setIsViewOpen] = useState(false);
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any>(null);
 
-  // page title
-  useEffect(() => {
-    setPageTitle(t(criteriaConfig.title));
-  }, [setPageTitle, t]);
+  // ── Row selection (for CSV download, identical to WhitelistPlatesPage) ───────
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
 
-  // lookups from config
-  const lookups = (criteriaConfig as any).lookups || {};
+  // ── API hooks ────────────────────────────────────────────────────────────────
+  const { data, isLoading, isFetching } = useGetCriteriaWeightsQuery(apiParams, {
+    refetchOnMountOrArgChange: true,
+  });
+  const [addCriteria, { isLoading: isAdding }] = useAddCriteriaWeightMutation();
+  const [updateCriteria, { isLoading: isUpdating }] = useUpdateCriteriaWeightMutation();
 
-  // helper to get label (EN/AR) from lookups
-  const getLabel = (value: string, category: string) => {
-    const list = lookups[category] || [];
-    const item = list.find((i: any) => i.value === value);
-    if (!item) return value;
-    return i18n.language === "ar" ? item.labelAr : item.labelEn;
+  // ── Derived data ─────────────────────────────────────────────────────────────
+  const criteriaList = useMemo(() => {
+    if (!data) return [];
+    return Array.isArray(data) ? data : (data.data ?? []);
+  }, [data]);
+
+  const totalCount = useMemo(() => {
+    if (!data) return 0;
+    return Array.isArray(data) ? data.length : (data.totalCount ?? data.totalRecords ?? data.total ?? 0);
+  }, [data]);
+
+  const metadata = useMemo(() => {
+    if (!data || Array.isArray(data)) return {};
+    return {
+      totalRecords: data.totalRecords ?? data.totalCount ?? data.total,
+      totalCount: data.totalCount ?? data.totalRecords ?? data.total,
+      active: data.active ?? data.activeRecords,
+      inActive: data.inActive ?? data.inactiveRecords,
+      pageNumber: data.pageNumber,
+      pageSize: data.pageSize,
+    };
+  }, [data]);
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+  const getObjectiveLabel = (value: string) => {
+    const option = objectiveTypeOptions.find((o) => o.value === value);
+    if (!option) return value;
+    return i18n.language === "ar" ? option.labelAr : option.labelEn;
   };
 
-  // filtered list
-  const filtered = useMemo(() => {
-    let list = [...criteria];
+  // ── Effects ───────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    setPageTitle(t(config.title));
+  }, [setPageTitle, t, config.title, i18n.language]);
 
-    if (searchValue) {
-      const q = searchValue.toLowerCase();
-      list = list.filter(
-        (c) =>
-          String(c.descriptionEn || "")
-            .toLowerCase()
-            .includes(q) ||
-          String(c.descriptionAr || "")
-            .toLowerCase()
-            .includes(q),
-      );
-    }
+  useEffect(() => {
+    setGlobalSearch(state.searchKey, debouncedSearch);
+  }, [debouncedSearch, state.searchKey, setGlobalSearch]);
 
-    if (filters.isActive !== undefined && filters.isActive !== null && filters.isActive !== "") {
-      list = list.filter((c) => c.isActive === filters.isActive);
-    }
+  // ── Filters ───────────────────────────────────────────────────────────────────
+  const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
+    if (type === "search") setSearchValue("");
+    clearFilter(type, key, value);
+  };
 
-    return list;
-  }, [criteria, searchValue, filters]);
+  const handleClearAll = () => {
+    setSearchValue("");
+    clearAll();
+  };
 
-  // stats metadata (simple)
-  const statsMetadata = useMemo(
-    () => ({ total: criteria.length, active: criteria.filter((c) => c.isActive).length }),
-    [criteria],
-  );
-
-  // open add/edit modal
-  const openModal = (mode: "add" | "edit", record?: any) => {
+  // ── Modal ─────────────────────────────────────────────────────────────────────
+  const handleModalOpen = (mode: "add" | "edit", record?: any) => {
     setModalMode(mode);
     setSelectedRecord(record || null);
     setIsModalOpen(true);
+
     if (mode === "edit" && record) {
-      form.setFieldsValue({
-        descriptionEn: record.descriptionEn,
-        descriptionAr: record.descriptionAr,
-        weight: record.weight,
-        objectiveType: record.objectiveType,
-        ratingScale: record.ratingScale,
-        isActive: record.isActive,
-      });
+      form.setFieldsValue(record);
     } else {
       form.resetFields();
-      form.setFieldsValue({ isActive: true });
+      form.setFieldsValue({ active: true });
     }
   };
 
-  const closeModal = () => {
+  const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedRecord(null);
     form.resetFields();
   };
 
-  // submit form
-  const onFinish = (values: any) => {
-    if (modalMode === "add") {
-      const nextId = criteria.length ? Math.max(...criteria.map((c) => c.id)) + 1 : 1;
-      const newItem = {
-        id: nextId,
-        ...values,
-      };
-      setCriteria((prev) => [newItem, ...prev]);
-      message.success(t("messages.addSuccess", { entity: t(criteriaConfig.name.singular) }));
-    } else if (modalMode === "edit" && selectedRecord) {
-      setCriteria((prev) => prev.map((c) => (c.id === selectedRecord.id ? { ...c, ...values } : c)));
-      message.success(t("messages.updateSuccess", { entity: t(criteriaConfig.name.singular) }));
+  // ── Submit ────────────────────────────────────────────────────────────────────
+  const handleFormSubmit = async (values: any) => {
+    const payload = {
+      descriptionEn: values.descriptionEn,
+      descriptionAr: values.descriptionAr,
+      weight: Number(values.weight),
+      active: values.active ?? true,
+      objectiveType: values.objectiveType,
+    };
+
+    try {
+      let response;
+      if (modalMode === "add") {
+        response = await addCriteria(payload).unwrap();
+        notification.success(response, t("messages.addSuccess", { entity: t(config.name.singular) }));
+      } else {
+        response = await updateCriteria({ ...payload, id: selectedRecord.id }).unwrap();
+        notification.success(response, t("messages.updateSuccess", { entity: t(config.name.singular) }));
+      }
+      handleModalClose();
+    } catch (err) {
+      notification.error(err as any, "Operation Failed");
     }
-    closeModal();
   };
 
-  // view
+  // ── View ──────────────────────────────────────────────────────────────────────
   const handleView = (record: any) => {
     setViewRecord(record);
-    setIsViewOpen(true);
+    setIsDrawerOpen(true);
   };
 
-  // table columns rendering (simple html table)
-  const tableColumns = [
-    { key: "descriptionEn", title: t("form.descriptionEn") },
-    { key: "descriptionAr", title: t("form.descriptionAr") },
-    // { key: "objectiveType", title: t("form.objectiveType") },
-    { key: "weight", title: t("form.weight") },
-    // { key: "ratingScale", title: t("form.ratingScale") },
-    { key: "isActive", title: t("form.isActive") },
-    { key: "actions", title: t("common.actions") },
+  // ── CSV Export (mirrors WhitelistPlatesPage pattern exactly) ─────────────────
+  const transformDataForCSV = (rows: any[]) => {
+    return rows.map((item, index: number) => {
+      const csvRecord: Record<string, unknown> = {};
+      csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
+      csvRecord[t("form.descriptionEn")] = item.descriptionEn || "";
+      csvRecord[t("form.descriptionAr")] = item.descriptionAr || "";
+      csvRecord[t("form.weight")] = item.weight != null ? `${item.weight}%` : "";
+      csvRecord[t("form.objectiveType")] = getObjectiveLabel(item.objectiveType) || "";
+      csvRecord[t("form.isActive")] = item.active ? t("common.active") : t("common.inactive");
+      return csvRecord;
+    });
+  };
+
+  const getCsvFilename = () => (i18n.language === "ar" ? "معايير_الأوزان.csv" : "Criteria_Weights.csv");
+
+  const handleDownloadCsv = () => {
+    if (selectedRowKeys.length === 0) {
+      notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
+      return;
+    }
+
+    modal.confirm({
+      title: t("messages.csvConfirmTitle"),
+      content: t("messages.csvConfirmContent"),
+      okText: t("common.ok"),
+      cancelText: t("common.cancel"),
+      onOk: () => {
+        try {
+          if (selectedRows.length === 0) {
+            notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
+            return;
+          }
+          const transformedData = transformDataForCSV(selectedRows);
+          exportToCsv(transformedData, getCsvFilename());
+          notification.success(
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedRows.length }) } },
+            t("messages.exportSuccess"),
+          );
+          setSelectedRowKeys([]);
+          setSelectedRows([]);
+        } catch {
+          notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
+        }
+      },
+    });
+  };
+
+  // ── Enhanced table config ─────────────────────────────────────────────────────
+  const enhancedTableConfig = useMemo(
+    () => ({
+      ...config.tableConfig,
+      columns: config.tableConfig.columns.map((column) => {
+        if (column.key === "objectiveType") {
+          return {
+            ...column,
+            render: (value: string) => getObjectiveLabel(value),
+          };
+        }
+        if (column.key === "active") {
+          return {
+            ...column,
+            render: (value: boolean) =>
+              value ? <Tag color="green">{t("common.active")}</Tag> : <Tag color="default">{t("common.inactive")}</Tag>,
+          };
+        }
+        if (column.key === "weight") {
+          return {
+            ...column,
+            render: (value: number) => <strong>{value}%</strong>,
+          };
+        }
+        return column;
+      }),
+    }),
+    [config.tableConfig, i18n.language, t],
+  );
+
+  // ── Column labels ─────────────────────────────────────────────────────────────
+  const columnLabels = useMemo(
+    () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
+    [t, config.tableConfig.columns, i18n.language],
+  );
+
+  // ── Action menu ───────────────────────────────────────────────────────────────
+  const actionMenuItems = (record: any) => [
+    {
+      key: "view",
+      label: t("common.view"),
+      icon: <EyeOutlined />,
+      onClick: () => handleView(record),
+    },
+    {
+      key: "edit",
+      label: t("common.edit"),
+      icon: <EditOutlined />,
+      onClick: () => handleModalOpen("edit", record),
+      disabled: !canEdit(menuName),
+    },
   ];
 
+  // ── Search addon ──────────────────────────────────────────────────────────────
+  const searchAddon = (
+    <Select value={state.searchKey} onChange={(key) => setGlobalSearch(key, state.searchValue)} style={{ width: 160 }}>
+      {config.searchConfig?.globalSearchKeys.map((key) => (
+        <Option key={key} value={key}>
+          {columnLabels[key] || key}
+        </Option>
+      ))}
+    </Select>
+  );
+
+  // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      <StatsDisplay statsConfig={criteriaConfig.statsConfig} data={criteria} metadata={statsMetadata} loading={false} />
+      {/* Stats cards — same as WhitelistPlatesPage */}
+      <StatsDisplay statsConfig={config.statsConfig} data={criteriaList} metadata={metadata} loading={isLoading} />
 
+      {/* Toolbar card */}
       <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
-        <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
+          {/* Left: search input with column selector addon */}
           <Col>
             <Space>
               <Input
+                addonBefore={searchAddon}
                 placeholder={t("common.searchPlaceholder")}
                 value={searchValue}
-                allowClear
                 onChange={(e) => setSearchValue(e.target.value)}
-                style={{ width: 300 }}
+                style={{ width: 450 }}
+                allowClear
               />
-              {/* <Select
-                allowClear
-                placeholder={t("form.objectiveType")}
-                style={{ width: 180 }}
-                onChange={(val) => setFilters((prev: any) => ({ ...prev, objectiveType: val }))}
-              >
-                {lookups.objectiveTypes?.map((ot: any) => (
-                  <Option key={ot.value} value={ot.value}>
-                    {i18n.language === "ar" ? ot.labelAr : ot.labelEn}
-                  </Option>
-                ))}
-              </Select> */}
-
-              <Select
-                allowClear
-                placeholder={t("form.isActive")}
-                style={{ width: 150 }}
-                onChange={(val) => setFilters((prev: any) => ({ ...prev, isActive: val }))}
-              >
-                <Option value={true}>{t("common.active")}</Option>
-                <Option value={false}>{t("common.inactive")}</Option>
-              </Select>
             </Space>
           </Col>
 
+          {/* Right: Download CSV (disabled until rows selected) + Add New */}
           <Col>
             <Space>
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal("add")}>
+              <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
+                {t("common.downloadCsv")}
+              </Button>
+
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => handleModalOpen("add")}
+                disabled={!canCreate(menuName)}
+              >
                 {t("common.addNew")}
               </Button>
             </Space>
           </Col>
         </Row>
+
+        {/* Active filter chips */}
+        <ActiveFiltersDisplay
+          state={state}
+          onClearFilter={handleClearFilter}
+          onClearAll={handleClearAll}
+          columnLabels={columnLabels}
+          lookupOptions={[]}
+          getLabelFromValue={() => ""}
+        />
       </Card>
 
-      <Card>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ backgroundColor: token.colorFillAlter }}>
-              {tableColumns.map((col) => (
-                <th
-                  key={col.key}
-                  style={{
-                    padding: 12,
-                    textAlign: "left",
-                    borderBottom: `1px solid ${token.colorBorderSecondary}`,
-                    color: token.colorText,
-                    fontWeight: 600,
-                  }}
-                >
-                  {col.title}
-                </th>
-              ))}
-            </tr>
-          </thead>
+      {/* Data table with leading checkboxes — identical rowSelection shape to WhitelistPlatesPage */}
+      <DataTableWrapper
+        pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
+        data={criteriaList}
+        total={totalCount}
+        isLoading={isLoading || isFetching}
+        apiParams={apiParams}
+        handleTableChange={handleTableChange}
+        handlePaginationChange={handlePaginationChange}
+        rowSelection={{
+          selectedRowKeys,
+          onChange: (keys: React.Key[], rows: any[]) => {
+            setSelectedRowKeys(keys);
+            setSelectedRows((prev) => {
+              const remaining = prev.filter((p) => keys.includes(p.id));
+              const newSelected = rows.filter((r) => !remaining.some((p) => p.id === r.id));
+              return [...remaining, ...newSelected];
+            });
+          },
+        }}
+        actionMenuItems={actionMenuItems}
+        tableSize="small"
+        state={state}
+        lookupOptions={[]}
+        getLabelFromValue={() => ""}
+      />
 
-          <tbody>
-            {filtered.map((row) => (
-              <tr key={row.id} style={{ borderBottom: `1px solid ${token.colorBorderSecondary}` }}>
-                <td style={{ padding: 12, color: token.colorText }}>{row.descriptionEn}</td>
-                <td style={{ padding: 12, color: token.colorText }}>{row.descriptionAr}</td>
-                {/* <td style={{ padding: 12 }}>
-                  <Tag>{getLabel(row.objectiveType, "objectiveTypes")}</Tag>
-                </td> */}
-                <td style={{ padding: 12, color: token.colorText }}>
-                  <strong>{row.weight}%</strong>
-                </td>
-                {/* <td style={{ padding: 12, color: token.colorText }}>{getLabel(row.ratingScale, "ratingScales")}</td> */}
-                <td style={{ padding: 12 }}>
-                  {row.isActive ? (
-                    <Tag color="green">{t("common.active")}</Tag>
-                  ) : (
-                    <Tag color="red">{t("common.inactive")}</Tag>
-                  )}
-                </td>
-                <td>
-                  <Dropdown
-                    menu={{
-                      items: [
-                        {
-                          key: "view",
-                          label: t("common.view"),
-                          icon: <EyeOutlined />,
-                          onClick: () => handleView(row),
-                        },
-                        {
-                          key: "edit",
-                          label: t("common.edit"),
-                          icon: <EditOutlined />,
-                          onClick: () => openModal("edit", row),
-                        },
-                      ],
-                    }}
-                    trigger={["click"]}
-                  >
-                    <Button type="text" icon={<MoreOutlined />} />
-                  </Dropdown>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {filtered.length === 0 && (
-          <div style={{ textAlign: "center", padding: 30 }}>
-            <FileTextOutlined style={{ fontSize: 36, color: token.colorTextDisabled }} />
-            <p style={{ color: token.colorTextSecondary }}>{t("common.noData")}</p>
-          </div>
-        )}
-      </Card>
-
-      {/* Add / Edit Modal */}
+      {/* ── Add / Edit Modal ─────────────────────────────────────────────────── */}
       <Modal
         open={isModalOpen}
-        title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(criteriaConfig.name.singular) })}
-        onCancel={() => closeModal()}
-        width={criteriaConfig.formConfig?.modalWidth || 600}
+        title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", {
+          entity: t(config.name.singular),
+        })}
+        onCancel={handleModalClose}
+        width={600}
         footer={[
-          <Button key="back" onClick={() => closeModal()}>
+          <Button key="reset" onClick={() => form.resetFields()}>
+            {t("common.reset")}
+          </Button>,
+          <Button key="cancel" onClick={handleModalClose}>
             {t("common.cancel")}
           </Button>,
-          <Button key="submit" type="primary" onClick={() => form.submit()}>
+          <Button key="submit" type="primary" loading={isAdding || isUpdating} onClick={() => form.submit()}>
             {t(modalMode === "add" ? "common.submit" : "common.update")}
           </Button>,
         ]}
       >
-        <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
           <Row gutter={16}>
             <Col span={24}>
-              <Form.Item name="descriptionEn" label={t("form.descriptionEn")} rules={[{ required: true }]}>
+              <Form.Item
+                name="descriptionEn"
+                label={t("form.descriptionEn")}
+                rules={[{ required: true, message: t("validation.required", { field: t("form.descriptionEn") }) }]}
+              >
                 <Input placeholder={t("placeholders.descriptionEn")} />
               </Form.Item>
             </Col>
 
             <Col span={24}>
-              <Form.Item name="descriptionAr" label={t("form.descriptionAr")} rules={[{ required: true }]}>
+              <Form.Item
+                name="descriptionAr"
+                label={t("form.descriptionAr")}
+                rules={[{ required: true, message: t("validation.required", { field: t("form.descriptionAr") }) }]}
+              >
                 <Input placeholder={t("placeholders.descriptionAr")} dir="rtl" />
               </Form.Item>
             </Col>
 
             <Col span={12}>
-              <Form.Item name="weight" label={t("form.weight")} rules={[{ required: true }]}>
-                <Input type="number" min={0} max={100} placeholder="0-100" />
+              <Form.Item
+                name="weight"
+                label={t("form.weight")}
+                rules={[
+                  { required: true, message: t("validation.required", { field: t("form.weight") }) },
+                  {
+                    type: "number",
+                    min: 0,
+                    max: 100,
+                    message: t("validation.weightRange") || "Weight must be between 0 and 100",
+                    transform: (v) => Number(v),
+                  },
+                ]}
+              >
+                <Input type="number" min={0} max={100} placeholder="0 – 100" />
               </Form.Item>
             </Col>
 
-            {/* <Col span={12}>
-              <Form.Item name="objectiveType" label={t("form.objectiveType")} rules={[{ required: true }]}>
-                <Select placeholder={t("placeholders.selectObjective")}>
-                  {lookups.objectiveTypes?.map((ot: any) => (
-                    <Option key={ot.value} value={ot.value}>
-                      {i18n.language === "ar" ? ot.labelAr : ot.labelEn}
-                    </Option>
-                  ))}
-                </Select>
+            <Col span={12}>
+              <Form.Item
+                name="objectiveType"
+                label={t("form.objectiveType")}
+                rules={[
+                  {
+                    required: true,
+                    message: t("validation.selectRequired", { field: t("form.objectiveType") }),
+                  },
+                ]}
+              >
+                <Select
+                  showSearch
+                  placeholder={t("placeholders.selectObjective") || "Select objective type"}
+                  optionFilterProp="label"
+                  filterOption={(input, option) =>
+                    (option?.label as string).toLowerCase().includes(input.toLowerCase())
+                  }
+                  options={objectiveTypeOptions.map((o) => ({
+                    label: i18n.language === "ar" ? o.labelAr : o.labelEn,
+                    value: o.value,
+                  }))}
+                />
               </Form.Item>
-            </Col> */}
-
-            {/* <Col span={12}>
-              <Form.Item name="ratingScale" label={t("form.ratingScale")} rules={[{ required: true }]}>
-                <Select placeholder={t("placeholders.selectRatingScale")}>
-                  {lookups.ratingScales?.map((rs: any) => (
-                    <Option key={rs.value} value={rs.value}>
-                      {i18n.language === "ar" ? rs.labelAr : rs.labelEn}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col> */}
+            </Col>
 
             <Col span={12}>
-              <Form.Item name="isActive" label={t("form.isActive")} valuePropName="checked">
+              <Form.Item name="active" label={t("form.isActive")} valuePropName="checked">
                 <Switch />
               </Form.Item>
             </Col>
@@ -346,7 +470,17 @@ const CriteriaPage: React.FC = () => {
         </Form>
       </Modal>
 
-      <CriteriaViewDrawer open={isViewOpen} onClose={() => setIsViewOpen(false)} record={viewRecord} />
+      {/* ── View Drawer ──────────────────────────────────────────────────────── */}
+      {viewRecord && (
+        <CriteriaViewDrawer
+          open={isDrawerOpen}
+          onClose={() => {
+            setIsDrawerOpen(false);
+            setViewRecord(null);
+          }}
+          record={viewRecord}
+        />
+      )}
     </Space>
   );
 };

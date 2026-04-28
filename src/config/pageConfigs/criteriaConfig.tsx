@@ -1,114 +1,55 @@
 import type { PageConfig } from "../../types/config";
 import { FileTextOutlined } from "@ant-design/icons";
 
-//
-// criteriaConfig.tsx
-// PageConfig for Criteria CRUD (static data only, NO DELETE)
-// Matches the format you requested (icons in TSX, PageConfig shape)
-//
-
 /**
- * Static lookup values for criteria form
+ * Static lookup values (for dropdowns)
  */
-export const staticCriteriaLookups = {
+export const criteriaLookups = {
   objectiveTypes: [
     { value: "target", labelEn: "Target", labelAr: "هدف" },
     { value: "competence", labelEn: "Competence", labelAr: "كفاءة" },
   ],
-  ratingScales: [
-    { value: "1-5", labelEn: "1-5 Scale", labelAr: "مقياس 1-5" },
-    { value: "1-10", labelEn: "1-10 Scale", labelAr: "مقياس 1-10" },
-    { value: "poor-excellent", labelEn: "Poor - Excellent", labelAr: "ضعيف - ممتاز" },
-  ],
 };
 
 /**
- * Static criteria seed data (NO DELETE support)
- * Users can search, add and update these records via CriteriaPage
- */
-export const staticCriteriaData = [
-  {
-    id: 1,
-    descriptionEn: "Attendance",
-    descriptionAr: "الحضور",
-    weight: 20,
-    objectiveType: "target",
-    ratingScale: "1-5",
-    isActive: true,
-  },
-  {
-    id: 2,
-    descriptionEn: "Punctuality",
-    descriptionAr: "الالتزام بالمواعيد",
-    weight: 15,
-    objectiveType: "target",
-    ratingScale: "1-5",
-    isActive: true,
-  },
-  {
-    id: 3,
-    descriptionEn: "Shift Completion",
-    descriptionAr: "إتمام المناوبة",
-    weight: 25,
-    objectiveType: "target",
-    ratingScale: "1-5",
-    isActive: true,
-  },
-  {
-    id: 4,
-    descriptionEn: "Inspection Accuracy",
-    descriptionAr: "دقة التفتيش",
-    weight: 30,
-    objectiveType: "competence",
-    ratingScale: "1-5",
-    isActive: true,
-  },
-  {
-    id: 5,
-    descriptionEn: "Compliance with Procedures",
-    descriptionAr: "الالتزام بالإجراءات",
-    weight: 10,
-    objectiveType: "competence",
-    ratingScale: "1-5",
-    isActive: true,
-  },
-];
-
-/**
- * Criteria PageConfig
- *
- * - Uses JSX icon (hence .tsx)
- * - Provides searchConfig, statsConfig, tableConfig and formConfig
- * - No delete operation (per your choice)
+ * Criteria PageConfig (API BASED)
  */
 export const criteriaConfig: PageConfig = {
-  key: "criteria",
+  key: "criteria-weight",
   title: "page.title.criteria",
   name: { singular: "entity.criteria", plural: "entity.criteriaPlural" },
 
+  // ✅ API updated to your backend
   api: {
-    get: "/api/Criteria", // static data used in page; api kept for parity (no delete)
-    post: "/api/Criteria",
-    put: "/api/Criteria",
-    // delete intentionally omitted because Criteria cannot be deleted in your requirement
+    get: "/api/CriteriaWeight/GetAll",
+    post: "/api/CriteriaWeight",
+    put: "/api/CriteriaWeight",
   },
 
   searchConfig: {
     globalSearchKeys: ["descriptionEn", "descriptionAr"],
-    columnFilterKeys: ["isActive"],
+    columnFilterKeys: ["active", "objectiveType"],
   },
 
   statsConfig: [
     {
       title: "stats.TotalCriteria",
       icon: <FileTextOutlined />,
-      value: (data: any[]) => `${data.length}`,
+      value: (data: any[], metadata: any) => `${data?.length || 0} / ${metadata?.totalCount || 0}`,
     },
     {
       title: "stats.ActiveCriteria",
       icon: <FileTextOutlined />,
-      value: (data: any[]) => data.filter((c) => c.isActive).length,
+      value: (data: any[], metadata: any) =>
+        `${data?.filter((c) => c.active).length || 0} / ${metadata?.active || 0}`,
       color: "#52c41a",
+    },
+    {
+      title: "stats.InactiveCriteria",
+      icon: <FileTextOutlined />,
+      value: (data: any[], metadata: any) =>
+        `${data?.filter((c) => !c.active).length || 0} / ${metadata?.inActive || 0}`,
+      color: "#ff4d4f",
     },
   ],
 
@@ -119,24 +60,20 @@ export const criteriaConfig: PageConfig = {
         title: "form.descriptionEn",
         dataIndex: "descriptionEn",
         type: "string",
-        sortable: true,
-        filterable: true,
       },
       {
         key: "descriptionAr",
         title: "form.descriptionAr",
         dataIndex: "descriptionAr",
         type: "string",
-        sortable: true,
+      },
+      {
+        key: "objectiveType",
+        title: "form.objectiveType",
+        dataIndex: "objectiveType",
+        type: "tag",
         filterable: true,
       },
-      // {
-      //   key: "objectiveType",
-      //   title: "form.objectiveType",
-      //   dataIndex: "objectiveType",
-      //   type: "tag",
-      //   filterable: true,
-      // },
       {
         key: "weight",
         title: "form.weight",
@@ -144,16 +81,10 @@ export const criteriaConfig: PageConfig = {
         type: "number",
         sortable: true,
       },
-      // {
-      //   key: "ratingScale",
-      //   title: "form.ratingScale",
-      //   dataIndex: "ratingScale",
-      //   type: "string",
-      // },
       {
-        key: "isActive",
+        key: "active",
         title: "form.isActive",
-        dataIndex: "isActive",
+        dataIndex: "active",
         type: "boolean",
         filterable: true,
       },
@@ -186,22 +117,15 @@ export const criteriaConfig: PageConfig = {
         span: 12,
         props: { min: 0, max: 100 },
       },
-      // {
-      //   name: "objectiveType",
-      //   label: "form.objectiveType",
-      //   type: "select",
-      //   required: true,
-      //   span: 12,
-      // },
-      // {
-      //   name: "ratingScale",
-      //   label: "form.ratingScale",
-      //   type: "select",
-      //   required: true,
-      //   span: 12,
-      // },
       {
-        name: "isActive",
+        name: "objectiveType",
+        label: "form.objectiveType",
+        type: "select",
+        required: true,
+        span: 12,
+      },
+      {
+        name: "active",
         label: "form.isActive",
         type: "switch",
         required: false,
@@ -210,8 +134,8 @@ export const criteriaConfig: PageConfig = {
     ],
   },
 
-  // attach lookups so pages can reference them
-  lookups: staticCriteriaLookups,
+  // attach lookups
+  lookups: criteriaLookups,
 };
 
 export default criteriaConfig;

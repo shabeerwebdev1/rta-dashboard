@@ -751,10 +751,22 @@ export const dynamicApi = createApi({
 
     // Criteria Weight
     getCriteriaWeights: builder.query({
-      query: (params) => ({ url: "/api/CriteriaWeight", params }),
+      query: (params) => ({ url: "/api/CriteriaWeight/GetAll", params }),
       transformResponse: (response: any) => ({
-        data: response?.data || [],
-        total: response?.totalCount || 0,
+        data: response?.data ?? [],
+        total: response?.totalCount ?? 0,
+        totalCount: response?.totalCount ?? 0,
+        totalRecords: response?.totalRecords ?? response?.totalCount ?? 0,
+        active: response?.active ?? 0,
+        inActive: response?.inActive ?? 0,
+        pageNumber: response?.pageNumber,
+        pageSize: response?.pageSize,
+        statusCode: response?.statusCode,
+        successful: response?.successful,
+        en_Msg: response?.en_Msg,
+        ar_Msg: response?.ar_Msg,
+        validationErrors: response?.validationErrors ?? [],
+        haveValidationErrors: response?.haveValidationErrors ?? false,
       }),
       providesTags: ["CriteriaWeight"],
     }),

@@ -87,6 +87,16 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
   };
 
   const getFilterLabel = (columnKey: string, value: string | number) => {
+    const stringValue = String(value);
+
+    if (stringValue === "true") {
+      return t("common.active");
+    }
+
+    if (stringValue === "false") {
+      return t("common.inactive", { defaultValue: "In Active" });
+    }
+
     // Handle Zone filter
     if (columnKey === "zone") {
       const zone = zoneOptions.find((z) => z.value?.toString() === value.toString());
@@ -169,7 +179,7 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
     const from = formatDateRange(state.dateRange[0], i18n.language);
     const to = formatDateRange(state.dateRange[1], i18n.language);
     const dateLabel = i18n.language === "ar" ? "من إلى" : "from to";
-    
+
     filterGroups.push(
       <Space key="date_group" align="center">
         <Text>{t("form.dateRange")}: </Text>

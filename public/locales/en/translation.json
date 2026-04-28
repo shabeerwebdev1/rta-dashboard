@@ -553,7 +553,8 @@
     "aed": "AED",
     "day": "Day",
     "days": "Days",
-    "open": "Open"
+    "open": "Open",
+    "Inactive": "Inactive"
   },
   "entity": {
     "plate": "Plate",
@@ -734,6 +735,7 @@
     "ApprovedEvaluations": "Approved Evaluations",
     "TotalCriteria": "Total Criteria",
     "ActiveCriteria": "Active Criteria",
+    "InactiveCriteria": "Inactive Criteria",
     "TotalCampaigns": "Total Campaigns",
     "ActiveCampaigns": "Active Campaigns",
     "DraftCampaigns": "Draft Campaigns",
@@ -753,7 +755,8 @@
     "uploadRequired": " Please upload {{field}} ",
     "invalidEmail": " Please enter a valid email address ",
     "onlyNumbers": " Only numbers are allowed ",
-    "lengthRange": "{{field}} must contain digits of at least {{min}}."
+    "lengthRange": "{{field}} must contain digits of at least {{min}}.",
+    "weightRange": "Weight must be between 0 and 100"
   },
   "reports": {
     "parkingInspectorsEvaluation": "Parking Inspectors Evaluation Summary",

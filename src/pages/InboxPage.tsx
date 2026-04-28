@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import React from "react";
 import { useState, useMemo, useEffect } from "react";
 import { Dropdown, Button } from "antd";
 import { EyeOutlined, MoreOutlined } from "@ant-design/icons";
@@ -32,13 +33,9 @@ const InboxPage = () => {
     if (!notificationCode) return "Inbox";
 
     const isArabic = i18n.language === "ar";
-
     const matches = inboxMenus.filter((item: any) => item.NotificationCode === notificationCode);
-
     const arabicItem = matches.find((m: any) => /[\u0600-\u06FF]/.test(m.NotificationName));
-
     const englishItem = matches.find((m: any) => !/[\u0600-\u06FF]/.test(m.NotificationName));
-
     const selected = isArabic ? arabicItem || englishItem : englishItem || arabicItem;
 
     return sanitizeInboxTitle(selected?.NotificationName || "Inbox");
@@ -55,9 +52,7 @@ const InboxPage = () => {
   });
 
   // Fetch full dataset
-  const { data, isLoading } = useGetInboxListQuery({
-    notificationCode,
-  });
+  const { data, isLoading } = useGetInboxListQuery({ notificationCode });
 
   const fullData = data?.DataTable ?? [];
 
@@ -80,12 +75,12 @@ const InboxPage = () => {
 
   const renderTextCell = (value: any) => {
     const displayValue = value === null || value === undefined || value === "" ? "-" : String(value);
-
     return (
       <span
         style={{
           display: "block",
           maxWidth: "100%",
+          // maxwidth: 180 ,
           whiteSpace: "normal",
           wordBreak: "break-word",
           overflowWrap: "anywhere",
@@ -100,9 +95,7 @@ const InboxPage = () => {
   const renderPlateInfoCell = (value: any) => {
     const plateInfo = value === null || value === undefined ? "" : String(value).trim();
     if (!plateInfo) return "-";
-
     const [plateNumber, sourceEn, _categoryEn, plateColorCodeEn, sourceAr] = plateInfo.split("|");
-
     return (
       <UAEPlate
         code={plateColorCodeEn || ""}
@@ -113,24 +106,17 @@ const InboxPage = () => {
     );
   };
 
-  // SL.No Column
-  // const slNoColumn = {
-  //   key: "slno",
-  //   title: "SL.No",
-  //   width: 100,
-  //   render: (_: any, __: any, index: number) => (apiParams.PageNumber - 1) * apiParams.PageSize + index + 1,
-  // };
-
+  // ── SL.No: fixed narrow width, zero side padding ──────────────────────────
   const slNoColumn = {
     key: "slno",
     title: isRTL ? "التسلسل" : "SL.No",
-    width: 56,
+    width: 58,
     align: "center" as const,
     onHeaderCell: () => ({
-      style: { textAlign: "center", paddingInline: 8 },
+      style: { textAlign: "center", padding: "0 4px", whiteSpace: "nowrap" },
     }),
     onCell: () => ({
-      style: { textAlign: "center", paddingInline: 8 },
+      style: { textAlign: "center", padding: "0 4px" },
     }),
     render: (_: any, __: any, index: number) => (apiParams.PageNumber - 1) * apiParams.PageSize + index + 1,
   };
@@ -139,7 +125,8 @@ const InboxPage = () => {
   const actionColumn = {
     key: "actions",
     title: isRTL ? "الإجراءات" : "Actions",
-    width: 100,
+    width: 80,
+    align: "center" as const,
     render: (_: any, row: any) => (
       <Dropdown
         trigger={["click"]}
@@ -190,42 +177,12 @@ const InboxPage = () => {
     return [slNoColumn, ...dynamicColumns, actionColumn];
   }, [data, apiParams]);
 
-  // const columns = useMemo(() => {
-  //   if (!data?.Columns) return [];
-
-  //   const hiddenColumns = ["Notification Name", "Activity Name", "Actor Name"];
-
-  //   const dynamicColumns = data.Columns.filter((col: any) => col.Visible)
-  //     .sort((a: any, b: any) => a.Position - b.Position)
-  //     .filter((col: any) => !hiddenColumns.includes(col.DisplayName)) // hide columns
-  //     .map((col: any) => ({
-  //       key: col.Field,
-  //       dataIndex: col.Field,
-  //       title: col.DisplayName === "Last Updated DateTime" ? "Last Updated" : col.DisplayName, // rename column
-  //       sortable: col.AllowSorting === "true",
-  //       width: String(col.Name || "").toLowerCase() === "_$v$_$plateinfo" ? 180 : undefined,
-  //       ellipsis: true,
-  //       render:
-  //         String(col.Name || "").toLowerCase() === "_$v$_$plateinfo" ||
-  //         String(col.DisplayName || "").toLowerCase() === "plate no"
-  //           ? (value: any) => renderPlateInfoCell(value)
-  //           : col.Type === "datetime"
-  //             ? (value: any) => renderTextCell(value ? formatDateTimeDisplay(value) : "-")
-  //             : (value: any) => renderTextCell(value),
-  //     }));
-
-  //   return [slNoColumn, ...dynamicColumns, actionColumn];
-  // }, [data, apiParams]);
-
   const pageConfig = {
     tableConfig: { columns },
   };
 
   const handlePaginationChange = (page: number, pageSize: number) => {
-    setApiParams({
-      PageNumber: page,
-      PageSize: pageSize,
-    });
+    setApiParams({ PageNumber: page, PageSize: pageSize });
   };
 
   return (
@@ -241,6 +198,7 @@ const InboxPage = () => {
         tableSize="small"
         state={{ columnFilters: {} }}
         tableLayout="fixed"
+        scrollX="max-content" // scrollX={1200}
       />
 
       <DynamicEntityHandler

@@ -553,7 +553,8 @@
     "aed": "درهم إماراتي",
     "day": "يوم",
     "days": "أيام",
-    "open": "مفتوح"
+    "open": "مفتوح",
+    "Inactive": "غير نشط"
   },
   "entity": {
     "plate": "لوحة",
@@ -735,6 +736,8 @@
     "ApprovedEvaluations": "التقييمات المعتمدة",
     "TotalCriteria": "إجمالي المعايير",
     "ActiveCriteria": "المعايير النشطة",
+    "InactiveCriteria": "المعايير غير النشطة",
+
     "TotalCampaigns": "إجمالي الحملات",
     "ActiveCampaigns": "الحملات النشطة",
     "DraftCampaigns": "الحملات المسودة",
@@ -754,7 +757,8 @@
     "uploadRequired": "يرجى رفع {{field}}",
     "invalidEmail": "يرجى إدخال عنوان بريد إلكتروني صالح",
     "onlyNumbers": "يُسمح بإدخال الأرقام فقط",
-    "lengthRange": "{{field}} يجب أن يحتوي على {{min}} أرقام على الأقل"
+    "lengthRange": "{{field}} يجب أن يحتوي على {{min}} أرقام على الأقل",
+    "weightRange": "يجب أن يكون الوزن بين 0 و100"
   },
   "reports": {
     "parkingInspectorsEvaluation": "ملخص تقييم مفتشي المواقف",
