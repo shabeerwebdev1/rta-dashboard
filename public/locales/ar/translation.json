@@ -451,7 +451,9 @@
     "reviewedDate": "تاريخ المراجعة",
     "selectAction": "اختر الإجراء",
     "selectActionPlaceholder": "يرجى اختيار إجراء",
-    "refernecenumber": "رقم المرجع"
+    "refernecenumber": "رقم المرجع",
+    "basicInformation": "المعلومات الأساسية",
+    "scoreDetails": "تفاصيل النقاط"
   },
   "common": {
     "action": "الإجراءات",
@@ -531,6 +533,8 @@
     "filterBytowingDate": "التصفية حسب تاريخ القطر  ",
     "filterByaddedon": "التصفية حسب تاريخ الإضافة",
     "filterByInspectionDate": "التصفية حسب تاريخ التفتيش",
+    "filterByevaluationDate": "التصفية حسب تاريخ التقييم",
+
     "createEvaluation": "إنشاء تقييم",
     "viewEvaluation": "عرض التقييم",
     "close": "إغلاق",
@@ -673,7 +677,12 @@
     "tradeLicense_EN_Name": "أدخل اسم الرخصة التجارية باللغة الإنجليزية",
     "tradeLicense_AR_Name": "أدخل اسم الرخصة التجارية باللغة العربية",
     "sendToEmail": "أدخل البريد الإلكتروني للإرسال",
-    "selectSupervisor": "اختر المشرف"
+    "selectSupervisor": "اختر المشرف",
+    "startYear": "اختر السنة البدء",
+    "endYear": "اختر السنة الانتهاء",
+    "startMonth": "اختر الشهر البدء",
+    "endMonth": "اختر الشهر الانتهاء",
+    "Notes": "أدخل الملاحظات"
   },
 
   "dashboard": {

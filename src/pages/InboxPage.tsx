@@ -79,8 +79,6 @@ const InboxPage = () => {
       <span
         style={{
           display: "block",
-          maxWidth: "100%",
-          // maxwidth: 180 ,
           whiteSpace: "normal",
           wordBreak: "break-word",
           overflowWrap: "anywhere",
@@ -198,7 +196,7 @@ const InboxPage = () => {
         tableSize="small"
         state={{ columnFilters: {} }}
         tableLayout="fixed"
-        scrollX="max-content" // scrollX={1200}
+        scrollX={1200} // scrollX={1200}
       />
 
       <DynamicEntityHandler

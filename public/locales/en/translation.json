@@ -451,7 +451,9 @@
     "reviewedDate": "Reviewed Date",
     "selectAction": "Select Action",
     "selectActionPlaceholder": "Please select an action",
-    "refernecenumber": "Reference Number"
+    "refernecenumber": "Reference Number",
+    "basicInformation": "Basic Information",
+    "scoreDetails": "Score Details"
   },
   "common": {
     "action": "Actions",
@@ -531,6 +533,7 @@
     "filterBytowingDate": "Filter by Towing Date",
     "filterByaddedon": "Filter by Added On",
     "filterByInspectionDate": "Filter by Inspection Date",
+    "filterByevaluationDate": "Filter by Evaluation Date",
     "createEvaluation": "Create Evaluation",
     "viewEvaluation": "View Evaluation",
     "close": "Close",
@@ -673,7 +676,12 @@
     "tradeLicense_EN_Name": "Enter the trade license name in English",
     "tradeLicense_AR_Name": "Enter the trade license name in Arabic",
     "sendToEmail": "Enter email to send the report",
-    "selectSupervisor": "Select supervisor "
+    "selectSupervisor": "Select supervisor ",
+    "startYear": "Select start year",
+    "endYear": "Select end year",
+    "startMonth": "Select start month",
+    "endMonth": "Select end month",
+    "Notes": "Enter notes"
   },
   "dashboard": {
     "totalInspectors": "Total Inspectors",

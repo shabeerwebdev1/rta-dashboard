@@ -84,6 +84,7 @@ export const dynamicApi = createApi({
     "InboxSummaryMenu",
     "Inbox",
     "CriteriaWeight",
+    "TeamEvaluation",
   ],
 
   endpoints: (builder) => ({
@@ -794,6 +795,49 @@ export const dynamicApi = createApi({
       invalidatesTags: ["CriteriaWeight"],
     }),
 
+    //Team Evaluation
+
+    getTeamEvaluations: builder.query({
+      query: (params) => ({ url: "/api/TeamEvaluation", params }),
+      transformResponse: (response: any) => ({
+        data: response?.data ?? [],
+        totalCount: response?.totalCount ?? 0,
+        pageNumber: response?.pageNumber,
+        pageSize: response?.pageSize,
+        statusCode: response?.statusCode,
+        successful: response?.successful,
+        en_Msg: response?.en_Msg,
+        ar_Msg: response?.ar_Msg,
+      }),
+      providesTags: ["TeamEvaluation"],
+    }),
+
+    // GET BY ID
+    getTeamEvaluationById: builder.query({
+      query: (id) => `/api/TeamEvaluation/${id}`,
+      providesTags: ["TeamEvaluation"],
+    }),
+
+    // CREATE
+    createTeamEvaluation: builder.mutation({
+      query: (body) => ({
+        url: "/api/TeamEvaluation",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["TeamEvaluation"],
+    }),
+
+    // UPDATE
+    updateTeamEvaluation: builder.mutation({
+      query: (body) => ({
+        url: "/api/TeamEvaluation",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["TeamEvaluation"],
+    }),
+
     getInboxSummary: builder.query<any, void>({
       query: () => ({
         url: "/api/CallIntegration/inboxNotifications",
@@ -1049,6 +1093,12 @@ export const {
   useLazyGetCriteriaWeightByIdQuery,
   useAddCriteriaWeightMutation,
   useUpdateCriteriaWeightMutation,
+
+  // Team Evaluation
+  useGetTeamEvaluationsQuery,
+  useLazyGetTeamEvaluationByIdQuery,
+  useCreateTeamEvaluationMutation,
+  useUpdateTeamEvaluationMutation,
 
   // Inbox Summary
   useGetInboxSummaryQuery,
