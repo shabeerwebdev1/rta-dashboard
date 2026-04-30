@@ -194,8 +194,16 @@ export const parkonicPageConfig: PageConfig = {
       {
         key: "categoryId",
         title: "form.violationCategory",
+        width: 90,
         align: "center",
         type: "custom" as const,
+        onHeaderCell: () => ({
+          style: {
+            whiteSpace: "normal",
+            wordWrap: "break-word",
+            padding: "8px 4px",
+          },
+        }),
         render: (_: any, record: any) => {
           const getCurrentLanguage = () => {
             const storedLang = localStorage.getItem("i18nextLng");
@@ -222,14 +230,23 @@ export const parkonicPageConfig: PageConfig = {
       {
         key: "violationAmount",
         title: "form.violationAmount",
+        width: 90,
         align: "center",
         type: "number",
+        onHeaderCell: () => ({
+          style: {
+            whiteSpace: "normal",
+            wordWrap: "break-word",
+            padding: "8px 4px",
+          },
+        }),
         render: (value?: number) => <Typography.Text type="danger"> AED {value ?? "—"} </Typography.Text>,
       },
 
       {
         key: "reviewStatus",
         title: "form.reviewtatus",
+        align: "center",
         type: "custom",
         filterable: true,
         render: (status: number) => {

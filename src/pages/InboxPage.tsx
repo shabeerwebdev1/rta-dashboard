@@ -14,6 +14,7 @@ import UAEPlate from "../components/UAEPlate";
 import { usePage } from "../contexts/PageContext";
 import { DynamicEntityHandler, useEntityHandler } from "../components/common/DynamicEntityHandler";
 import { formatDateTimeDisplay } from "../utils/dateFormatter";
+import { getFixedT } from "i18next";
 
 const InboxPage = () => {
   const { t, i18n } = useTranslation();
@@ -124,6 +125,7 @@ const InboxPage = () => {
     key: "actions",
     title: isRTL ? "الإجراءات" : "Actions",
     width: 80,
+    fixed: "right" as const,
     align: "center" as const,
     render: (_: any, row: any) => (
       <Dropdown
@@ -155,14 +157,19 @@ const InboxPage = () => {
         dataIndex: col.Field,
         title: col.DisplayName,
         sortable: col.AllowSorting === "true",
-        width: String(col.Name || "").toLowerCase() === "_$v$_$plateinfo" ? 180 : undefined,
+
+        width: String(col.Name || "").toLowerCase() === "_$v$_$plateinfo" ? 180 : 160, // 👈 DEFAULT WIDTH ADDED
+
         onCell: () => ({
           style: {
+            maxWidth: String(col.Name || "").toLowerCase() === "_$v$_$plateinfo" ? 180 : 160, // 👈 LOCK WIDTH
+
             whiteSpace: "normal",
             wordBreak: "break-word",
             overflowWrap: "anywhere",
           },
         }),
+
         render:
           String(col.Name || "").toLowerCase() === "_$v$_$plateinfo" ||
           String(col.DisplayName || "").toLowerCase() === "plate no"
@@ -196,7 +203,8 @@ const InboxPage = () => {
         tableSize="small"
         state={{ columnFilters: {} }}
         tableLayout="fixed"
-        scrollX={1200} // scrollX={1200}
+        scrollX="max-content"
+        // scrollX={1200}
       />
 
       <DynamicEntityHandler

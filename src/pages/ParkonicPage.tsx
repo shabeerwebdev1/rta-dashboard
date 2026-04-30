@@ -300,6 +300,7 @@ const ParkonicPage: React.FC = () => {
         tableSize={tableSize}
         rowKey={config.tableConfig.rowKey}
         state={state}
+        tableLayout="fixed"
         filterOptions={{
           reviewStatus: [
             { text: t("status.pending"), value: 0 },

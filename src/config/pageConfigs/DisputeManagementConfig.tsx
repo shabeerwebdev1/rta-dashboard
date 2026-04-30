@@ -100,6 +100,7 @@ export const disputeManagementConfig: PageConfig = {
         key: "dispute_Status",
         title: "form.disputestatus",
         type: "string",
+        align: "center",
       },
     ],
     viewRecord: true,

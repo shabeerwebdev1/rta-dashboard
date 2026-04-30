@@ -507,13 +507,13 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
   const columns = React.useMemo(() => {
     const generatedColumns = pageConfig.tableConfig.columns.map((col: any) => {
       const antdCol: any = {
-        ...col,
-        key: col.key,
-        title: t(col.title),
-        dataIndex: col.key,
-        filteredValue: state.columnFilters[col.key] || null,
-        width: col.key === "plateUI" ? "160px" : undefined,
-      };
+  ...col,
+  key: col.key,
+  title: t(col.title),
+  dataIndex: col.key,
+  filteredValue: state.columnFilters[col.key] || null,
+  width: col.key === "plateUI" ? "250px" : col.width ?? undefined,
+};
 
       if (col.sortable) {
         antdCol.sorter = true;

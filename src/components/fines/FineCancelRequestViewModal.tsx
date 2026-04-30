@@ -679,7 +679,7 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                                   style={{
                                     display: "inline-flex",
                                     alignItems: "center",
-                                    gap: 8,
+                                    gap: 6,
                                     borderRadius: 999,
                                     background: hasMissingVehicleOwnerName ? "#fff0f1" : "#f0f7eb",
                                   }}
@@ -693,13 +693,13 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                                       width: 30,
                                       height: 30,
                                       borderRadius: "50%",
-                                      border: `2px solid ${hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d"}`,
+                                      border: `1px solid ${hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d"}`,
                                       flexShrink: 0,
                                     }}
                                   >
                                     <CarOutlined
                                       style={{
-                                        fontSize: 15,
+                                        fontSize: 12,
                                         color: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
                                       }}
                                     />
@@ -708,7 +708,7 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                                   {/* Label */}
                                   <span
                                     style={{
-                                      fontSize: 13,
+                                      fontSize: 10,
                                       fontWeight: 700,
                                       color: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
                                     }}
@@ -720,7 +720,7 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                                   <span
                                     style={{
                                       width: 1,
-                                      height: 18,
+                                      height: 15,
                                       background: hasMissingVehicleOwnerName ? "#eb2630" : "#389e0d",
                                       opacity: 0.35,
                                       display: "inline-block",
@@ -729,9 +729,9 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
 
                                   {/* Check / X icon */}
                                   {hasMissingVehicleOwnerName ? (
-                                    <CloseCircleFilled style={{ fontSize: 20, color: "#eb2630" }} />
+                                    <CloseCircleFilled style={{ fontSize: 14, color: "#eb2630" }} />
                                   ) : (
-                                    <CheckCircleFilled style={{ fontSize: 20, color: "#389e0d" }} />
+                                    <CheckCircleFilled style={{ fontSize: 14, color: "#389e0d" }} />
                                   )}
                                 </span>
                               </Col>
