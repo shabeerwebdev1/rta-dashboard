@@ -7,7 +7,6 @@ import { PATHS, FULL_PATHS } from "./constants/paths";
 import GeneralSearchPage from "./pages/GeneralSearchPage";
 import TeamEvaluationPage from "./pages/TeamEvaluationPage";
 
-
 // Lazy-loaded Pages
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const PermitsPage = lazy(() => import("./pages/PermitsPage"));
@@ -35,6 +34,7 @@ const ParkingsInspectionsPage = lazy(() => import("./pages/ParkingsInspectionsPa
 const ReportsPage = lazy(() => import("./pages/ReportsPage"));
 const ShiftPlanPage = lazy(() => import("./pages/ShiftPlanPage"));
 const CriteriaPage = lazy(() => import("./pages/CriteriaPage"));
+const CriteriaGroupPage = lazy(() => import("./pages/CriteriaGroupPage"));
 const ProactiveCampaignsPage = lazy(() => import("./pages/ProactiveCampaignsPage"));
 const HRMSPage = lazy(() => import("./pages/HRMSPage"));
 const InboxPage = lazy(() => import("./pages/InboxPage"));
@@ -208,7 +208,6 @@ const AppRoutes = () => (
           }
         />
 
-
         <Route
           path={PATHS.CREATESHIFTPLAN}
           element={
@@ -278,6 +277,14 @@ const AppRoutes = () => (
           element={
             <ProtectedRoute>
               <CriteriaPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={FULL_PATHS.CRITERIA_GROUP}
+          element={
+            <ProtectedRoute>
+              <CriteriaGroupPage />
             </ProtectedRoute>
           }
         />

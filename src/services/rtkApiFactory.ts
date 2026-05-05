@@ -85,6 +85,7 @@ export const dynamicApi = createApi({
     "Inbox",
     "CriteriaWeight",
     "TeamEvaluation",
+    "CriteriaWeight",
   ],
 
   endpoints: (builder) => ({
@@ -794,6 +795,50 @@ export const dynamicApi = createApi({
       }),
       invalidatesTags: ["CriteriaWeight"],
     }),
+    // Criteria Group
+    addCriteriaGroup: builder.mutation({
+      query: (body) => ({
+        url: "/api/CriteriaGroup",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["CriteriaWeight"],
+    }),
+
+    getCriteriaGroups: builder.query({
+      query: (params) => ({ url: "/api/CriteriaGroup/GetAll", params }),
+      transformResponse: (response: any) => ({
+        data: response?.data ?? [],
+        total: response?.totalCount ?? 0,
+        totalCount: response?.totalCount ?? 0,
+        totalRecords: response?.totalRecords ?? response?.totalCount ?? 0,
+        active: response?.active ?? 0,
+        inActive: response?.inActive ?? 0,
+        pageNumber: response?.pageNumber,
+        pageSize: response?.pageSize,
+        statusCode: response?.statusCode,
+        successful: response?.successful,
+        en_Msg: response?.en_Msg,
+        ar_Msg: response?.ar_Msg,
+        validationErrors: response?.validationErrors ?? [],
+        haveValidationErrors: response?.haveValidationErrors ?? false,
+      }),
+      providesTags: ["CriteriaWeight"],
+    }),
+
+    getCriteriaGroupById: builder.query({
+      query: (id) => `/api/CriteriaGroup/${id}`,
+      providesTags: ["CriteriaWeight"],
+    }),
+
+    updateCriteriaGroup: builder.mutation({
+      query: (body) => ({
+        url: "/api/CriteriaGroup",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["CriteriaWeight"],
+    }),
 
     //Team Evaluation
 
@@ -1093,6 +1138,12 @@ export const {
   useLazyGetCriteriaWeightByIdQuery,
   useAddCriteriaWeightMutation,
   useUpdateCriteriaWeightMutation,
+
+  // Criteria Group
+  useAddCriteriaGroupMutation,
+  useGetCriteriaGroupsQuery,
+  useLazyGetCriteriaGroupByIdQuery,
+  useUpdateCriteriaGroupMutation,
 
   // Team Evaluation
   useGetTeamEvaluationsQuery,

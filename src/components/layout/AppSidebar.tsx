@@ -21,6 +21,17 @@ import {
   IdcardOutlined,
   BookOutlined,
   SolutionOutlined,
+  ControlOutlined,
+  ApartmentOutlined,
+  FileProtectOutlined,
+  FileDoneOutlined,
+  UserSwitchOutlined,
+  SafetyCertificateOutlined,
+  NotificationOutlined,
+  TruckOutlined,
+  ScheduleOutlined,
+  PlusCircleOutlined,
+  ClockCircleOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -130,7 +141,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
     },
     {
       key: FULL_PATHS.HRMS,
-      icon: <BookOutlined />,
+      icon: <IdcardOutlined />,
       labelText: t("sidebar.hrms"),
       permission: "WebDashboard",
     },
@@ -147,13 +158,13 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       children: [
         {
           key: "whitelist",
-          icon: <FileTextOutlined />,
+          icon: <FileProtectOutlined />,
           labelText: t("sidebar.whitelists"),
           permission: "WhiteListPlate",
           children: [
             {
               key: FULL_PATHS.WHITELIST_PLATES,
-              icon: <FileTextOutlined />,
+              icon: <CarOutlined />,
               labelText: t("sidebar.whitelistPlates"),
               permission: "WhiteListPlate",
             },
@@ -167,25 +178,25 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         },
         {
           key: FULL_PATHS.INSPECTIONS_OBSTACLES,
-          icon: <SearchOutlined />,
+          icon: <WarningOutlined />,
           labelText: t("sidebar.inspectionsObstacles"),
           permission: "InspectionObstacle",
         },
         {
           key: FULL_PATHS.PLEDGES,
-          icon: <AuditOutlined />,
+          icon: <FileDoneOutlined />,
           labelText: t("sidebar.pledges"),
           permission: "Pledge",
         },
         {
           key: FULL_PATHS.LEAVE_MANGEMENT,
-          icon: <TeamOutlined />,
+          icon: <UserSwitchOutlined />,
           labelText: t("sidebar.leaves"),
           permission: "Leave",
         },
         {
           key: FULL_PATHS.ROLE_MANAGEMENT,
-          icon: <LinkOutlined />,
+          icon: <SafetyCertificateOutlined />,
           labelText: t("sidebar.roles"),
           permission: "RolePermission",
         },
@@ -210,13 +221,13 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         },
         {
           key: FULL_PATHS.TRADE_LICENSE_INSPECTIONS,
-          icon: <IdcardOutlined />,
+          icon: <EnvironmentOutlined />,
           labelText: t("sidebar.Parkings"),
           permission: "Inspection",
         },
         {
           key: FULL_PATHS.PROACTIVECAMPAIGN,
-          icon: <AuditOutlined />,
+          icon: <NotificationOutlined />,
           labelText: t("sidebar.proactivecampaigns"),
           permission: "Inspection",
         },
@@ -241,7 +252,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         },
         {
           key: FULL_PATHS.FINES_PARKINGS,
-          icon: <IdcardOutlined />,
+          icon: <EnvironmentOutlined />,
           labelText: t("sidebar.Parkings"),
           permission: "Inspection",
         },
@@ -260,7 +271,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         },
         {
           key: FULL_PATHS.PARKING_DISPUTE,
-          icon: <IdcardOutlined />,
+          icon: <EnvironmentOutlined />,
           labelText: t("sidebar.Parkings"),
           permission: "Dispute",
         },
@@ -274,24 +285,30 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
     // },
     {
       key: FULL_PATHS.TOWING,
-      icon: <CarOutlined />,
+      icon: <TruckOutlined />,
       labelText: t("sidebar.towing"),
       permission: "Towing",
     },
     {
       key: "team-assessment-group",
-      icon: <UsergroupAddOutlined />,
+      icon: <TeamOutlined />,
       labelText: t("sidebar.teamEvaluation"),
       children: [
         {
           key: FULL_PATHS.CRITERIA,
-          icon: <UsergroupAddOutlined />,
+          icon: <ControlOutlined />,
           labelText: t("sidebar.Criteria&Weights"),
           permission: "CallIntegration",
         },
         {
+          key: FULL_PATHS.CRITERIA_GROUP,
+          icon: <ApartmentOutlined />,
+          labelText: t("sidebar.criteriaGroup"),
+          permission: "CallIntegration",
+        },
+        {
           key: FULL_PATHS.TEAM_EVALUATION,
-          icon: <UsergroupAddOutlined />,
+          icon: <AuditOutlined />,
           labelText: t("sidebar.evaluate"),
           permission: "CallIntegration",
         },
@@ -318,24 +335,24 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
     },
     {
       key: "shiftplanning",
-      icon: <AuditOutlined />,
+      icon: <ScheduleOutlined />,
       labelText: t("sidebar.shiftplanning"),
       children: [
         {
           key: FULL_PATHS.CREATESHIFTPLAN,
-          icon: <AuditOutlined />,
+          icon: <PlusCircleOutlined />,
           labelText: t("sidebar.createshiftplan"),
           permission: "CreateShift",
         },
         {
           key: FULL_PATHS.ADHOCSHIFTPLAN,
-          icon: <AuditOutlined />,
+          icon: <ClockCircleOutlined />,
           labelText: t("sidebar.adhocshiftplan"),
           permission: "AdhocShift",
         },
         {
           key: FULL_PATHS.SHIFT_MANAGEMENT,
-          icon: <AuditOutlined />,
+          icon: <ControlOutlined />,
           labelText: t("sidebar.shiftmanagement"),
           permission: "ShiftManagement",
         },

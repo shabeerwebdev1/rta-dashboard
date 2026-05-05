@@ -3,8 +3,7 @@ export const PATHS = {
   DASHBOARD: "dashboard",
   SPLASH: "splash",
   PERMITS: "permits",
-  INBOX: "inbox",   // ✅ ADD THIS
-
+  INBOX: "inbox", // ✅ ADD THIS
 
   // --- Whitelist section ---
   WHITELIST: "whitelist",
@@ -43,6 +42,7 @@ export const PATHS = {
   FINES_INSPECTIONS: "fines-inspections",
   SHIFT_PLAN: "shift-plan",
   CRITERIA: "criteria",
+  CRITERIA_GROUP: "criteria-group",
   PROACTIVECAMPAIGN: "proactive-campaign",
   HRMS: "hrms",
   WHITELIST_TRADELICENSES: "tradelicenses", // ✅ added missing path
@@ -56,9 +56,7 @@ export const FULL_PATHS = {
   PERMITS: "/permits",
   GENERAL: "/general",
   HRMS: "/hrms",
-  INBOX: "/inbox",   // ✅ ADD THIS
-
-  
+  INBOX: "/inbox", // ✅ ADD THIS
 
   // --- Whitelist section ---
   WHITELIST: "/whitelist",
@@ -96,5 +94,6 @@ export const FULL_PATHS = {
   SHIFT_PLAN: "/shift-plan",
 
   CRITERIA: "/criteria",
+  CRITERIA_GROUP: "/criteria-group",
   PROACTIVECAMPAIGN: "/proactive-campaign",
 };

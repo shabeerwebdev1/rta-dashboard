@@ -40,6 +40,7 @@
     "Vehicle": "Vehicles",
     "Parkings": "Parkings",
     "Criteria&Weights": "Criteria & Weights",
+    "criteriaGroup": " Criteria Group",
     "proactivecampaigns": "Proactive Campaigns",
     "inbox": "Inbox",
     "allInbox": "All Inbox",
@@ -91,6 +92,7 @@
       "parkingsfines": "Parking Fines",
       "team-evaluation": "Team Evaluation",
       "criteria": "Criteria & Weights",
+      "criteriaGroup": " Criteria Group",
       "proactive-campaigns": "Proactive Campaigns",
       "hrms": "HRMS Attendance",
       "shiftplanning": "Create Shift Plan",
@@ -154,7 +156,10 @@
     "exportSuccess": "Data exported successfully!",
     "boundaryDrawn": "Boundary drawn successfully!",
     "polygonSavedToForm": "Polygon saved to form",
-    "editAssignedInspectors": "Assigned inspectors ready for editing"
+    "editAssignedInspectors": "Assigned inspectors ready for editing",
+    "criteriaGroupHelper": "Create a criteria group by entering the group names and selecting one or more existing criteria.",
+    "noCriteriaAvailable": "No active criteria are available to group.",
+    "selectGroupFirst": "Please select a criteria group first."
   },
   "form": {
     "Number": "Number",
@@ -379,6 +384,9 @@
     "evaluationCriteria": "Evaluation Criteria",
     "rating": "Rating",
     "weight": "Weight",
+    "groupNameEn": "Group Name (EN)",
+    "groupNameAr": "Group Name (AR)",
+    "criteriaSelection": "Criteria",
     "descriptionEn": "Description (EN)",
     "descriptionAr": "Description (AR)",
     "ratingScale": "Rating Scale",
@@ -454,7 +462,10 @@
     "selectActionPlaceholder": "Please select an action",
     "refernecenumber": "Reference Number",
     "basicInformation": "Basic Information",
-    "scoreDetails": "Score Details"
+    "scoreDetails": "Score Details",
+    "criteriaName": "Criteria Name",
+    "totalWeight": "Total Weight",
+    "criteriaGroup": "Criteria Group"
   },
   "common": {
     "action": "Actions",
@@ -572,6 +583,7 @@
     "evaluations": "Evaluations",
     "proactiveCampaign": "Proactive Campaign",
     "criteria": "Criteria & Weights",
+    "criteriaGroup": "Criteria Group",
     "hrms": "HRMS Record"
   },
   "status": {
@@ -658,6 +670,9 @@
     "selectInspector": "Select inspector",
     "descriptionEn": "Enter description in English",
     "descriptionAr": "Enter description in Arabic",
+    "groupNameEn": "Enter group name in English",
+    "groupNameAr": "Enter group name in Arabic",
+    "selectCriteria": "Select existing criteria",
     "selectObjective": "Select objective type",
     "selectRatingScale": "Select rating scale",
     "titleEn": "Enter campaign title in English",
@@ -682,7 +697,8 @@
     "endYear": "Select end year",
     "startMonth": "Select start month",
     "endMonth": "Select end month",
-    "Notes": "Enter notes"
+    "Notes": "Enter notes",
+    "selectCriteriaGroup": "Select criteria group"
   },
   "dashboard": {
     "totalInspectors": "Total Inspectors",
@@ -756,7 +772,10 @@
     "TotalLicenses": "Total Licenses",
     "ActiveLicenses": "Active Licenses",
     "ExpiredLicenses": "Expired Licenses",
-    "InactiveLicenses": "Inactive Licenses"
+    "InactiveLicenses": "Inactive Licenses",
+    "TotalGroups": "Total Groups",
+    "ActiveGroups": "Active Groups",
+    "InactiveGroups": "Inactive Groups"
   },
   "validation": {
     "required": " Please enter {{field}} ",

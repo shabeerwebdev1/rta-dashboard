@@ -20,6 +20,7 @@ import {
   Collapse,
   Spin,
   theme,
+  Empty,
 } from "antd";
 import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined, TeamOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
@@ -36,11 +37,12 @@ import { formatDateByLocale } from "../utils/dateFormatter";
 import { evaluationTypeOptions, teamEvaluationConfig } from "../config/pageConfigs/teamEvaluationConfig";
 import TeamEvaluationViewDrawer from "../components/Teamevaluation/TeamEvaluationViewDrawer";
 import {
-  useGetCriteriaWeightsQuery,
   useGetActiveShiftsQuery,
   useGetTeamEvaluationsQuery,
   useCreateTeamEvaluationMutation,
   useUpdateTeamEvaluationMutation,
+  useGetCriteriaGroupsQuery,
+  useLazyGetCriteriaGroupByIdQuery,
 } from "../services/rtkApiFactory";
 
 const { Option } = Select;
@@ -59,19 +61,16 @@ const getGradeTagColor = (grade: string, score?: number) => {
   const normalizedGrade = String(grade || "")
     .trim()
     .toLowerCase();
-
   if (normalizedGrade === "excellent") return "green";
   if (normalizedGrade === "good") return "blue";
   if (normalizedGrade === "fair") return "orange";
   if (normalizedGrade === "unsatisfactory") return "red";
-
   if (typeof score === "number" && Number.isFinite(score)) {
     if (score >= 90) return "green";
     if (score >= 75) return "blue";
     if (score >= 50) return "orange";
     return "red";
   }
-
   return "default";
 };
 
@@ -85,7 +84,7 @@ const TeamEvaluationPage: React.FC = () => {
 
   const evaluationType = Form.useWatch("evaluationType", form);
 
-  // Table params (pagination, sort, search) — mirrors WhitelistPlatesPage
+  // ── Table params ────────────────────────────────────────────────────────────
   const {
     apiParams: rawApiParams,
     handleTableChange,
@@ -103,7 +102,7 @@ const TeamEvaluationPage: React.FC = () => {
     ...rawApiParams,
   };
 
-  // UI state
+  // ── UI state ────────────────────────────────────────────────────────────────
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
@@ -112,11 +111,15 @@ const TeamEvaluationPage: React.FC = () => {
   const [tableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
-
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
+
+  // ── Criteria from selected group ────────────────────────────────────────────
+  const [groupCriteria, setGroupCriteria] = useState<any[]>([]);
+  const [isGroupCriteriaLoading, setIsGroupCriteriaLoading] = useState(false);
+
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
-  // ── API queries ──────────────────────────────────────────────────────────────
+  // ── API queries ─────────────────────────────────────────────────────────────
   const {
     data: evaluationsResponse,
     isLoading: isLoadingEvaluations,
@@ -126,27 +129,30 @@ const TeamEvaluationPage: React.FC = () => {
   const [createTeamEvaluation, { isLoading: isCreating }] = useCreateTeamEvaluationMutation();
   const [updateTeamEvaluation, { isLoading: isUpdating }] = useUpdateTeamEvaluationMutation();
 
-  const { data: criteriaResponse, isLoading: isLoadingCriteria } = useGetCriteriaWeightsQuery({});
+  // Criteria groups list
+  const { data: criteriaGroupsResponse, isLoading: isLoadingGroups } = useGetCriteriaGroupsQuery({
+    PageNumber: 1,
+    PageSize: 1000,
+  });
+
+  // Lazy get-by-id for selected group
+  const [triggerGetGroupById] = useLazyGetCriteriaGroupByIdQuery();
 
   const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery({});
-  // ─────────────────────────────────────────────────────────────────────────────
 
-  // Active criteria from CriteriaWeight API
-  const criteria = useMemo(() => {
-    const apiCriteria = (criteriaResponse as any)?.data || [];
-    return apiCriteria
-      .filter((c: any) => c.active)
-      .map((c: any, index: number) => ({
-        id: c.id,
-        descriptionEn: c.descriptionEn,
-        descriptionAr: c.descriptionAr,
-        weight: c.weight,
-        isActive: c.active,
-        order: index + 1,
-      }));
-  }, [criteriaResponse]);
+  // ── Derived: group options ──────────────────────────────────────────────────
+  const criteriaGroupOptions = useMemo(() => {
+    const items = Array.isArray(criteriaGroupsResponse?.data) ? criteriaGroupsResponse.data : [];
+    return items
+      .filter((g: any) => g.isActive !== false)
+      .map((g: any) => ({
+        value: g.id,
+        label: i18n.language === "ar" ? g.groupName_AR || g.groupName_EN : g.groupName_EN || g.groupName_AR,
+      }))
+      .sort((a: { label: string }, b: { label: string }) => a.label.localeCompare(b.label));
+  }, [criteriaGroupsResponse, i18n.language]);
 
-  // Inspectors & supervisors from active shifts
+  // ── Derived: inspectors ─────────────────────────────────────────────────────
   const inspectors = useMemo(() => {
     if (!activeShiftsData) return [];
     return (activeShiftsData as any[])
@@ -169,16 +175,52 @@ const TeamEvaluationPage: React.FC = () => {
       }));
   }, [activeShiftsData]);
 
-  // Page title
+  // ── Effects ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     setPageTitle(t(teamEvaluationConfig.title));
   }, [setPageTitle, t, i18n.language]);
 
-  // Sync debounced search into table params
   useEffect(() => {
     setGlobalSearch(state.searchKey, debouncedSearchValue);
   }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
 
+  // ── Handle group selection → fetch criteria ─────────────────────────────────
+  const handleGroupChange = async (groupId: string) => {
+    if (!groupId) {
+      setGroupCriteria([]);
+      return;
+    }
+    // Clear previous criteria scores/comments from form
+    const clearFields = groupCriteria.reduce((acc: any, c: any) => {
+      acc[`criteria_${c.id}`] = undefined;
+      acc[`comments_${c.id}`] = undefined;
+      return acc;
+    }, {});
+    form.setFieldsValue(clearFields);
+    setGroupCriteria([]);
+
+    setIsGroupCriteriaLoading(true);
+    try {
+      const result = await triggerGetGroupById(groupId).unwrap();
+      const details = result?.data?.details ?? [];
+      setGroupCriteria(
+        details.map((d: any) => ({
+          id: d.id,
+          descriptionEn: d.descriptionEn,
+          descriptionAr: d.descriptionAr,
+          weight: d.weight,
+          isActive: true,
+        })),
+      );
+    } catch {
+      notification.error({ data: { en_Msg: "Failed to load group criteria" } }, "Error");
+      setGroupCriteria([]);
+    } finally {
+      setIsGroupCriteriaLoading(false);
+    }
+  };
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
   const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
     if (type === "search") setSearchValue("");
     clearFilter(type, key, value);
@@ -189,7 +231,6 @@ const TeamEvaluationPage: React.FC = () => {
     clearAll();
   };
 
-  // Derive flat list and total from API response
   const evaluationsData: any[] = useMemo(() => {
     if (!evaluationsResponse) return [];
     if (Array.isArray(evaluationsResponse)) return evaluationsResponse;
@@ -207,77 +248,102 @@ const TeamEvaluationPage: React.FC = () => {
   const getInspectorName = (inspectorId: string, fallbackEn?: string, fallbackAr?: string) => {
     if (i18n.language === "ar" && fallbackAr) return fallbackAr;
     if (fallbackEn) return fallbackEn;
-
     const inspector = inspectors.find((item) => String(item.value) === String(inspectorId));
     if (!inspector) return inspectorId || t("common.noData");
     return i18n.language === "ar" ? inspector.labelAr : inspector.labelEn;
   };
 
-  // ── Modal open/close ────────────────────────────────────────────────────────
-  const openModal = (mode: "add" | "edit", record?: any) => {
+  // ── Modal open/close ─────────────────────────────────────────────────────────
+  const openModal = async (mode: "add" | "edit", record?: any) => {
     setModalMode(mode);
     setSelectedRecord(record || null);
     setIsModalOpen(true);
 
     if (mode === "edit" && record) {
-      // Build criteria field values from criteriaDetails in the GET response
-      const criteriaFields = (record.criteriaDetails || []).reduce((acc: any, cd: any) => {
-        // Match by criteriaName against our loaded criteria
-        const matched = criteria.find(
-          (c) =>
-            (i18n.language === "ar" ? c.descriptionAr : c.descriptionEn).toLowerCase() ===
-              String(cd.criteriaName || "").toLowerCase() ||
-            c.descriptionEn.toLowerCase() === String(cd.criteriaName || "").toLowerCase(),
-        );
-        if (matched) {
-          acc[`criteria_${matched.id}`] = cd.score;
-          acc[`comments_${matched.id}`] = cd.comments;
-        }
-        return acc;
-      }, {});
+      // If record has a criteriaGroupId, pre-load that group's criteria
+      if (record.criteriaGroupId) {
+        setIsGroupCriteriaLoading(true);
+        try {
+          const result = await triggerGetGroupById(record.criteriaGroupId).unwrap();
+          const details = result?.data?.details ?? [];
+          const loadedCriteria = details.map((d: any) => ({
+            id: d.id,
+            descriptionEn: d.descriptionEn,
+            descriptionAr: d.descriptionAr,
+            weight: d.weight,
+            isActive: true,
+          }));
+          setGroupCriteria(loadedCriteria);
 
-      form.setFieldsValue({
-        inspectorIds: [record.inspectorId],
-        supervisorId: record.supervisorId,
-        evaluationDate: dayjs(record.evaluationDate),
-        evaluationType: String(record.evaluationType || "").toLowerCase(),
-        evaluationPeriod: [dayjs(record.fromDate), dayjs(record.toDate)],
-        supervisorNotes: record.supervisorNotes,
-        ...criteriaFields,
-      });
+          // Build criteria field values
+          const criteriaFields = (record.criteriaDetails || []).reduce((acc: any, cd: any) => {
+            const matched = loadedCriteria.find(
+              (c: any) => c.descriptionEn.toLowerCase() === String(cd.criteriaName || "").toLowerCase(),
+            );
+            if (matched) {
+              acc[`criteria_${matched.id}`] = cd.score;
+              acc[`comments_${matched.id}`] = cd.comments;
+            }
+            return acc;
+          }, {});
+
+          form.setFieldsValue({
+            inspectorIds: [record.inspectorId],
+            criteriaGroupId: record.criteriaGroupId,
+            evaluationDate: dayjs(record.evaluationDate),
+            evaluationType: String(record.evaluationType || "").toLowerCase(),
+            evaluationPeriod: [dayjs(record.fromDate), dayjs(record.toDate)],
+            supervisorNotes: record.supervisorNotes,
+            ...criteriaFields,
+          });
+        } catch {
+          notification.error({ data: { en_Msg: "Failed to load group criteria" } }, "Error");
+        } finally {
+          setIsGroupCriteriaLoading(false);
+        }
+      } else {
+        form.setFieldsValue({
+          inspectorIds: [record.inspectorId],
+          evaluationDate: dayjs(record.evaluationDate),
+          evaluationType: String(record.evaluationType || "").toLowerCase(),
+          evaluationPeriod: [dayjs(record.fromDate), dayjs(record.toDate)],
+          supervisorNotes: record.supervisorNotes,
+        });
+      }
     } else {
       form.resetFields();
+      setGroupCriteria([]);
     }
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedRecord(null);
+    setGroupCriteria([]);
     form.resetFields();
   };
 
-  // ── Form submit → real API ────────────────────────────────────────────────
+  // ── Form submit ──────────────────────────────────────────────────────────────
   const onFinish = async (values: any) => {
-    const { inspectorIds, supervisorId, evaluationDate, evaluationType, evaluationPeriod, supervisorNotes } = values;
+    const { inspectorIds, criteriaGroupId, evaluationDate, evaluationType, evaluationPeriod, supervisorNotes } = values;
 
     if (!inspectorIds || inspectorIds.length === 0) {
       notification.error({ data: { en_Msg: t("validation.selectRequired", { field: t("form.inspector") }) } }, "");
       return;
     }
 
-    // Build criteria array matching POST/PUT payload shape
-    const criteriaPayload = criteria
+    const criteriaPayload = groupCriteria
       .filter((c) => c.isActive)
       .map((c) => ({
-        criteriaName: c.descriptionEn, // API expects criteriaName (string)
+        criteriaName: c.descriptionEn,
         weight: Number(c.weight),
         score: Number(values[`criteria_${c.id}`] ?? 0),
         comments: values[`comments_${c.id}`] ?? "",
       }));
 
     const payload: any = {
-      inspectorIds, // string[] (GUIDs)
-      supervisorId,
+      inspectorIds,
+      criteriaGroupId: values.criteriaGroupId,
       evaluationDate: evaluationDate.toISOString(),
       evaluationType,
       fromDate: evaluationPeriod[0].toISOString(),
@@ -301,13 +367,12 @@ const TeamEvaluationPage: React.FC = () => {
     }
   };
 
-  // ── CSV export ─────────────────────────────────────────────────────────────
+  // ── CSV export ───────────────────────────────────────────────────────────────
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
       return;
     }
-
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
@@ -321,7 +386,6 @@ const TeamEvaluationPage: React.FC = () => {
           [t("form.grade")]: ev.grade,
           [t("form.supervisorNotes")]: ev.supervisorNotes,
         }));
-
         exportToCsv(csvData, `team-evaluations-${dayjs().format("YYYY-MM-DD")}.csv`);
         setSelectedRowKeys([]);
         setSelectedRows([]);
@@ -330,69 +394,96 @@ const TeamEvaluationPage: React.FC = () => {
     });
   };
 
-  // ── Criteria form block ────────────────────────────────────────────────────
+  // ── Criteria form block (now uses groupCriteria instead of criteriaResponse) ─
   const renderCriteriaForm = () => {
-    if (isLoadingCriteria) {
-      return (
-        <div style={{ textAlign: "center", padding: "40px" }}>
-          <Spin />
-          <p>{t("common.loading")}</p>
-        </div>
-      );
-    }
-    if (criteria.length === 0) {
-      return (
-        <div style={{ textAlign: "center", padding: "40px" }}>
-          <p>{t("messages.noCriteriaFound")}</p>
-        </div>
-      );
-    }
     return (
       <div style={{ marginBottom: 24 }}>
         <Divider orientation="left">
           <TeamOutlined /> {t("form.evaluationCriteria")}
         </Divider>
-        <Collapse defaultActiveKey={[]}>
-          {criteria.map((criterion) => (
-            <Panel
-              header={i18n.language === "ar" ? criterion.descriptionAr : criterion.descriptionEn}
-              key={String(criterion.id)}
-              extra={
-                <Tag color={token.colorPrimary}>
-                  {t("form.weight")}: {criterion.weight}%
-                </Tag>
-              }
-            >
-              <Row gutter={16} align="middle">
-                <Col xs={24} sm={8}>
-                  <Form.Item
-                    name={`criteria_${criterion.id}`}
-                    label={t("form.score")}
-                    rules={[{ required: true, message: t("validation.required", { field: t("form.score") }) }]}
-                  >
-                    <Select placeholder={t("placeholders.score")}>
-                      {SCORE_OPTIONS.map((option) => (
-                        <Option key={option.value} value={option.value}>
-                          {option.value} - {i18n.language === "ar" ? option.labelAr : option.labelEn}
-                        </Option>
-                      ))}
-                    </Select>
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={16}>
-                  <Form.Item name={`comments_${criterion.id}`} label={t("form.comments")}>
-                    <TextArea placeholder={t("placeholders.comments")} rows={2} />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Panel>
-          ))}
-        </Collapse>
+
+        {/* Loading */}
+        {isGroupCriteriaLoading && (
+          <div style={{ textAlign: "center", padding: 20 }}>
+            <Spin />
+          </div>
+        )}
+
+        {/* No group selected */}
+        {!form.getFieldValue("criteriaGroupId") && !isGroupCriteriaLoading && (
+          <div style={{ padding: "8px 0", color: "#999" }}>
+            {t("messages.selectGroupFirst") || "Please select a criteria group"}
+          </div>
+        )}
+
+        {/* No criteria */}
+        {form.getFieldValue("criteriaGroupId") && !isGroupCriteriaLoading && groupCriteria.length === 0 && (
+          <div style={{ padding: "8px 0", color: "#999" }}>{t("messages.noCriteriaFound") || "No criteria found"}</div>
+        )}
+
+        {/* Criteria list (scrollable only this part) */}
+        {groupCriteria.length > 0 && (
+          <div
+            style={{
+              maxHeight: 300,
+              overflowY: "auto",
+              paddingRight: 8,
+              border: "1px solid #f0f0f0",
+              borderRadius: 6,
+              padding: 8,
+            }}
+          >
+            <Collapse defaultActiveKey={[]}>
+              {groupCriteria.map((criterion) => (
+                <Panel
+                  header={i18n.language === "ar" ? criterion.descriptionAr : criterion.descriptionEn}
+                  key={String(criterion.id)}
+                  extra={
+                    <Tag color={token.colorPrimary}>
+                      {t("form.weight")}: {criterion.weight}%
+                    </Tag>
+                  }
+                >
+                  <Row gutter={16} align="middle">
+                    <Col xs={24} sm={8}>
+                      <Form.Item
+                        name={`criteria_${criterion.id}`}
+                        label={t("form.score")}
+                        rules={[
+                          {
+                            required: true,
+                            message: t("validation.required", {
+                              field: t("form.score"),
+                            }),
+                          },
+                        ]}
+                      >
+                        <Select placeholder={t("placeholders.score")}>
+                          {SCORE_OPTIONS.map((option) => (
+                            <Option key={option.value} value={option.value}>
+                              {option.value} - {i18n.language === "ar" ? option.labelAr : option.labelEn}
+                            </Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    </Col>
+
+                    <Col xs={24} sm={16}>
+                      <Form.Item name={`comments_${criterion.id}`} label={t("form.comments")}>
+                        <TextArea placeholder={t("placeholders.comments")} rows={2} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </Panel>
+              ))}
+            </Collapse>
+          </div>
+        )}
       </div>
     );
   };
 
-  // ── Enhanced table config with custom renders ──────────────────────────────
+  // ── Enhanced table config ────────────────────────────────────────────────────
   const enhancedTableConfig = useMemo(
     () => ({
       ...teamEvaluationConfig.tableConfig,
@@ -417,11 +508,9 @@ const TeamEvaluationPage: React.FC = () => {
         if (column.key === "grade") {
           return {
             ...column,
-            render: (value: string, record: any) => {
-              return (
-                <Tag color={getGradeTagColor(value, Number(record.totalScore))}>{value || t("common.noData")}</Tag>
-              );
-            },
+            render: (value: string, record: any) => (
+              <Tag color={getGradeTagColor(value, Number(record.totalScore))}>{value || t("common.noData")}</Tag>
+            ),
           };
         }
         return column;
@@ -430,7 +519,7 @@ const TeamEvaluationPage: React.FC = () => {
     [i18n.language, inspectors, t],
   );
 
-  // ── Action menu — same shape as WhitelistPlatesPage ────────────────────────
+  // ── Action menu ──────────────────────────────────────────────────────────────
   const actionMenuItems = (record: any) => [
     {
       key: "view",
@@ -449,7 +538,6 @@ const TeamEvaluationPage: React.FC = () => {
     },
   ];
 
-  // Column labels for search addon
   const columnLabels = useMemo(
     () => Object.fromEntries(teamEvaluationConfig.tableConfig.columns.map((c) => [c.key, t(c.title)])),
     [t, i18n.language],
@@ -467,7 +555,7 @@ const TeamEvaluationPage: React.FC = () => {
 
   const normalizedEvaluationType = String(evaluationType || "").toLowerCase();
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
       <StatsDisplay
@@ -545,7 +633,7 @@ const TeamEvaluationPage: React.FC = () => {
         getLabelFromValue={() => ""}
       />
 
-      {/* Add / Edit Modal */}
+      {/* ── Add / Edit Modal ── */}
       <Modal
         open={isModalOpen}
         title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", {
@@ -563,17 +651,10 @@ const TeamEvaluationPage: React.FC = () => {
           </Button>,
         ]}
       >
-        <Spin spinning={isLoadingCriteria || isLoadingShifts}>
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={onFinish}
-            initialValues={{
-              evaluationDate: dayjs(), // 👈 today
-            }}
-          >
+        <Spin spinning={isLoadingShifts || isLoadingGroups}>
+          <Form form={form} layout="vertical" onFinish={onFinish} initialValues={{ evaluationDate: dayjs() }}>
             <Row gutter={24}>
-              {/* Inspector (multi-select, GUIDs) */}
+              {/* Inspector (multi-select) */}
               <Col span={12}>
                 <Form.Item
                   name="inspectorIds"
@@ -588,7 +669,6 @@ const TeamEvaluationPage: React.FC = () => {
                     allowClear
                     loading={isLoadingShifts}
                     disabled={modalMode === "edit"}
-                    style={{ cursor: modalMode === "edit" ? "not-allowed" : undefined }}
                   >
                     {inspectors.map((inspector) => (
                       <Option key={inspector.value} value={inspector.value}>
@@ -599,21 +679,32 @@ const TeamEvaluationPage: React.FC = () => {
                 </Form.Item>
               </Col>
 
-              {/* Supervisor */}
+              {/* Criteria Group — replaces Supervisor */}
               <Col span={12}>
-                <Form.Item name="supervisorId" label={t("form.supervisor")}>
+                <Form.Item
+                  name="criteriaGroupId"
+                  label={t("form.criteriaGroup") || "Criteria Group"}
+                  rules={[
+                    {
+                      required: true,
+                      message: t("validation.selectRequired", { field: t("form.criteriaGroup") || "Criteria Group" }),
+                    },
+                  ]}
+                >
                   <Select
-                    placeholder={t("placeholders.selectSupervisor")}
-                    optionFilterProp="children"
+                    showSearch
                     allowClear
-                    loading={isLoadingShifts}
-                  >
-                    {supervisors.map((supervisor) => (
-                      <Option key={supervisor.value} value={supervisor.value}>
-                        {i18n.language === "ar" ? supervisor.labelAr : supervisor.labelEn}
-                      </Option>
-                    ))}
-                  </Select>
+                    loading={isLoadingGroups}
+                    placeholder={t("placeholders.selectCriteriaGroup") || "Select criteria group"}
+                    optionFilterProp="label"
+                    filterOption={(input, option) =>
+                      String(option?.label || "")
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
+                    }
+                    options={criteriaGroupOptions}
+                    onChange={handleGroupChange}
+                  />
                 </Form.Item>
               </Col>
 
@@ -623,12 +714,7 @@ const TeamEvaluationPage: React.FC = () => {
                   name="evaluationDate"
                   label={t("form.evaluationDate")}
                   rules={[
-                    {
-                      required: true,
-                      message: t("validation.selectRequired", {
-                        field: t("form.evaluationDate"),
-                      }),
-                    },
+                    { required: true, message: t("validation.selectRequired", { field: t("form.evaluationDate") }) },
                   ]}
                 >
                   <DatePicker
@@ -684,7 +770,7 @@ const TeamEvaluationPage: React.FC = () => {
               </Col>
             </Row>
 
-            {/* Dynamic Criteria Section */}
+            {/* ── Dynamic Criteria Section (driven by selected group) ── */}
             {renderCriteriaForm()}
 
             <Row gutter={24}>
@@ -702,7 +788,7 @@ const TeamEvaluationPage: React.FC = () => {
         </Spin>
       </Modal>
 
-      {/* View Drawer */}
+      {/* ── View Drawer ── */}
       <TeamEvaluationViewDrawer
         open={isViewOpen}
         onClose={() => {
@@ -710,10 +796,10 @@ const TeamEvaluationPage: React.FC = () => {
           setViewRecord(null);
         }}
         record={viewRecord}
-        criteria={criteria}
+        criteria={groupCriteria}
         inspectors={inspectors}
         supervisors={supervisors}
-        isLoading={isLoadingCriteria || isLoadingShifts}
+        isLoading={isLoadingShifts}
       />
     </Space>
   );

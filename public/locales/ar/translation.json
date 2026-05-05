@@ -40,6 +40,7 @@
     "Vehicle": "المركبات",
     "Parkings": "مواقف السيارات",
     "Criteria&Weights": "المعايير والأوزان",
+    "criteriaGroup": "مجموعة المعايير",
     "proactivecampaigns": "الحملات الاستباقية",
     "inbox": "صندوق الوارد",
     "allInbox": "جميع الرسائل",
@@ -91,6 +92,7 @@
       "parkingsfines": "مخالفات مواقف السيارات  ",
       "team-evaluation": "تقييم الفريق",
       "criteria": "المعايير والأوزان",
+      "criteriaGroup": "مجموعة المعايير",
       "proactive-campaigns": "الحملات الاستباقية",
       "hrms": "سجلات الحضور والانصراف",
       "shiftplanning": "إنشاء خطة المناوبات",
@@ -154,7 +156,10 @@
     "exportSuccess": "تم تصدير البيانات بنجاح!",
     "boundaryDrawn": "تم رسم الحدود بنجاح!",
     "polygonSavedToForm": "تم حفظ المضلع في النموذج",
-    "editAssignedInspectors": "المفتشون المعينون جاهزون للتعديل"
+    "editAssignedInspectors": "المفتشون المعينون جاهزون للتعديل",
+    "criteriaGroupHelper": "أنشئ مجموعة معايير بإدخال اسم المجموعة واختيار معيار واحد أو أكثر من المعايير الحالية.",
+    "noCriteriaAvailable": "لا توجد معايير نشطة متاحة للتجميع.",
+    "selectGroupFirst": "يرجى اختيار مجموعة المعايير أولاً."
   },
   "form": {
     "Number": "الرقم",
@@ -379,6 +384,9 @@
     "evaluationCriteria": "معايير التقييم",
     "rating": "التقييم",
     "weight": "الوزن",
+    "groupNameEn": "اسم المجموعة (إنجليزي)",
+    "groupNameAr": "اسم المجموعة (عربي)",
+    "criteriaSelection": "المعايير",
     "descriptionEn": "الوصف (إنجليزي)",
     "descriptionAr": "الوصف (عربي)",
     "ratingScale": "مقياس التقييم",
@@ -454,7 +462,10 @@
     "selectActionPlaceholder": "يرجى اختيار إجراء",
     "refernecenumber": "رقم المرجع",
     "basicInformation": "المعلومات الأساسية",
-    "scoreDetails": "تفاصيل النقاط"
+    "scoreDetails": "تفاصيل النقاط",
+    "criteriaName": "اسم المعيار",
+    "totalWeight": "الوزن الإجمالي",
+    "criteriaGroup": "مجموعة المعايير"
   },
   "common": {
     "action": "الإجراءات",
@@ -573,6 +584,7 @@
     "evaluations": "التقييمات",
     "proactiveCampaign": "حملة استباقية",
     "criteria": "المعايير والأوزان",
+    "criteriaGroup": "مجموعة المعايير",
     "hrms": "سجل الحضور والانصراف"
   },
   "status": {
@@ -659,6 +671,9 @@
     "selectInspector": "اختر المفتش",
     "descriptionEn": "أدخل الوصف باللغة الإنجليزية",
     "descriptionAr": "أدخل الوصف باللغة العربية",
+    "groupNameEn": "أدخل اسم المجموعة باللغة الإنجليزية",
+    "groupNameAr": "أدخل اسم المجموعة باللغة العربية",
+    "selectCriteria": "اختر المعايير الحالية",
     "selectObjective": "اختر نوع الهدف",
     "selectRatingScale": "اختر مقياس التقييم",
     "titleEn": "أدخل عنوان الحملة بالإنجليزية",
@@ -683,7 +698,8 @@
     "endYear": "اختر السنة الانتهاء",
     "startMonth": "اختر الشهر البدء",
     "endMonth": "اختر الشهر الانتهاء",
-    "Notes": "أدخل الملاحظات"
+    "Notes": "أدخل الملاحظات",
+    "selectCriteriaGroup": "اختر مجموعة المعايير"
   },
 
   "dashboard": {
@@ -759,7 +775,10 @@
     "TotalLicenses": "إجمالي الرخص",
     "ActiveLicenses": "الرخص النشطة",
     "ExpiredLicenses": "الرخص منتهية الصلاحية",
-    "InactiveLicenses": "الرخص غير النشطة"
+    "InactiveLicenses": "الرخص غير النشطة",
+    "TotalGroups": "إجمالي المجموعات",
+    "ActiveGroups": "المجموعات النشطة",
+    "InactiveGroups": "المجموعات غير النشطة"
   },
   "validation": {
     "required": "يرجى إدخال {{field}}",
