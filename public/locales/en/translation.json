@@ -247,6 +247,7 @@
     "vehicleOwnerEmail": "Vehicle Owner Email",
     "vehicleOwnerMobile": "Vehicle Owner Mobile",
     "notPaid": "Not Paid",
+    "paid": "Paid",
     "pledgestartDate": "Pledge Start Date",
     "pledgeEndDate": "Pledge End Date",
     "disputestatus": "Dispute Status",

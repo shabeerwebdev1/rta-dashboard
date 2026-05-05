@@ -777,10 +777,10 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                               <Col>
                                 <Text strong>{t("form.amount", { defaultValue: "Amount" })}:</Text>
                               </Col>
-                              <Col style={{ textAlign: "right" }}>
+                              <Col style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                                <Text strong>{t("form.amount")} :</Text>
                                 <Text type="danger" strong>
-                                  {" "}
-                                  {value?.totalFineAmount} AED{" "}
+                                  AED {value?.totalFineAmount}
                                 </Text>
                               </Col>
                             </Row>

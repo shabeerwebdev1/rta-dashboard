@@ -483,7 +483,7 @@ const WhitelistPlatesPage: React.FC = () => {
           return {
             ...column,
             render: (value: any) =>
-              value ? <CheckCircleTwoTone twoToneColor="#52c41a" /> : <CloseCircleTwoTone twoToneColor="#ff4d4f" />,
+              value ? <CheckCircleTwoTone twoToneColor="#52c41a" /> : <CloseCircleTwoTone twoToneColor="#eb2630" />,
           };
         }
         return column;

@@ -95,7 +95,7 @@ export const pledgeConfig: PageConfig = {
       { key: "pledgeType", title: "form.pledgeType", type: "string", filterable: true },
       { key: "pledgeDate", title: "form.pledgestartDate", type: "date", sortable: true , render: formatDate},
       { key: "pledgeEndDate", title: "form.pledgeEndDate", type: "date", sortable: true , render: formatDate},
-      { key: "pledgeStatus", title: "form.status", type: "string", sortable: true, filterable: true },
+      { key: "pledgeStatus", title: "form.status", type: "string", sortable: true, filterable: true , align: "center"},
     ],
   },
 

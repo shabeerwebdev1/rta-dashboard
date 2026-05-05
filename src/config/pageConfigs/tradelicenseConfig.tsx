@@ -88,8 +88,14 @@ export const tradeLicenseConfig: PageConfig = {
       { key: "inspectionCategory", title: "form.fineType", type: "string", filterable: true },
       // { key: "fineAmount", title: "form.fineAmount", type: "number" },
 
-      { key: "entityDateTime", title: "form.inspectionDate", type: "string" , render: (value) => formatDateTime(value), sortable: true },
-      { key: "inspectionStatus", title: "form.inspectionStatus", type: "string", filterable: true },
+      {
+        key: "entityDateTime",
+        title: "form.inspectionDate",
+        type: "string",
+        render: (value) => formatDateTime(value),
+        sortable: true,
+      },
+      { key: "inspectionStatus", title: "form.inspectionStatus", type: "string", filterable: true, align: "center" },
     ],
     viewRecord: true,
   },

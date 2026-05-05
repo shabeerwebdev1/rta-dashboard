@@ -3,7 +3,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tag, Typography } from "antd";
-import { EyeOutlined, DownloadOutlined, EnvironmentOutlined, PaperClipOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  DownloadOutlined,
+  EnvironmentOutlined,
+  PaperClipOutlined,
+  CheckCircleTwoTone,
+  CloseCircleTwoTone,
+} from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -309,7 +316,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
     </Select>
   );
 
-const fineStatusColorMap: Record<number, string> = {
+  const fineStatusColorMap: Record<number, string> = {
     15001: "green",
     15002: "blue",
     15003: "orange",
@@ -363,11 +370,14 @@ const fineStatusColorMap: Record<number, string> = {
             render: (value: any) => {
               if (value == null || value === "") return t("common.noData");
 
-              return <Typography.Text type="danger"> AED {value} </Typography.Text>;
+              return (
+                <Typography.Text type="danger" strong>
+                  AED {value}
+                </Typography.Text>
+              );
             },
           };
         }
-
         if (column.key === "inspectionStatus") {
           return {
             ...column,
@@ -379,6 +389,17 @@ const fineStatusColorMap: Record<number, string> = {
 
               return <Tag color={color}>{label}</Tag>;
             },
+          };
+        }
+        if (column.key === "paymentType") {
+          return {
+            ...column,
+            render: (value: any) =>
+              String(value) === "1" ? (
+                <CheckCircleTwoTone twoToneColor="#52c41a" />
+              ) : (
+                <CloseCircleTwoTone twoToneColor="#eb2630" />
+              ),
           };
         }
 

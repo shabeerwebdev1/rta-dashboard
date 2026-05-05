@@ -3,7 +3,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Row, Col, Select, App, DatePicker, Tag, Typography } from "antd";
-import { EyeOutlined, DownloadOutlined, EnvironmentOutlined, PaperClipOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  DownloadOutlined,
+  EnvironmentOutlined,
+  PaperClipOutlined,
+  CheckCircleTwoTone,
+  CloseCircleTwoTone,
+} from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -105,7 +112,6 @@ const VehicleInspectionsPage: React.FC = () => {
     15005: "red",
     15006: "green",
   };
-
 
   useEffect(() => {
     fetchLookupData();
@@ -366,7 +372,11 @@ const VehicleInspectionsPage: React.FC = () => {
             render: (value: any) => {
               if (value == null || value === "") return t("common.noData");
 
-              return <Typography.Text type="danger"> AED {value} </Typography.Text>;
+              return (
+                <Typography.Text type="danger" strong>
+                  AED {value}
+                </Typography.Text>
+              );
             },
           };
         }
@@ -382,6 +392,18 @@ const VehicleInspectionsPage: React.FC = () => {
 
               return <Tag color={color}>{label}</Tag>;
             },
+          };
+        }
+
+        if (column.key === "paymentType") {
+          return {
+            ...column,
+            render: (value: any) =>
+              String(value) === "1" ? (
+                <CheckCircleTwoTone twoToneColor="#52c41a" />
+              ) : (
+                <CloseCircleTwoTone twoToneColor="#eb2630" />
+              ),
           };
         }
 

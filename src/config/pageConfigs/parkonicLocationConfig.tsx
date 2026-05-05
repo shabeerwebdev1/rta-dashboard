@@ -79,6 +79,7 @@ export const parkonicLocationPageConfig: PageConfig = {
         key: "status",
         title: "form.status",
         type: "custom",
+        align: "center",
         sortable: true,
         filterable: true,
         render: (status: string) => {

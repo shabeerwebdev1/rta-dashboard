@@ -84,6 +84,7 @@ export const whitelistTradeLicenseConfig: PageConfig = {
         type: "tag",
         filterable: true,
         lookupCategory: 500,
+        align: "center",
       },
     ],
     viewRecord: true,

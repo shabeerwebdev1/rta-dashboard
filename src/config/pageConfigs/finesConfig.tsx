@@ -5,7 +5,6 @@ import UAEPlate from "../../components/UAEPlate";
 import "dayjs/locale/ar";
 import dayjs from "dayjs";
 
-
 const formatDateTime = (value: number) => {
   if (!value) return "";
 
@@ -192,8 +191,14 @@ export const finesConfig: PageConfig = {
       { key: "inspectionCategory", title: "form.fineType", type: "string", filterable: true },
       // { key: "fineAmount", title: "form.fineAmount", type: "number" },
 
-      { key: "entityDateTime", title: "form.inspectionDate", type: "string" , render: (value) => formatDateTime(value), sortable: true},
-      { key: "inspectionStatus", title: "form.inspectionStatus", type: "string", filterable: true },
+      {
+        key: "entityDateTime",
+        title: "form.inspectionDate",
+        type: "string",
+        render: (value) => formatDateTime(value),
+        sortable: true,
+      },
+      { key: "inspectionStatus", title: "form.inspectionStatus", type: "string", filterable: true, align: "center" },
     ],
     viewRecord: true,
   },

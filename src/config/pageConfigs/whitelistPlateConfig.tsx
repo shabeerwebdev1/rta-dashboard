@@ -284,6 +284,7 @@ export const whitelistPlateConfig: PageConfig = {
         type: "tag",
         filterable: true,
         lookupCategory: 500,
+        align: "center",
       },
       {
         key: "exemptionReason_ID",

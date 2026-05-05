@@ -58,6 +58,7 @@ export const teamEvaluationConfig: PageConfig = {
         dataIndex: "evaluationType",
         type: "tag",
         filterable: true,
+        align: "center",
       },
       {
         key: "totalScore",
@@ -65,6 +66,7 @@ export const teamEvaluationConfig: PageConfig = {
         dataIndex: "totalScore",
         type: "number",
         sortable: true,
+        align: "center",
       },
       {
         key: "grade",
@@ -72,6 +74,7 @@ export const teamEvaluationConfig: PageConfig = {
         dataIndex: "grade",
         type: "badge",
         filterable: true,
+        align: "center",
       },
     ],
     viewRecord: true,

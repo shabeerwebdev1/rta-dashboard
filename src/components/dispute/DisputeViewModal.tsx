@@ -718,12 +718,12 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                             {dispute.department ? getLabelFromValue(dispute.department, 1000) : t("common.noData")}
                           </Col>
 
-                          <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                          {/* <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
                             <Text strong>{t("form.paymentType")}:</Text>
                           </Col>
                           <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
                             {dispute.payment_Type ? getLabelFromValue(dispute.payment_Type, 1100) : t("common.noData")}
-                          </Col>
+                          </Col> */}
 
                           <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
                             <Text strong>{t("form.disputeCategory")}:</Text>
@@ -991,9 +991,16 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
                           )}
                         </Col>
 
+                        <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
+                          <Text strong>{t("form.paymentType")}:</Text>
+                        </Col>
+                        <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
+                          {dispute.payment_Type ? getLabelFromValue(dispute.payment_Type, 1100) : t("common.noData")}
+                        </Col>
+
                         {/* Fine Status */}
                         <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
-                          <Text strong>{t("form.status")}:</Text>
+                          <Text strong>{t("form.finestatus")}:</Text>
                         </Col>
                         <Col span={14} style={{ textAlign: isRTL ? "right" : "left" }}>
                           {dispute.fineDetails.fineStatus ? (

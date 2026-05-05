@@ -19,6 +19,7 @@ import {
   Divider,
   Collapse,
   Spin,
+  theme,
 } from "antd";
 import { PlusOutlined, EyeOutlined, EditOutlined, DownloadOutlined, TeamOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
@@ -80,6 +81,8 @@ const TeamEvaluationPage: React.FC = () => {
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const [form] = Form.useForm();
+  const { token } = theme.useToken();
+
   const evaluationType = Form.useWatch("evaluationType", form);
 
   // Table params (pagination, sort, search) — mirrors WhitelistPlatesPage
@@ -355,7 +358,7 @@ const TeamEvaluationPage: React.FC = () => {
               header={i18n.language === "ar" ? criterion.descriptionAr : criterion.descriptionEn}
               key={String(criterion.id)}
               extra={
-                <Tag>
+                <Tag color={token.colorPrimary}>
                   {t("form.weight")}: {criterion.weight}%
                 </Tag>
               }
@@ -561,7 +564,14 @@ const TeamEvaluationPage: React.FC = () => {
         ]}
       >
         <Spin spinning={isLoadingCriteria || isLoadingShifts}>
-          <Form form={form} layout="vertical" onFinish={onFinish}>
+          <Form
+            form={form}
+            layout="vertical"
+            onFinish={onFinish}
+            initialValues={{
+              evaluationDate: dayjs(), // 👈 today
+            }}
+          >
             <Row gutter={24}>
               {/* Inspector (multi-select, GUIDs) */}
               <Col span={12}>
@@ -613,7 +623,12 @@ const TeamEvaluationPage: React.FC = () => {
                   name="evaluationDate"
                   label={t("form.evaluationDate")}
                   rules={[
-                    { required: true, message: t("validation.selectRequired", { field: t("form.evaluationDate") }) },
+                    {
+                      required: true,
+                      message: t("validation.selectRequired", {
+                        field: t("form.evaluationDate"),
+                      }),
+                    },
                   ]}
                 >
                   <DatePicker

@@ -40,8 +40,7 @@ export const criteriaConfig: PageConfig = {
     {
       title: "stats.ActiveCriteria",
       icon: <FileTextOutlined />,
-      value: (data: any[], metadata: any) =>
-        `${data?.filter((c) => c.active).length || 0} / ${metadata?.active || 0}`,
+      value: (data: any[], metadata: any) => `${data?.filter((c) => c.active).length || 0} / ${metadata?.active || 0}`,
       color: "#52c41a",
     },
     {
@@ -80,6 +79,7 @@ export const criteriaConfig: PageConfig = {
         dataIndex: "weight",
         type: "number",
         sortable: true,
+        align: "center",
       },
       {
         key: "active",
@@ -87,6 +87,7 @@ export const criteriaConfig: PageConfig = {
         dataIndex: "active",
         type: "boolean",
         filterable: true,
+        align: "center",
       },
     ],
     viewRecord: true,
@@ -129,6 +130,7 @@ export const criteriaConfig: PageConfig = {
         label: "form.isActive",
         type: "switch",
         required: false,
+        align: "center",
         span: 12,
       },
     ],

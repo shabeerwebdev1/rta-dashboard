@@ -41,7 +41,7 @@ interface InspectionManagementRow {
 
 const specialZoneOptions = [
   { label: "G1", value: 1 },
-  { label: "GX", value: 2 },
+  { label: "G45", value: 2 },
   { label: "G90", value: 3 },
 ];
 

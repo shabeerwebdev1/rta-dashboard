@@ -151,6 +151,7 @@ export const towingConfig: PageConfig = {
         dataIndex: "towing_Status",
         sortable: false,
         filterable: true,
+        align: "center",
         render: (status: string) => {
           const statusEnum = mapTowingStatus(status);
 

@@ -137,6 +137,7 @@ export const useLeaveManagementPageConfig = (): PageConfig => {
           type: "custom",
           sortable: false,
           filterable: true,
+          align: "center",
           render: (status: LeaveStatus) => {
             const { text, color } =
               statusMap[status] || {

@@ -193,10 +193,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
       fineAmountFormatted: (fine.fineAmount ?? fine.fineAmount === 0) ? ` AED ${fine.fineAmount} ` : "No Data",
       totalAmountFormatted:
         (fine.totalFineAmount ?? fine.totalFineAmount === 0) ? ` AED ${fine.totalFineAmount} ` : "No Data",
-      paymentTypeLabel:
-        fine.paymentType !== undefined && fine.paymentType !== null
-          ? getLabelFunction(fine.paymentType, paymentTypeOptions, i18n)
-          : getPaymentTypeLabel(fine.paymentType),
+      paymentTypeLabel: getPaymentTypeLabel(fine.paymentType),
       statusLabel: getStatusLabel(fine.isPaid, effectiveInspectionStatus),
       statusColor: getStatusColor(fine.isPaid, effectiveInspectionStatus),
       blackPointsFormatted: (fine.blackPoint ?? fine.blackPoint === 0) ? fine.blackPoint : "0",
@@ -225,12 +222,11 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
 
   const getPaymentTypeLabel = (paymentType: string) => {
     const map: Record<string, string> = {
-      "0": t("form.notPaid"),
-      "1": t("paymentTypes.cash"),
-      "2": t("paymentTypes.creditCard"),
-      "3": t("paymentTypes.online"),
+      "0": t("form.notPaid"), // already exists
+      "1": t("status.paid"), // reuse existing translation
     };
-    return map[paymentType] || paymentType || "No Data";
+
+    return map[paymentType] || t("common.noData");
   };
 
   const getStatusLabel = (isPaid: boolean, inspectionStatus: number) => {
@@ -453,10 +449,10 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                         )}
 
                         {/* Fine Details */}
-                        <Col span={10}>
+                        {/* <Col span={10}>
                           <Text strong>{t("form.fineType")}:</Text>
                         </Col>
-                        <Col span={14}>{mappedFine.inspectionCategoryLabel}</Col>
+                        <Col span={14}>{mappedFine.inspectionCategoryLabel}</Col> */}
 
                         <Col span={10}>
                           <Text strong>{t("form.fineNumber")}:</Text>
@@ -476,7 +472,11 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                         <Col span={10}>
                           <Text strong>{t("form.amount")}:</Text>
                         </Col>
-                        <Col span={14}>{mappedFine.fineAmountFormatted}</Col>
+                        <Col span={14}>
+                          <Text strong type="danger">
+                            {mappedFine.fineAmountFormatted}
+                          </Text>
+                        </Col>
 
                         <Col span={10}>
                           <Text strong>{t("form.paymentType")}:</Text>
@@ -484,7 +484,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                         <Col span={14}>{mappedFine.paymentTypeLabel}</Col>
 
                         <Col span={10}>
-                          <Text strong>{t("form.inspectionStatus")}:</Text>
+                          <Text strong>{t("form.finestatus")}:</Text>
                         </Col>
                         <Col span={14}>
                           <Tag color={mappedFine.statusColor}>{mappedFine.inspectionStatusLabel}</Tag>
@@ -701,12 +701,9 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                                 {i18n.language === "ar" ? value?.violationNameAr : value?.violationNameEn}
                               </Text>
                             </Col>
-                            <Col>
-                              <Text strong>{t("form.amount")}:</Text>
-                            </Col>
-                            <Col style={{ textAlign: "right" }}>
+                            <Col style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                              <Text strong>{t("form.amount")} :</Text>
                               <Text type="danger" strong>
-                                {" "}
                                 AED {value?.totalFineAmount}
                               </Text>
                             </Col>

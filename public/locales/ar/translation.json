@@ -247,6 +247,7 @@
     "vehicleOwnerEmail": "البريد الإلكتروني لمالك المركبة",
     "vehicleOwnerMobile": "جوال مالك المركبة",
     "notPaid": "لم يتم الدفع",
+    "paid": "تم الدفع",
     "pledgestartDate": "تاريخ بدء التعهد",
     "pledgeEndDate": "تاريخ انتهاء التعهد",
     "disputestatus": "حالة النزاع",

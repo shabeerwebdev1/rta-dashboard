@@ -240,7 +240,12 @@ export const parkonicPageConfig: PageConfig = {
             padding: "8px 4px",
           },
         }),
-        render: (value?: number) => <Typography.Text type="danger"> AED {value ?? "—"} </Typography.Text>,
+        render: (value?: number) => (
+          <Typography.Text type="danger" strong>
+            {" "}
+            AED {value ?? "—"}{" "}
+          </Typography.Text>
+        ),
       },
 
       {
