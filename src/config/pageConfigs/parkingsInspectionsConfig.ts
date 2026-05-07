@@ -73,7 +73,7 @@ export const parkingsInspectionsConfig: PageConfig = {
 
       { key: "entityDateTime", title: "form.finedDate", type: "string", render: (value) => formatDateTime(value) },
       { key: "inspectionStatus", title: "form.finestatus", type: "string", filterable: true, align: "center" },
-      { key: "paymentType", title: "form.paymentType", type: "string", align: "center" },
+      { key: "paymentType", title: "form.paymentStatus", type: "string", align: "center" },
     ],
     viewRecord: true,
   },

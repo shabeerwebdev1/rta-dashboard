@@ -155,14 +155,18 @@ const TeamEvaluationViewDrawer: React.FC<TeamEvaluationViewDrawerProps> = ({
             {getPersonName(record.inspectorId, inspectors, record.inspectorName, record.inspectorNameAr)}
           </Descriptions.Item>
 
-          <Descriptions.Item label={t("form.supervisor")}>
-            {getPersonName(record.supervisorId, supervisors, record.supervisorName, record.supervisorNameAr)}
-          </Descriptions.Item>
-
           <Descriptions.Item label={t("form.evaluationDate")}>{formatDate(record.evaluationDate)}</Descriptions.Item>
 
           <Descriptions.Item label={t("form.evaluationType")}>
             {getEvaluationTypeLabel(record.evaluationType, i18n.language) || t("common.noData")}
+          </Descriptions.Item>
+
+          <Descriptions.Item label={t("form.criteriaGroup")}>
+            {(() => {
+              const groupName_EN = record.groupName_EN || record.groupName;
+              const groupName_AR = record.groupName_AR || record.groupName;
+              return getPersonName(null, [], groupName_EN, groupName_AR);
+            })()}
           </Descriptions.Item>
 
           <Descriptions.Item label={t("form.evaluationPeriod")}>{evaluationPeriod}</Descriptions.Item>

@@ -382,6 +382,14 @@ const CriteriaPage: React.FC = () => {
         })}
         onCancel={handleModalClose}
         width={600}
+        styles={{
+          body: {
+            maxHeight: "60vh",
+            overflowY: "auto",
+            overflowX: "hidden",
+            paddingRight: 4,
+          },
+        }}
         footer={[
           <Button key="reset" onClick={() => form.resetFields()}>
             {t("common.reset")}

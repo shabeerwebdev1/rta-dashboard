@@ -266,7 +266,7 @@ const TradeLicenseInspectionPage: React.FC = () => {
 
         exportToCsv(formattedData, filename);
         notification.success(
-          { data: { en_Msg: t("messages.csvDownloaded", { count: selectedData.length }) } },
+          { data: { en_Msg: t("messages.csvDownloaded", { count: selectedFineData.length }) } },
           t("messages.exportSuccess"),
         );
         setSelectedRowKeys([]);

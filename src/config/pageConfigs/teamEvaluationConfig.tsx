@@ -61,6 +61,27 @@ export const teamEvaluationConfig: PageConfig = {
         align: "center",
       },
       {
+        key: "groupName",
+        title: "form.criteriaGroup",
+        type: "custom" as const,
+        render: (_: any, record: any) => {
+          const getCurrentLanguage = () => {
+            const storedLang = localStorage.getItem("i18nextLng");
+            if (storedLang) return storedLang;
+            if (document.documentElement.dir === "rtl") return "ar";
+            if (document.body.classList.contains("rtl")) return "ar";
+            return "en";
+          };
+
+          const language = getCurrentLanguage();
+          const isArabic = language.startsWith("ar");
+
+          return isArabic
+            ? record?.groupName_AR || record?.groupName_EN || "No Data"
+            : record?.groupName_EN || record?.groupName_AR || "No Data";
+        },
+      },
+      {
         key: "totalScore",
         title: "form.totalScore",
         dataIndex: "totalScore",

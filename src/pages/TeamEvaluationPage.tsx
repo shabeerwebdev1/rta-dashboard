@@ -440,7 +440,17 @@ const TeamEvaluationPage: React.FC = () => {
                   key={String(criterion.id)}
                   extra={
                     <Tag color={token.colorPrimary}>
-                      {t("form.weight")}: {criterion.weight}%
+                      {t("form.weight")}:{" "}
+                      <span
+                        style={{
+                          display: "inline-block",
+                          width: 28,
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        }}
+                      >
+                        {criterion.weight}%
+                      </span>
                     </Tag>
                   }
                 >
@@ -640,7 +650,14 @@ const TeamEvaluationPage: React.FC = () => {
           entity: t(teamEvaluationConfig.name.singular),
         })}
         onCancel={closeModal}
-        style={{ top: 20 }}
+        styles={{
+          body: {
+            maxHeight: "60vh",
+            overflowY: "auto",
+            overflowX: "hidden",
+            paddingRight: 4,
+          },
+        }}
         width={teamEvaluationConfig.formConfig?.modalWidth || "800px"}
         footer={[
           <Button key="back" onClick={closeModal}>

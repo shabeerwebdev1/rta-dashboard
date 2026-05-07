@@ -615,6 +615,14 @@ const WhitelistTradeLicensesPage: React.FC = () => {
         title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
         onCancel={handleModalClose}
         width="720px"
+        styles={{
+          body: {
+            maxHeight: "60vh",
+            overflowY: "auto",
+            overflowX: "hidden",
+            paddingRight: 4,
+          },
+        }}
         footer={[
           <Button key="reset" onClick={() => form.resetFields()}>
             {t("common.reset")}
@@ -631,10 +639,7 @@ const WhitelistTradeLicensesPage: React.FC = () => {
           <Form form={form} layout="vertical" onFinish={handleFormSubmit}>
             <Row gutter={24}>
               <Col span={12}>
-                <Form.Item
-                  name="tradeLicenseNumber"
-                  label={t("form.tradeLicenseNumber")}
-                >
+                <Form.Item name="tradeLicenseNumber" label={t("form.tradeLicenseNumber")}>
                   <Input.Group compact>
                     <Form.Item
                       name="tradeLicenseNumber"

@@ -25,6 +25,11 @@ export interface InspectorAttendanceDTO {
   finesIssued?: number;
   towingRequests?: number;
   leaveRequested?: number;
+  inspectionSummary?: {
+    fine: number;
+    warning: number;
+    routine: number;
+  };
   // ✅ NEW: Inspector path and fine locations
   inspectorPath?: Array<{ lat: number; lng: number; timestamp: string }>;
   fineLocations?: Array<{
@@ -62,6 +67,11 @@ export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
     finesIssued: 5,
     towingRequests: 2,
     leaveRequested: 0,
+    inspectionSummary: {
+      fine: 3,
+      warning: 1,
+      routine: 1,
+    },
     // Path follows Sheikh Mohammed bin Rashid Boulevard loop around Burj/Dubai Mall
     inspectorPath: [
       // 29 Boulevard (southwest part of the loop)
@@ -132,6 +142,11 @@ export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
     finesIssued: 4,
     towingRequests: 1,
     leaveRequested: 0,
+    inspectionSummary: {
+      fine: 3,
+      warning: 1,
+      routine: 0,
+    },
     // Path runs along Sheikh Zayed Road (SZR) hotel strip
     inspectorPath: [
       // Safa Park / SZR stretch (south-west)
@@ -200,6 +215,11 @@ export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
     finesIssued: 0,
     towingRequests: 0,
     leaveRequested: 1,
+    inspectionSummary: {
+      fine: 0,
+      warning: 0,
+      routine: 0,
+    },
     inspectorPath: [],
     fineLocations: [],
   },
@@ -226,6 +246,11 @@ export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
     finesIssued: 6,
     towingRequests: 1,
     leaveRequested: 0,
+    inspectionSummary: {
+      fine: 3,
+      warning: 1,
+      routine: 2,
+    },
     // Path along Jumeirah Street / beach road
     inspectorPath: [
       // Jumeirah Beach section
@@ -291,6 +316,11 @@ export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
     finesIssued: 3,
     towingRequests: 0,
     leaveRequested: 0,
+    inspectionSummary: {
+      fine: 3,
+      warning: 0,
+      routine: 0,
+    },
     // Path along Deira main roads: City Centre Deira -> Deira core -> Al Rigga -> Corniche
     inspectorPath: [
       // City Centre Deira access roads

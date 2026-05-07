@@ -425,6 +425,10 @@
     "finesIssued": "Fines Issued",
     "towingRequests": "Towing Requests",
     "leaveRequested": "Leave Requested",
+    "totalInspections": "Total Inspections",
+    "fineCount": "Fine",
+    "warningCount": "Warning",
+    "routineCount": "Routine",
     "upcomingShifts": "Upcoming Shift Details",
     "MapLegend": "Map Legend",
     "StartPoint": "Start Point",
@@ -465,7 +469,13 @@
     "scoreDetails": "Score Details",
     "criteriaName": "Criteria Name",
     "totalWeight": "Total Weight",
-    "criteriaGroup": "Criteria Group"
+    "criteriaGroup": "Criteria Group",
+    "paymentStatus": "Payment Status",
+    "personaldetails": "Personal Details",
+    "totaliinspections": "Total Inspections",
+    "routineinspections": "Routine Inspections",
+    "warninginspections": "Warning Inspections",
+    "EndPoint": "End Point"
   },
   "common": {
     "action": "Actions",

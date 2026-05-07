@@ -832,6 +832,14 @@ const InspectionObstaclesPage: React.FC = () => {
         title={t("page.addTitle", { entity: t(config.name.singular) })}
         onCancel={handleModalClose}
         width="750px"
+        styles={{
+          body: {
+            maxHeight: "60vh",
+            overflowY: "auto",
+            overflowX: "hidden",
+            paddingRight: 4,
+          },
+        }}
         footer={[
           <Button key="reset" onClick={() => form.resetFields()}>
             {t("common.reset")}

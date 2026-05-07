@@ -768,6 +768,14 @@ const PledgesPage: React.FC = () => {
         title={t(modalMode === "add" ? "page.addTitle" : "page.editTitle", { entity: t(config.name.singular) })}
         onCancel={handleModalClose}
         width="720px"
+        styles={{
+          body: {
+            maxHeight: "60vh",
+            overflowY: "auto",
+            overflowX: "hidden",
+            paddingRight: 4,
+          },
+        }}
         footer={[
           <Button key="reset" onClick={() => form.resetFields()}>
             {t("common.reset")}

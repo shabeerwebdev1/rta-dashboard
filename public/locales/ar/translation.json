@@ -425,6 +425,10 @@
     "finesIssued": "الغرامات المصدرة",
     "towingRequests": "طلبات السحب",
     "leaveRequested": "الإجازات المطلوبة",
+    "totalInspections": "إجمالي التفتيشات",
+    "fineCount": "مخالفة",
+    "warningCount": "إنذار",
+    "routineCount": "روتيني",
     "upcomingShifts": "تفاصيل الورديات القادمة",
     "MapLegend": "أسطورة الخريطة",
     "StartPoint": "نقطة البداية",
@@ -465,7 +469,13 @@
     "scoreDetails": "تفاصيل النقاط",
     "criteriaName": "اسم المعيار",
     "totalWeight": "الوزن الإجمالي",
-    "criteriaGroup": "مجموعة المعايير"
+    "criteriaGroup": "مجموعة المعايير",
+    "paymentStatus": "حالة الدفع",
+    "personaldetails": "التفاصيل الشخصية",
+    "totaliinspections": "إجمالي التفتيشات",
+    "routineinspections": "التفتيشات الروتينية",
+    "warninginspections": "التفتيشات المنبهة",
+    "EndPoint": "نقطة النهاية"
   },
   "common": {
     "action": "الإجراءات",
