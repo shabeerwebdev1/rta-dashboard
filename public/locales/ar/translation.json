@@ -475,7 +475,10 @@
     "totaliinspections": "إجمالي التفتيشات",
     "routineinspections": "التفتيشات الروتينية",
     "warninginspections": "التفتيشات المنبهة",
-    "EndPoint": "نقطة النهاية"
+    "EndPoint": "نقطة النهاية",
+    "WarningLocations": "مواقع الإنذارات",
+    "RoutineLocations": "مواقع التفتيشات الروتينية",
+    "TowingLocations": "مواقع طلبات السحب"
   },
   "common": {
     "action": "الإجراءات",

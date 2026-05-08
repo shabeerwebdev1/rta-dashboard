@@ -475,7 +475,10 @@
     "totaliinspections": "Total Inspections",
     "routineinspections": "Routine Inspections",
     "warninginspections": "Warning Inspections",
-    "EndPoint": "End Point"
+    "EndPoint": "End Point",
+    "WarningLocations": "Warning Locations",
+    "RoutineLocations": "Routine Locations",
+    "TowingLocations": "Towing Locations"
   },
   "common": {
     "action": "Actions",

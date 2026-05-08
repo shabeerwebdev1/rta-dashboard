@@ -389,6 +389,39 @@ export const dynamicApi = createApi({
       },
     }),
 
+    // Inspection Details
+    getInspections: builder.query({
+      query: (params) => ({
+        url: "/api/Inspection",
+        params,
+      }),
+
+      transformResponse: (response: any) => {
+        if (!response) {
+          return {
+            data: [],
+            total: 0,
+          };
+        }
+
+        const normalizedData = (response.data || []).map((item: any) => ({
+          ...item,
+
+          inspectionCategory: item.inspectionCategory ? parseInt(item.inspectionCategory, 10) : null,
+        }));
+
+        return {
+          data: normalizedData,
+          total: response.totalCount || 0,
+          totalCount: response.totalCount || 0,
+          pageNumber: response.pageNumber,
+          pageSize: response.pageSize,
+        };
+      },
+
+      providesTags: ["FineSearch"],
+    }),
+
     getCarInspectionById: builder.query<any, string>({
       query: (inspectionGUID) => ({
         url: `/api/Inspection/CarInspections/${inspectionGUID}`,
@@ -1064,6 +1097,7 @@ export const {
   useGetTLInspectionByIdQuery,
   useLazyGetCarInspectionByIdQuery,
   useLazyGetTLInspectionByIdQuery,
+  useGetInspectionsQuery,
 
   // Parkonics
   useGetParkonicsQuery,

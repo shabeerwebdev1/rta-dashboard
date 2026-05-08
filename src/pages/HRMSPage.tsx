@@ -10,6 +10,7 @@ import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
+import { useGetInspectionObstaclesQuery } from "../services/rtkApiFactory";
 
 // ========== RTK Query Imports (COMMENTED OUT) ==========
 // import {
@@ -82,9 +83,13 @@ const HRMSPage: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
-
+  const [obstacleParams, setObstacleParams] = useState<any>(null);
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
+
+  const { data: obstacleResponse } = useGetInspectionObstaclesQuery(obstacleParams, {
+    skip: !obstacleParams,
+  });
 
   // ========== MOCK DATA INSTEAD ==========
   const data = MOCK_INSPECTORS_DATA;
@@ -208,20 +213,41 @@ const HRMSPage: React.FC = () => {
     [t],
   );
 
-  // ✅ FIX: Find the complete record from MOCK_INSPECTORS_DATA
-  const handleView = (record: any) => {
-    // Find the full record with path and fine data
-    const fullRecord = MOCK_INSPECTORS_DATA.find((item) => item.id === record.id);
-    if (fullRecord) {
-      console.log("Opening drawer with full record:", fullRecord);
-      setViewRecord(fullRecord);
-      setIsDrawerOpen(true);
-    } else {
-      console.warn("Record not found in mock data");
-      setViewRecord(record);
-      setIsDrawerOpen(true);
-    }
-  };
+  const handleView = async (record: any) => {
+  const selectedDate = "2026-03-10";
+
+  setViewRecord(record);
+
+  setObstacleParams({
+    PageNumber: 1,
+    PageSize: 100,
+
+    "betweens[createdDateTime][From]": selectedDate,
+    "betweens[createdDateTime][To]": selectedDate,
+  });
+
+  setIsDrawerOpen(true);
+};
+
+  useEffect(() => {
+    if (!obstacleResponse || !viewRecord) return;
+
+    console.log("Obstacle Response", obstacleResponse);
+
+    const obstacleLocations =
+      obstacleResponse?.data?.map((item: any) => ({
+        id: item.inspectionGUID,
+        lat: Number(item.latitude),
+        lng: Number(item.longitude),
+        createdDateTime: item.createdDateTime,
+      })) || [];
+
+    setViewRecord((prev: any) => ({
+      ...prev,
+      obstacleLocations,
+      obstacles: obstacleResponse?.totalCount || 0,
+    }));
+  }, [obstacleResponse]);
 
   const handleShare = () => {
     const shareUrl = window.location.href;

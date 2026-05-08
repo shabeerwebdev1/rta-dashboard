@@ -40,6 +40,27 @@ export interface InspectorAttendanceDTO {
     timestamp: string;
     plateNumber: string;
   }>;
+
+  warningLocations?: Array<{
+    id: string;
+    lat: number;
+    lng: number;
+    timestamp: string;
+  }>;
+
+  routineLocations?: Array<{
+    id: string;
+    lat: number;
+    lng: number;
+    timestamp: string;
+  }>;
+
+  towingLocations?: Array<{
+    id: string;
+    lat: number;
+    lng: number;
+    timestamp: string;
+  }>;
 }
 
 // Mock Data with enhanced details including paths and fine locations
@@ -89,34 +110,70 @@ export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
       // Back near 1 Sheikh Mohammed bin Rashid Blvd
       { lat: 25.1970306, lng: 55.2742217, timestamp: "05:00 PM" },
     ],
+    // Ahmed Hassan (101) — all markers snapped to his actual path
+
     fineLocations: [
-      {
-        id: "FINE-001",
-        // Between Boulevard Central and Address Residences
-        lat: 25.1945,
-        lng: 55.27295,
-        fineAmount: 500,
-        timestamp: "09:45 AM",
-        plateNumber: "ABC-1234",
-      },
-      {
-        id: "FINE-002",
-        // Near Burj Khalifa road frontage
-        lat: 25.1969,
-        lng: 55.2744,
-        fineAmount: 300,
-        timestamp: "11:30 AM",
-        plateNumber: "XYZ-5678",
-      },
-      {
-        id: "FINE-003",
-        // On the Dubai Mall approach road
-        lat: 25.1991,
-        lng: 55.2793,
-        fineAmount: 400,
-        timestamp: "02:45 PM",
-        plateNumber: "DEF-9012",
-      },
+      { id: "FINE-1", lat: 25.19221, lng: 55.27259, fineAmount: 500, timestamp: "08:15 AM", plateNumber: "DXB-1000" },
+      { id: "FINE-2", lat: 25.19195, lng: 55.2731, fineAmount: 500, timestamp: "08:40 AM", plateNumber: "DXB-1001" },
+      { id: "FINE-3", lat: 25.1918, lng: 55.2737, fineAmount: 500, timestamp: "09:00 AM", plateNumber: "DXB-1002" },
+      { id: "FINE-4", lat: 25.192, lng: 55.2734, fineAmount: 500, timestamp: "09:20 AM", plateNumber: "DXB-1003" },
+      { id: "FINE-5", lat: 25.194, lng: 55.2723, fineAmount: 500, timestamp: "09:50 AM", plateNumber: "DXB-1004" },
+      { id: "FINE-6", lat: 25.196, lng: 55.2722, fineAmount: 500, timestamp: "10:10 AM", plateNumber: "DXB-1005" },
+      { id: "FINE-7", lat: 25.1972, lng: 55.2722, fineAmount: 500, timestamp: "10:30 AM", plateNumber: "DXB-1006" },
+      { id: "FINE-8", lat: 25.19714, lng: 55.2738, fineAmount: 500, timestamp: "10:50 AM", plateNumber: "DXB-1007" },
+      { id: "FINE-9", lat: 25.1973, lng: 55.2743, fineAmount: 500, timestamp: "11:10 AM", plateNumber: "DXB-1008" },
+      { id: "FINE-10", lat: 25.198, lng: 55.275, fineAmount: 500, timestamp: "11:30 AM", plateNumber: "DXB-1009" },
+      { id: "FINE-11", lat: 25.199, lng: 55.276, fineAmount: 500, timestamp: "11:50 AM", plateNumber: "DXB-1010" },
+      { id: "FINE-12", lat: 25.2002, lng: 55.277, fineAmount: 500, timestamp: "12:10 PM", plateNumber: "DXB-1011" },
+      { id: "FINE-13", lat: 25.2012, lng: 55.2779, fineAmount: 500, timestamp: "12:30 PM", plateNumber: "DXB-1012" },
+      { id: "FINE-14", lat: 25.2005, lng: 55.2785, fineAmount: 500, timestamp: "01:00 PM", plateNumber: "DXB-1013" },
+      { id: "FINE-15", lat: 25.1995, lng: 55.2792, fineAmount: 500, timestamp: "01:30 PM", plateNumber: "DXB-1014" },
+      { id: "FINE-16", lat: 25.1987, lng: 55.2798, fineAmount: 500, timestamp: "02:00 PM", plateNumber: "DXB-1015" },
+      { id: "FINE-17", lat: 25.1982, lng: 55.2795, fineAmount: 500, timestamp: "02:30 PM", plateNumber: "DXB-1016" },
+      { id: "FINE-18", lat: 25.1976, lng: 55.2788, fineAmount: 500, timestamp: "03:00 PM", plateNumber: "DXB-1017" },
+      { id: "FINE-19", lat: 25.1972, lng: 55.278, fineAmount: 500, timestamp: "03:15 PM", plateNumber: "DXB-1018" },
+      { id: "FINE-20", lat: 25.19703, lng: 55.27422, fineAmount: 500, timestamp: "04:45 PM", plateNumber: "DXB-1019" },
+    ],
+
+    warningLocations: [
+      { id: "WARN-1", lat: 25.1921, lng: 55.2727, timestamp: "08:30 AM" },
+      { id: "WARN-2", lat: 25.19175, lng: 55.27355, timestamp: "09:10 AM" },
+      { id: "WARN-3", lat: 25.195, lng: 55.27225, timestamp: "09:45 AM" },
+      { id: "WARN-4", lat: 25.19715, lng: 55.2721, timestamp: "10:20 AM" },
+      { id: "WARN-5", lat: 25.19716, lng: 55.27415, timestamp: "10:55 AM" },
+      { id: "WARN-6", lat: 25.1985, lng: 55.2752, timestamp: "11:20 AM" },
+      { id: "WARN-7", lat: 25.2, lng: 55.2768, timestamp: "11:50 AM" },
+      { id: "WARN-8", lat: 25.201, lng: 55.2778, timestamp: "12:20 PM" },
+      { id: "WARN-9", lat: 25.2, lng: 55.2787, timestamp: "01:10 PM" },
+      { id: "WARN-10", lat: 25.1988, lng: 55.2796, timestamp: "02:10 PM" },
+      { id: "WARN-11", lat: 25.1974, lng: 55.2786, timestamp: "03:10 PM" },
+      { id: "WARN-12", lat: 25.19705, lng: 55.2743, timestamp: "04:30 PM" },
+    ],
+
+    routineLocations: [
+      { id: "ROUTINE-1", lat: 25.19222, lng: 55.2726, timestamp: "08:05 AM" },
+      { id: "ROUTINE-2", lat: 25.1919, lng: 55.2732, timestamp: "08:50 AM" },
+      { id: "ROUTINE-3", lat: 25.19172, lng: 55.27348, timestamp: "09:15 AM" },
+      { id: "ROUTINE-4", lat: 25.1935, lng: 55.2723, timestamp: "09:35 AM" },
+      { id: "ROUTINE-5", lat: 25.1972, lng: 55.27218, timestamp: "10:05 AM" },
+      { id: "ROUTINE-6", lat: 25.19714, lng: 55.2739, timestamp: "10:40 AM" },
+      { id: "ROUTINE-7", lat: 25.1975, lng: 55.2745, timestamp: "11:05 AM" },
+      { id: "ROUTINE-8", lat: 25.1986, lng: 55.2755, timestamp: "11:25 AM" },
+      { id: "ROUTINE-9", lat: 25.1998, lng: 55.2766, timestamp: "11:45 AM" },
+      { id: "ROUTINE-10", lat: 25.201, lng: 55.2776, timestamp: "12:05 PM" },
+      { id: "ROUTINE-11", lat: 25.2002, lng: 55.2784, timestamp: "01:20 PM" },
+      { id: "ROUTINE-12", lat: 25.1992, lng: 55.279, timestamp: "02:00 PM" },
+      { id: "ROUTINE-13", lat: 25.1984, lng: 55.2797, timestamp: "02:45 PM" },
+      { id: "ROUTINE-14", lat: 25.1975, lng: 55.2783, timestamp: "03:20 PM" },
+      { id: "ROUTINE-15", lat: 25.19703, lng: 55.2744, timestamp: "04:40 PM" },
+    ],
+
+    towingLocations: [
+      { id: "TOW-1", lat: 25.19195, lng: 55.27348, timestamp: "09:30 AM" },
+      { id: "TOW-2", lat: 25.19714, lng: 55.27411, timestamp: "12:30 PM" },
+      { id: "TOW-3", lat: 25.2012, lng: 55.27786, timestamp: "02:00 PM" },
+      { id: "TOW-4", lat: 25.1987, lng: 55.28, timestamp: "03:30 PM" },
+      { id: "TOW-5", lat: 25.19703, lng: 55.27422, timestamp: "05:00 PM" },
     ],
   },
   {
