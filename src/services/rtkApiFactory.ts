@@ -64,6 +64,7 @@ export const dynamicApi = createApi({
     "WhitelistTradeLicense",
     "Pledge",
     "InspectionObstacle",
+    "HRMS",
     "Dispute",
     "PermitSearch",
     "FineSearch",
@@ -237,6 +238,31 @@ export const dynamicApi = createApi({
         method: "PUT",
       }),
       invalidatesTags: ["InspectionObstacle"],
+    }),
+
+    // HRMS
+    getHRMSAttendance: builder.query({
+      query: (params) => ({ url: "/api/HRMS/Attendance/GetAll", params }),
+      transformResponse: (response: any) => ({
+        data: response?.data ?? [],
+        total: response?.totalCount ?? 0,
+        totalCount: response?.totalCount ?? 0,
+        totalRecords: response?.totalRecords ?? response?.totalCount ?? 0,
+        active: response?.active ?? 0,
+        inActive: response?.inActive ?? 0,
+        pageNumber: response?.pageNumber,
+        pageSize: response?.pageSize,
+        statusCode: response?.statusCode,
+        successful: response?.successful,
+        en_Msg: response?.en_Msg,
+        ar_Msg: response?.ar_Msg,
+      }),
+      providesTags: ["HRMS"],
+    }),
+    getHRMSTracking: builder.query({
+      query: (params) => ({ url: "/api/HRMS/Tracking", params }),
+      transformResponse: (response: any) => response?.data ?? [],
+      providesTags: ["HRMS"],
     }),
 
     // Disputes
@@ -1078,6 +1104,10 @@ export const {
   useLazyGetInspectionObstacleByIdQuery,
   useAddInspectionObstacleMutation,
   useUpdateInspectionObstacleMutation,
+
+  // HRMS
+  useGetHRMSAttendanceQuery,
+  useGetHRMSTrackingQuery,
 
   // Search
   useSearchPermitsQuery,

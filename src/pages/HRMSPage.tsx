@@ -1,55 +1,147 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, DatePicker, Spin, Tag } from "antd";
-import { PlusOutlined, DownloadOutlined, EyeOutlined } from "@ant-design/icons";
+import React, { useEffect, useMemo, useState } from "react";
+import { App, Button, Card, Col, DatePicker, Form, Input, Modal, Row, Select, Space, Spin, Tag } from "antd";
+import { DownloadOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
-import { useGetInspectionObstaclesQuery } from "../services/rtkApiFactory";
-
-// ========== RTK Query Imports (COMMENTED OUT) ==========
-// import {
-//   useGetHRMSAttendanceQuery,
-//   useAddHRMSAttendanceMutation,
-//   useLazyGetLookupsQuery,
-//   useLazyGetSupervisorsQuery,
-// } from "../services/rtkApiFactory";
-
+import {
+  useGetActiveShiftsQuery,
+  useGetHRMSAttendanceQuery,
+  useGetHRMSTrackingQuery,
+  useGetInspectionObstaclesQuery,
+  useGetTowingDetailsQuery,
+  useGetInspectionsQuery, // ✅ NEW: inspection API
+} from "../services/rtkApiFactory";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import { exportToCsv } from "../utils/csvExporter";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import HRMSViewDrawer from "../components/hrms/HRMSViewDrawer";
-import { formatDateDisplay } from "../utils/dateFormatter";
-// import { usePermission } from "../hooks/usePermission";
-
-// Import config and mock data
-import { hrmsConfig, MOCK_INSPECTORS_DATA, InspectorAttendanceDTO } from "../config/pageConfigs/hrmsConfig";
+import { formatDateDisplay, formatDateTimeDisplay } from "../utils/dateFormatter";
+import { hrmsConfig } from "../config/pageConfigs/hrmsConfig";
 
 const { Option } = Select;
-const pageKey = "hrms";
 
-// Helper function to get label from value based on current language
-const getLabelFromValue = (value: number | string, options: any[], i18n: any) => {
-  const option = options.find((opt) => opt.value.toString() === value.toString());
-  if (!option) return value;
-  return i18n.language === "ar" ? option.labelAr : option.labelEn;
+const ZERO_DATE = "0001-01-01T00:00:00";
+const ZERO_GUID = "00000000-0000-0000-0000-000000000000";
+
+// ── Inspection category codes ────────────────────────────────────────────────
+const INSPECTION_CATEGORY = {
+  FINE: 13001,
+  WARNING: 13002,
+  ROUTINE: 13003,
+} as const;
+
+const normalizeDateValue = (value?: string | null) => {
+  if (!value || value === ZERO_DATE) return null;
+  return dayjs(value).isValid() ? value : null;
 };
 
-// Helper function to filter options by category
-const filterOptionsByCategory = (options: any[], categoryId: number) => {
-  return options.filter((option) => option.categoryId === categoryId);
+const parseCoordinate = (value: string | number | null | undefined) => {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const hasValidCoordinates = (lat: number | null, lng: number | null) =>
+  lat !== null && lng !== null && !(lat === 0 && lng === 0);
+
+const buildAttendanceStatus = (checkIn?: string | null, checkOut?: string | null) => {
+  if (checkOut) return "Checked Out";
+  if (checkIn) return "Checked In";
+  return "Pending";
+};
+
+const getRecordDate = (...dates: Array<string | null | undefined>) => {
+  const validDate = dates.find((value) => value && dayjs(value).isValid());
+  return validDate || null;
+};
+
+const normalizeGuid = (value?: string | null) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
+
+const buildPrimaryLocation = (record: any) => {
+  const checkOutLat = parseCoordinate(record.checkOut_Lat);
+  const checkOutLng = parseCoordinate(record.checkOut_Lng);
+  if (hasValidCoordinates(checkOutLat, checkOutLng)) {
+    return { lat: checkOutLat as number, lng: checkOutLng as number };
+  }
+
+  const checkInLat = parseCoordinate(record.checkIn_Lat);
+  const checkInLng = parseCoordinate(record.checkIn_Lng);
+  if (hasValidCoordinates(checkInLat, checkInLng)) {
+    return { lat: checkInLat as number, lng: checkInLng as number };
+  }
+
+  return null;
+};
+
+const normalizeAttendanceRecord = (item: any, inspectorNameMap: Map<string, string>) => {
+  const checkIn = normalizeDateValue(item.checkIn);
+  const checkOut = normalizeDateValue(item.checkOut);
+  const addOn = normalizeDateValue(item.addOn) || item.addOn || null;
+  const primaryLocation = buildPrimaryLocation(item);
+  const recordDate = getRecordDate(checkIn, addOn, checkOut);
+  const inspectorGuid = item.inspectorGUID || ZERO_GUID;
+  const inspectorName =
+    inspectorNameMap.get(normalizeGuid(inspectorGuid)) || (inspectorGuid !== ZERO_GUID ? inspectorGuid : "-");
+  const supervisorName = item.supervisorName || item.supervisorNameEn || item.supervisorNameAr || "-";
+
+  return {
+    ...item,
+    id: item.attendance_Id || item.attendanceId || `${item.inspectorGUID}-${recordDate || item.addOn || "row"}`,
+    attendance_Id: item.attendance_Id || item.attendanceId || "-",
+    inspectorGUID: inspectorGuid,
+    devices_id: Number(item.devices_id ?? 0),
+    assignment_id: Number(item.assignment_id ?? 0),
+    checkIn,
+    checkOut,
+    addOn,
+    date: recordDate || addOn,
+    recordDate,
+    inspectorName,
+    supervisorName,
+    checkInTime: checkIn,
+    checkOutTime: checkOut,
+    status: buildAttendanceStatus(checkIn, checkOut),
+    location: primaryLocation
+      ? {
+          ...primaryLocation,
+          zone: item.assignment_id ? `Assignment ${item.assignment_id}` : "N/A",
+        }
+      : null,
+    obstacleLocations: [],
+    inspectorPath: [],
+    trackingPoints: 0,
+    obstacles: 0,
+  };
+};
+
+// ── Helper: convert inspection API item → map location point ────────────────
+const normalizeInspectionLocation = (item: any) => {
+  const lat = parseCoordinate(item.latitude ?? item.entityLatitude);
+  const lng = parseCoordinate(item.longitude ?? item.entityLongitude);
+  if (!hasValidCoordinates(lat, lng)) return null;
+  return {
+    id: item.inspectionGUID || item.entityNo,
+    lat: lat as number,
+    lng: lng as number,
+    timestamp: item.entityDateTime || item.actualDateTime,
+    plateNumber: item.plateNumber,
+    fineAmount: item.fineAmount || item.totalFineAmount,
+    inspectionCategory: item.inspectionCategory,
+  };
 };
 
 const HRMSPage: React.FC = () => {
-  // const { canCreate, canEdit } = usePermission();
-  const canCreate = () => true; // Mock permission
-  const canEdit = () => true; // Mock permission
+  const canCreate = () => true;
   const menuName = "HRMS";
 
   const { t, i18n } = useTranslation();
@@ -69,11 +161,23 @@ const HRMSPage: React.FC = () => {
     state,
   } = useTableParams(config.searchConfig!);
 
-  const apiParams = {
-    PageNumber: rawApiParams.PageNumber || 1,
-    PageSize: rawApiParams.PageSize || 10,
-    ...rawApiParams,
-  };
+  const apiParams = useMemo(() => {
+    const { orFilters, ...rest } = rawApiParams as Record<string, any>;
+    const normalizedParams: Record<string, any> = {
+      PageNumber: rawApiParams.PageNumber || 1,
+      PageSize: rawApiParams.PageSize || 10,
+      ...rest,
+    };
+
+    if (orFilters && typeof orFilters === "object") {
+      const { status: _statusFilter, ...serverOrFilters } = orFilters;
+      if (Object.keys(serverOrFilters).length > 0) {
+        normalizedParams.orFilters = serverOrFilters;
+      }
+    }
+
+    return normalizedParams;
+  }, [rawApiParams]);
 
   const [form] = Form.useForm();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -81,69 +185,119 @@ const HRMSPage: React.FC = () => {
   const [viewRecord, setViewRecord] = useState<any>(null);
   const [tableSize] = useState<"middle" | "small">("small");
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [lookupOptions, setLookupOptions] = useState<any[]>([]);
-  const [isLoadingLookups, setIsLoadingLookups] = useState(false);
-  const [obstacleParams, setObstacleParams] = useState<any>(null);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [obstacleParams, setObstacleParams] = useState<Record<string, any> | null>(null);
+  const [towingParams, setTowingParams] = useState<Record<string, any> | null>(null);
+  const [trackingParams, setTrackingParams] = useState<{ inspectorGuid: string; trackedDtTm: string } | null>(null);
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
 
-  const { data: obstacleResponse } = useGetInspectionObstaclesQuery(obstacleParams, {
-    skip: !obstacleParams,
+  // ✅ NEW: Inspection params state (shared date range, different category filters)
+  const [inspectionDateParams, setInspectionDateParams] = useState<Record<string, any> | null>(null);
+
+  // ── Existing API calls ────────────────────────────────────────────────────
+  const {
+    data: attendanceResponse,
+    isLoading,
+    isFetching,
+  } = useGetHRMSAttendanceQuery(apiParams, {
+    refetchOnMountOrArgChange: true,
   });
 
-  // ========== MOCK DATA INSTEAD ==========
-  const data = MOCK_INSPECTORS_DATA;
-  const isLoading = false;
-  const isFetching = false;
-  const isAddingAttendance = false;
-  const isLoadingSupervisors = false;
+  const { currentData: towingResponse } = useGetTowingDetailsQuery(towingParams, {
+    skip: !towingParams,
+    refetchOnMountOrArgChange: true,
+  });
 
-  // Mock supervisors data
+  const { data: activeShiftsData } = useGetActiveShiftsQuery();
+
+  const { currentData: obstacleResponse } = useGetInspectionObstaclesQuery(obstacleParams, {
+    skip: !obstacleParams,
+    refetchOnMountOrArgChange: true,
+  });
+
+  const { currentData: trackingResponse } = useGetHRMSTrackingQuery(trackingParams, {
+    skip: !trackingParams,
+    refetchOnMountOrArgChange: true,
+  });
+
+  // ✅ NEW: Fine inspections (category 13001)
+  const { currentData: fineInspectionResponse } = useGetInspectionsQuery(
+    inspectionDateParams
+      ? {
+          ...inspectionDateParams,
+          "orFilters[inspectionCategory]": INSPECTION_CATEGORY.FINE,
+          PageNumber: 1,
+          PageSize: 500,
+        }
+      : null,
+    {
+      skip: !inspectionDateParams,
+      refetchOnMountOrArgChange: true,
+    },
+  );
+
+  // ✅ NEW: Warning inspections (category 13002)
+  const { currentData: warningInspectionResponse } = useGetInspectionsQuery(
+    inspectionDateParams
+      ? {
+          ...inspectionDateParams,
+          "orFilters[inspectionCategory]": INSPECTION_CATEGORY.WARNING,
+          PageNumber: 1,
+          PageSize: 500,
+        }
+      : null,
+    {
+      skip: !inspectionDateParams,
+      refetchOnMountOrArgChange: true,
+    },
+  );
+
+  // ✅ NEW: Routine inspections (category 13003)
+  const { currentData: routineInspectionResponse } = useGetInspectionsQuery(
+    inspectionDateParams
+      ? {
+          ...inspectionDateParams,
+          "orFilters[inspectionCategory]": INSPECTION_CATEGORY.ROUTINE,
+          PageNumber: 1,
+          PageSize: 500,
+        }
+      : null,
+    {
+      skip: !inspectionDateParams,
+      refetchOnMountOrArgChange: true,
+    },
+  );
+
+  const isAddingAttendance = false;
+  const isLoadingLookups = false;
+
   const supervisorsData = [
     { id: 1, name: "Mohammed Ali", nameAr: "محمد علي" },
     { id: 2, name: "Sara Ahmed", nameAr: "سارة أحمد" },
     { id: 3, name: "Khalid Hassan", nameAr: "خالد حسن" },
   ];
 
-  // Mock lookup data for status
-  const mockLookupOptions = [
-    { value: 1, labelEn: "Present", labelAr: "حاضر", categoryId: 900 },
-    { value: 2, labelEn: "Absent", labelAr: "غائب", categoryId: 900 },
-    { value: 3, labelEn: "Leave", labelAr: "إجازة", categoryId: 900 },
-  ];
-
-  // State to maintain the rows data for downloading
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-
-  // ========== MOCK FETCH INSTEAD ==========
-  useEffect(() => {
-    setIsLoadingLookups(true);
-    setTimeout(() => {
-      setLookupOptions(mockLookupOptions);
-      setIsLoadingLookups(false);
-    }, 500);
-  }, [i18n.language]);
-
-  // Supervisor options
-  const supervisorOptions = useMemo(() => {
-    if (!supervisorsData) return [];
-    return supervisorsData.map((supervisor: any) => ({
-      value: supervisor.id,
-      label: i18n.language === "ar" ? supervisor.nameAr : supervisor.name,
-      original: supervisor,
-    }));
-  }, [supervisorsData, i18n.language]);
-
-  // Status options from lookups
-  const statusOptions = useMemo(
+  const supervisorOptions = useMemo(
     () =>
-      filterOptionsByCategory(lookupOptions, 900).map((option) => ({
-        ...option,
-        value: option.value,
-        label: i18n.language === "ar" ? option.labelAr : option.labelEn,
+      supervisorsData.map((supervisor) => ({
+        value: supervisor.id,
+        label: i18n.language === "ar" ? supervisor.nameAr : supervisor.name,
       })),
-    [lookupOptions, i18n.language],
+    [i18n.language],
   );
+
+  const inspectorNameMap = useMemo(() => {
+    const shifts = Array.isArray(activeShiftsData) ? activeShiftsData : activeShiftsData?.data || [];
+    const nameMap = new Map<string, string>();
+    shifts.forEach((shift: any) => {
+      const guid = normalizeGuid(shift.employeeId);
+      if (guid) {
+        nameMap.set(guid, shift.employeeName || shift.employeeNameAr || shift.employeeId);
+      }
+    });
+    return nameMap;
+  }, [activeShiftsData]);
 
   useEffect(() => {
     setPageTitle(t(config.title));
@@ -153,10 +307,166 @@ const HRMSPage: React.FC = () => {
     setGlobalSearch(state.searchKey, debouncedSearchValue);
   }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
 
+  // ── Obstacle response handler (unchanged) ─────────────────────────────────
+  useEffect(() => {
+    if (!obstacleResponse) return;
+
+    const obstacleLocations =
+      obstacleResponse.data
+        ?.map((item: any) => {
+          const lat = parseCoordinate(item.latitude);
+          const lng = parseCoordinate(item.longitude);
+          if (!hasValidCoordinates(lat, lng)) return null;
+          return {
+            id: item.inspectionGUID || item.id || `${item.createdDateTime}-${lat}-${lng}`,
+            lat: lat as number,
+            lng: lng as number,
+            createdDateTime: item.createdDateTime,
+          };
+        })
+        .filter(Boolean) || [];
+
+    setViewRecord((prev: any) =>
+      prev
+        ? {
+            ...prev,
+            obstacleLocations,
+            obstacles: obstacleResponse.totalCount || obstacleLocations.length,
+          }
+        : prev,
+    );
+  }, [obstacleResponse]);
+
+  // ── Tracking response handler (unchanged) ─────────────────────────────────
+  useEffect(() => {
+    if (!trackingResponse) return;
+
+    const inspectorPath = [...trackingResponse]
+      .map((item: any) => {
+        const lat = parseCoordinate(item.arcGis_Lat ?? item.geo_Lat);
+        const lng = parseCoordinate(item.arcGis_Lng ?? item.geo_Lng);
+        if (!hasValidCoordinates(lat, lng) || !item.trackedDtTm || !dayjs(item.trackedDtTm).isValid()) {
+          return null;
+        }
+        return {
+          lat: lat as number,
+          lng: lng as number,
+          timestamp: formatDateTimeDisplay(item.trackedDtTm, i18n.language),
+          trackedDtTm: item.trackedDtTm,
+        };
+      })
+      .filter(Boolean)
+      .sort((a: any, b: any) => dayjs(a.trackedDtTm).valueOf() - dayjs(b.trackedDtTm).valueOf())
+      .map(({ trackedDtTm, ...pathPoint }: any) => pathPoint);
+
+    setViewRecord((prev: any) => {
+      if (!prev) return prev;
+      const lastTrackingPoint = inspectorPath[inspectorPath.length - 1];
+      return {
+        ...prev,
+        inspectorPath,
+        trackingPoints: inspectorPath.length,
+        location: lastTrackingPoint
+          ? {
+              lat: lastTrackingPoint.lat,
+              lng: lastTrackingPoint.lng,
+              zone: prev.location?.zone || (prev.assignment_id ? `Assignment ${prev.assignment_id}` : "N/A"),
+            }
+          : prev.location,
+      };
+    });
+  }, [trackingResponse, i18n.language]);
+
+  // ── Towing response handler (unchanged) ───────────────────────────────────
+  useEffect(() => {
+    if (!towingResponse) return;
+
+    const towingLocations =
+      towingResponse.data
+        ?.map((item: any) => {
+          const lat = parseCoordinate(item.latitude);
+          const lng = parseCoordinate(item.longitude);
+          if (!hasValidCoordinates(lat, lng)) return null;
+          return {
+            id: item.inspectionGUID || item.iid,
+            lat: lat as number,
+            lng: lng as number,
+            timestamp: item.createdDateTime,
+            plateNumber: item.plateNumber,
+            towingStatus: item.towing_Status,
+          };
+        })
+        .filter(Boolean) || [];
+
+    setViewRecord((prev: any) =>
+      prev
+        ? {
+            ...prev,
+            towingLocations,
+            towingRequests: towingResponse.total || towingLocations.length,
+          }
+        : prev,
+    );
+  }, [towingResponse]);
+
+  // ✅ NEW: Fine inspection response handler
+  useEffect(() => {
+    if (!fineInspectionResponse) return;
+
+    const fineLocations = (fineInspectionResponse.data || []).map(normalizeInspectionLocation).filter(Boolean);
+
+    setViewRecord((prev: any) =>
+      prev
+        ? {
+            ...prev,
+            fineLocations,
+            finesIssued: fineInspectionResponse.totalCount || fineLocations.length,
+          }
+        : prev,
+    );
+  }, [fineInspectionResponse]);
+
+  // ✅ NEW: Warning inspection response handler
+  useEffect(() => {
+    if (!warningInspectionResponse) return;
+
+    const warningLocations = (warningInspectionResponse.data || []).map(normalizeInspectionLocation).filter(Boolean);
+
+    setViewRecord((prev: any) =>
+      prev
+        ? {
+            ...prev,
+            warningLocations,
+            warningInspections: warningInspectionResponse.totalCount || warningLocations.length,
+          }
+        : prev,
+    );
+  }, [warningInspectionResponse]);
+
+  // ✅ NEW: Routine inspection response handler
+  useEffect(() => {
+    if (!routineInspectionResponse) return;
+
+    const routineLocations = (routineInspectionResponse.data || []).map(normalizeInspectionLocation).filter(Boolean);
+
+    setViewRecord((prev: any) =>
+      prev
+        ? {
+            ...prev,
+            routineLocations,
+            routineInspections: routineInspectionResponse.totalCount || routineLocations.length,
+            // total = fine + warning + routine
+            totalInspections:
+              (fineInspectionResponse?.totalCount || 0) +
+              (warningInspectionResponse?.totalCount || 0) +
+              (routineInspectionResponse?.totalCount || routineLocations.length),
+          }
+        : prev,
+    );
+  }, [routineInspectionResponse]);
+
   const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
-    if (type === "search") {
-      setSearchValue("");
-    }
+    if (type === "search") setSearchValue("");
     clearFilter(type, key, value);
   };
 
@@ -165,9 +475,7 @@ const HRMSPage: React.FC = () => {
     clearAll();
   };
 
-  const handleModalOpen = () => {
-    setIsModalOpen(true);
-  };
+  const handleModalOpen = () => setIsModalOpen(true);
 
   const handleModalClose = () => {
     setIsModalOpen(false);
@@ -176,28 +484,12 @@ const HRMSPage: React.FC = () => {
 
   const handleFormSubmit = async (values: any) => {
     try {
-      const attendancePayload = {
-        inspectorName: values.InspectorName,
-        supervisorName: values.SupervisorName,
-        date: values.Date.format("YYYY-MM-DD"),
-        checkInTime: values.CheckInTime,
-        checkOutTime: values.CheckOutTime || "",
-        status: values.Status,
-      };
-
-      // ========== RTK Mutation (COMMENTED OUT) ==========
-      // await addAttendance(attendancePayload).unwrap();
-
-      // ========== MOCK SUCCESS ==========
-      console.log("Mock submission:", attendancePayload);
-
       notification.success({
         data: {
-          en_Msg: "Attendance record added successfully",
-          ar_Msg: "تمت إضافة سجل الحضور بنجاح",
+          en_Msg: `Attendance draft created for ${values.InspectorName}`,
+          ar_Msg: "تم إنشاء مسودة الحضور بنجاح",
         },
       });
-
       handleModalClose();
     } catch (err) {
       notification.error(err as any, "Operation Failed");
@@ -206,77 +498,104 @@ const HRMSPage: React.FC = () => {
 
   const statusLabels = useMemo(
     () => ({
-      Present: t("status.present") || "Present",
-      Absent: t("status.absent") || "Absent",
-      Leave: t("status.leave") || "Leave",
+      "Checked In": t("status.checkedIn", { defaultValue: "Checked In" }),
+      "Checked Out": t("status.checkedOut", { defaultValue: "Checked Out" }),
+      Pending: t("status.pending", { defaultValue: "Pending" }),
     }),
     [t],
   );
 
-  const handleView = async (record: any) => {
-  const selectedDate = "2026-03-10";
+  const handleView = (record: any) => {
+    const recordDate = record.recordDate && dayjs(record.recordDate).isValid() ? dayjs(record.recordDate) : null;
+    const selectedDate = recordDate ? recordDate.format("YYYY-MM-DD") : null;
+    const trackedDtTm = recordDate ? recordDate.startOf("day").format("YYYY-MM-DDTHH:mm:ss") : null;
 
-  setViewRecord(record);
+    // Reset viewRecord with empty arrays so map clears immediately
+    setViewRecord({
+      ...record,
+      obstacleLocations: [],
+      towingLocations: [],
+      fineLocations: [],
+      warningLocations: [],
+      routineLocations: [],
+      inspectorPath: [],
+      trackingPoints: 0,
+      obstacles: 0,
+      towingRequests: 0,
+      finesIssued: 0,
+      warningInspections: 0,
+      routineInspections: 0,
+      totalInspections: 0,
+      trackingQueryDate: trackedDtTm,
+    });
 
-  setObstacleParams({
-    PageNumber: 1,
-    PageSize: 100,
+    // Obstacle params (unchanged)
+    setObstacleParams(
+      selectedDate
+        ? {
+            PageNumber: 1,
+            PageSize: 100,
+            "betweens[createdDateTime][From]": selectedDate,
+            "betweens[createdDateTime][To]": selectedDate,
+          }
+        : null,
+    );
 
-    "betweens[createdDateTime][From]": selectedDate,
-    "betweens[createdDateTime][To]": selectedDate,
-  });
+    // Towing params (unchanged)
+    setTowingParams(
+      selectedDate
+        ? {
+            PageNumber: 1,
+            PageSize: 100,
+            "betweens[createdDateTime][From]": selectedDate,
+            "betweens[createdDateTime][To]": selectedDate,
+          }
+        : null,
+    );
 
-  setIsDrawerOpen(true);
-};
+    // Tracking params (unchanged)
+    setTrackingParams(
+      record.inspectorGUID && record.inspectorGUID !== ZERO_GUID && trackedDtTm
+        ? { inspectorGuid: record.inspectorGUID, trackedDtTm }
+        : null,
+    );
 
-  useEffect(() => {
-    if (!obstacleResponse || !viewRecord) return;
+    // ✅ NEW: Inspection date params — used by all 3 inspection queries
+    setInspectionDateParams(
+      selectedDate
+        ? {
+            "betweens[entityDateTime][From]": selectedDate,
+            "betweens[entityDateTime][To]": selectedDate,
+          }
+        : null,
+    );
 
-    console.log("Obstacle Response", obstacleResponse);
+    setIsDrawerOpen(true);
+  };
 
-    const obstacleLocations =
-      obstacleResponse?.data?.map((item: any) => ({
-        id: item.inspectionGUID,
-        lat: Number(item.latitude),
-        lng: Number(item.longitude),
-        createdDateTime: item.createdDateTime,
-      })) || [];
-
-    setViewRecord((prev: any) => ({
-      ...prev,
-      obstacleLocations,
-      obstacles: obstacleResponse?.totalCount || 0,
-    }));
-  }, [obstacleResponse]);
+  const handleDrawerClose = () => {
+    setIsDrawerOpen(false);
+    setViewRecord(null);
+    setObstacleParams(null);
+    setTowingParams(null);
+    setTrackingParams(null);
+    setInspectionDateParams(null); // ✅ NEW: clear inspection params on close
+  };
 
   const handleShare = () => {
     const shareUrl = window.location.href;
-
     if (navigator?.clipboard && window.isSecureContext) {
       navigator.clipboard
         .writeText(shareUrl)
-        .then(() => {
+        .then(() =>
           notification.success(
-            {
-              data: {
-                en_Msg: "Link copied to clipboard",
-                ar_Msg: "تم نسخ الرابط",
-              },
-            },
+            { data: { en_Msg: "Link copied to clipboard", ar_Msg: "تم نسخ الرابط" } },
             "Share Success",
-          );
-        })
-        .catch(() => {
-          notification.error(
-            {
-              data: {
-                en_Msg: "Failed to copy link",
-                ar_Msg: "فشل نسخ الرابط",
-              },
-            },
-            "Share Failed",
-          );
-        });
+          ),
+        )
+        .catch(() =>
+          notification.error({ data: { en_Msg: "Failed to copy link", ar_Msg: "فشل نسخ الرابط" } }, "Share Failed"),
+        );
     } else {
       const textArea = document.createElement("textarea");
       textArea.value = shareUrl;
@@ -285,74 +604,53 @@ const HRMSPage: React.FC = () => {
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-
       try {
         document.execCommand("copy");
         notification.success(
-          {
-            data: {
-              en_Msg: "Link copied to clipboard",
-              ar_Msg: "تم نسخ الرابط",
-            },
-          },
+          { data: { en_Msg: "Link copied to clipboard", ar_Msg: "تم نسخ الرابط" } },
           "Share Success",
         );
       } catch {
-        notification.error(
-          {
-            data: {
-              en_Msg: "Failed to copy link",
-              ar_Msg: "فشل نسخ الرابط",
-            },
-          },
-          "Share Failed",
-        );
+        notification.error({ data: { en_Msg: "Failed to copy link", ar_Msg: "فشل نسخ الرابط" } }, "Share Failed");
       } finally {
         document.body.removeChild(textArea);
       }
     }
   };
 
-  // Transform data for CSV export
-  const transformDataForCSV = (data: any[]) => {
-    return data.map((item, index: number) => {
+  const transformDataForCSV = (data: any[]) =>
+    data.map((item, index: number) => {
       const csvRecord: Record<string, any> = {};
       csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
-
       config.tableConfig.columns.forEach((column) => {
         if (column.key === "date") {
-          csvRecord[t("form.date") || "Date"] = item.date ? dayjs(item.date).format("DD MMM YYYY") : "";
+          csvRecord[t("form.date") || "Date"] = item.date ? formatDateDisplay(item.date, i18n.language) : "";
         } else if (column.key === "inspectorName") {
           csvRecord[t("form.inspectorName") || "Inspector Name"] = item.inspectorName || "";
         } else if (column.key === "supervisorName") {
           csvRecord[t("form.supervisorName") || "Supervisor Name"] = item.supervisorName || "";
         } else if (column.key === "checkInTime") {
-          csvRecord[t("form.checkInTime") || "Check In Time"] = item.checkInTime || "";
+          csvRecord[t("form.checkInTime") || "Check In"] = item.checkInTime
+            ? dayjs(item.checkInTime).format("hh:mm A")
+            : "";
         } else if (column.key === "checkOutTime") {
-          csvRecord[t("form.checkOutTime") || "Check Out Time"] = item.checkOutTime || "";
+          csvRecord[t("form.checkOutTime") || "Check Out"] = item.checkOutTime
+            ? dayjs(item.checkOutTime).format("hh:mm A")
+            : "";
         } else if (column.key === "status") {
           csvRecord[t("form.status") || "Status"] = statusLabels[item.status] || item.status;
         }
       });
-
       return csvRecord;
     });
-  };
 
-  const getCsvFilename = () => {
-    if (i18n.language === "ar") {
-      return `سجلات_الحضور.csv`;
-    } else {
-      return `HRMS_Attendance_Records.csv`;
-    }
-  };
+  const getCsvFilename = () => (i18n.language === "ar" ? "سجلات_الحضور.csv" : "HRMS_Attendance_Records.csv");
 
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
       notification.error({ data: { en_Msg: "Please select at least one row to export" } }, "No Selection");
       return;
     }
-
     modal.confirm({
       title: "Export to CSV",
       content: `Export ${selectedRows.length} selected records?`,
@@ -364,20 +662,14 @@ const HRMSPage: React.FC = () => {
             notification.error({ data: { en_Msg: "No data to export" } }, "Export Failed");
             return;
           }
-
-          const transformedData = transformDataForCSV(selectedRows);
-          const filename = getCsvFilename();
-
-          exportToCsv(transformedData, filename);
-
+          exportToCsv(transformDataForCSV(selectedRows), getCsvFilename());
           notification.success(
             { data: { en_Msg: `${selectedRows.length} records exported successfully` } },
             "Export Success",
           );
-
           setSelectedRowKeys([]);
           setSelectedRows([]);
-        } catch (error) {
+        } catch {
           notification.error({ data: { en_Msg: "Failed to export data" } }, "Export Failed");
         }
       },
@@ -385,11 +677,10 @@ const HRMSPage: React.FC = () => {
   };
 
   const columnLabels = useMemo(
-    () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title) || c.key])),
-    [t, config.tableConfig.columns, i18n.language],
+    () => Object.fromEntries(config.tableConfig.columns.map((column) => [column.key, t(column.title) || column.key])),
+    [config.tableConfig.columns, i18n.language, t],
   );
 
-  // Enhanced table config with render functions
   const enhancedTableConfig = useMemo(
     () => ({
       ...config.tableConfig,
@@ -397,27 +688,28 @@ const HRMSPage: React.FC = () => {
         if (column.key === "status") {
           return {
             ...column,
-            render: (value: any) => {
-              let color = "default";
-              if (value === "Present") color = "green";
-              if (value === "Absent") color = "red";
-              if (value === "Leave") color = "orange";
+            render: (value: string) => {
+              const color = value === "Checked Out" ? "green" : value === "Checked In" ? "blue" : "orange";
               return <Tag color={color}>{statusLabels[value] || value}</Tag>;
             },
           };
         }
-
         if (column.key === "date") {
           return {
             ...column,
-            render: (value: any) => (value ? formatDateDisplay(value, i18n.language) : ""),
+            render: (value: string | null) => (value ? formatDateDisplay(value, i18n.language) : t("common.noData")),
           };
         }
-
+        if (["checkInTime", "checkOutTime"].includes(column.key)) {
+          return {
+            ...column,
+            render: (value: string | null) => (value ? dayjs(value).format("hh:mm A") : t("common.noData")),
+          };
+        }
         return column;
       }),
     }),
-    [config.tableConfig, statusLabels, i18n, t],
+    [config.tableConfig, i18n.language, statusLabels, t],
   );
 
   const actionMenuItems = (record: any) => [
@@ -430,7 +722,7 @@ const HRMSPage: React.FC = () => {
   ];
 
   const searchAddon = (
-    <Select value={state.searchKey} onChange={(key) => setGlobalSearch(key, state.searchValue)} style={{ width: 150 }}>
+    <Select value={state.searchKey} onChange={(key) => setGlobalSearch(key, state.searchValue)} style={{ width: 170 }}>
       {config.searchConfig?.globalSearchKeys.map((key) => (
         <Option key={key} value={key}>
           {columnLabels[key]}
@@ -439,59 +731,36 @@ const HRMSPage: React.FC = () => {
     </Select>
   );
 
-  // ========== Process Mock Data with Filters ==========
-  const hrmsData = useMemo(() => {
-    let filteredData = [...MOCK_INSPECTORS_DATA];
+  const hrmsData = useMemo(
+    () => (attendanceResponse?.data ?? []).map((item: any) => normalizeAttendanceRecord(item, inspectorNameMap)),
+    [attendanceResponse?.data, inspectorNameMap],
+  );
 
-    // Apply status filter
-    if (state?.columnFilters?.status && state.columnFilters.status.length > 0) {
-      filteredData = filteredData.filter((item) => state.columnFilters.status.includes(item.status));
-    }
+  const totalCount = useMemo(() => attendanceResponse?.totalCount || 0, [attendanceResponse?.totalCount]);
 
-    // Apply supervisor filter
-    if (state?.columnFilters?.supervisorName && state.columnFilters.supervisorName.length > 0) {
-      filteredData = filteredData.filter((item) => state.columnFilters.supervisorName.includes(item.supervisorName));
-    }
+  const metadata = useMemo(
+    () => ({
+      totalRecords: attendanceResponse?.totalRecords || attendanceResponse?.totalCount || 0,
+    }),
+    [attendanceResponse?.totalCount, attendanceResponse?.totalRecords],
+  );
 
-    // Apply date range filter
-    if (state?.dateRange && state.dateRange[0] && state.dateRange[1]) {
-      filteredData = filteredData.filter((item) => {
-        const itemDate = dayjs(item.date);
-        return itemDate.isAfter(state.dateRange[0]) && itemDate.isBefore(state.dateRange[1]);
-      });
-    }
-
-    return filteredData;
-  }, [data, state?.columnFilters, state?.dateRange]);
-
-  const totalCount = useMemo(() => {
-    return hrmsData.length;
-  }, [hrmsData]);
-
-  const metadata = useMemo(() => {
-    return {
-      totalRecords: MOCK_INSPECTORS_DATA.length,
-    };
-  }, []);
-
-  // ✅ Create properly formatted state object
-  const activeFilterState = useMemo(() => {
-    return {
+  const activeFilterState = useMemo(
+    () => ({
       columnFilters: state?.columnFilters || {},
       searchKey: state?.searchKey || "",
       searchValue: state?.searchValue || "",
       dateRange: state?.dateRange || null,
       sortBy: state?.sortBy || undefined,
       sortOrder: state?.sortOrder || undefined,
-    };
-  }, [state]);
+    }),
+    [state],
+  );
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
-      {/* ✅ Stats Display */}
       <StatsDisplay statsConfig={config.statsConfig} data={hrmsData} metadata={metadata} loading={isLoading} />
 
-      {/* ✅ Search and Filter Card - EXACT LAYOUT AS WHITELIST */}
       <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
         <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
           <Col>
@@ -501,13 +770,13 @@ const HRMSPage: React.FC = () => {
                 placeholder={t("common.searchPlaceholder") || "Search..."}
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                style={{ width: 450 }}
+                style={{ width: 520 }}
                 allowClear
               />
               <span>{t("common.filterByDate") || "Filter by Date:"}</span>
               <DatePicker.RangePicker
                 value={state.dateRange}
-                format={"DD MMM YYYY"}
+                format="DD MMM YYYY"
                 placeholder={[t("placeholders.startDate") || "Start Date", t("placeholders.endDate") || "End Date"]}
                 onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
               />
@@ -518,26 +787,21 @@ const HRMSPage: React.FC = () => {
               <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
                 {t("common.downloadCsv") || "Download CSV"}
               </Button>
-
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleModalOpen} disabled={!canCreate(menuName)}>
+              {/* <Button type="primary" icon={<PlusOutlined />} onClick={handleModalOpen} disabled={!canCreate(menuName)}>
                 {t("common.addNew") || "Add New"}
-              </Button>
+              </Button> */}
             </Space>
           </Col>
         </Row>
 
-        {/* ✅ Active Filters Display */}
         <ActiveFiltersDisplay
           state={activeFilterState}
           onClearFilter={handleClearFilter}
           onClearAll={handleClearAll}
           columnLabels={columnLabels}
-          lookupOptions={lookupOptions}
-          getLabelFromValue={getLabelFromValue}
         />
       </Card>
 
-      {/* ✅ Data Table */}
       <DataTableWrapper
         pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
         data={hrmsData}
@@ -548,11 +812,13 @@ const HRMSPage: React.FC = () => {
         handlePaginationChange={handlePaginationChange}
         rowSelection={{
           selectedRowKeys,
-          onChange: (keys: React.Key[], selectedRows: any[]) => {
+          onChange: (keys: React.Key[], nextSelectedRows: any[]) => {
             setSelectedRowKeys(keys);
             setSelectedRows((prev) => {
-              const remaining = prev.filter((p) => keys.includes(p.id));
-              const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+              const remaining = prev.filter((item) => keys.includes(item.id));
+              const newSelected = nextSelectedRows.filter(
+                (item) => !remaining.some((existing) => existing.id === item.id),
+              );
               return [...remaining, ...newSelected];
             });
           },
@@ -560,11 +826,10 @@ const HRMSPage: React.FC = () => {
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
         state={activeFilterState}
-        lookupOptions={lookupOptions}
-        getLabelFromValue={getLabelFromValue}
+        tableLayout="auto"
+        scrollX={1200}
       />
 
-      {/* ✅ Add New Attendance Modal */}
       <Modal
         open={isModalOpen}
         title={t("common.addNew") || "Add New Attendance"}
@@ -594,7 +859,6 @@ const HRMSPage: React.FC = () => {
                   <Input placeholder="Enter inspector name" />
                 </Form.Item>
               </Col>
-
               <Col span={12}>
                 <Form.Item
                   name="SupervisorName"
@@ -610,7 +874,6 @@ const HRMSPage: React.FC = () => {
                   />
                 </Form.Item>
               </Col>
-
               <Col span={12}>
                 <Form.Item
                   name="Date"
@@ -620,7 +883,6 @@ const HRMSPage: React.FC = () => {
                   <DatePicker style={{ width: "100%" }} format="DD MMM YYYY" />
                 </Form.Item>
               </Col>
-
               <Col span={12}>
                 <Form.Item
                   name="Status"
@@ -633,26 +895,24 @@ const HRMSPage: React.FC = () => {
                     optionFilterProp="label"
                     filterOption={(input, option) => (option?.label ?? "").toLowerCase().includes(input.toLowerCase())}
                   >
-                    <Option value="Present">{t("status.present") || "Present"}</Option>
-                    <Option value="Absent">{t("status.absent") || "Absent"}</Option>
-                    <Option value="Leave">{t("status.leave") || "Leave"}</Option>
+                    <Option value="Checked In">{statusLabels["Checked In"]}</Option>
+                    <Option value="Checked Out">{statusLabels["Checked Out"]}</Option>
+                    <Option value="Pending">{statusLabels.Pending}</Option>
                   </Select>
                 </Form.Item>
               </Col>
-
               <Col span={12}>
                 <Form.Item
                   name="CheckInTime"
                   label={t("form.checkInTime") || "Check In Time"}
                   rules={[{ required: true, message: "Please enter check-in time" }]}
                 >
-                  <Input placeholder="HH:MM AM/PM" />
+                  <Input placeholder="YYYY-MM-DD HH:MM" />
                 </Form.Item>
               </Col>
-
               <Col span={12}>
                 <Form.Item name="CheckOutTime" label={t("form.checkOutTime") || "Check Out Time"}>
-                  <Input placeholder="HH:MM AM/PM" />
+                  <Input placeholder="YYYY-MM-DD HH:MM" />
                 </Form.Item>
               </Col>
             </Row>
@@ -660,14 +920,10 @@ const HRMSPage: React.FC = () => {
         </Spin>
       </Modal>
 
-      {/* ✅ View Modal */}
       {viewRecord && (
         <HRMSViewDrawer
           open={isDrawerOpen}
-          onClose={() => {
-            setIsDrawerOpen(false);
-            setViewRecord(null);
-          }}
+          onClose={handleDrawerClose}
           record={viewRecord}
           config={config}
           onShare={handleShare}

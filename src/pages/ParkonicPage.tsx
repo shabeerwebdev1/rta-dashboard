@@ -27,7 +27,7 @@ import ParkonicAttachmentsModal from "../components/parkonic/ParkonicAttachments
 const { Option } = Select;
 
 const ParkonicPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t , i18n} = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
@@ -100,26 +100,65 @@ const ParkonicPage: React.FC = () => {
     setDrawerOpen(true);
   };
 
+  const transformDataForCSV = (data: any[]) => {
+    return data.map((item, index: number) => {
+      const csvRecord: Record<string, unknown> = {};
+
+      csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
+
+      config.tableConfig.columns.forEach((column: any) => {
+        if (column.key === "plateNumber") {
+          csvRecord[t("form.plateNumber")] = item.plateNumber || "";
+        } else if (column.key === "reviewStatus") {
+          csvRecord[t("form.status")] =
+            item.reviewStatus === 1
+              ? t("status.approved")
+              : item.reviewStatus === 2
+                ? t("status.rejected")
+                : t("status.pending");
+        } else if (column.key === "entryDate") {
+          csvRecord[t("form.entryDate")] = item.entryDate ? dayjs(item.entryDate).format("DD MMM YYYY") : "";
+        } else {
+          csvRecord[t(column.title)] = item[column.key] ?? "";
+        }
+      });
+
+      return csvRecord;
+    });
+  };
+
+  const getCsvFilename = () => {
+    return i18n.language === "ar" ? "بيانات_باركونك.csv" : "Parkonic_Data.csv";
+  };
+
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
       notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
       return;
     }
+
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       okText: t("common.ok"),
       cancelText: t("common.cancel"),
+
       onOk: () => {
-        //const selectedData = data?.data?.filter((item: any) => selectedRowKeys.includes(item.fineId)) || [];
-        exportToCsv(selectedRows, `parkonic_export.csv`);
-        notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
-        setSelectedRowKeys([]);
-        setSelectedRows([]);
+        try {
+          const transformedData = transformDataForCSV(selectedRows);
+
+          exportToCsv(transformedData, getCsvFilename());
+
+          notification.success({ data: { en_Msg: t("messages.csvDownloaded") } }, t("messages.csvDownloaded"));
+
+          setSelectedRowKeys([]);
+          setSelectedRows([]);
+        } catch (error) {
+          notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
+        }
       },
     });
   };
-
   const columnLabels = useMemo(
     () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
     [t, config.tableConfig.columns],

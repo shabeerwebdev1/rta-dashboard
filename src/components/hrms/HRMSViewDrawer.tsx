@@ -14,6 +14,7 @@ import {
 import { useTranslation } from "react-i18next";
 import type { PageConfig } from "../../types/config";
 import ArcGISMap from "../common/ArcGISMap";
+import dayjs from "dayjs";
 
 // ─── Inline SVG Icon Components ───────────────────────────────────────────────
 
@@ -80,20 +81,20 @@ const TowingIcon = ({ size = 22 }: { size?: number }) => (
     <ellipse cx="24" cy="57" rx="6" ry="2.5" fill="rgba(0,0,0,0.15)" />
     <path
       d="M24 2C13.507 2 5 10.507 5 21c0 14.25 19 37 19 37S43 35.25 43 21C43 10.507 34.493 2 24 2z"
-      fill="#7B1FA2"
-      stroke="#4A148C"
+      fill="#1565C0"
+      stroke="#0d47a1"
       strokeWidth="1.2"
     />
     <path d="M17 7 Q24 3 31 9 Q26 5 17 7z" fill="rgba(255,255,255,0.25)" />
     <circle cx="24" cy="19" r="11" fill="white" opacity="0.97" />
-    <rect x="27" y="15.5" width="6" height="5" rx="1.1" fill="#7B1FA2" />
+    <rect x="27" y="15.5" width="6" height="5" rx="1.1" fill="#1565C0" />
     <rect x="28.1" y="16.4" width="2.6" height="2.6" rx="0.5" fill="white" opacity="0.9" />
-    <rect x="15.5" y="17.5" width="11.5" height="3.2" rx="0.8" fill="#7B1FA2" />
-    <line x1="18.5" y1="17.5" x2="18.5" y2="13" stroke="#7B1FA2" strokeWidth="2" strokeLinecap="round" />
-    <line x1="18.5" y1="13" x2="23.5" y2="13" stroke="#7B1FA2" strokeWidth="2" strokeLinecap="round" />
-    <path d="M23.5,13 Q25.5,13 25.5,15.5" fill="none" stroke="#7B1FA2" strokeWidth="2" strokeLinecap="round" />
-    <circle cx="18.5" cy="22" r="2" fill="#7B1FA2" stroke="white" strokeWidth="1" />
-    <circle cx="29" cy="22" r="2" fill="#7B1FA2" stroke="white" strokeWidth="1" />
+    <rect x="15.5" y="17.5" width="11.5" height="3.2" rx="0.8" fill="#1565C0" />
+    <line x1="18.5" y1="17.5" x2="18.5" y2="13" stroke="#1565C0" strokeWidth="2" strokeLinecap="round" />
+    <line x1="18.5" y1="13" x2="23.5" y2="13" stroke="#1565C0" strokeWidth="2" strokeLinecap="round" />
+    <path d="M23.5,13 Q25.5,13 25.5,15.5" fill="none" stroke="#1565C0" strokeWidth="2" strokeLinecap="round" />
+    <circle cx="18.5" cy="22" r="2" fill="#1565C0" stroke="white" strokeWidth="1" />
+    <circle cx="29" cy="22" r="2" fill="#1565C0" stroke="white" strokeWidth="1" />
   </svg>
 );
 
@@ -276,10 +277,10 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
             <span style={{ fontSize: 16, fontWeight: 600 }}>
               {record.inspectorName} ({record.inspectorId}){record.inspectorNameAr && ` - ${record.inspectorNameAr}`}
             </span>
-            <div style={{ fontSize: 12, color: "#666", fontWeight: "normal", marginTop: 4, display: "flex", gap: 12 }}>
+            {/* <div style={{ fontSize: 12, color: "#666", fontWeight: "normal", marginTop: 4, display: "flex", gap: 12 }}>
               {pathCount > 0 && <span style={{ color: "#0070ff" }}>● {pathCount} path points</span>}
               {fineCount > 0 && <span style={{ color: "#E53935" }}>● {fineCount} fines issued</span>}
-            </div>
+            </div> */}
           </div>
         </div>
       }
@@ -420,21 +421,64 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
           </div>
 
           {/* ── Performance bar ────────────────────────────────────────────── */}
-          <div style={{ display: "flex", borderTop: "1px solid #e8e8e8", background: "white" }}>
+          <div
+            style={{
+              display: "flex",
+              borderTop: "1px solid #e8e8e8",
+              background: "white",
+            }}
+          >
             {performanceStats.map((stat, index) => (
               <div
                 key={index}
                 style={{
                   flex: 1,
                   textAlign: "center",
-                  padding: "14px 8px",
+                  padding: "16px 8px",
                   borderRight: index < performanceStats.length - 1 ? "1px solid #e8e8e8" : "none",
-                  transition: "background 0.2s",
                 }}
               >
-                <div style={{ fontSize: 20, color: stat.color, marginBottom: 4, lineHeight: 1 }}>{stat.icon}</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: stat.color, lineHeight: 1.2 }}>{stat.value}</div>
-                <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>{stat.label}</div>
+                {/* Icon + Count */}
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                    marginBottom: 6,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 22,
+                      color: stat.color,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {stat.icon}
+                  </span>
+
+                  <span
+                    style={{
+                      fontSize: 22,
+                      fontWeight: 700,
+                      color: stat.color,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {stat.value}
+                  </span>
+                </div>
+
+                {/* Label */}
+                <div
+                  style={{
+                    fontSize: 14,
+                    color: "#080101",
+                  }}
+                >
+                  {stat.label}
+                </div>
               </div>
             ))}
           </div>
@@ -448,11 +492,11 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
               {t("form.personaldetails") || "Basic Details"}
             </div>
             <Descriptions bordered column={1} size="small">
-              <Descriptions.Item label={t("form.inspectorId") || "Inspector ID"}>
-                {record.inspectorId}
+              <Descriptions.Item label={t("form.InspectorName") || "Inspector Name"}>
+                {record.inspectorName}
               </Descriptions.Item>
-              <Descriptions.Item label={t("form.email") || "Email"}>{record.email || "N/A"}</Descriptions.Item>
-              <Descriptions.Item label={t("form.mobile") || "Mobile"}>{record.mobile || "N/A"}</Descriptions.Item>
+              <Descriptions.Item label={t("form.email") || "Email"}>{record.email || "No data"}</Descriptions.Item>
+              <Descriptions.Item label={t("form.mobile") || "Mobile"}>{record.mobile || "No data"}</Descriptions.Item>
             </Descriptions>
           </div>
 
@@ -489,7 +533,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                   {record.checkOutTime ? (
                     <span>
                       <ClockCircleOutlined style={{ marginRight: 4 }} />
-                      {record.checkOutTime}
+                      {dayjs(record.checkOutTime).format("DD MMM YYYY, hh:mm A")}
                     </span>
                   ) : (
                     <span style={{ color: "#ff4d4f" }}>
@@ -498,9 +542,9 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                     </span>
                   )}
                 </Descriptions.Item>
-                <Descriptions.Item label={t("form.supervisorName") || "Supervisor"}>
+                {/* <Descriptions.Item label={t("form.supervisorName") || "Supervisor"}>
                   {record.supervisorName}
-                </Descriptions.Item>
+                </Descriptions.Item> */}
                 <Descriptions.Item label={t("form.status") || "Status"}>
                   <Badge status={getStatusBadge(record.status)} text={statusLabels[record.status] || record.status} />
                 </Descriptions.Item>

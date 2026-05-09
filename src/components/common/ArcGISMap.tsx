@@ -16,7 +16,7 @@ import esriConfig from "@arcgis/core/config";
 import { MAP_ICONS } from "./mapIconUrls";
 
 export type Inspector = {
-  id: number;
+  id: number | string;
   name: string;
   nameAr: string;
   lat: number;

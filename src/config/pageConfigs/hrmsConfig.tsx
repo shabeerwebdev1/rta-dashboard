@@ -429,7 +429,7 @@ export const hrmsConfig: PageConfig = {
   name: { singular: "entity.hrms", plural: "HRMS Records" },
 
   api: {
-    get: "/api/hrms/attendance",
+    get: "/api/HRMS/Attendance/GetAll",
     post: "/api/hrms/attendance",
     postContentType: "application/json",
     put: "/api/hrms/attendance/{id}",
@@ -437,9 +437,9 @@ export const hrmsConfig: PageConfig = {
   },
 
   searchConfig: {
-    globalSearchKeys: ["inspectorName", "supervisorName"],
-    columnFilterKeys: ["status", "supervisorName"],
-    dateRangeKey: "date",
+    globalSearchKeys: ["inspectorNameEn"],
+    columnFilterKeys: ["status"],
+    dateRangeKey: "addOn",
   },
 
   statsConfig: [
@@ -452,12 +452,12 @@ export const hrmsConfig: PageConfig = {
 
   tableConfig: {
     columns: [
-      { key: "date", title: "form.date", type: "date", sortable: true },
-      { key: "inspectorName", title: "form.inspectorName", type: "string", sortable: true },
-      { key: "supervisorName", title: "form.supervisorName", type: "string", filterable: true },
-      { key: "checkInTime", title: "form.checkInTime", type: "string" },
-      { key: "checkOutTime", title: "form.checkOutTime", type: "string" },
-      { key: "status", title: "form.status", type: "string", filterable: true },
+      { key: "date", title: "form.date", type: "date", width: 150 },
+      { key: "inspectorNameEn", title: "form.inspectorName", type: "string", width: 220 },
+      // { key: "supervisorName", title: "form.supervisorName", type: "string", width: 220 },
+      { key: "checkInTime", title: "form.checkInTime", type: "string", width: 140 },
+      { key: "checkOutTime", title: "form.checkOutTime", type: "string", width: 140 },
+      // { key: "status", title: "form.status", type: "string", filterable: true, width: 130 },
     ],
     viewRecord: true,
     showEdit: false,

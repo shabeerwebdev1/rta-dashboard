@@ -5,16 +5,9 @@ import { useValidatecodeQuery } from "../services/rtkApiFactory";
 import { useAuth } from "../contexts/AuthContext";
 import { EXTERNAL_LOGIN_URL } from "../config/envConfig";
 
-//  202602056735FED1C0BC48978ACA603F dc
-
-// 20260205ED7F72A095154944BCB7F249  sr senior
-
-const FALLBACK_CODE = "202605083B8DC07978AF4BEE9B35853A";
+const FALLBACK_CODE = "2026050936D0663375864FE79325649E";
 
 const SPLASH_DELAY = 1300;
-// const EXTERNAL_LOGIN_URL = "https://sso.kandaprojects.live/webapp/ui/common/login.aspx";
-
-// const EXTERNAL_LOGIN_URL = "http://localhost:7000/webapp/ui/common/login.aspx";
 
 export default function SplashPage() {
   const navigate = useNavigate();

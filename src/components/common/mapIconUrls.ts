@@ -1,19 +1,3 @@
-/**
- * mapIconUrls.ts
- * SVG data URLs for all map marker icons.
- * Use directly in ArcGIS PictureMarkerSymbol `url` field.
- *
- * Colors:
- *  - Routine   : #34A853 (Google green)
- *  - Warning   : #F9A825 (amber/gold)
- *  - Fine      : #E53935 (red)
- *  - Towing    : #1565C0 (dark navy blue)
- *  - Obstacle  : #F57C00 (deep orange)
- *
- * Icon circle is centered at cy=19 (slightly higher) so the icon sits
- * visually in the "bulge" of the teardrop, with the tip clearly below.
- */
-
 const svgToDataUrl = (svg: string): string => {
   const encoded = btoa(unescape(encodeURIComponent(svg)));
   return `data:image/svg+xml;base64,${encoded}`;
