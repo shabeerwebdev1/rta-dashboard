@@ -261,7 +261,15 @@ export const dynamicApi = createApi({
     }),
     getHRMSTracking: builder.query({
       query: (params) => ({ url: "/api/HRMS/Tracking", params }),
-      transformResponse: (response: any) => response?.data ?? [],
+      transformResponse: (response: any) => ({
+        data: response?.data ?? [],
+        statusCode: response?.statusCode,
+        successful: response?.successful,
+        en_Msg: response?.en_Msg,
+        ar_Msg: response?.ar_Msg,
+        validationErrors: response?.validationErrors ?? [],
+        haveValidationErrors: response?.haveValidationErrors ?? false,
+      }),
       providesTags: ["HRMS"],
     }),
 

@@ -16,118 +16,10 @@ import type { PageConfig } from "../../types/config";
 import ArcGISMap from "../common/ArcGISMap";
 import dayjs from "dayjs";
 
-// ─── Inline SVG Icon Components ───────────────────────────────────────────────
-
-const RoutineIcon = ({ size = 22 }: { size?: number }) => (
-  <svg width={size} height={size * 1.25} viewBox="0 0 48 60" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="24" cy="57" rx="6" ry="2.5" fill="rgba(0,0,0,0.15)" />
-    <path
-      d="M24 2C13.507 2 5 10.507 5 21c0 14.25 19 37 19 37S43 35.25 43 21C43 10.507 34.493 2 24 2z"
-      fill="#34A853"
-      stroke="#27843f"
-      strokeWidth="1.2"
-    />
-    <path d="M17 7 Q24 3 31 9 Q26 5 17 7z" fill="rgba(255,255,255,0.25)" />
-    <circle cx="24" cy="19" r="11" fill="white" opacity="0.97" />
-    <polyline
-      points="17,19 22,25 32,13"
-      fill="none"
-      stroke="#34A853"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
-
-const WarningIcon = ({ size = 22 }: { size?: number }) => (
-  <svg width={size} height={size * 1.25} viewBox="0 0 48 60" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="24" cy="57" rx="6" ry="2.5" fill="rgba(0,0,0,0.15)" />
-    <path
-      d="M24 2C13.507 2 5 10.507 5 21c0 14.25 19 37 19 37S43 35.25 43 21C43 10.507 34.493 2 24 2z"
-      fill="#F9A825"
-      stroke="#c97d00"
-      strokeWidth="1.2"
-    />
-    <path d="M17 7 Q24 3 31 9 Q26 5 17 7z" fill="rgba(255,255,255,0.25)" />
-    <circle cx="24" cy="19" r="11" fill="white" opacity="0.97" />
-    <polygon points="24,10 33,27 15,27" fill="none" stroke="#F9A825" strokeWidth="2.4" strokeLinejoin="round" />
-    <line x1="24" y1="15" x2="24" y2="22" stroke="#F9A825" strokeWidth="2.4" strokeLinecap="round" />
-    <circle cx="24" cy="25" r="1.3" fill="#F9A825" />
-  </svg>
-);
-
-const FineIcon = ({ size = 22 }: { size?: number }) => (
-  <svg width={size} height={size * 1.25} viewBox="0 0 48 60" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="24" cy="57" rx="6" ry="2.5" fill="rgba(0,0,0,0.15)" />
-    <path
-      d="M24 2C13.507 2 5 10.507 5 21c0 14.25 19 37 19 37S43 35.25 43 21C43 10.507 34.493 2 24 2z"
-      fill="#E53935"
-      stroke="#b71c1c"
-      strokeWidth="1.2"
-    />
-    <path d="M17 7 Q24 3 31 9 Q26 5 17 7z" fill="rgba(255,255,255,0.25)" />
-    <circle cx="24" cy="19" r="11" fill="white" opacity="0.97" />
-    <rect x="18.5" y="11" width="11" height="14" rx="1.6" fill="none" stroke="#E53935" strokeWidth="2" />
-    <path d="M26,11 L29.5,14.5 L26,14.5 Z" fill="#E53935" opacity="0.35" />
-    <line x1="20.5" y1="17" x2="27.5" y2="17" stroke="#E53935" strokeWidth="1.6" strokeLinecap="round" />
-    <line x1="20.5" y1="20" x2="27.5" y2="20" stroke="#E53935" strokeWidth="1.6" strokeLinecap="round" />
-    <line x1="20.5" y1="23" x2="25" y2="23" stroke="#E53935" strokeWidth="1.6" strokeLinecap="round" />
-  </svg>
-);
-
-const TowingIcon = ({ size = 22 }: { size?: number }) => (
-  <svg width={size} height={size * 1.25} viewBox="0 0 48 60" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="24" cy="57" rx="6" ry="2.5" fill="rgba(0,0,0,0.15)" />
-    <path
-      d="M24 2C13.507 2 5 10.507 5 21c0 14.25 19 37 19 37S43 35.25 43 21C43 10.507 34.493 2 24 2z"
-      fill="#1565C0"
-      stroke="#0d47a1"
-      strokeWidth="1.2"
-    />
-    <path d="M17 7 Q24 3 31 9 Q26 5 17 7z" fill="rgba(255,255,255,0.25)" />
-    <circle cx="24" cy="19" r="11" fill="white" opacity="0.97" />
-    <rect x="27" y="15.5" width="6" height="5" rx="1.1" fill="#1565C0" />
-    <rect x="28.1" y="16.4" width="2.6" height="2.6" rx="0.5" fill="white" opacity="0.9" />
-    <rect x="15.5" y="17.5" width="11.5" height="3.2" rx="0.8" fill="#1565C0" />
-    <line x1="18.5" y1="17.5" x2="18.5" y2="13" stroke="#1565C0" strokeWidth="2" strokeLinecap="round" />
-    <line x1="18.5" y1="13" x2="23.5" y2="13" stroke="#1565C0" strokeWidth="2" strokeLinecap="round" />
-    <path d="M23.5,13 Q25.5,13 25.5,15.5" fill="none" stroke="#1565C0" strokeWidth="2" strokeLinecap="round" />
-    <circle cx="18.5" cy="22" r="2" fill="#1565C0" stroke="white" strokeWidth="1" />
-    <circle cx="29" cy="22" r="2" fill="#1565C0" stroke="white" strokeWidth="1" />
-  </svg>
-);
-
-const ObstacleIcon = ({ size = 22 }: { size?: number }) => (
-  <svg width={size} height={size * 1.25} viewBox="0 0 48 60" xmlns="http://www.w3.org/2000/svg">
-    <ellipse cx="24" cy="57" rx="6" ry="2.5" fill="rgba(0,0,0,0.15)" />
-    <path
-      d="M24 2C13.507 2 5 10.507 5 21c0 14.25 19 37 19 37S43 35.25 43 21C43 10.507 34.493 2 24 2z"
-      fill="#F57C00"
-      stroke="#bf360c"
-      strokeWidth="1.2"
-    />
-    <path d="M17 7 Q24 3 31 9 Q26 5 17 7z" fill="rgba(255,255,255,0.25)" />
-    <circle cx="24" cy="19" r="11" fill="white" opacity="0.97" />
-    <polygon points="24,10 29.5,27 18.5,27" fill="#F57C00" />
-    <polygon points="22.5,15.5 25.5,15.5 26.7,18.8 21.3,18.8" fill="white" opacity="0.9" />
-    <polygon points="21,21.5 27,21.5 27.8,24.5 20.2,24.5" fill="white" opacity="0.9" />
-    <rect x="17.5" y="27" width="13" height="2.3" rx="1.1" fill="#F57C00" />
-  </svg>
-);
-
 const StartPin = () => (
   <svg width="22" height="22" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
     <circle cx="20" cy="20" r="18" fill="#00C853" stroke="white" strokeWidth="2.5" />
     <polygon points="16,13 30,20 16,27" fill="white" />
-  </svg>
-);
-
-const InspectorPin = () => (
-  <svg width="22" height="22" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="22" cy="22" r="21" fill="#0070FF" stroke="white" strokeWidth="2.5" />
-    <circle cx="22" cy="16" r="6" fill="white" />
-    <path d="M10 38 Q10 28 22 28 Q34 28 34 38" fill="white" />
   </svg>
 );
 
@@ -198,7 +90,10 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "Present":
+      case "Checked Out":
         return "success";
+      case "Checked In":
+        return "processing";
       case "Absent":
         return "error";
       case "Leave":
@@ -229,7 +124,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
       label: t("form.obstacles") || "Obstacles",
       value: record.obstacles || 0,
       color: "#F57C00",
-      icon: <WarningOutlined />,
+      icon: <img src="/images/Obstacle.png" alt="Obstacles" style={{ width: 36, height: 36, objectFit: "contain" }} />,
     },
     {
       label: t("form.totaliinspections") || "Total",
@@ -247,24 +142,31 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
       label: t("form.warninginspections") || "Warnings",
       value: record.warningInspections || 0,
       color: "#F9A825",
-      icon: <FileExclamationOutlined />,
+      icon: <img src="/images/Warning.png" alt="Warnings" style={{ width: 36, height: 36, objectFit: "contain" }} />,
     },
     {
       label: t("stats.totalFines") || "Fines",
       value: record.finesIssued || 0,
       color: "#E53935",
-      icon: <SafetyOutlined />,
+      icon: <img src="/images/Fine.png" alt="Fines" style={{ width: 36, height: 36, objectFit: "contain" }} />,
     },
     {
       label: t("form.towingRequests") || "Towing",
       value: record.towingRequests || 0,
       color: "#7B1FA2",
-      icon: <CarOutlined />,
+      icon: <img src="/images/Towing.png" alt="Towing" style={{ width: 36, height: 36, objectFit: "contain" }} />,
     },
   ];
 
   const pathCount = record.inspectorPath?.length || 0;
   const fineCount = record.fineLocations?.length || 0;
+  const hasCheckedIn = Boolean(record.checkInTime);
+  const checkInPanelBackground = hasCheckedIn ? "#f6ffed" : "#fff1f0";
+  const checkInPanelBorder = hasCheckedIn ? "#b7eb8f" : "#ffccc7";
+  const formattedCheckInTime =
+    record.checkInTime && dayjs(record.checkInTime).isValid()
+      ? dayjs(record.checkInTime).format("DD MMM YYYY, hh:mm A")
+      : record.checkInTime;
 
   return (
     <Modal
@@ -275,12 +177,14 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingRight: 40 }}>
           <div>
             <span style={{ fontSize: 16, fontWeight: 600 }}>
-              {record.inspectorName} ({record.inspectorId}){record.inspectorNameAr && ` - ${record.inspectorNameAr}`}
+              {record.inspectorName} {record.inspectorNameAr && ` - ${record.inspectorNameAr}`}
             </span>
-            {/* <div style={{ fontSize: 12, color: "#666", fontWeight: "normal", marginTop: 4, display: "flex", gap: 12 }}>
-              {pathCount > 0 && <span style={{ color: "#0070ff" }}>● {pathCount} path points</span>}
-              {fineCount > 0 && <span style={{ color: "#E53935" }}>● {fineCount} fines issued</span>}
-            </div> */}
+
+            <div style={{ fontSize: 12, color: "#666", fontWeight: "normal", marginTop: 4, display: "flex", gap: 4 }}>
+              <span style={{ fontSize: 16, fontWeight: 600, color: "#0070ff" }}>{record.zoneName}</span>
+              <span style={{ fontSize: 16, fontWeight: 600, color: "#0070ff" }}>-</span>
+              <span style={{ fontSize: 16, fontWeight: 600, color: "#0070ff" }}>{record.areaName}</span>
+            </div>
           </div>
         </div>
       }
@@ -383,22 +287,40 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                         }
                         label={t("form.InspectorPath") || "Inspector Path"}
                       />
-                      <LegendRow icon={<RoutineIcon size={22} />} label={t("form.RoutineLocations") || "Routine"} />
-                      <LegendRow icon={<WarningIcon size={22} />} label={t("form.WarningLocations") || "Warning"} />
-                      <LegendRow icon={<FineIcon size={22} />} label={t("form.FineLocations") || "Fine Issued"} />
-                      <LegendRow icon={<TowingIcon size={22} />} label={t("form.TowingLocations") || "Towing"} />
-                      <LegendRow icon={<ObstacleIcon size={22} />} label={"Obstacle"} />
                       <LegendRow
                         icon={
-                          <img
-                            src="/images/inspector-avatar.png"
-                            width={22}
-                            height={22}
-                            style={{ borderRadius: "50%" }}
-                          />
+                          <img src="/images/icon_Routine.svg" width={24} height={24} style={{ borderRadius: "50%" }} />
                         }
+                        label={t("form.RoutineLocations") || "Routine"}
+                      />
+                      <LegendRow
+                        icon={
+                          <img src="/images/icon_Warning.svg" width={24} height={24} style={{ borderRadius: "50%" }} />
+                        }
+                        label={t("form.WarningLocations") || "Warning"}
+                      />
+                      <LegendRow
+                        icon={
+                          <img src="/images/icon_fine.svg" width={24} height={24} style={{ borderRadius: "50%" }} />
+                        }
+                        label={t("form.FineLocations") || "Fine Issued"}
+                      />
+                      <LegendRow
+                        icon={
+                          <img src="/images/icon_Towing.svg" width={24} height={24} style={{ borderRadius: "50%" }} />
+                        }
+                        label={t("form.TowingLocations") || "Towing"}
+                      />
+                      <LegendRow
+                        icon={
+                          <img src="/images/icon_Obstacle.svg" width={24} height={24} style={{ borderRadius: "50%" }} />
+                        }
+                        label={"Obstacle"}
+                      />
+                      <LegendRow
+                        icon={<img src="/images/icon1.png" width={24} height={24} style={{ borderRadius: "50%" }} />}
                         label={t("form.CurrentLocation") || "Inspector"}
-                      />{" "}
+                      />
                     </div>
                   )}
                 </div>
@@ -450,9 +372,15 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                 >
                   <span
                     style={{
-                      fontSize: 22,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 26,
+                      height: 26,
+                      fontSize: 26,
                       color: stat.color,
                       lineHeight: 1,
+                      flexShrink: 0,
                     }}
                   >
                     {stat.icon}
@@ -460,7 +388,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
 
                   <span
                     style={{
-                      fontSize: 22,
+                      fontSize: 26,
                       fontWeight: 700,
                       color: stat.color,
                       lineHeight: 1,
@@ -473,7 +401,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                 {/* Label */}
                 <div
                   style={{
-                    fontSize: 14,
+                    fontSize: 16,
                     color: "#080101",
                   }}
                 >
@@ -507,14 +435,16 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
             </div>
             <div
               style={{
-                backgroundColor: record.status === "Present" ? "#f6ffed" : "#fff1f0",
-                border: `1px solid ${record.status === "Present" ? "#b7eb8f" : "#ffccc7"}`,
+                backgroundColor: checkInPanelBackground,
+                border: `1px solid ${checkInPanelBorder}`,
                 borderRadius: 4,
                 padding: 8,
               }}
             >
               <Descriptions bordered column={1} size="small">
-                <Descriptions.Item label={t("form.zone") || "Zone"}>{record.location?.zone || "N/A"}</Descriptions.Item>
+                <Descriptions.Item label={t("form.location") || "Zone"}>
+                  {record.location?.zone || "N/A"}
+                </Descriptions.Item>
                 <Descriptions.Item label={t("form.shift") || "Shift"}>
                   {record.shift || "Morning Shift"}
                 </Descriptions.Item>
@@ -524,7 +454,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                     text={
                       <span>
                         <CheckCircleOutlined style={{ marginRight: 4 }} />
-                        {record.checkInTime}
+                        {formattedCheckInTime || t("common.noData")}
                       </span>
                     }
                   />

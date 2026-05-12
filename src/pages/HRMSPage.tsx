@@ -83,38 +83,68 @@ const buildPrimaryLocation = (record: any) => {
   return null;
 };
 
+const getAttendancePayload = (item: any) =>
+  item?.attendance && typeof item.attendance === "object" ? item.attendance : item;
+
 const normalizeAttendanceRecord = (item: any, inspectorNameMap: Map<string, string>) => {
-  const checkIn = normalizeDateValue(item.checkIn);
-  const checkOut = normalizeDateValue(item.checkOut);
-  const addOn = normalizeDateValue(item.addOn) || item.addOn || null;
-  const primaryLocation = buildPrimaryLocation(item);
-  const recordDate = getRecordDate(checkIn, addOn, checkOut);
-  const inspectorGuid = item.inspectorGUID || ZERO_GUID;
+  const attendance = getAttendancePayload(item);
+  const checkIn = normalizeDateValue(attendance.checkIn);
+  const checkOut = normalizeDateValue(attendance.checkOut);
+  const addOn = normalizeDateValue(attendance.addOn) || attendance.addOn || null;
+  const assignmentDate = normalizeDateValue(attendance.assignmentDate) || attendance.assignmentDate || null;
+  const primaryLocation = buildPrimaryLocation(attendance);
+  const recordDate = getRecordDate(checkIn, assignmentDate, addOn, checkOut);
+  const inspectorGuid = attendance.inspectorGUID || attendance.inspectorGuid || item.inspectorGUID || ZERO_GUID;
+  const attendanceId = attendance.attendance_Id || attendance.attendanceId || item.attendance_Id || item.attendanceId;
+  const assignmentId = Number(attendance.assignment_id ?? attendance.assignmentId ?? 0);
+  const zoneLabel =
+    attendance.zoneName ||
+    item.zoneName ||
+    attendance.areaName ||
+    item.areaName ||
+    (assignmentId ? `Assignment ${assignmentId}` : "N/A");
   const inspectorName =
-    inspectorNameMap.get(normalizeGuid(inspectorGuid)) || (inspectorGuid !== ZERO_GUID ? inspectorGuid : "-");
-  const supervisorName = item.supervisorName || item.supervisorNameEn || item.supervisorNameAr || "-";
+    item.inspectorName ||
+    attendance.inspectorName ||
+    inspectorNameMap.get(normalizeGuid(inspectorGuid)) ||
+    (inspectorGuid !== ZERO_GUID ? inspectorGuid : "-");
+  const supervisorName =
+    item.supervisorName ||
+    attendance.supervisorName ||
+    attendance.supervisorNameEn ||
+    attendance.supervisorNameAr ||
+    "-";
 
   return {
     ...item,
-    id: item.attendance_Id || item.attendanceId || `${item.inspectorGUID}-${recordDate || item.addOn || "row"}`,
-    attendance_Id: item.attendance_Id || item.attendanceId || "-",
+    ...attendance,
+    id: attendanceId || `${inspectorGuid}-${recordDate || attendance.addOn || "row"}`,
+    attendance_Id: attendanceId || "-",
     inspectorGUID: inspectorGuid,
-    devices_id: Number(item.devices_id ?? 0),
-    assignment_id: Number(item.assignment_id ?? 0),
+    inspectorId: attendance.inspectorId || inspectorGuid || "-",
+    inspectorGuid,
+    inspectorName,
+    inspectorNameEn: inspectorName,
+    inspectorNameAr: item.inspectorNameAr || attendance.inspectorNameAr || "",
+    supervisorName,
+    devices_id: Number(attendance.devices_id ?? attendance.devicesId ?? 0),
+    assignment_id: assignmentId,
     checkIn,
     checkOut,
     addOn,
+    assignmentDate,
     date: recordDate || addOn,
     recordDate,
-    inspectorName,
-    supervisorName,
     checkInTime: checkIn,
     checkOutTime: checkOut,
     status: buildAttendanceStatus(checkIn, checkOut),
+    email: attendance.email || attendance.emailId || item.email || item.emailId || "",
+    mobile: attendance.mobile || attendance.mobileNo || item.mobile || item.mobileNo || "",
+    shift: attendance.shift || attendance.shiftName || item.shift || item.shiftName || "",
     location: primaryLocation
       ? {
           ...primaryLocation,
-          zone: item.assignment_id ? `Assignment ${item.assignment_id}` : "N/A",
+          zone: zoneLabel,
         }
       : null,
     obstacleLocations: [],
@@ -341,7 +371,10 @@ const HRMSPage: React.FC = () => {
   useEffect(() => {
     if (!trackingResponse) return;
 
-    const inspectorPath = [...trackingResponse]
+    const trackingData = Array.isArray(trackingResponse) ? trackingResponse : trackingResponse?.data || [];
+    const trackingMeta = trackingData[0];
+
+    const inspectorPath = [...trackingData]
       .map((item: any) => {
         const lat = parseCoordinate(item.arcGis_Lat ?? item.geo_Lat);
         const lng = parseCoordinate(item.arcGis_Lng ?? item.geo_Lng);
@@ -364,13 +397,30 @@ const HRMSPage: React.FC = () => {
       const lastTrackingPoint = inspectorPath[inspectorPath.length - 1];
       return {
         ...prev,
+        inspectorName: trackingMeta?.inspectorName || prev.inspectorName,
+        inspectorGuid: trackingMeta?.inspectorGuid || prev.inspectorGuid,
+        email: trackingMeta?.emailId || prev.email,
+        mobile: trackingMeta?.mobileNo || prev.mobile,
+        attendanceId: trackingMeta?.attendanceId || prev.attendanceId,
+        shiftId: trackingMeta?.shiftId || prev.shiftId,
+        isOff: trackingMeta?.isOff ?? prev.isOff,
+        assignmentDate: trackingMeta?.assignmentDate || prev.assignmentDate,
+        zoneName: trackingMeta?.zoneName || prev.zoneName,
+        areaName: trackingMeta?.areaName || prev.areaName,
+        checkIn: prev.checkIn || normalizeDateValue(trackingMeta?.checkIn),
+        checkOut: prev.checkOut || normalizeDateValue(trackingMeta?.checkOut),
+        checkInTime: prev.checkInTime || normalizeDateValue(trackingMeta?.checkIn),
+        checkOutTime: prev.checkOutTime || normalizeDateValue(trackingMeta?.checkOut),
         inspectorPath,
         trackingPoints: inspectorPath.length,
         location: lastTrackingPoint
           ? {
               lat: lastTrackingPoint.lat,
               lng: lastTrackingPoint.lng,
-              zone: prev.location?.zone || (prev.assignment_id ? `Assignment ${prev.assignment_id}` : "N/A"),
+              zone:
+                [trackingMeta?.zoneName, trackingMeta?.areaName].filter(Boolean).join(" - ") ||
+                prev.location?.zone ||
+                (prev.assignment_id ? `Assignment ${prev.assignment_id}` : "N/A"),
             }
           : prev.location,
       };
@@ -508,7 +558,7 @@ const HRMSPage: React.FC = () => {
   const handleView = (record: any) => {
     const recordDate = record.recordDate && dayjs(record.recordDate).isValid() ? dayjs(record.recordDate) : null;
     const selectedDate = recordDate ? recordDate.format("YYYY-MM-DD") : null;
-    const trackedDtTm = recordDate ? recordDate.startOf("day").format("YYYY-MM-DDTHH:mm:ss") : null;
+    const trackedDtTm = selectedDate;
 
     // Reset viewRecord with empty arrays so map clears immediately
     setViewRecord({

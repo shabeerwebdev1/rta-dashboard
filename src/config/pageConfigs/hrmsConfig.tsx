@@ -437,7 +437,7 @@ export const hrmsConfig: PageConfig = {
   },
 
   searchConfig: {
-    globalSearchKeys: ["inspectorNameEn"],
+    globalSearchKeys: ["inspectorName"],
     columnFilterKeys: ["status"],
     dateRangeKey: "addOn",
   },
@@ -453,7 +453,7 @@ export const hrmsConfig: PageConfig = {
   tableConfig: {
     columns: [
       { key: "date", title: "form.date", type: "date", width: 150 },
-      { key: "inspectorNameEn", title: "form.inspectorName", type: "string", width: 220 },
+      { key: "inspectorName", title: "form.inspectorName", type: "string", width: 220 },
       // { key: "supervisorName", title: "form.supervisorName", type: "string", width: 220 },
       { key: "checkInTime", title: "form.checkInTime", type: "string", width: 140 },
       { key: "checkOutTime", title: "form.checkOutTime", type: "string", width: 140 },

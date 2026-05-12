@@ -75,10 +75,10 @@ const featureServiceUrls = [
   "https://services1.arcgis.com/0zsuvMZIPja7Lm9C/arcgis/rest/services/RTA_Dubai/FeatureServer",
 ];
 
-const PIN_W = "40px";
-const PIN_H = "40px";
+const PIN_W = "50px";
+const PIN_H = "50px";
 const START_SIZE = "40px";
-const AVATAR_SIZE = "40px";
+const AVATAR_SIZE = "90px";
 
 const ArcGISMap: React.FC<ArcGISMapProps> = ({
   inspectors,
@@ -231,12 +231,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
           // Start marker
           symbol = new PictureMarkerSymbol({ url: MAP_ICONS.start, width: START_SIZE, height: START_SIZE });
         } else {
-          // All other waypoints — small blue dot (no end marker)
-          symbol = new SimpleMarkerSymbol({
-            color: [0, 112, 255, 0.85],
-            size: 8,
-            outline: { color: [255, 255, 255], width: 2 },
-          });
+          return; // Skip end marker for now
         }
         view.graphics.add(
           new Graphic({
@@ -400,10 +395,11 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
           outline: { color: [255, 255, 255], width: 3 },
         });
       } else {
+        const isCheckedOut = inspector.status === "Checked Out";
         symbol = new PictureMarkerSymbol({
-          url: "/images/inspector-avatar.png",
-          width: AVATAR_SIZE,
-          height: AVATAR_SIZE,
+          url: isCheckedOut ? MAP_ICONS.end : "/images/icon1.png",
+          width: isCheckedOut ? START_SIZE : AVATAR_SIZE,
+          height: isCheckedOut ? START_SIZE : AVATAR_SIZE,
         });
       }
 
