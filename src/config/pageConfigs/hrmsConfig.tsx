@@ -425,7 +425,7 @@ export const MOCK_INSPECTORS_DATA: InspectorAttendanceDTO[] = [
 // Configuration
 export const hrmsConfig: PageConfig = {
   key: "hrms",
-  title: "page.title.hrms",
+  title: "page.title.attendance",
   name: { singular: "entity.hrms", plural: "HRMS Records" },
 
   api: {

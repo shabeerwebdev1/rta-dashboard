@@ -45,7 +45,8 @@
     "inbox": "صندوق الوارد",
     "allInbox": "جميع الرسائل",
     "whitelistPlates": "القائمة البيضاء",
-    "whitelistTradeLicenses": "الرخص التجارية"
+    "whitelistTradeLicenses": "الرخص التجارية",
+    "attendance": "الحضور والانصراف"
   },
   "header": {
     "compactMode": "الوضع المضغوط",
@@ -96,7 +97,8 @@
       "proactive-campaigns": "الحملات الاستباقية",
       "hrms": "سجلات الحضور والانصراف",
       "shiftplanning": "إنشاء خطة المناوبات",
-      "dispute-parking": " اعتراضات مواقف السيارات "
+      "dispute-parking": " اعتراضات مواقف السيارات ",
+      "attendance": "الحضور والانصراف"
     },
     "addTitle": "إضافة {{entity}} جديد",
     "editTitle": "تعديل {{entity}}",

@@ -5,7 +5,7 @@ import { useValidatecodeQuery } from "../services/rtkApiFactory";
 import { useAuth } from "../contexts/AuthContext";
 import { EXTERNAL_LOGIN_URL } from "../config/envConfig";
 
-const FALLBACK_CODE = "20260512EDA7B26A1ADC491CBFDCF3B3";
+const FALLBACK_CODE = "20260513995D31B5FEF848F882927E8F";
 
 const SPLASH_DELAY = 1300;
 

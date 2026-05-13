@@ -456,6 +456,22 @@ export const dynamicApi = createApi({
       providesTags: ["FineSearch"],
     }),
 
+    getInspectionById: builder.query<any, string>({
+      query: (inspectionGUID) => ({
+        url: `/api/Inspection/${inspectionGUID}`,
+        method: "GET",
+      }),
+      transformResponse: (response: any) => {
+        const data = response?.data || response || null;
+        if (!data) return null;
+
+        return {
+          ...data,
+          inspectionCategory: data.inspectionCategory ? parseInt(data.inspectionCategory, 10) : null,
+        };
+      },
+    }),
+
     getCarInspectionById: builder.query<any, string>({
       query: (inspectionGUID) => ({
         url: `/api/Inspection/CarInspections/${inspectionGUID}`,
@@ -1136,6 +1152,7 @@ export const {
   useLazyGetCarInspectionByIdQuery,
   useLazyGetTLInspectionByIdQuery,
   useGetInspectionsQuery,
+  useGetInspectionByIdQuery,
 
   // Parkonics
   useGetParkonicsQuery,

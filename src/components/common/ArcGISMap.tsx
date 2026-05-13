@@ -9,11 +9,14 @@ import PictureMarkerSymbol from "@arcgis/core/symbols/PictureMarkerSymbol";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
 import Extent from "@arcgis/core/geometry/Extent";
+import PopupTemplate from "@arcgis/core/PopupTemplate";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import { Dropdown, Menu } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import esriConfig from "@arcgis/core/config";
 import { MAP_ICONS } from "./mapIconUrls";
+import { useTranslation } from "react-i18next";
+import dayjs from "dayjs";
 
 export type Inspector = {
   id: number | string;
@@ -29,6 +32,7 @@ export type Inspector = {
 };
 
 export type InspectorPath = Array<{ lat: number; lng: number; timestamp: string }>;
+
 export type FineLocation = {
   id: string;
   lat: number;
@@ -36,6 +40,7 @@ export type FineLocation = {
   fineAmount: number;
   timestamp: string;
   plateNumber: string;
+  [key: string]: any;
 };
 
 export type ObstacleLocation = {
@@ -67,6 +72,8 @@ interface ArcGISMapProps {
   showTowingRoute?: boolean;
   towingStartPoint?: { lat: number; lng: number };
   towingEndPoint?: { lat: number; lng: number };
+  onFineClick?: (fine: any) => void;
+  onInspectionClick?: (inspection: any) => void;
 }
 
 const featureServiceUrls = [
@@ -79,6 +86,142 @@ const PIN_W = "50px";
 const PIN_H = "50px";
 const START_SIZE = "40px";
 const AVATAR_SIZE = "90px";
+
+// Store callbacks globally - use mutable refs so they're always up to date
+let globalOnFineClick: ((fine: any) => void) | undefined;
+let globalOnInspectionClick: ((inspection: any) => void) | undefined;
+let globalFineLocations: any[] = [];
+let globalWarningLocations: any[] = [];
+let globalRoutineLocations: any[] = [];
+let globalTowingLocations: any[] = [];
+let globalObstacleLocations: any[] = [];
+
+// Helper function to get Arabic labels based on type
+const getArabicLabels = (type: string, data: any) => {
+  const labels: Record<string, any> = {
+    fine: {
+      amount: "المبلغ",
+      time: "الوقت",
+      plate: "رقم اللوحة",
+    },
+    warning: {
+      type: "النوع",
+      time: "الوقت",
+      plate: "رقم اللوحة",
+    },
+    routine: {
+      type: "النوع",
+      time: "الوقت",
+      plate: "رقم اللوحة",
+    },
+    towing: {
+      status: "الحالة",
+      time: "الوقت",
+      plate: "رقم اللوحة",
+    },
+    obstacle: {
+      type: "النوع",
+      reported: "تاريخ البلاغ",
+      id: "المعرف",
+    },
+  };
+  return labels[type] || labels.fine;
+};
+
+const formatDateTime = (dateString?: string) => {
+  if (!dateString) return "—";
+
+  return dayjs(dateString).format("DD MMM YYYY hh:mm A");
+};
+
+const createPopupDOMElement = (
+  itemId: string,
+  rows: Array<{ icon: string; label: string; value: string; valueColor?: string }>,
+  type: string,
+  showButton: boolean = true,
+  language: string = "en",
+) => {
+  const container = document.createElement("div");
+  container.style.cssText =
+    'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-width:220px;padding:4px 0;';
+
+  // Create table
+  const table = document.createElement("table");
+  table.style.cssText = "width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px;";
+
+  rows.forEach((row) => {
+    const tr = document.createElement("tr");
+
+    const tdLabel = document.createElement("td");
+    tdLabel.style.cssText = `padding:5px ${language === "ar" ? "0 12px 5px 0" : "5px 12px 5px 0"};color:#8c8c8c;font-weight:500;white-space:nowrap`;
+    // Remove icon from label - only show text
+    tdLabel.innerHTML = `${row.label}`;
+
+    const tdValue = document.createElement("td");
+    tdValue.style.cssText = `padding:5px 0;color:${row.valueColor || "#262626"};font-weight:600;${language === "ar" ? "text-align:right" : "text-align:left"}`;
+    tdValue.textContent = row.value;
+
+    tr.appendChild(tdLabel);
+    tr.appendChild(tdValue);
+    table.appendChild(tr);
+  });
+
+  container.appendChild(table);
+
+  // Hide button if showButton = false
+  if (showButton) {
+    const buttonDiv = document.createElement("div");
+    buttonDiv.style.cssText = "border-top:1px solid #f0f0f0;padding-top:10px;text-align:right;";
+
+    const button = document.createElement("button");
+    const buttonText = language === "ar" ? "مزيد من التفاصيل" : "More Details";
+
+    button.innerHTML = `
+      <svg
+  width="14"
+  height="14"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  style="flex-shrink:0;"
+>
+  <path d="M9 18l6-6-6-6"/>
+</svg>
+      ${buttonText}
+    `;
+
+    button.style.cssText = `
+      background:linear-gradient(135deg,#1677ff 0%,#0958d9 100%);
+      color:#fff;
+      border:none;
+      border-radius:6px;
+      padding:7px 18px;
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+      letter-spacing:0.02em;
+      box-shadow:0 2px 8px rgba(22,119,255,0.35);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    `;
+
+    button.setAttribute("data-id", itemId);
+    button.setAttribute("data-type", type);
+    button.className = "arcgis-more-details-btn";
+
+    buttonDiv.appendChild(button);
+    container.appendChild(buttonDiv);
+  }
+
+  return container;
+};
+
+// Global click handler that will be registered once
+let globalClickHandlerRegistered = false;
 
 const ArcGISMap: React.FC<ArcGISMapProps> = ({
   inspectors,
@@ -102,14 +245,102 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   showTowingRoute = false,
   towingStartPoint,
   towingEndPoint,
+  onFineClick,
+  onInspectionClick,
 }) => {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<__esri.MapView | null>(null);
   const featureLayersRef = useRef<__esri.FeatureLayer[]>([]);
   const [basemap, setBasemap] = useState("streets-navigation-vector");
   const locationMarkerRef = useRef<__esri.Graphic | null>(null);
+  const graphicsRef = useRef<any[]>([]);
+  const { i18n } = useTranslation();
 
-  // ─── Map init ─────────────────────────────────────────────────────────────
+  // Get current language
+  const currentLanguage = document.documentElement.lang || localStorage.getItem("i18nextLng") || "en"; // Update global data and callbacks - use refs to ensure latest values
+  useEffect(() => {
+    globalOnFineClick = onFineClick;
+    globalOnInspectionClick = onInspectionClick;
+    globalFineLocations = [...fineLocations]; // Create new array to ensure reactivity
+    globalWarningLocations = [...warningLocations];
+    globalRoutineLocations = [...routineLocations];
+    globalTowingLocations = [...towingLocations];
+    globalObstacleLocations = [...obstacleLocations];
+
+    console.log("🟢 Updated global callbacks and data");
+    console.log("Fine locations count:", fineLocations.length);
+    console.log("Warning locations count:", warningLocations.length);
+    console.log("onFineClick exists:", !!onFineClick);
+    console.log("onInspectionClick exists:", !!onInspectionClick);
+  }, [
+    onFineClick,
+    onInspectionClick,
+    fineLocations,
+    warningLocations,
+    routineLocations,
+    towingLocations,
+    obstacleLocations,
+  ]);
+
+  // Register a single global click listener for all "More Details" buttons
+  useEffect(() => {
+    if (!globalClickHandlerRegistered) {
+      const handleGlobalClick = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        const button = target.closest(".arcgis-more-details-btn");
+
+        if (button) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const itemId = button.getAttribute("data-id");
+          const type = button.getAttribute("data-type");
+
+          console.log(`🟢 Global click handler: ${type} - ${itemId}`);
+
+          if (type === "fine") {
+            const fine = globalFineLocations.find((f) => String(f.id) === itemId);
+            if (fine && globalOnFineClick) {
+              console.log("🎯 Calling onFineClick with:", fine);
+              globalOnFineClick(fine);
+            } else {
+              console.warn("Fine not found or no handler:", { itemId, fine, hasHandler: !!globalOnFineClick });
+            }
+          } else {
+            const allInspections = [
+              ...globalWarningLocations,
+              ...globalRoutineLocations,
+              ...globalTowingLocations,
+              ...globalObstacleLocations,
+            ];
+            const inspection = allInspections.find((i) => String(i.id) === itemId);
+            if (inspection && globalOnInspectionClick) {
+              console.log("🎯 Calling onInspectionClick with:", inspection);
+              globalOnInspectionClick(inspection);
+            } else {
+              console.warn("Inspection not found or no handler:", {
+                itemId,
+                inspection,
+                hasHandler: !!globalOnInspectionClick,
+              });
+            }
+          }
+        }
+      };
+
+      document.addEventListener("click", handleGlobalClick);
+      globalClickHandlerRegistered = true;
+      console.log("✅ Global click handler registered");
+
+      return () => {
+        document.removeEventListener("click", handleGlobalClick);
+        globalClickHandlerRegistered = false;
+        console.log("❌ Global click handler removed");
+      };
+    }
+  }, []);
+
+  // Map init
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -149,33 +380,25 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       featureLayersRef.current = [];
       locationMarkerRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ─── Basemap switch ───────────────────────────────────────────────────────
+  // Basemap switch
   useEffect(() => {
     if (viewRef.current) viewRef.current.map.basemap = basemap as any;
   }, [basemap]);
 
-  // ─── Location picking click handler ──────────────────────────────────────
+  // Location picking click handler
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
     const clickHandle = view.on("click", (event: any) => {
       const { latitude, longitude } = event.mapPoint;
       if (onLocationPick) onLocationPick(latitude, longitude);
-      if (onInspectorClick) {
-        view.hitTest(event).then((response: any) => {
-          const g = response.results?.[0]?.graphic;
-          const inspector = g?.attributes?.inspector;
-          if (inspector) onInspectorClick(inspector);
-        });
-      }
     });
     return () => clickHandle.remove();
-  }, [onLocationPick, onInspectorClick]);
+  }, [onLocationPick]);
 
-  // ─── Picked location marker ───────────────────────────────────────────────
+  // Picked location marker
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
@@ -195,19 +418,20 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     }
   }, [pickedLat, pickedLng]);
 
-  // ─── Main graphics draw ───────────────────────────────────────────────────
+  // Main graphics draw
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
 
-    // Clear all except location marker
+    // Clear existing graphics
     view.graphics.forEach((g) => {
       if (g !== locationMarkerRef.current) view.graphics.remove(g);
     });
+    graphicsRef.current = [];
 
     const toDraw = onlyInspector ? [onlyInspector] : inspectors;
 
-    // ── 1. Inspector Path (blue polyline) ────────────────────────────────────
+    // 1. Inspector Path
     if (showPath && inspectorPath && inspectorPath.length > 1) {
       const pathCoordinates = inspectorPath.map((p) => [p.lng, p.lat]);
       const polyline = new Polyline({ paths: [pathCoordinates], spatialReference: { wkid: 4326 } });
@@ -219,122 +443,284 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         }),
       );
 
-      // Path waypoint markers — start pin only, no end pin
       inspectorPath.forEach((pathPoint, index) => {
-        const point = new Point({
-          longitude: pathPoint.lng,
-          latitude: pathPoint.lat,
-          spatialReference: { wkid: 4326 },
-        });
-        let symbol: any;
-        if (index === 0) {
-          // Start marker
-          symbol = new PictureMarkerSymbol({ url: MAP_ICONS.start, width: START_SIZE, height: START_SIZE });
-        } else {
-          return; // Skip end marker for now
-        }
+        if (index !== 0) return;
         view.graphics.add(
           new Graphic({
-            geometry: point,
-            symbol,
-            attributes: { timestamp: pathPoint.timestamp, type: index === 0 ? "start" : "pathPoint" },
-            popupTemplate: {
-              title: index === 0 ? "Start Point" : `Path Point ${index}`,
-              content: `<b>Time:</b> ${pathPoint.timestamp}`,
-            },
+            geometry: new Point({
+              longitude: pathPoint.lng,
+              latitude: pathPoint.lat,
+              spatialReference: { wkid: 4326 },
+            }),
+            symbol: new PictureMarkerSymbol({ url: MAP_ICONS.start, width: START_SIZE, height: START_SIZE }),
+            attributes: { timestamp: pathPoint.timestamp, type: "start" },
+            popupTemplate: new PopupTemplate({
+              title: currentLanguage === "ar" ? "نقطة البداية" : "Start Point",
+              content: `<b>${currentLanguage === "ar" ? "الوقت:" : "Time:"}</b> ${pathPoint.timestamp}`,
+            }),
           }),
         );
       });
     }
 
-    // ── 2. Fine Locations — Red marker ───────────────────────────────────────
+    // 2. Fine Locations
     if (showFineLocations && fineLocations?.length > 0) {
       fineLocations.forEach((fine) => {
-        view.graphics.add(
-          new Graphic({
-            geometry: new Point({ longitude: fine.lng, latitude: fine.lat, spatialReference: { wkid: 4326 } }),
-            symbol: new PictureMarkerSymbol({ url: MAP_ICONS.fine, width: PIN_W, height: PIN_H }),
-            attributes: { fine, type: "fine" },
-            popupTemplate: {
-              title: `Fine: ${fine.plateNumber}`,
-              content: `<b>Amount:</b> AED ${fine.fineAmount}<br><b>Time:</b> ${fine.timestamp}<br><b>Plate:</b> ${fine.plateNumber}`,
-            },
-          }),
-        );
+        const fineId = String(fine.id);
+        const hasPlateNumber = fine.plateNumber && fine.plateNumber.trim() !== "";
+
+        const plateDisplay = hasPlateNumber ? fine.plateNumber : fine.tradeLicenseNumber || "—";
+
+        const plateLabel = hasPlateNumber
+          ? currentLanguage === "ar"
+            ? "رقم اللوحة"
+            : "Plate Number"
+          : currentLanguage === "ar"
+            ? "رقم الرخصة التجارية"
+            : "Trade License Number";
+        const timeDisplay = formatDateTime((fine as any).entityDateTime || fine.timestamp);
+        const popupTitle = fine.plateNumber
+          ? `${currentLanguage === "ar" ? "مخالفة:" : "Fine:"} ${fine.plateNumber}`
+          : `${currentLanguage === "ar" ? "مخالفة:" : "Fine:"} ${(fine as any).entityNo || fine.id || "—"}`;
+
+        const rows = [
+          {
+            icon: "",
+            label: currentLanguage === "ar" ? "المبلغ" : "Amount",
+            value: `AED ${fine.fineAmount ?? 0}`,
+            valueColor: "#cf1322",
+          },
+          {
+            icon: "",
+            label: currentLanguage === "ar" ? "الوقت" : "Time",
+            value: timeDisplay,
+          },
+          {
+            icon: "",
+            label: plateLabel,
+            value: plateDisplay,
+          },
+        ];
+
+        const popupElement = createPopupDOMElement(fineId, rows, "fine", true, currentLanguage);
+
+        const popupTemplate = new PopupTemplate({
+          title: popupTitle,
+          content: () => popupElement,
+        });
+
+        const graphic = new Graphic({
+          geometry: new Point({ longitude: fine.lng, latitude: fine.lat, spatialReference: { wkid: 4326 } }),
+          symbol: new PictureMarkerSymbol({ url: MAP_ICONS.fine, width: PIN_W, height: PIN_H }),
+          attributes: { fine, type: "fine", fineId },
+          popupTemplate: popupTemplate,
+        });
+        view.graphics.add(graphic);
+        graphicsRef.current.push(graphic);
       });
     }
 
-    // ── 3. Warning Locations — Gold marker ───────────────────────────────────
+    // 3. Warning Locations
     if (warningLocations?.length > 0) {
       warningLocations.forEach((warning) => {
-        view.graphics.add(
-          new Graphic({
-            geometry: new Point({ longitude: warning.lng, latitude: warning.lat, spatialReference: { wkid: 4326 } }),
-            symbol: new PictureMarkerSymbol({ url: MAP_ICONS.warning, width: PIN_W, height: PIN_H }),
-            attributes: warning,
-            popupTemplate: {
-              title: "Warning Inspection",
-              content: `<b>ID:</b> ${warning.id}<br/><b>Time:</b> ${warning.timestamp}`,
-            },
-          }),
-        );
+        const itemId = String(warning.id);
+        const timeDisplay = formatDateTime((warning as any).entityDateTime || warning.timestamp);
+        const hasPlateNumber = warning.plateNumber && warning.plateNumber.trim() !== "";
+
+        const plateDisplay = hasPlateNumber ? warning.plateNumber : warning.tradeLicenseNumber || "—";
+
+        const plateLabel = hasPlateNumber
+          ? currentLanguage === "ar"
+            ? "رقم اللوحة"
+            : "Plate Number"
+          : currentLanguage === "ar"
+            ? "رقم الرخصة التجارية"
+            : "Trade License Number";
+        const popupTitle = warning.plateNumber
+          ? `${currentLanguage === "ar" ? "تحذير:" : "Warning:"} ${warning.plateNumber}`
+          : `${currentLanguage === "ar" ? "تحذير:" : "Warning:"} ${(warning as any).entityNo || warning.id || "—"}`;
+
+        const rows = [
+          {
+            icon: "",
+            label: currentLanguage === "ar" ? "النوع" : "Type",
+            value: currentLanguage === "ar" ? "تفتيش تحذيري" : "Warning Inspection",
+          },
+          {
+            icon: "",
+            label: currentLanguage === "ar" ? "الوقت" : "Time",
+            value: timeDisplay,
+          },
+          {
+            icon: "",
+            label: plateLabel,
+            value: plateDisplay,
+          },
+        ];
+
+        const popupElement = createPopupDOMElement(itemId, rows, "inspection", true, currentLanguage);
+
+        const popupTemplate = new PopupTemplate({
+          title: popupTitle,
+          content: () => popupElement,
+        });
+
+        const graphic = new Graphic({
+          geometry: new Point({ longitude: warning.lng, latitude: warning.lat, spatialReference: { wkid: 4326 } }),
+          symbol: new PictureMarkerSymbol({ url: MAP_ICONS.warning, width: PIN_W, height: PIN_H }),
+          attributes: { ...warning, type: "warning" },
+          popupTemplate: popupTemplate,
+        });
+        view.graphics.add(graphic);
+        graphicsRef.current.push(graphic);
       });
     }
 
-    // ── 4. Routine Locations — Green marker ──────────────────────────────────
+    // 4. Routine Locations
     if (routineLocations?.length > 0) {
       routineLocations.forEach((routine) => {
-        view.graphics.add(
-          new Graphic({
-            geometry: new Point({ longitude: routine.lng, latitude: routine.lat, spatialReference: { wkid: 4326 } }),
-            symbol: new PictureMarkerSymbol({ url: MAP_ICONS.routine, width: PIN_W, height: PIN_H }),
-            attributes: routine,
-            popupTemplate: {
-              title: "Routine Inspection",
-              content: `<b>ID:</b> ${routine.id}<br/><b>Time:</b> ${routine.timestamp}`,
-            },
-          }),
-        );
+        const itemId = String(routine.id);
+        const timeDisplay = formatDateTime((routine as any).entityDateTime || routine.timestamp);
+        const hasPlateNumber = routine.plateNumber && routine.plateNumber.trim() !== "";
+
+        const plateDisplay = hasPlateNumber ? routine.plateNumber : routine.tradeLicenseNumber || "—";
+
+        const plateLabel = hasPlateNumber
+          ? currentLanguage === "ar"
+            ? "رقم اللوحة"
+            : "Plate Number"
+          : currentLanguage === "ar"
+            ? "رقم الرخصة التجارية"
+            : "Trade License Number";
+        const popupTitle = routine.plateNumber
+          ? `${currentLanguage === "ar" ? "روتيني:" : "Routine:"} ${routine.plateNumber}`
+          : `${currentLanguage === "ar" ? "روتيني:" : "Routine:"} ${(routine as any).entityNo || routine.id || "—"}`;
+
+        const rows = [
+          {
+            icon: "",
+            label: currentLanguage === "ar" ? "النوع" : "Type",
+            value: currentLanguage === "ar" ? "تفتيش روتيني" : "Routine Inspection",
+          },
+          {
+            icon: "",
+            label: currentLanguage === "ar" ? "الوقت" : "Time",
+            value: timeDisplay,
+          },
+          {
+            icon: "",
+            label: plateLabel,
+            value: plateDisplay,
+          },
+        ];
+
+        const popupElement = createPopupDOMElement(itemId, rows, "inspection", true, currentLanguage);
+
+        const popupTemplate = new PopupTemplate({
+          title: popupTitle,
+          content: () => popupElement,
+        });
+
+        const graphic = new Graphic({
+          geometry: new Point({ longitude: routine.lng, latitude: routine.lat, spatialReference: { wkid: 4326 } }),
+          symbol: new PictureMarkerSymbol({ url: MAP_ICONS.routine, width: PIN_W, height: PIN_H }),
+          attributes: { ...routine, type: "routine" },
+          popupTemplate: popupTemplate,
+        });
+        view.graphics.add(graphic);
+        graphicsRef.current.push(graphic);
       });
     }
 
-    // ── 5. Towing Locations — Navy marker ────────────────────────────────────
+    // 5. Towing Locations
     if (towingLocations?.length > 0) {
       towingLocations.forEach((tow) => {
-        view.graphics.add(
-          new Graphic({
-            geometry: new Point({ longitude: tow.lng, latitude: tow.lat, spatialReference: { wkid: 4326 } }),
-            symbol: new PictureMarkerSymbol({ url: MAP_ICONS.towing, width: PIN_W, height: PIN_H }),
-            attributes: tow,
-            popupTemplate: {
-              title: "Towing Request",
-              content: `<b>ID:</b> ${tow.id}<br/><b>Time:</b> ${tow.timestamp}`,
-            },
-          }),
-        );
+        const itemId = String(tow.id);
+        const timeDisplay = formatDateTime((tow as any).entityDateTime || tow.timestamp);
+        const plateDisplay = tow.plateNumber || "—";
+        const popupTitle = tow.plateNumber
+          ? `${currentLanguage === "ar" ? "سحب:" : "Towing:"} ${tow.plateNumber}`
+          : `${currentLanguage === "ar" ? "سحب:" : "Towing:"} ${(tow as any).entityNo || tow.id || "—"}`;
+
+        const rows = [
+          {
+            icon: "",
+            label: currentLanguage === "ar" ? "الحالة" : "Status",
+            value: tow.towingStatus || (currentLanguage === "ar" ? "مطلوب" : "Requested"),
+          },
+          {
+            icon: "",
+            label: currentLanguage === "ar" ? "الوقت" : "Time",
+            value: timeDisplay,
+          },
+          {
+            icon: "",
+            label: currentLanguage === "ar" ? "رقم اللوحة" : "Plate",
+            value: plateDisplay,
+          },
+        ];
+
+        const popupElement = createPopupDOMElement(itemId, rows, "inspection", false, currentLanguage);
+
+        const popupTemplate = new PopupTemplate({
+          title: popupTitle,
+          content: () => popupElement,
+        });
+
+        const graphic = new Graphic({
+          geometry: new Point({ longitude: tow.lng, latitude: tow.lat, spatialReference: { wkid: 4326 } }),
+          symbol: new PictureMarkerSymbol({ url: MAP_ICONS.towing, width: PIN_W, height: PIN_H }),
+          attributes: { ...tow, type: "towing" },
+          popupTemplate: popupTemplate,
+        });
+        view.graphics.add(graphic);
+        graphicsRef.current.push(graphic);
       });
     }
 
-    // ── 6. Obstacle Locations — Orange marker ────────────────────────────────
+    // 6. Obstacle Locations
     if (obstacleLocations?.length > 0) {
       obstacleLocations.forEach((obstacle) => {
-        view.graphics.add(
-          new Graphic({
-            geometry: new Point({ longitude: obstacle.lng, latitude: obstacle.lat, spatialReference: { wkid: 4326 } }),
-            symbol: new PictureMarkerSymbol({ url: MAP_ICONS.obstacle, width: PIN_W, height: PIN_H }),
-            attributes: { obstacle, type: "obstacle" },
-            popupTemplate: {
-              title: "Obstacle Location",
-              content: `<b>ID:</b> ${obstacle.id}<br/><b>Date:</b> ${obstacle.createdDateTime || "N/A"}`,
-            },
-          }),
-        );
+        const itemId = String(obstacle.id);
+        const dateDisplay = formatDateTime(obstacle.createdDateTime);
+        const rows = [
+          // {
+          //   icon: "",
+          //   label: currentLanguage === "ar" ? "النوع" : "Type",
+          //   value: currentLanguage === "ar" ? "عائق طريق" : "Road Obstacle",
+          // },
+          {
+            icon: "",
+            label: currentLanguage === "ar" ? "تاريخ البلاغ" : "  Reported Date",
+            value: dateDisplay,
+          },
+          // {
+          //   icon: "",
+          //   label: currentLanguage === "ar" ? "المعرف" : "ID",
+          //   value: itemId,
+          // },
+        ];
+
+        const popupElement = createPopupDOMElement(itemId, rows, "inspection", false, currentLanguage);
+
+        const popupTemplate = new PopupTemplate({
+          title: `${currentLanguage === "ar" ? "عائق:" : "Obstacle"} `,
+          content: () => popupElement,
+        });
+
+        const graphic = new Graphic({
+          geometry: new Point({ longitude: obstacle.lng, latitude: obstacle.lat, spatialReference: { wkid: 4326 } }),
+          symbol: new PictureMarkerSymbol({ url: MAP_ICONS.obstacle, width: PIN_W, height: PIN_H }),
+          attributes: { ...obstacle, type: "obstacle" },
+          popupTemplate: popupTemplate,
+        });
+        view.graphics.add(graphic);
+        graphicsRef.current.push(graphic);
       });
     }
 
-    // ── 7. Towing Route (Start → End dashed line) — no end pin ───────────────
+    // 7. Towing Route
     if (showTowingRoute && towingStartPoint && towingEndPoint) {
-      // Dashed line
       view.graphics.add(
         new Graphic({
           geometry: new Polyline({
@@ -350,7 +736,6 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
           attributes: { type: "towingRoute" },
         }),
       );
-      // Start pin only — no end pin
       view.graphics.add(
         new Graphic({
           geometry: new Point({
@@ -360,12 +745,15 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
           }),
           symbol: new PictureMarkerSymbol({ url: MAP_ICONS.start, width: START_SIZE, height: START_SIZE }),
           attributes: { type: "towingStart" },
-          popupTemplate: { title: "Towing Start", content: "Vehicle pickup location" },
+          popupTemplate: new PopupTemplate({
+            title: currentLanguage === "ar" ? "بداية السحب" : "Towing Start",
+            content: currentLanguage === "ar" ? "موقع استلام المركبة" : "Vehicle pickup location",
+          }),
         }),
       );
     }
 
-    // ── 8. Inspector Avatar ───────────────────────────────────────────────────
+    // 8. Inspector Avatar
     toDraw.forEach((inspector) => {
       let avatarLng = inspector.lng;
       let avatarLat = inspector.lat;
@@ -408,15 +796,15 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
           geometry: new Point({ longitude: avatarLng, latitude: avatarLat, spatialReference: { wkid: 4326 } }),
           symbol,
           attributes: { inspector, type: "inspector" },
-          popupTemplate: {
+          popupTemplate: new PopupTemplate({
             title: inspector.name,
-            content: `<b>Status:</b> ${inspector.status}<br><b>Zone:</b> ${inspector.zone || "N/A"}`,
-          },
+            content: `<b>${currentLanguage === "ar" ? "الحالة:" : "Status:"}</b> ${inspector.status}<br><b>${currentLanguage === "ar" ? "المنطقة:" : "Zone:"}</b> ${inspector.zone || "N/A"}`,
+          }),
         }),
       );
     });
 
-    // ── 9. Auto-zoom ──────────────────────────────────────────────────────────
+    // 9. Auto-zoom
     if (onlyInspector) {
       view.goTo({ center: [onlyInspector.lng, onlyInspector.lat], zoom: 13 }, { duration: 600 }).catch(console.warn);
     } else {
@@ -425,18 +813,18 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         if (showPath && inspectorPath?.length > 0) {
           const last = inspectorPath[inspectorPath.length - 1];
           allPoints.push({ lng: last.lng, lat: last.lat });
-        } else {
-          allPoints.push({ lng: inspector.lng, lat: inspector.lat });
-        }
+        } else allPoints.push({ lng: inspector.lng, lat: inspector.lat });
       });
       inspectorPath?.forEach((p) => allPoints.push({ lng: p.lng, lat: p.lat }));
       fineLocations?.forEach((f) => allPoints.push({ lng: f.lng, lat: f.lat }));
       obstacleLocations?.forEach((o) => allPoints.push({ lng: o.lng, lat: o.lat }));
+      warningLocations?.forEach((w) => allPoints.push({ lng: w.lng, lat: w.lat }));
+      routineLocations?.forEach((r) => allPoints.push({ lng: r.lng, lat: r.lat }));
+      towingLocations?.forEach((t) => allPoints.push({ lng: t.lng, lat: t.lat }));
       if (showTowingRoute && towingStartPoint && towingEndPoint) {
         allPoints.push({ lng: towingStartPoint.lng, lat: towingStartPoint.lat });
         allPoints.push({ lng: towingEndPoint.lng, lat: towingEndPoint.lat });
       }
-
       if (allPoints.length > 1) {
         const lngs = allPoints.map((p) => p.lng);
         const lats = allPoints.map((p) => p.lat);
@@ -460,28 +848,9 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         view.goTo({ center, zoom }).catch(() => {});
       }
     }
-
-    // ── 10. Inspector click handler ───────────────────────────────────────────
-    let clickHandle: any = null;
-    if (clickable && onInspectorClick) {
-      try {
-        clickHandle = (view as any).on("click", (event: any) => {
-          view.hitTest(event).then((response: any) => {
-            const g = response.results?.[0]?.graphic;
-            const insp = g?.attributes?.inspector;
-            if (insp) onInspectorClick(insp);
-          });
-        });
-      } catch (_) {}
-    }
-    return () => {
-      if (clickHandle?.remove) clickHandle.remove();
-    };
   }, [
     inspectors,
     onlyInspector,
-    clickable,
-    onInspectorClick,
     center,
     zoom,
     inspectorPath,
@@ -495,9 +864,9 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     showTowingRoute,
     towingStartPoint,
     towingEndPoint,
+    currentLanguage,
   ]);
 
-  // ─── Basemap menu ─────────────────────────────────────────────────────────
   const menu = (
     <Menu
       onClick={(e) => setBasemap(e.key)}
@@ -526,6 +895,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
             padding: 8,
             cursor: "pointer",
             boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+            zIndex: 1000,
           }}
         />
       </Dropdown>

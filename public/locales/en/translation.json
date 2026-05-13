@@ -45,7 +45,8 @@
     "inbox": "Inbox",
     "allInbox": "All Inbox",
     "whitelistPlates": "Plate",
-    "whitelistTradeLicenses": "Trade License"
+    "whitelistTradeLicenses": "Trade License",
+    "attendance": "Attendance"
   },
   "header": {
     "compactMode": "Compact Mode",
@@ -96,7 +97,8 @@
       "proactive-campaigns": "Proactive Campaigns",
       "hrms": "HRMS Attendance",
       "shiftplanning": "Create Shift Plan",
-      "dispute-parking": "Parking Disputes"
+      "dispute-parking": "Parking Disputes",
+      "attendance": "Attendance"
     },
     "addTitle": "Add New {{entity}}",
     "editTitle": "Edit {{entity}}",

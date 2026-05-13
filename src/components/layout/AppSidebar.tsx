@@ -140,10 +140,24 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       permission: "WebDashboard",
     },
     {
-      key: FULL_PATHS.HRMS,
+      key: "hrms",
       icon: <IdcardOutlined />,
       labelText: t("sidebar.hrms"),
       permission: "WebDashboard",
+      children: [
+        {
+          key: FULL_PATHS.HRMS,
+          icon: <ClockCircleOutlined />,
+          labelText: t("sidebar.attendance"),
+          permission: "WebDashboard",
+        },
+        {
+          key: FULL_PATHS.LEAVE_MANGEMENT,
+          icon: <UserSwitchOutlined />,
+          labelText: t("sidebar.leaves"),
+          permission: "Leave",
+        },
+      ],
     },
     {
       key: FULL_PATHS.GENERAL,
@@ -188,12 +202,12 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           labelText: t("sidebar.pledges"),
           permission: "Pledge",
         },
-        {
-          key: FULL_PATHS.LEAVE_MANGEMENT,
-          icon: <UserSwitchOutlined />,
-          labelText: t("sidebar.leaves"),
-          permission: "Leave",
-        },
+        // {
+        //   key: FULL_PATHS.LEAVE_MANGEMENT,
+        //   icon: <UserSwitchOutlined />,
+        //   labelText: t("sidebar.leaves"),
+        //   permission: "Leave",
+        // },
         {
           key: FULL_PATHS.ROLE_MANAGEMENT,
           icon: <SafetyCertificateOutlined />,
