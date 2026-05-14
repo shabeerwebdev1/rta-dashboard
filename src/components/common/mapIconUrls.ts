@@ -23,8 +23,9 @@ const END_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" 
 </svg>`;
 
 export const MAP_ICONS = {
+  parkingfine: "/images/icon_parking_fine.svg", // ← was inline SVG data URL
   routine: "/images/icon_Routine.svg", // ← was inline SVG data URL
-  warning: "/images/icon_Warning.svg", // ← was inline SVG data URL
+  warning: "/images/warning.svg", // ← was inline SVG data URL
   fine: "/images/icon_fine.svg", // ← was inline SVG data URL
   towing: "/images/icon_Towing.svg", // ← was inline SVG data URL
   obstacle: "/images/icon_Obstacle.svg", // ← was inline SVG data URL

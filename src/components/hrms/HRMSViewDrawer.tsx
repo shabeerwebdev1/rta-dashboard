@@ -1,41 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useCallback, useState, useRef } from "react";
-import { Modal, Descriptions, Badge, Spin } from "antd";
-import { CheckCircleOutlined, ClockCircleOutlined, AuditOutlined } from "@ant-design/icons";
+import React, { useEffect, useCallback, useRef } from "react";
+import { Modal, Descriptions, Badge } from "antd";
+import {
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  AuditOutlined,
+  WarningOutlined,
+  AlertOutlined,
+  CarOutlined,
+  TruckOutlined,
+  PaperClipOutlined,
+} from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import type { PageConfig } from "../../types/config";
 import ArcGISMap from "../common/ArcGISMap";
 import FinesViewDrawer from "../fines/FinesViewDrawer";
 import { useGetInspectionByIdQuery, useGetViolationDetailsQuery } from "../../services/rtkApiFactory";
 import dayjs from "dayjs";
-
-const StartPin = () => (
-  <svg width="22" height="22" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="20" cy="20" r="18" fill="#00C853" stroke="white" strokeWidth="2.5" />
-    <polygon points="16,13 30,20 16,27" fill="white" />
-  </svg>
-);
-
-interface LegendRowProps {
-  icon: React.ReactNode;
-  label: string;
-}
-
-const LegendRow: React.FC<LegendRowProps> = ({ icon, label }) => (
-  <div
-    style={{
-      display: "flex",
-      alignItems: "center",
-      gap: 9,
-      padding: "5px 0",
-      borderBottom: "1px solid rgba(0,0,0,0.04)",
-    }}
-  >
-    <div style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>{icon}</div>
-    <span style={{ fontSize: 12, color: "#444", flex: 1, fontWeight: 500 }}>{label}</span>
-  </div>
-);
 
 interface HRMSViewDrawerProps {
   open: boolean;
@@ -48,7 +29,8 @@ interface HRMSViewDrawerProps {
 
 const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, statusLabels }) => {
   const { t } = useTranslation();
-  const [legendOpen, setLegendOpen] = React.useState(false);
+  const PERFORMANCE_ICON_FRAME = 34;
+  const PERFORMANCE_ICON_SIZE = 30;
 
   // ── FinesViewDrawer state ──────────────────────────────────────────────
   const [fineDrawerOpen, setFineDrawerOpen] = React.useState(false);
@@ -56,60 +38,38 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
   const [selectedEntityCode, setSelectedEntityCode] = React.useState<string>("parking-inspection");
   const [fineData, setFineData] = React.useState<any>(null);
 
-  // Use refs to track if we've fetched data for current ID
   const fetchedIdRef = useRef<string | null>(null);
   const isFetchingRef = useRef(false);
 
-  // Fetch inspection data when selectedFineId changes
   const {
     data: inspectionData,
     isLoading: isLoadingInspection,
     isFetching: isFetchingInspection,
-  } = useGetInspectionByIdQuery(selectedFineId as string, {
-    skip: !selectedFineId,
-  });
+  } = useGetInspectionByIdQuery(selectedFineId as string, { skip: !selectedFineId });
 
-  // Fetch violation details when we have inspection data
-  const {
-    data: violationDetails,
-    isLoading: isLoadingViolations,
-    isFetching: isFetchingViolations,
-  } = useGetViolationDetailsQuery(
-    {
-      inspectionGUID: selectedFineId as string,
-      entityCode: selectedEntityCode,
-    },
-    {
-      skip: !selectedFineId,
-    },
+  const { data: violationDetails } = useGetViolationDetailsQuery(
+    { inspectionGUID: selectedFineId as string, entityCode: selectedEntityCode },
+    { skip: !selectedFineId },
   );
 
-  // Combine data when both queries are ready - but only for the current ID
   useEffect(() => {
     if (selectedFineId && inspectionData && !isFetchingInspection && !isLoadingInspection) {
-      // Only process if this is the current ID we're expecting
       if (fetchedIdRef.current === selectedFineId && isFetchingRef.current) {
-        const combinedData = {
-          ...inspectionData,
-          violationDetails: violationDetails || [],
-        };
-        setFineData(combinedData);
+        setFineData({ ...inspectionData, violationDetails: violationDetails || [] });
         isFetchingRef.current = false;
-        console.log("✅ Data loaded and set for:", selectedFineId);
       }
     }
   }, [inspectionData, violationDetails, isLoadingInspection, isFetchingInspection, selectedFineId]);
 
-  // Reset when drawer closes
   useEffect(() => {
     if (!fineDrawerOpen) {
-      const timer = setTimeout(() => {
+      const t = setTimeout(() => {
         setSelectedFineId(null);
         setFineData(null);
         fetchedIdRef.current = null;
         isFetchingRef.current = false;
       }, 300);
-      return () => clearTimeout(timer);
+      return () => clearTimeout(t);
     }
   }, [fineDrawerOpen]);
 
@@ -117,31 +77,23 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
     if (open && record) console.log("HRMSViewDrawer opened:", record.inspectorName);
   }, [open, record]);
 
-  // Handle fine/inspection click - uses refs to ensure multiple clicks work
+  const openDrawerWithNewData = (inspectionGUID: string, entityCode: string) => {
+    setFineData(null);
+    setSelectedFineId(inspectionGUID);
+    setSelectedEntityCode(entityCode || "parking-inspection");
+    fetchedIdRef.current = inspectionGUID;
+    isFetchingRef.current = true;
+    setFineDrawerOpen(true);
+  };
+
   const handleItemClick = useCallback(
     (item: any) => {
-      console.log("🟢 handleItemClick called with:", item);
-
-      if (!item) {
-        console.error("No item provided to handleItemClick");
-        return;
-      }
-
-      // Get the inspection GUID
+      if (!item) return;
       const inspectionGUID = item.inspectionGUID || item.id || item.inspectionId;
-
-      if (!inspectionGUID) {
-        console.error("No inspectionGUID found in item:", item);
-        return;
-      }
-
-      // Close existing drawer if open
+      if (!inspectionGUID) return;
       if (fineDrawerOpen) {
         setFineDrawerOpen(false);
-        // Small delay to allow cleanup
-        setTimeout(() => {
-          openDrawerWithNewData(inspectionGUID, item.entityCode);
-        }, 100);
+        setTimeout(() => openDrawerWithNewData(inspectionGUID, item.entityCode), 100);
       } else {
         openDrawerWithNewData(inspectionGUID, item.entityCode);
       }
@@ -149,25 +101,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
     [fineDrawerOpen],
   );
 
-  const openDrawerWithNewData = (inspectionGUID: string, entityCode: string) => {
-    console.log("📦 Fetching inspection details for GUID:", inspectionGUID);
-
-    // Reset data first
-    setFineData(null);
-    setSelectedFineId(inspectionGUID);
-    setSelectedEntityCode(entityCode || "parking-inspection");
-
-    // Track this fetch
-    fetchedIdRef.current = inspectionGUID;
-    isFetchingRef.current = true;
-
-    // Open the drawer
-    setFineDrawerOpen(true);
-  };
-
-  const handleFineDrawerClose = useCallback(() => {
-    setFineDrawerOpen(false);
-  }, []);
+  const handleFineDrawerClose = useCallback(() => setFineDrawerOpen(false), []);
 
   if (!record) return null;
 
@@ -187,6 +121,157 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
     }
   };
 
+  const FineIcon = ({ color = "#E53935", size = "1em" }: { color?: string; size?: string }) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 100 100"
+      width={size}
+      height={size}
+      fill={color}
+      style={{ display: "inline-block", verticalAlign: "-0.125em" }}
+    >
+      {/* Ticket icon - rotated ~-40deg, with notches and perforated line */}
+      <g transform="translate(50,50) rotate(-40) translate(-50,-50)">
+        {/* Main ticket body */}
+        <rect x="10" y="30" width="80" height="40" rx="6" ry="6" />
+        {/* Left notch */}
+        <circle cx="10" cy="50" r="6" fill="white" />
+        {/* Right notch */}
+        <circle cx="90" cy="50" r="6" fill="white" />
+        {/* Perforated line (white dots) */}
+        <line x1="55" y1="30" x2="55" y2="70" stroke="white" strokeWidth="2.5" strokeDasharray="4,4" />
+        {/* Inner rectangle cutout */}
+        <rect x="15" y="35" width="35" height="30" rx="3" ry="3" fill="white" />
+      </g>
+    </svg>
+  );
+
+  const ObstacleIcon = ({ color = "#F57C00", size = "1em" }: { color?: string; size?: string }) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 100 100"
+      width={size}
+      height={size}
+      fill={color}
+      style={{ display: "inline-block", verticalAlign: "-0.125em" }}
+    >
+      {/* Traffic cone */}
+      {/* Base plate */}
+      <rect x="18" y="82" width="64" height="10" rx="5" ry="5" />
+      {/* Lower cone section */}
+      <polygon points="25,82 75,82 65,62 35,62" />
+      {/* White stripe gap (transparent) */}
+      <polygon points="35,62 65,62 60,50 40,50" fill="white" />
+      {/* Middle cone section */}
+      <polygon points="40,50 60,50 54,38 46,38" />
+      {/* White stripe gap */}
+      <polygon points="46,38 54,38 51,30 49,30" fill="white" />
+      {/* Top cone */}
+      <polygon points="49,30 51,30 56,20 44,20" />
+      <ellipse cx="50" cy="20" rx="7" ry="5" />
+    </svg>
+  );
+
+  const TowingIcon = ({ color = "#7B1FA2", size = "1em" }: { color?: string; size?: string }) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 120 80"
+      width={size}
+      height={size}
+      fill={color}
+      style={{ display: "inline-block", verticalAlign: "-0.125em" }}
+    >
+      {/* Tow truck body */}
+      {/* Cab */}
+      <rect x="5" y="30" width="35" height="28" rx="5" ry="5" />
+      {/* Cab roof curve */}
+      <rect x="10" y="22" width="25" height="12" rx="6" ry="6" />
+      {/* Window */}
+      <rect x="13" y="25" width="16" height="9" rx="3" ry="3" fill="white" opacity="0.9" />
+      {/* Truck bed */}
+      <rect x="38" y="42" width="55" height="16" rx="3" ry="3" />
+      {/* Ramp (slanted bed) */}
+      <polygon points="55,58 95,58 95,52 68,52" />
+      {/* Crane arm */}
+      <rect x="65" y="18" width="38" height="10" rx="4" ry="4" transform="rotate(-30,65,42)" />
+      {/* Crane base post */}
+      <rect x="62" y="30" width="12" height="24" rx="4" ry="4" />
+      {/* Pulley wheel */}
+      <circle cx="74" cy="32" r="9" fill={color} />
+      <circle cx="74" cy="32" r="5" fill="white" />
+      {/* Hook */}
+      <path d="M88,22 Q96,22 96,30 Q96,36 90,36" fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" />
+      {/* Front wheel */}
+      <circle cx="20" cy="62" r="11" fill={color} />
+      <circle cx="20" cy="62" r="5" fill="white" />
+      {/* Rear wheel */}
+      <circle cx="70" cy="62" r="11" fill={color} />
+      <circle cx="70" cy="62" r="5" fill="white" />
+    </svg>
+  );
+
+  const WarningIcon = ({ color = "#F9A825", size = "1em" }: { color?: string; size?: string }) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 100 90"
+      width={size}
+      height={size}
+      fill={color}
+      style={{ display: "inline-block", verticalAlign: "-0.125em" }}
+    >
+      {/* Warning triangle with rounded corners */}
+      <path d="M50,8 L92,80 Q94,86 88,86 L12,86 Q6,86 8,80 Z" strokeLinejoin="round" />
+      {/* Exclamation mark - stem */}
+      <rect x="45" y="36" width="10" height="26" rx="5" ry="5" fill="white" />
+      {/* Exclamation mark - dot */}
+      <circle cx="50" cy="71" r="6" fill="white" />
+    </svg>
+  );
+
+  // For "Routine" and "Total Inspections" — using the same WarningIcon style
+  // but with different colors (green / blue) since no separate PNGs were provided
+  // You can swap these with your own PNGs if desired.
+  const InspectionIcon = ({ color = "#096dd9", size = "1em" }: { color?: string; size?: string }) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 100 100"
+      width={size}
+      height={size}
+      fill={color}
+      style={{ display: "inline-block", verticalAlign: "-0.125em" }}
+    >
+      {/* Clipboard / audit icon */}
+      <rect x="15" y="20" width="70" height="75" rx="6" ry="6" />
+      <rect x="35" y="12" width="30" height="16" rx="8" ry="8" fill="white" />
+      {/* Lines */}
+      <rect x="25" y="45" width="50" height="6" rx="3" fill="white" opacity="0.85" />
+      <rect x="25" y="58" width="40" height="6" rx="3" fill="white" opacity="0.85" />
+      <rect x="25" y="71" width="30" height="6" rx="3" fill="white" opacity="0.85" />
+    </svg>
+  );
+
+  const RoutineIcon = ({ color = "#34A853", size = "1em" }: { color?: string; size?: string }) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 100 100"
+      width={size}
+      height={size}
+      fill={color}
+      style={{ display: "inline-block", verticalAlign: "-0.125em" }}
+    >
+      {/* Check circle */}
+      <circle cx="50" cy="50" r="45" />
+      <polyline
+        points="28,52 44,68 72,36"
+        fill="none"
+        stroke="white"
+        strokeWidth="9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+
   const inspectorForMap =
     record.location?.lat && record.location?.lng
       ? [
@@ -202,55 +287,79 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
           },
         ]
       : [];
-
   const performanceStats = [
     {
       label: t("form.obstacles") || "Obstacles",
       value: record.obstacles || 0,
       color: "#F57C00",
-      icon: <img src="/images/obstacle.png" alt="Obstacles" style={{ width: 36, height: 36, objectFit: "contain" }} />,
+      icon: <ObstacleIcon color="#F57C00" size="2.5em" />,
     },
     {
       label: t("form.totaliinspections") || "Total",
       value: record.totalInspections || 0,
       color: "#096dd9",
-      icon: <AuditOutlined />,
+      icon: <InspectionIcon color="#096dd9" size="2.5em" />,
     },
     {
       label: t("form.routineinspections") || "Routine",
       value: record.routineInspections || 0,
       color: "#34A853",
-      icon: <CheckCircleOutlined />,
+      icon: <RoutineIcon color="#34A853" size="2.5em" />,
     },
     {
       label: t("form.warninginspections") || "Warnings",
       value: record.warningInspections || 0,
-      color: "#F9A825",
-      icon: <img src="/images/warning.png" alt="Warnings" style={{ width: 36, height: 36, objectFit: "contain" }} />,
+      color: "#c900b5",
+      icon: <WarningIcon color="#c900b5" size="2.5em" />,
     },
     {
       label: t("stats.totalFines") || "Fines",
       value: record.finesIssued || 0,
       color: "#E53935",
-      icon: <img src="/images/fine.png" alt="Fines" style={{ width: 36, height: 36, objectFit: "contain" }} />,
+      icon: <FineIcon color="#E53935" size="2.5em" />,
     },
     {
       label: t("form.towingRequests") || "Towing",
       value: record.towingRequests || 0,
       color: "#7B1FA2",
-      icon: <img src="/images/towing.png" alt="Towing" style={{ width: 36, height: 36, objectFit: "contain" }} />,
+      icon: <TowingIcon color="#7B1FA2" size="2.5em" />,
     },
   ];
 
+  const renderPerformanceIcon = (icon: React.ReactNode, color: string) => {
+    if (!React.isValidElement(icon)) return icon;
+
+    const isImageIcon = typeof icon.type === "string" && icon.type === "img";
+    const style = isImageIcon
+      ? {
+          width: PERFORMANCE_ICON_SIZE,
+          height: PERFORMANCE_ICON_SIZE,
+          objectFit: "contain" as const,
+          display: "block",
+          flexShrink: 0,
+        }
+      : {
+          fontSize: PERFORMANCE_ICON_SIZE,
+          color,
+          display: "block",
+          lineHeight: 1,
+          flexShrink: 0,
+        };
+
+    return React.cloneElement(icon as React.ReactElement<any>, {
+      style: {
+        ...(icon.props?.style || {}),
+        ...style,
+      },
+    });
+  };
+
   const hasCheckedIn = Boolean(record.checkInTime);
-  const checkInPanelBackground = hasCheckedIn ? "#f6ffed" : "#fff1f0";
-  const checkInPanelBorder = hasCheckedIn ? "#b7eb8f" : "#ffccc7";
   const formattedCheckInTime =
     record.checkInTime && dayjs(record.checkInTime).isValid()
       ? dayjs(record.checkInTime).format("DD MMM YYYY, hh:mm A")
       : record.checkInTime;
 
-  // Calculate loading state
   const isDrawerLoading = isLoadingInspection || isFetchingInspection || (selectedFineId && !fineData);
 
   return (
@@ -283,146 +392,23 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
           <div style={{ flex: 3, borderRight: "1px solid #e8e8e8", display: "flex", flexDirection: "column" }}>
             <div style={{ position: "relative", background: "#f0f2f5", padding: 16, flex: 1 }}>
               {record.location?.lat && record.location?.lng ? (
-                <>
-                  <ArcGISMap
-                    inspectors={inspectorForMap}
-                    center={[record.location.lng, record.location.lat]}
-                    obstacleLocations={record.obstacleLocations || []}
-                    zoom={13}
-                    height="500px"
-                    inspectorPath={record.inspectorPath || []}
-                    fineLocations={record.fineLocations || []}
-                    warningLocations={record.warningLocations || []}
-                    routineLocations={record.routineLocations || []}
-                    towingLocations={record.towingLocations || []}
-                    showPath={true}
-                    showFineLocations={true}
-                    clickable={false}
-                    onFineClick={handleItemClick}
-                    onInspectionClick={handleItemClick}
-                  />
-
-                  {/* Map Legend */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: 35,
-                      right: 28,
-                      background: "rgba(255,255,255,0.97)",
-                      border: "1px solid rgba(0,0,0,0.08)",
-                      borderRadius: 12,
-                      zIndex: 10,
-                      minWidth: 220,
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.13), 0 1px 4px rgba(0,0,0,0.08)",
-                      backdropFilter: "blur(8px)",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      onClick={() => setLegendOpen((prev) => !prev)}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "10px 14px",
-                        cursor: "pointer",
-                        borderBottom: legendOpen ? "1px solid #f0f0f0" : "none",
-                        userSelect: "none",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: "#1a1a2e",
-                          letterSpacing: "0.04em",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {t("form.MapLegend") || "Map Legend"}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 10,
-                          color: "#888",
-                          display: "inline-block",
-                          transform: legendOpen ? "rotate(180deg)" : "rotate(0deg)",
-                          transition: "transform 0.2s ease",
-                          marginLeft: 8,
-                        }}
-                      >
-                        ▼
-                      </span>
-                    </div>
-                    {legendOpen && (
-                      <div style={{ padding: "8px 14px 10px" }}>
-                        <LegendRow icon={<StartPin />} label={t("form.StartPoint") || "Start Point"} />
-                        <LegendRow
-                          icon={
-                            <div
-                              style={{
-                                width: 22,
-                                height: 3,
-                                background: "linear-gradient(90deg,#0070ff,#40a9ff)",
-                                borderRadius: 2,
-                              }}
-                            />
-                          }
-                          label={t("form.InspectorPath") || "Inspector Path"}
-                        />
-                        <LegendRow
-                          icon={
-                            <img
-                              src="/images/icon_Routine.svg"
-                              width={24}
-                              height={24}
-                              style={{ borderRadius: "50%" }}
-                            />
-                          }
-                          label={t("form.RoutineLocations") || "Routine"}
-                        />
-                        <LegendRow
-                          icon={
-                            <img
-                              src="/images/icon_Warning.svg"
-                              width={24}
-                              height={24}
-                              style={{ borderRadius: "50%" }}
-                            />
-                          }
-                          label={t("form.WarningLocations") || "Warning"}
-                        />
-                        <LegendRow
-                          icon={
-                            <img src="/images/icon_fine.svg" width={24} height={24} style={{ borderRadius: "50%" }} />
-                          }
-                          label={t("form.FineLocations") || "Fine Issued"}
-                        />
-                        <LegendRow
-                          icon={
-                            <img src="/images/icon_Towing.svg" width={24} height={24} style={{ borderRadius: "50%" }} />
-                          }
-                          label={t("form.TowingLocations") || "Towing"}
-                        />
-                        <LegendRow
-                          icon={
-                            <img
-                              src="/images/icon_Obstacle.svg"
-                              width={24}
-                              height={24}
-                              style={{ borderRadius: "50%" }}
-                            />
-                          }
-                          label={"Obstacle"}
-                        />
-                        <LegendRow
-                          icon={<img src="/images/icon1.png" width={24} height={24} style={{ borderRadius: "50%" }} />}
-                          label={t("form.CurrentLocation") || "Inspector"}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </>
+                <ArcGISMap
+                  inspectors={inspectorForMap}
+                  center={[record.location.lng, record.location.lat]}
+                  obstacleLocations={record.obstacleLocations || []}
+                  zoom={13}
+                  height="500px"
+                  inspectorPath={record.inspectorPath || []}
+                  fineLocations={record.fineLocations || []}
+                  warningLocations={record.warningLocations || []}
+                  routineLocations={record.routineLocations || []}
+                  towingLocations={record.towingLocations || []}
+                  showPath={true}
+                  showFineLocations={true}
+                  clickable={false}
+                  onFineClick={handleItemClick}
+                  onInspectionClick={handleItemClick}
+                />
               ) : (
                 <div
                   style={{
@@ -466,15 +452,14 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        width: 26,
-                        height: 26,
-                        fontSize: 26,
+                        width: PERFORMANCE_ICON_FRAME,
+                        height: PERFORMANCE_ICON_FRAME,
                         color: stat.color,
                         lineHeight: 1,
                         flexShrink: 0,
                       }}
                     >
-                      {stat.icon}
+                      {renderPerformanceIcon(stat.icon, stat.color)}
                     </span>
                     <span style={{ fontSize: 26, fontWeight: 700, color: stat.color, lineHeight: 1 }}>
                       {stat.value}
@@ -507,8 +492,8 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
               </div>
               <div
                 style={{
-                  backgroundColor: checkInPanelBackground,
-                  border: `1px solid ${checkInPanelBorder}`,
+                  backgroundColor: hasCheckedIn ? "#f6ffed" : "#fff1f0",
+                  border: `1px solid ${hasCheckedIn ? "#b7eb8f" : "#ffccc7"}`,
                   borderRadius: 4,
                   padding: 8,
                 }}
@@ -554,7 +539,6 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
         </div>
       </Modal>
 
-      {/* FinesViewDrawer with loading state */}
       <FinesViewDrawer
         open={fineDrawerOpen}
         onClose={handleFineDrawerClose}
