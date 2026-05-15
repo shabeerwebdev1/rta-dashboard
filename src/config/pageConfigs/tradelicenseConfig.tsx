@@ -29,7 +29,7 @@ export const tradeLicenseConfig: PageConfig = {
   },
 
   searchConfig: {
-    globalSearchKeys: ["entityNo", "tradeLicenseNumber"],
+    globalSearchKeys: ["entityNo", "tradeLicenseNumber", "inspectorNameEn"],
     columnFilterKeys: ["inspectionStatus", "inspectionType", "inspectionCategory"],
     dateRangeKey: "entityDateTime",
   },

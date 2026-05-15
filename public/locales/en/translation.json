@@ -584,7 +584,8 @@
     "day": "Day",
     "days": "Days",
     "open": "Open",
-    "Inactive": "Inactive"
+    "Inactive": "Inactive",
+    "inspectorName": "Inspector Name"
   },
   "entity": {
     "plate": "Plate",
@@ -790,7 +791,9 @@
     "InactiveLicenses": "Inactive Licenses",
     "TotalGroups": "Total Groups",
     "ActiveGroups": "Active Groups",
-    "InactiveGroups": "Inactive Groups"
+    "InactiveGroups": "Inactive Groups",
+    "vehicleFines": "Vehicle Fines",
+    "parkingFines": "Parking Fines"
   },
   "validation": {
     "required": " Please enter {{field}} ",

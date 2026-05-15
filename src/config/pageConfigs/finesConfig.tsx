@@ -122,7 +122,7 @@ export const finesConfig: PageConfig = {
     delete: "",
   },
   searchConfig: {
-    globalSearchKeys: ["entityNo", "plateNumber", "inspectorName"],
+    globalSearchKeys: ["entityNo", "plateNumber", "inspectorNameEn"],
     columnFilterKeys: ["inspectionStatus", "vehicleColor", "fineType", "inspectionType"],
     dateRangeKey: "entityDateTime",
   },

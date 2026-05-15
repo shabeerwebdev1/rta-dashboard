@@ -1,3 +1,4 @@
+// ArcGISMap.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useRef, useState } from "react";
 import Map from "@arcgis/core/Map";
@@ -29,6 +30,7 @@ export type LayerKey =
   | "routine"
   | "warning"
   | "fine"
+  | "parkingFine"
   | "towing"
   | "obstacle"
   | "inspector";
@@ -83,6 +85,7 @@ interface ArcGISMapProps {
   clickable?: boolean;
   inspectorPath?: InspectorPath;
   fineLocations?: FineLocation[];
+  parkingFineLocations?: FineLocation[];
   warningLocations?: any[];
   routineLocations?: any[];
   towingLocations?: any[];
@@ -125,6 +128,7 @@ const LAYER_ORDER: LayerKey[] = [
   "routine",
   "warning",
   "fine",
+  "parkingFine",
   "towing",
   "obstacle",
   "inspector", // Top
@@ -158,6 +162,13 @@ const LAYER_PANEL_CONFIG: Array<{
   { key: "routine", titleEn: "Routine", titleAr: "الروتينية", iconUrl: MAP_ICONS.routine, iconSize: "22px" },
   { key: "warning", titleEn: "Warnings", titleAr: "التحذيرات", iconUrl: MAP_ICONS.warning, iconSize: "20px" },
   { key: "fine", titleEn: "Fines", titleAr: "المخالفات", iconUrl: MAP_ICONS.fine, iconSize: "22px" },
+  {
+    key: "parkingFine",
+    titleEn: "Parking Fines",
+    titleAr: "مخالفات مواقف",
+    iconUrl: MAP_ICONS.parkingfine,
+    iconSize: "22px",
+  },
   { key: "startPoint", titleEn: "Start Point", titleAr: "نقطة البداية", iconUrl: MAP_ICONS.start, iconSize: "20px" },
   { key: "inspectorPath", titleEn: "Inspector Path", titleAr: "مسار المفتش", lineColor: "#0070ff" },
 ];
@@ -182,6 +193,7 @@ const EYE_CLOSED_ICON = `
 let globalOnFineClick: ((fine: any) => void) | undefined;
 let globalOnInspectionClick: ((inspection: any) => void) | undefined;
 let globalFineLocations: any[] = [];
+let globalParkingFineLocations: any[] = [];
 let globalWarningLocations: any[] = [];
 let globalRoutineLocations: any[] = [];
 let globalTowingLocations: any[] = [];
@@ -436,6 +448,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   clickable = true,
   inspectorPath = [],
   fineLocations = [],
+  parkingFineLocations = [],
   warningLocations = [],
   routineLocations = [],
   towingLocations = [],
@@ -640,6 +653,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     globalOnFineClick = onFineClick;
     globalOnInspectionClick = onInspectionClick;
     globalFineLocations = [...fineLocations];
+    globalParkingFineLocations = [...parkingFineLocations];
     globalWarningLocations = [...warningLocations];
     globalRoutineLocations = [...routineLocations];
     globalTowingLocations = [...towingLocations];
@@ -648,6 +662,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     onFineClick,
     onInspectionClick,
     fineLocations,
+    parkingFineLocations,
     warningLocations,
     routineLocations,
     towingLocations,
@@ -668,12 +683,13 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         const inspectionId = button.getAttribute("data-inspection-id");
         const entityCode = button.getAttribute("data-entity-code");
         if (type === "fine") {
-          const fine = globalFineLocations.find((f) => String(f.id) === itemId) || {
-            id: itemId,
-            inspectionGUID: inspectionGUID || itemId,
-            inspectionId: inspectionId || inspectionGUID || itemId,
-            entityCode: entityCode || "parking-inspection",
-          };
+          const fine = globalFineLocations.find((f) => String(f.id) === itemId) ||
+            globalParkingFineLocations.find((f) => String(f.id) === itemId) || {
+              id: itemId,
+              inspectionGUID: inspectionGUID || itemId,
+              inspectionId: inspectionId || inspectionGUID || itemId,
+              entityCode: entityCode || "parking-inspection",
+            };
           if (fine && globalOnFineClick) globalOnFineClick(fine);
         } else if (type === "parking") {
           const allParking = parkingPointsRef.current.filter((p) => String(p.objectId) === itemId);
@@ -971,6 +987,91 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
                   label: currentLanguage === "ar" ? "المبلغ" : "Amount",
                   value: `AED ${attrs.fineAmount ?? 0}`,
                   valueColor: "#cf1322",
+                },
+                {
+                  icon: "",
+                  label: currentLanguage === "ar" ? "الوقت" : "Time",
+                  value: formatDateTime(attrs.timestamp),
+                },
+                { icon: "", label: plateLabel, value: plateDisplay },
+              ];
+              return createPopupDOMElement(fineId, rows, "fine", true, currentLanguage, {
+                "inspection-guid": String(attrs.inspectionGUID || attrs.id || ""),
+                "inspection-id": String(attrs.inspectionId || attrs.inspectionGUID || attrs.id || ""),
+                "entity-code": String(attrs.entityCode || "parking-inspection"),
+              });
+            },
+          }),
+        }),
+      );
+    }
+
+    // ─── Parking Fine Locations cluster block (identical to fine block) ──────
+    if (showFineLocations && parkingFineLocations.length > 0) {
+      addMarkerLayer(
+        "parkingFine",
+        createClusterLayer({
+          title: currentLanguage === "ar" ? "مخالفات مواقف" : "Parking Fines",
+          icon: MAP_ICONS.parkingfine,
+          color: "#1565C0CC",
+          points: parkingFineLocations.map((fine) => ({
+            attributes: {
+              id: fine.id,
+              inspectionGUID: fine.inspectionGUID || fine.id,
+              inspectionId: fine.inspectionId || fine.inspectionGUID || fine.id,
+              entityCode: fine.entityCode || "parking-inspection",
+              name: fine.plateNumber || fine.tradeLicenseNumber || "—",
+              tradeLicenseNumber: fine.tradeLicenseNumber || "",
+              fineAmount: fine.fineAmount ?? 0,
+              entityNo: (fine as any).entityNo || "",
+              timestamp: (fine as any).entityDateTime || fine.timestamp,
+              plateNumber: fine.plateNumber,
+            },
+            longitude: fine.lng,
+            latitude: fine.lat,
+          })),
+          iconWidth: PIN_W,
+          iconHeight: PIN_H,
+          objectIdField: "OBJECTID",
+          fields: [
+            { name: "OBJECTID", type: "oid" },
+            { name: "id", type: "string" },
+            { name: "inspectionGUID", type: "string" },
+            { name: "inspectionId", type: "string" },
+            { name: "entityCode", type: "string" },
+            { name: "name", type: "string" },
+            { name: "tradeLicenseNumber", type: "string" },
+            { name: "fineAmount", type: "double" },
+            { name: "entityNo", type: "string" },
+            { name: "timestamp", type: "string" },
+            { name: "plateNumber", type: "string" },
+          ],
+          clusterRadius,
+          popupTemplate: new PopupTemplate({
+            title: (feature: any) => {
+              const attrs = getPopupAttributes(feature);
+              return attrs.plateNumber
+                ? `${currentLanguage === "ar" ? "مخالفة موقف:" : "Parking Fine:"} ${attrs.plateNumber}`
+                : `${currentLanguage === "ar" ? "مخالفة موقف:" : "Parking Fine:"} ${attrs.entityNo || attrs.id || "—"}`;
+            },
+            content: (feature: any) => {
+              const attrs = getPopupAttributes(feature);
+              const fineId = String(attrs.id);
+              const hasPlate = attrs.plateNumber?.trim();
+              const plateDisplay = hasPlate ? attrs.plateNumber : attrs.tradeLicenseNumber || attrs.name || "—";
+              const plateLabel = hasPlate
+                ? currentLanguage === "ar"
+                  ? "رقم اللوحة"
+                  : "Plate Number"
+                : currentLanguage === "ar"
+                  ? "رقم الرخصة التجارية"
+                  : "Trade License Number";
+              const rows = [
+                {
+                  icon: "",
+                  label: currentLanguage === "ar" ? "المبلغ" : "Amount",
+                  value: `AED ${attrs.fineAmount ?? 0}`,
+                  valueColor: "#eb2630",
                 },
                 {
                   icon: "",
@@ -1360,6 +1461,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     clusterRadius,
     currentLanguage,
     fineLocations,
+    parkingFineLocations,
     inspectors,
     inspectorPath,
     layerVisibility,
@@ -1510,6 +1612,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       });
       inspectorPath?.forEach((p) => pts.push({ lng: p.lng, lat: p.lat }));
       fineLocations?.forEach((f) => pts.push({ lng: f.lng, lat: f.lat }));
+      parkingFineLocations?.forEach((f) => pts.push({ lng: f.lng, lat: f.lat }));
       obstacleLocations?.forEach((o) => pts.push({ lng: o.lng, lat: o.lat }));
       warningLocations?.forEach((w) => pts.push({ lng: w.lng, lat: w.lat }));
       routineLocations?.forEach((r) => pts.push({ lng: r.lng, lat: r.lat }));
@@ -1549,6 +1652,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     zoom,
     inspectorPath,
     fineLocations,
+    parkingFineLocations,
     obstacleLocations,
     warningLocations,
     routineLocations,

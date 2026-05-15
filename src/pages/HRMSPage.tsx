@@ -1,3 +1,4 @@
+// HRMSPage.tsx
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, useState } from "react";
@@ -411,11 +412,34 @@ const HRMSPage: React.FC = () => {
     );
   }, [towingResponse]);
 
+  // ─── Change 1: Split fines into vehicle fines and parking fines ─────────────
   useEffect(() => {
     if (!fineInspectionResponse) return;
-    const fineLocations = (fineInspectionResponse.data || []).map(normalizeInspectionLocation).filter(Boolean);
+
+    const allLocations = (fineInspectionResponse.data || []).map(normalizeInspectionLocation).filter(Boolean);
+
+    // Split by inspectionType
+    const vehicleFineLocations = allLocations.filter((loc: any) => {
+      const type = Number(loc.inspectionType);
+      return type === 14001 || type === 14002 || type === 14003;
+    });
+
+    const parkingFineLocations = allLocations.filter((loc: any) => {
+      const type = Number(loc.inspectionType);
+      return type === 14004 || type === 14005;
+    });
+
     setViewRecord((prev: any) =>
-      prev ? { ...prev, fineLocations, finesIssued: fineInspectionResponse.totalCount || fineLocations.length } : prev,
+      prev
+        ? {
+            ...prev,
+            fineLocations: vehicleFineLocations,
+            vehicleFinesIssued: vehicleFineLocations.length,
+            parkingFineLocations: parkingFineLocations,
+            parkingFinesIssued: parkingFineLocations.length,
+            totalFinesIssued: allLocations.length,
+          }
+        : prev,
     );
   }, [fineInspectionResponse]);
 
@@ -494,13 +518,16 @@ const HRMSPage: React.FC = () => {
       obstacleLocations: [],
       towingLocations: [],
       fineLocations: [],
+      parkingFineLocations: [],
       warningLocations: [],
       routineLocations: [],
       inspectorPath: [],
       trackingPoints: 0,
       obstacles: 0,
       towingRequests: 0,
-      finesIssued: 0,
+      vehicleFinesIssued: 0,
+      parkingFinesIssued: 0,
+      totalFinesIssued: 0,
       warningInspections: 0,
       routineInspections: 0,
       totalInspections: 0,

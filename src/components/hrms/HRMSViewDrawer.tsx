@@ -1,16 +1,8 @@
+// HRMSViewDrawer.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useCallback, useRef } from "react";
 import { Modal, Descriptions, Badge } from "antd";
-import {
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  AuditOutlined,
-  WarningOutlined,
-  AlertOutlined,
-  CarOutlined,
-  TruckOutlined,
-  PaperClipOutlined,
-} from "@ant-design/icons";
+import { CheckCircleOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import type { PageConfig } from "../../types/config";
 import ArcGISMap from "../common/ArcGISMap";
@@ -26,6 +18,96 @@ interface HRMSViewDrawerProps {
   onShare: () => void;
   statusLabels: Record<string, string>;
 }
+
+// ─── Change 2: Inline SVG icon components ────────────────────────────────────
+const VehicleFineIcon = ({ color = "#1E88E5", size = "1em" }: { color?: string; size?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 100 100"
+    width={size}
+    height={size}
+    fill={color}
+    style={{ display: "inline-block", verticalAlign: "-0.125em" }}
+  >
+    {/* Car Body */}
+    <path 
+      d="M22 65 L28 48 Q32 40 40 40 L70 40 Q78 48 82 65 L82 72 L18 72 Z" 
+      fill={color}
+    />
+
+    {/* Cabin / Windows */}
+    <path 
+      d="M38 48 Q45 37 55 37 Q68 45 72 48 L65 48 L38 48 Z" 
+      fill="#26334A"
+    />
+
+    {/* Windshield Highlight */}
+    <polygon points="52,41 65,48 64,48 52,41" fill="#81D4FA" />
+
+    {/* Wheels */}
+    <circle cx="33" cy="73" r="9.5" fill="#26334A" />
+    <circle cx="33" cy="73" r="5.8" fill="#FAFAFA" />
+    <circle cx="33" cy="73" r="3" fill="#26334A" />
+
+    <circle cx="67" cy="73" r="9.5" fill="#26334A" />
+    <circle cx="67" cy="73" r="5.8" fill="#FAFAFA" />
+    <circle cx="67" cy="73" r="3" fill="#26334A" />
+
+    {/* Headlights */}
+    <rect x="16" y="60" width="6" height="8" rx="2" fill="#FFEB3B" />
+    
+    {/* Taillights */}
+    <rect x="78" y="60" width="6" height="8" rx="2" fill="#EF5350" />
+
+    {/* Grille */}
+    <rect x="19" y="58" width="12" height="5" fill="#1C2B4A" />
+  </svg>
+);
+
+const ParkingFineIcon = ({ color = "#1565C0", size = "1em" }: { color?: string; size?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 100 100"
+    width={size}
+    height={size}
+    fill={color}
+    style={{ display: "inline-block", verticalAlign: "-0.125em" }}
+  >
+    {/* Rounded square */}
+    <rect x="15" y="15" width="70" height="70" rx="12" ry="12" />
+    {/* Bold white "P" */}
+    <path
+      d="M40,70 L40,30 L58,30 Q68,30 68,40 Q68,50 58,50 L48,50 L48,70 Z M48,42 L56,42 Q58,42 58,40 Q58,38 56,38 L48,38 Z"
+      fill="white"
+    />
+  </svg>
+);
+
+const TotalFineIcon = ({ color = "#FF6F00", size = "1em" }: { color?: string; size?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 100 100"
+    width={size}
+    height={size}
+    fill={color}
+    style={{ display: "inline-block", verticalAlign: "-0.125em" }}
+  >
+    {/* Ticket stack / merged icon */}
+    <g transform="translate(50,50) rotate(-20) translate(-50,-50)">
+      {/* Back ticket */}
+      <rect x="14" y="34" width="80" height="40" rx="6" ry="6" fill={color} opacity="0.6" />
+      {/* Front ticket */}
+      <rect x="6" y="26" width="80" height="40" rx="6" ry="6" fill={color} />
+      {/* Notches */}
+      <circle cx="6" cy="46" r="6" fill="white" />
+      <circle cx="86" cy="46" r="6" fill="white" />
+      {/* Perforated line */}
+      <line x1="51" y1="26" x2="51" y2="66" stroke="white" strokeWidth="2.5" strokeDasharray="4,4" />
+      {/* Inner rectangle */}
+      <rect x="11" y="31" width="35" height="30" rx="3" ry="3" fill="white" opacity="0.9" />
+    </g>
+  </svg>
+);
 
 const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, statusLabels }) => {
   const { t } = useTranslation();
@@ -287,6 +369,8 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
           },
         ]
       : [];
+
+  // ─── Change 2: Updated performanceStats with Total Fines, Vehicle Fines, Parking Fines ──
   const performanceStats = [
     {
       label: t("form.obstacles") || "Obstacles",
@@ -313,10 +397,22 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
       icon: <WarningIcon color="#c900b5" size="2.5em" />,
     },
     {
-      label: t("stats.totalFines") || "Fines",
-      value: record.finesIssued || 0,
+      label: t("stats.totalFines") || "Fines (Total)",
+      value: record.totalFinesIssued || 0,
+      color: "#eb2630",
+      icon: <TotalFineIcon color="#eb2630" size="2.5em" />,
+    },
+    {
+      label: t("stats.vehicleFines") || "Vehicle",
+      value: record.vehicleFinesIssued || 0,
       color: "#E53935",
-      icon: <FineIcon color="#E53935" size="2.5em" />,
+      icon: <VehicleFineIcon color="#E53935" size="2.5em" />,
+    },
+    {
+      label: t("stats.parkingFines") || "Parking",
+      value: record.parkingFinesIssued || 0,
+      color: "#29b6f6",
+      icon: <ParkingFineIcon color="#29b6f6" size="2.5em" />,
     },
     {
       label: t("form.towingRequests") || "Towing",
@@ -400,6 +496,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                   height="500px"
                   inspectorPath={record.inspectorPath || []}
                   fineLocations={record.fineLocations || []}
+                  parkingFineLocations={record.parkingFineLocations || []}
                   warningLocations={record.warningLocations || []}
                   routineLocations={record.routineLocations || []}
                   towingLocations={record.towingLocations || []}
@@ -427,12 +524,13 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
             </div>
 
             {/* Performance bar */}
-            <div style={{ display: "flex", borderTop: "1px solid #e8e8e8", background: "white" }}>
+            <div style={{ display: "flex", borderTop: "1px solid #e8e8e8", background: "white", flexWrap: "wrap" }}>
               {performanceStats.map((stat, index) => (
                 <div
                   key={index}
                   style={{
                     flex: 1,
+                    minWidth: 100,
                     textAlign: "center",
                     padding: "16px 8px",
                     borderRight: index < performanceStats.length - 1 ? "1px solid #e8e8e8" : "none",

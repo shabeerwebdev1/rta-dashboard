@@ -123,7 +123,7 @@ export const vehicleInspectionsConfig: PageConfig = {
   },
 
   searchConfig: {
-    globalSearchKeys: ["entityNo", "plateNumber"],
+    globalSearchKeys: ["entityNo", "plateNumber", "inspectorNameEn"],
     columnFilterKeys: ["inspectionStatus", "vehicleColor", "inspectionType"],
     dateRangeKey: "entityDateTime",
   },

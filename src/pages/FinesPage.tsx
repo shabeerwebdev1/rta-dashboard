@@ -9,7 +9,11 @@ import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
-import { useSearchFinesQuery, useLazyGetLookupsQuery, useLazyGetCarInspectionByIdQuery } from "../services/rtkApiFactory";
+import {
+  useSearchFinesQuery,
+  useLazyGetLookupsQuery,
+  useLazyGetCarInspectionByIdQuery,
+} from "../services/rtkApiFactory";
 import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
@@ -154,9 +158,15 @@ const FinesPage: React.FC = () => {
   }, [setPageTitle, t, config.title, i18n.language]);
 
   useEffect(() => {
-    setGlobalSearch(state.searchKey, debouncedSearchValue);
-  }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
+    const actualKey =
+      state.searchKey === "inspectorNameEn"
+        ? i18n.language === "ar"
+          ? "inspectorNameAr"
+          : "inspectorNameEn"
+        : state.searchKey;
 
+    setGlobalSearch(actualKey, debouncedSearchValue);
+  }, [debouncedSearchValue, state.searchKey, setGlobalSearch, i18n.language]);
   const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
     if (type === "search") setSearchValue("");
     clearFilter(type, key, value);
@@ -248,7 +258,8 @@ const FinesPage: React.FC = () => {
                     ? t("common.noData")
                     : getLabelFromValue(displayValue, inspectionCategoryOptions, i18n);
               } else if (columnKey === "fineAmount") {
-                displayValue = displayValue == null || displayValue === "" ? t("common.noData") : ` AED ${displayValue} `;
+                displayValue =
+                  displayValue == null || displayValue === "" ? t("common.noData") : ` AED ${displayValue} `;
               } else if (columnKey === "inspectionStatus") {
                 displayValue =
                   displayValue == null ? t("common.noData") : getLabelFromValue(displayValue, lookupOptions, i18n);
@@ -314,14 +325,17 @@ const FinesPage: React.FC = () => {
 
   const handleSearchKeyChange = (newKey: string) => {
     setSearchValue("");
-    setGlobalSearch(newKey, "");
-  };
 
+    const actualKey =
+      newKey === "inspectorNameEn" ? (i18n.language === "ar" ? "inspectorNameAr" : "inspectorNameEn") : newKey;
+
+    setGlobalSearch(actualKey, "");
+  };
   const searchAddon = (
     <Select value={state.searchKey} onChange={handleSearchKeyChange} style={{ width: 150 }}>
       {config.searchConfig?.globalSearchKeys.map((key) => (
         <Option key={key} value={key}>
-          {columnLabels[key]}
+          {key === "inspectorNameEn" || key === "inspectorNameAr" ? t("common.inspectorName") : columnLabels[key]}
         </Option>
       ))}
     </Select>
@@ -488,7 +502,7 @@ const FinesPage: React.FC = () => {
         lookupOptions={modifiedLookupOptions} // ✅ Use modified lookup options
         getLabelFromValue={(value, options) => getLabelFromValue(value, options, i18n)}
         columnLookupMap={{ inspectionType: 1700, inspectionCategory: 1300 }}
-        />
+      />
 
       <FinesViewDrawer
         open={drawerVisible}

@@ -585,7 +585,8 @@
     "day": "يوم",
     "days": "أيام",
     "open": "مفتوح",
-    "Inactive": "غير نشط"
+    "Inactive": "غير نشط",
+    "inspectorName": "اسم المفتش"
   },
   "entity": {
     "plate": "لوحة",
@@ -793,7 +794,9 @@
     "InactiveLicenses": "الرخص غير النشطة",
     "TotalGroups": "إجمالي المجموعات",
     "ActiveGroups": "المجموعات النشطة",
-    "InactiveGroups": "المجموعات غير النشطة"
+    "InactiveGroups": "المجموعات غير النشطة",
+    "vehicleFines": "مخالفات المركبات",
+    "parkingFines": "مخالفات المواقف"
   },
   "validation": {
     "required": "يرجى إدخال {{field}}",

@@ -28,7 +28,7 @@ export const parkingsInspectionsConfig: PageConfig = {
   },
 
   searchConfig: {
-    globalSearchKeys: ["entityNo", "tradeLicenseNumber"],
+    globalSearchKeys: ["entityNo", "tradeLicenseNumber" ,"inspectorNameEn"],
     columnFilterKeys: ["inspectionStatus", "inspectionType"],
     dateRangeKey: "entityDateTime",
   },
