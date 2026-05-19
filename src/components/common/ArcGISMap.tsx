@@ -115,11 +115,11 @@ const featureServiceUrls = [
 ];
 
 // CRITICAL FIX: Use same exact icon sizes as previous GraphicsLayer implementation
-const PIN_W = "50px";
-const PIN_H = "50px";
-const START_SIZE = "40px";
-const AVATAR_SIZE = "90px";
-const DEFAULT_CLUSTER_RADIUS = "60px";
+const PIN_W = "36px";
+const PIN_H = "36px";
+const START_SIZE = "34px";
+const AVATAR_SIZE = "66px";
+const DEFAULT_CLUSTER_RADIUS = "32px";
 
 // CRITICAL FIX: Layer order definition - higher index = drawn on top
 const LAYER_ORDER: LayerKey[] = [
@@ -174,19 +174,39 @@ const LAYER_PANEL_CONFIG: Array<{
 ];
 
 const EYE_OPEN_ICON = `
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-    <path d="M2.2 12s3.6-6 9.8-6 9.8 6 9.8 6-3.6 6-9.8 6-9.8-6-9.8-6Z" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.9"/>
-  </svg>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.8"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
+  <circle cx="12" cy="12" r="3"/>
+</svg>
 `;
 
 const EYE_CLOSED_ICON = `
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-    <path d="M3 3l18 18" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
-    <path d="M10.6 6.3A10.8 10.8 0 0 1 12 6c6.2 0 9.8 6 9.8 6a18 18 0 0 1-3.1 3.7" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M6.1 6.9C3.8 8.4 2.2 12 2.2 12s3.6 6 9.8 6c1.8 0 3.3-.5 4.7-1.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M9.9 9.9a3.2 3.2 0 0 0 4.2 4.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
-  </svg>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="18"
+  height="18"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.8"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a21.77 21.77 0 0 1 5.06-5.94"/>
+  <path d="M9.9 4.24A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a21.8 21.8 0 0 1-2.16 3.19"/>
+  <path d="M1 1l22 22"/>
+  <path d="M9.53 9.53a3 3 0 0 0 4.24 4.24"/>
+</svg>
 `;
 
 // ── Global State ─────────────────────────────────────────────────────────
@@ -422,8 +442,8 @@ const createClusterLayer = (params: {
           type: "simple-marker",
           style: "circle",
           color,
-          size: "30px",
-          outline: { color: "#ffffff", width: 2 },
+          size: "20px",
+          outline: { color: "#ffffff", width: 1.5 },
         },
         // Show count on cluster
         label: "{cluster_count}",
@@ -553,11 +573,16 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       const toggleBtn = document.createElement("button");
       toggleBtn.type = "button";
       toggleBtn.className = `arcgis-custom-layer-toggle ${params.isVisible ? "is-visible" : "is-hidden"}`;
-      toggleBtn.innerHTML = `
-        <span class="arcgis-custom-layer-toggle-icon">${params.isVisible ? EYE_OPEN_ICON : EYE_CLOSED_ICON}</span>
-        <span>${params.isVisible ? (language === "ar" ? "إخفاء" : "Hide") : language === "ar" ? "إظهار" : "Show"}</span>
-      `;
-      toggleBtn.setAttribute("aria-label", `${params.isVisible ? "Hide" : "Show"} ${params.label}`);
+      const toggleText = params.isVisible
+        ? language === "ar"
+          ? "إخفاء"
+          : "Hide"
+        : language === "ar"
+          ? "إظهار"
+          : "Show";
+      toggleBtn.innerHTML = `<span class="arcgis-custom-layer-toggle-icon">${params.isVisible ? EYE_OPEN_ICON : EYE_CLOSED_ICON}</span>`;
+      toggleBtn.setAttribute("aria-label", `${toggleText} ${params.label}`);
+      toggleBtn.setAttribute("title", `${toggleText} ${params.label}`);
       toggleBtn.setAttribute("aria-pressed", String(params.isVisible));
       toggleBtn.addEventListener("click", (event) => {
         event.preventDefault();
@@ -780,8 +805,8 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       const style = document.createElement("style");
       style.textContent = `
         .arcgis-custom-layer-panel {
-          min-width: 280px;
-          max-height: 360px;
+          min-width: 220px;
+          max-height: 300px;
           overflow-y: auto;
           background: #ffffff;
         }
@@ -789,51 +814,43 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          gap: 12px;
-          padding: 14px 18px;
+          gap: 10px;
+          padding: 10px 12px;
           border-bottom: 1px solid #e8e8e8;
         }
         .arcgis-custom-layer-left {
           display: flex;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
           min-width: 0;
           flex: 1;
         }
         .arcgis-custom-layer-label {
           color: #262626;
-          font-size: 15px;
+          font-size: 13px;
           line-height: 1.35;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .arcgis-custom-layer-toggle {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          min-width: 116px;
-          height: 44px;
-          padding: 0 18px;
-          border: 1px solid #a7e7bb;
-          background: #dbf8e4;
-          color: #12945b;
-          cursor: pointer;
-          border-radius: 999px;
-          flex-shrink: 0;
-          font-size: 15px;
-          font-weight: 600;
-          line-height: 1;
-          box-shadow: 0 1px 3px rgba(18, 148, 91, 0.12);
-        }
-        .arcgis-custom-layer-toggle:hover {
-          background: #d0f4dc;
-        }
-        .arcgis-custom-layer-toggle:focus {
-          outline: 2px solid #1677ff;
-          outline-offset: 2px;
-        }
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #667085;
+  cursor: pointer;
+  border-radius: 50%;
+  flex-shrink: 0;
+  line-height: 1;
+  box-shadow: none;
+}
+        
+       
         .arcgis-custom-layer-toggle.is-hidden {
           border-color: #d9d9d9;
           background: #ffffff;
@@ -846,9 +863,13 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
           justify-content: center;
           line-height: 0;
         }
+        .arcgis-custom-layer-toggle-icon svg {
+          width: 16px;
+          height: 16px;
+        }
         .arcgis-custom-layer-section-title {
-          padding: 16px 18px 10px;
-          font-size: 12px;
+          padding: 12px 12px 8px;
+          font-size: 11px;
           font-weight: 700;
           color: #8c8c8c;
           letter-spacing: 0.04em;
@@ -860,9 +881,9 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 14px 18px;
+          padding: 10px 12px;
           color: #262626;
-          font-size: 14px;
+          font-size: 13px;
           border-bottom: 1px solid #e8e8e8;
           cursor: pointer;
         }

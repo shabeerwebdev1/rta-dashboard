@@ -480,7 +480,8 @@
     "EndPoint": "End Point",
     "WarningLocations": "Warning Locations",
     "RoutineLocations": "Routine Locations",
-    "TowingLocations": "Towing Locations"
+    "TowingLocations": "Towing Locations",
+    "inspectorid": "Inspector ID"
   },
   "common": {
     "action": "Actions",

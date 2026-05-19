@@ -480,7 +480,8 @@
     "EndPoint": "نقطة النهاية",
     "WarningLocations": "مواقع الإنذارات",
     "RoutineLocations": "مواقع التفتيشات الروتينية",
-    "TowingLocations": "مواقع طلبات السحب"
+    "TowingLocations": "مواقع طلبات السحب",
+    "inspectorid": "معرف المفتش"
   },
   "common": {
     "action": "الإجراءات",

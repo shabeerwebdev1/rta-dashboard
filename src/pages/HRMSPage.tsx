@@ -361,6 +361,9 @@ const HRMSPage: React.FC = () => {
         ...prev,
         inspectorName: trackingMeta?.inspectorName || prev.inspectorName,
         inspectorGuid: trackingMeta?.inspectorGuid || prev.inspectorGuid,
+        displayNameAr: trackingMeta?.displayNameAr || prev.displayNameAr,
+        empNumber: trackingMeta?.empNumber || prev.empNumber,
+
         email: trackingMeta?.emailId || prev.email,
         mobile: trackingMeta?.mobileNo || prev.mobile,
         attendanceId: trackingMeta?.attendanceId || prev.attendanceId,
@@ -541,6 +544,7 @@ const HRMSPage: React.FC = () => {
             PageSize: 100,
             "betweens[createdDateTime][From]": selectedDate,
             "betweens[createdDateTime][To]": selectedDate,
+            "orFilters[inspectorGUID]": record.inspectorGUID || "",
           }
         : null,
     );
@@ -551,6 +555,7 @@ const HRMSPage: React.FC = () => {
             PageSize: 100,
             "betweens[createdDateTime][From]": selectedDate,
             "betweens[createdDateTime][To]": selectedDate,
+            "orFilters[inspectorGUID]": record.inspectorGUID || "",
           }
         : null,
     );
@@ -561,7 +566,11 @@ const HRMSPage: React.FC = () => {
     );
     setInspectionDateParams(
       selectedDate
-        ? { "betweens[entityDateTime][From]": selectedDate, "betweens[entityDateTime][To]": selectedDate }
+        ? {
+            "betweens[entityDateTime][From]": selectedDate,
+            "betweens[entityDateTime][To]": selectedDate,
+            "orFilters[inspectorGUID]": record.inspectorGUID || "",
+          }
         : null,
     );
     setIsDrawerOpen(true);

@@ -19,51 +19,6 @@ interface HRMSViewDrawerProps {
   statusLabels: Record<string, string>;
 }
 
-// ─── Change 2: Inline SVG icon components ────────────────────────────────────
-const VehicleFineIcon = ({ color = "#1E88E5", size = "1em" }: { color?: string; size?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 100 100"
-    width={size}
-    height={size}
-    fill={color}
-    style={{ display: "inline-block", verticalAlign: "-0.125em" }}
-  >
-    {/* Car Body */}
-    <path 
-      d="M22 65 L28 48 Q32 40 40 40 L70 40 Q78 48 82 65 L82 72 L18 72 Z" 
-      fill={color}
-    />
-
-    {/* Cabin / Windows */}
-    <path 
-      d="M38 48 Q45 37 55 37 Q68 45 72 48 L65 48 L38 48 Z" 
-      fill="#26334A"
-    />
-
-    {/* Windshield Highlight */}
-    <polygon points="52,41 65,48 64,48 52,41" fill="#81D4FA" />
-
-    {/* Wheels */}
-    <circle cx="33" cy="73" r="9.5" fill="#26334A" />
-    <circle cx="33" cy="73" r="5.8" fill="#FAFAFA" />
-    <circle cx="33" cy="73" r="3" fill="#26334A" />
-
-    <circle cx="67" cy="73" r="9.5" fill="#26334A" />
-    <circle cx="67" cy="73" r="5.8" fill="#FAFAFA" />
-    <circle cx="67" cy="73" r="3" fill="#26334A" />
-
-    {/* Headlights */}
-    <rect x="16" y="60" width="6" height="8" rx="2" fill="#FFEB3B" />
-    
-    {/* Taillights */}
-    <rect x="78" y="60" width="6" height="8" rx="2" fill="#EF5350" />
-
-    {/* Grille */}
-    <rect x="19" y="58" width="12" height="5" fill="#1C2B4A" />
-  </svg>
-);
-
 const ParkingFineIcon = ({ color = "#1565C0", size = "1em" }: { color?: string; size?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -228,7 +183,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
     </svg>
   );
 
-  const ObstacleIcon = ({ color = "#F57C00", size = "1em" }: { color?: string; size?: string }) => (
+  const ObstacleIcon = ({ color = "#f26322", size = "1em" }: { color?: string; size?: string }) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 100 100"
@@ -254,7 +209,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
     </svg>
   );
 
-  const TowingIcon = ({ color = "#7B1FA2", size = "1em" }: { color?: string; size?: string }) => (
+  const TowingIcon = ({ color = "#735fa9", size = "2.5em" }: { color?: string; size?: string }) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 120 80"
@@ -310,10 +265,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
     </svg>
   );
 
-  // For "Routine" and "Total Inspections" — using the same WarningIcon style
-  // but with different colors (green / blue) since no separate PNGs were provided
-  // You can swap these with your own PNGs if desired.
-  const InspectionIcon = ({ color = "#096dd9", size = "1em" }: { color?: string; size?: string }) => (
+  const InspectionIcon = ({ color = "#096dd9", size = "2.5em" }: { color?: string; size?: string }) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 100 100"
@@ -332,7 +284,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
     </svg>
   );
 
-  const RoutineIcon = ({ color = "#34A853", size = "1em" }: { color?: string; size?: string }) => (
+  const RoutineIcon = ({ color = "#34A853", size = "2.5em" }: { color?: string; size?: string }) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 100 100"
@@ -375,50 +327,50 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
     {
       label: t("form.obstacles") || "Obstacles",
       value: record.obstacles || 0,
-      color: "#F57C00",
-      icon: <ObstacleIcon color="#F57C00" size="2.5em" />,
+      color: "#f26322",
+      icon: <ObstacleIcon color="#f26322" size="3em" />,
     },
     {
       label: t("form.totaliinspections") || "Total",
       value: record.totalInspections || 0,
       color: "#096dd9",
-      icon: <InspectionIcon color="#096dd9" size="2.5em" />,
+      icon: <InspectionIcon color="#096dd9" size="3em" />,
     },
     {
       label: t("form.routineinspections") || "Routine",
       value: record.routineInspections || 0,
       color: "#34A853",
-      icon: <RoutineIcon color="#34A853" size="2.5em" />,
+      icon: <RoutineIcon color="#34A853" size="3em" />,
     },
     {
       label: t("form.warninginspections") || "Warnings",
       value: record.warningInspections || 0,
       color: "#c900b5",
-      icon: <WarningIcon color="#c900b5" size="2.5em" />,
+      icon: <WarningIcon color="#c900b5" size="3em" />,
     },
     {
       label: t("stats.totalFines") || "Fines (Total)",
       value: record.totalFinesIssued || 0,
       color: "#eb2630",
-      icon: <TotalFineIcon color="#eb2630" size="2.5em" />,
+      icon: <TotalFineIcon color="#eb2630" size="3em" />,
     },
     {
       label: t("stats.vehicleFines") || "Vehicle",
       value: record.vehicleFinesIssued || 0,
       color: "#E53935",
-      icon: <VehicleFineIcon color="#E53935" size="2.5em" />,
+      icon: <FineIcon color="#E53935" size="3em" />,
     },
     {
       label: t("stats.parkingFines") || "Parking",
       value: record.parkingFinesIssued || 0,
       color: "#29b6f6",
-      icon: <ParkingFineIcon color="#29b6f6" size="2.5em" />,
+      icon: <ParkingFineIcon color="#29b6f6" size="3em" />,
     },
     {
       label: t("form.towingRequests") || "Towing",
       value: record.towingRequests || 0,
-      color: "#7B1FA2",
-      icon: <TowingIcon color="#7B1FA2" size="2.5em" />,
+      color: "#735fa9",
+      icon: <TowingIcon color="#735fa9" size="3em" />,
     },
   ];
 
@@ -463,12 +415,14 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
       <Modal
         open={open}
         onCancel={onClose}
-        width={1400}
+        width={1600}
         title={
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingRight: 40 }}>
             <div>
               <span style={{ fontSize: 16, fontWeight: 600 }}>
-                {record.inspectorName} {record.inspectorNameAr && ` - ${record.inspectorNameAr}`}
+                {record.inspectorName}
+                {record.displayNameAr && ` - ${record.displayNameAr}`}
+                {/* {record.empNumber && ` - ${record.empNumber}`} */}
               </span>
               <div style={{ fontSize: 12, color: "#666", fontWeight: "normal", marginTop: 4, display: "flex", gap: 4 }}>
                 <span style={{ fontSize: 16, fontWeight: 600, color: "#0070ff" }}>{record.zoneName}</span>
@@ -524,46 +478,76 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
             </div>
 
             {/* Performance bar */}
-            <div style={{ display: "flex", borderTop: "1px solid #e8e8e8", background: "white", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", borderTop: "1px solid #e8e8e8", background: "white" }}>
               {performanceStats.map((stat, index) => (
                 <div
                   key={index}
                   style={{
                     flex: 1,
                     minWidth: 100,
-                    textAlign: "center",
-                    padding: "16px 8px",
+                    padding: "16px 12px",
                     borderRight: index < performanceStats.length - 1 ? "1px solid #e8e8e8" : "none",
                   }}
                 >
                   <div
                     style={{
                       display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 10,
-                      marginBottom: 6,
+                      alignItems: "stretch",
+                      justifyContent: "flex-start",
+                      gap: 12,
+                      height: "100%",
                     }}
                   >
-                    <span
+                    {/* Left Icon */}
+                    <div
                       style={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         width: PERFORMANCE_ICON_FRAME,
-                        height: PERFORMANCE_ICON_FRAME,
+                        minWidth: PERFORMANCE_ICON_FRAME,
                         color: stat.color,
                         lineHeight: 1,
                         flexShrink: 0,
                       }}
                     >
                       {renderPerformanceIcon(stat.icon, stat.color)}
-                    </span>
-                    <span style={{ fontSize: 26, fontWeight: 700, color: stat.color, lineHeight: 1 }}>
-                      {stat.value}
-                    </span>
+                    </div>
+
+                    {/* Right Content */}
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: 26,
+                          fontWeight: 700,
+                          color: stat.color,
+                          lineHeight: 1,
+                          marginBottom: 6,
+                        }}
+                      >
+                        {stat.value}
+                      </span>
+
+                      <span
+                        style={{
+                          fontSize: 13,
+                          color: "#080101",
+                          lineHeight: 1.25,
+                          wordBreak: "break-word",
+                          maxWidth: 110,
+                        }}
+                      >
+                        {stat.label}
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 16, color: "#080101" }}>{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -579,8 +563,15 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                 <Descriptions.Item label={t("form.InspectorName") || "Inspector Name"}>
                   {record.inspectorName}
                 </Descriptions.Item>
-                <Descriptions.Item label={t("form.email") || "Email"}>{record.email || "No data"}</Descriptions.Item>
-                <Descriptions.Item label={t("form.mobile") || "Mobile"}>{record.mobile || "No data"}</Descriptions.Item>
+                <Descriptions.Item label={t("form.inspectorid") || t("common.noData")}>
+                  {record.empNumber || t("common.noData")}
+                </Descriptions.Item>
+                <Descriptions.Item label={t("form.email") || t("common.noData")}>
+                  {record.email || t("common.noData")}
+                </Descriptions.Item>
+                <Descriptions.Item label={t("form.mobile") || t("common.noData")}>
+                  {record.mobile || t("common.noData")}
+                </Descriptions.Item>
               </Descriptions>
             </div>
 
@@ -598,12 +589,12 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
               >
                 <Descriptions bordered column={1} size="small">
                   <Descriptions.Item label={t("form.location") || "Zone"}>
-                    {record.location?.zone || "N/A"}
+                    {record.location?.zone || t("common.noData")}
                   </Descriptions.Item>
                   <Descriptions.Item label={t("form.shift") || "Shift"}>
                     {record.shift || "Morning Shift"}
                   </Descriptions.Item>
-                  <Descriptions.Item label={t("form.checkInTime") || "Check In Time"}>
+                  <Descriptions.Item label={t("form.checkInTime") || t("common.noData")}>
                     <Badge
                       status={getStatusBadge(record.status)}
                       text={
@@ -614,7 +605,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                       }
                     />
                   </Descriptions.Item>
-                  <Descriptions.Item label={t("form.checkOutTime") || "Check Out Time"}>
+                  <Descriptions.Item label={t("form.checkOutTime") || t("common.noData")}>
                     {record.checkOutTime ? (
                       <span>
                         <ClockCircleOutlined style={{ marginRight: 4 }} />
@@ -623,11 +614,11 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                     ) : (
                       <span style={{ color: "#ff4d4f" }}>
                         <ClockCircleOutlined style={{ marginRight: 4 }} />
-                        {t("common.notCheckedOut") || "Not Checked Out"}
+                        {t("common.notCheckedOut") || t("common.noData")}
                       </span>
                     )}
                   </Descriptions.Item>
-                  <Descriptions.Item label={t("form.status") || "Status"}>
+                  <Descriptions.Item label={t("form.status") || t("common.noData")}>
                     <Badge status={getStatusBadge(record.status)} text={statusLabels[record.status] || record.status} />
                   </Descriptions.Item>
                 </Descriptions>
