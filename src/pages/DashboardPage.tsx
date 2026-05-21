@@ -506,6 +506,7 @@ const SupervisorViewPage: React.FC = () => {
                   setDrawerVisible(true);
                 }}
                 onlyInspector={selectedInspector ?? null}
+                legendEnabled={false}
               />
             </div>
           </Card>

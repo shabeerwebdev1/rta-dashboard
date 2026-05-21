@@ -15,8 +15,6 @@ const ProactiveCampaignViewDrawer = ({ open, onClose, record, getLabel }) => {
 
         <Descriptions.Item label={t("form.titleAr")}>{record.titleAr}</Descriptions.Item>
 
-        <Descriptions.Item label={t("form.location")}>{getLabel(record.location, "locations")}</Descriptions.Item>
-
         <Descriptions.Item label={t("form.timeInterval")}>
           {formatDateByLocale(record.startTime, { en: "DD MMM YYYY HH:mm", ar: "DD MMM YYYY HH:mm" }, i18n.language)} -{" "}
           {formatDateByLocale(record.endTime, { en: "DD MMM YYYY HH:mm", ar: "DD MMM YYYY HH:mm" }, i18n.language)}
@@ -28,31 +26,9 @@ const ProactiveCampaignViewDrawer = ({ open, onClose, record, getLabel }) => {
           ))}
         </Descriptions.Item>
 
-        <Descriptions.Item label={t("form.assignedInspectors")}>
-          {(record.assignedInspectors || []).map((id: number) => (
-            <Tag key={id}>{getLabel(id, "inspectors")}</Tag>
-          ))}
-        </Descriptions.Item>
-
-        <Descriptions.Item label={t("form.polygon")}>
-          <div style={{ maxHeight: 160, overflowY: "auto" }}>{JSON.stringify(record.polygon || [], null, 2)}</div>
-        </Descriptions.Item>
-
         <Descriptions.Item label={t("form.notificationMessageEn")}>{record.notificationMessageEn}</Descriptions.Item>
 
         <Descriptions.Item label={t("form.notificationMessageAr")}>{record.notificationMessageAr}</Descriptions.Item>
-
-        <Descriptions.Item label={t("form.status")}>
-          <Tag color={record.status === "active" ? "green" : record.status === "draft" ? "orange" : "blue"}>
-            {getLabel(record.status, "statuses")}
-          </Tag>
-        </Descriptions.Item>
-
-        <Descriptions.Item label={t("form.createdBy")}>{record.createdBy}</Descriptions.Item>
-
-        <Descriptions.Item label={t("form.createdAt")}>
-          {formatDateByLocale(record.createdAt, { en: "DD MMM YYYY HH:mm", ar: "DD MMM YYYY HH:mm" }, i18n.language)}
-        </Descriptions.Item>
       </Descriptions>
     </Drawer>
   );

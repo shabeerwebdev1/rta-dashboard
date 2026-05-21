@@ -830,6 +830,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
                             zoom={16}
                             height="180px"
                             disablePopup={true}
+                            legendEnabled={false}
                           />
                         ) : (
                           <Empty description="No Location Data Available" />

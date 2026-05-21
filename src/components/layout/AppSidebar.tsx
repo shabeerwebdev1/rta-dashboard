@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useMemo, useState } from "react";
@@ -9,17 +10,14 @@ import {
   ExclamationCircleOutlined,
   SearchOutlined,
   BarChartOutlined,
-  UsergroupAddOutlined,
   PushpinOutlined,
   DashboardOutlined,
   AuditOutlined,
   SettingOutlined,
-  LinkOutlined,
   EnvironmentOutlined,
   CarFilled,
   WarningOutlined,
   IdcardOutlined,
-  BookOutlined,
   SolutionOutlined,
   ControlOutlined,
   ApartmentOutlined,
@@ -78,18 +76,6 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
   const inboxCount = inboxSummary?.data ?? 0;
   const totalInboxCount = inboxMenus.reduce((sum: number, item: any) => sum + (item.AW || 0), 0);
 
-  // const sanitizeInboxTitle = (title?: string) => {
-  //   if (!title) return "";
-
-  //   let text = title.replace(/^Parking\s*-\s*/i, "").trim();
-
-  //   if (/Parkonic\s*Fine\s*-\s*Dispute/i.test(text)) {
-  //     text = "Parkonic Disputes";
-  //   }
-
-  //   return text;
-  // };
-
   // Filter reports based on current language
   const filteredReports = useMemo(() => {
     return reports.filter((report) => report.language === currentLanguage);
@@ -143,13 +129,13 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       key: "hrms",
       icon: <IdcardOutlined />,
       labelText: t("sidebar.hrms"),
-      permission: "WebDashboard",
+      permission: "HRMS",
       children: [
         {
           key: FULL_PATHS.HRMS,
           icon: <ClockCircleOutlined />,
           labelText: t("sidebar.attendance"),
-          permission: "WebDashboard",
+          permission: "HRMS",
         },
         {
           key: FULL_PATHS.LEAVE_MANGEMENT,
@@ -202,12 +188,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           labelText: t("sidebar.pledges"),
           permission: "Pledge",
         },
-        // {
-        //   key: FULL_PATHS.LEAVE_MANGEMENT,
-        //   icon: <UserSwitchOutlined />,
-        //   labelText: t("sidebar.leaves"),
-        //   permission: "Leave",
-        // },
+
         {
           key: FULL_PATHS.ROLE_MANAGEMENT,
           icon: <SafetyCertificateOutlined />,
@@ -291,12 +272,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         },
       ],
     },
-    // {
-    //   key: FULL_PATHS.DISPUTE,
-    //   icon: <ExclamationCircleOutlined />,
-    //   labelText: t("sidebar.dispute"),
-    //   permission: "Dispute",
-    // },
+
     {
       key: FULL_PATHS.TOWING,
       icon: <TruckOutlined />,
@@ -312,26 +288,20 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           key: FULL_PATHS.CRITERIA,
           icon: <ControlOutlined />,
           labelText: t("sidebar.Criteria&Weights"),
-          permission: "CallIntegration",
+          permission: "CriteriaWeight",
         },
         {
           key: FULL_PATHS.CRITERIA_GROUP,
           icon: <ApartmentOutlined />,
           labelText: t("sidebar.criteriaGroup"),
-          permission: "CallIntegration",
+          permission: "CriteriaGroup",
         },
         {
           key: FULL_PATHS.TEAM_EVALUATION,
           icon: <AuditOutlined />,
           labelText: t("sidebar.evaluate"),
-          permission: "CallIntegration",
+          permission: "TeamEvaluation",
         },
-        // {
-        //   key: FULL_PATHS.TEAM_TRAINING,
-        //   icon: <UsergroupAddOutlined />,
-        //   labelText: t("sidebar.training"),
-        //   permission: "CallIntegration",
-        // },
       ],
     },
     // Reports as parent with filtered reports based on languagep
@@ -376,12 +346,6 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           labelText: t("sidebar.inspectionmanagement"),
           permission: "ShiftManagement",
         },
-        // {
-        //   key: FULL_PATHS.SHIFT_PLAN,
-        //   icon: <AuditOutlined />,
-        //   labelText: t("sidebar.shiftplan"),
-        //   permission: "ShiftManagement",
-        // },
       ],
     },
   ];

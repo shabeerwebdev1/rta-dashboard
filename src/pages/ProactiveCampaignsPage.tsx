@@ -1,18 +1,3 @@
-/* eslint-disable no-shadow-restricted-names */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/**
- * ProactiveCampaignsPage.tsx
- *
- * - Uses proactiveCampaignsConfig.tsx (static data only)
- * - NO DELETE (per requirement)
- * - Dummy Google Map iframe is embedded; "Draw Boundary" generates a dummy polygon
- * - Auto-assign inspectors based on polygon (demo: picks nearest-like inspectors deterministically)
- * - Create / Edit / View campaigns supported
- *
- * Paste into: /pages/ProactiveCampaignsPage.tsx
- */
-
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Space,
@@ -29,8 +14,8 @@ import {
   Tag,
   Divider,
   message,
-  Descriptions,
   Dropdown,
+  Table,
 } from "antd";
 import {
   PlusOutlined,
@@ -51,9 +36,38 @@ import {
   proactiveLookupData,
 } from "../config/pageConfigs/proactiveCampaignsConfig";
 import ProactiveCampaignViewDrawer from "../components/ProactiveCampaigns/ProactiveCampaignViewDrawer";
+import ArcGISMap from "../components/common/ArcGISMap";
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
+
+const CAMPAIGN_LOCATION_CENTERS: Record<string, [number, number]> = {
+  downtown: [25.2048, 55.2708],
+  "business-bay": [25.191, 55.276],
+  jumeirah: [25.144, 55.185],
+  deira: [25.263, 55.31],
+  "bur-dubai": [25.253, 55.276],
+};
+
+const getCampaignLocationCenter = (location?: string): [number, number] => {
+  if (!location) return [25.2, 55.27];
+  return CAMPAIGN_LOCATION_CENTERS[location] || [25.2, 55.27];
+};
+
+const getPolygonCenter = (polygon?: [number, number][]): [number, number] | null => {
+  if (!polygon?.length) return null;
+
+  const [totalLat, totalLng] = polygon.reduce(
+    (acc, [lat, lng]) => {
+      acc[0] += lat;
+      acc[1] += lng;
+      return acc;
+    },
+    [0, 0],
+  );
+
+  return [totalLat / polygon.length, totalLng / polygon.length];
+};
 
 const ProactiveCampaignsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -64,6 +78,7 @@ const ProactiveCampaignsPage: React.FC = () => {
   // Data (static)
   const [campaigns, setCampaigns] = useState<any[]>(staticProactiveCampaigns);
   const lookups = proactiveCampaignsConfig.lookups || proactiveLookupData;
+  const selectedLocation = Form.useWatch("location", form);
 
   // UI state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,6 +86,7 @@ const ProactiveCampaignsPage: React.FC = () => {
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any | null>(null);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
   const [searchValue, setSearchValue] = useState("");
   const [filters, setFilters] = useState<any>({});
@@ -166,6 +182,13 @@ const ProactiveCampaignsPage: React.FC = () => {
       form.resetFields();
       setCurrentPolygon([]);
       setAutoAssignedInspectors([]);
+      form.setFieldsValue({
+        location: lookups.locations?.[0]?.value,
+        polygon: [],
+        assignedInspectors: [],
+        status: "draft",
+        createdBy: "System User",
+      });
     }
   };
 
@@ -181,15 +204,7 @@ const ProactiveCampaignsPage: React.FC = () => {
   const generateDummyPolygon = (location?: string) => {
     // location-based seed for deterministic demo (simple hash)
     const seed = (location || "seed").split("").reduce((s, ch) => s + ch.charCodeAt(0), 0);
-    // center coordinates vary by location to look realistic
-    const centers: Record<string, [number, number]> = {
-      downtown: [25.2048, 55.2708],
-      "business-bay": [25.191, 55.276],
-      jumeirah: [25.144, 55.185],
-      deira: [25.263, 55.31],
-      "bur-dubai": [25.253, 55.276],
-    };
-    const center = centers[location as string] || [25.2, 55.27];
+    const center = getCampaignLocationCenter(location);
     const [cx, cy] = center;
     // generate 4 points around center using seed
     const poly: [number, number][] = [
@@ -234,6 +249,13 @@ const ProactiveCampaignsPage: React.FC = () => {
     // fill form assignedInspectors if present
     form.setFieldsValue({ polygon: poly, assignedInspectors: assigned });
   };
+
+  const mapLocationValue = (selectedLocation || selectedRecord?.location || lookups.locations?.[0]?.value) as
+    | string
+    | undefined;
+  const mapLocationLabel = mapLocationValue ? getLabel(mapLocationValue, "locations") : t("form.location");
+  const mapCenter = getPolygonCenter(currentPolygon) || getCampaignLocationCenter(mapLocationValue);
+  const [mapLat, mapLng] = mapCenter;
 
   // Create or update campaign
   const onFinish = (values: any) => {
@@ -291,16 +313,85 @@ const ProactiveCampaignsPage: React.FC = () => {
 
   // NOTE: no delete per requirement
 
-  // Table columns (simple table rendering)
   const tableColumns = [
-    { key: "titleEn", title: t("form.titleEn") },
-    { key: "location", title: t("form.location") },
-    { key: "startTime", title: t("form.startTime") },
-    { key: "endTime", title: t("form.endTime") },
-    { key: "violationTypes", title: t("form.violationTypes") },
-    { key: "assignedInspectors", title: t("form.assignedInspectors") },
-    { key: "status", title: t("form.status") },
-    { key: "actions", title: t("common.actions") },
+    {
+      key: "titleEn",
+      title: t("form.titleEn"),
+      dataIndex: "titleEn",
+    },
+    {
+      key: "location",
+      title: t("form.location"),
+      dataIndex: "location",
+      render: (value: string) => getLabel(value, "locations"),
+    },
+    {
+      key: "startTime",
+      title: t("form.startTime"),
+      dataIndex: "startTime",
+      render: (value: string) =>
+        formatDateByLocale(value, { en: "DD MMM  YYYY HH:mm", ar: "DD MMM YYYY HH:mm" }, i18n.language),
+    },
+    {
+      key: "endTime",
+      title: t("form.endTime"),
+      dataIndex: "endTime",
+      render: (value: string) =>
+        formatDateByLocale(value, { en: "DD MMM  YYYY HH:mm", ar: "DD MMM YYYY HH:mm" }, i18n.language),
+    },
+    {
+      key: "violationTypes",
+      title: t("form.violationTypes"),
+      dataIndex: "violationTypes",
+      render: (values: string[]) =>
+        (values || []).map((vt: string) => <Tag key={vt}>{getLabel(vt, "violationTypes")}</Tag>),
+    },
+    {
+      key: "assignedInspectors",
+      title: t("form.assignedInspectors"),
+      dataIndex: "assignedInspectors",
+      render: (values: number[]) =>
+        (values || []).map((id: number) => <Tag key={id}>{getLabel(id, "inspectors")}</Tag>),
+    },
+    {
+      key: "status",
+      title: t("form.status"),
+      dataIndex: "status",
+      render: (value: string) => (
+        <Tag color={value === "active" ? "green" : value === "draft" ? "orange" : "blue"}>
+          {getLabel(value, "statuses")}
+        </Tag>
+      ),
+    },
+    {
+      key: "actions",
+      title: t("common.actions"),
+      align: "center" as const,
+      width: 90,
+      render: (_: unknown, record: any) => (
+        <Dropdown
+          menu={{
+            items: [
+              {
+                key: "view",
+                label: t("common.view"),
+                icon: <EyeOutlined />,
+                onClick: () => handleView(record),
+              },
+              {
+                key: "edit",
+                label: t("common.edit"),
+                icon: <EditOutlined />,
+                onClick: () => openModal("edit", record),
+              },
+            ],
+          }}
+          trigger={["click"]}
+        >
+          <Button icon={<MoreOutlined />} size="small" />
+        </Dropdown>
+      ),
+    },
   ];
 
   return (
@@ -323,30 +414,6 @@ const ProactiveCampaignsPage: React.FC = () => {
                 onChange={(e) => setSearchValue(e.target.value)}
                 style={{ width: 320 }}
               />
-              <Select
-                allowClear
-                placeholder={t("form.location")}
-                style={{ width: 180 }}
-                onChange={(v) => setFilters((p: any) => ({ ...p, location: v }))}
-              >
-                {lookups.locations?.map((l: any) => (
-                  <Option key={l.value} value={l.value}>
-                    {i18n.language === "ar" ? l.labelAr : l.labelEn}
-                  </Option>
-                ))}
-              </Select>
-              <Select
-                allowClear
-                placeholder={t("form.status")}
-                style={{ width: 150 }}
-                onChange={(v) => setFilters((p: any) => ({ ...p, status: v }))}
-              >
-                {lookups.statuses?.map((s: any) => (
-                  <Option key={s.value} value={s.value}>
-                    {i18n.language === "ar" ? s.labelAr : s.labelEn}
-                  </Option>
-                ))}
-              </Select>
 
               <RangePicker showTime onChange={(vals) => setDateRange(vals as any)} />
             </Space>
@@ -362,81 +429,31 @@ const ProactiveCampaignsPage: React.FC = () => {
         </Row>
       </Card>
 
-      <Card>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ backgroundColor: "#fafafa" }}>
-              {tableColumns.map((col) => (
-                <th key={col.key} style={{ padding: 12, textAlign: "left", borderBottom: "1px solid #eee" }}>
-                  {col.title}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((c) => (
-              <tr key={c.id}>
-                <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>{c.titleEn}</td>
-                <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>{getLabel(c.location, "locations")}</td>
-                <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>
-                  {formatDateByLocale(
-                    c.startTime,
-                    { en: "DD MMM  YYYY HH:mm", ar: "DD MMM YYYY HH:mm" },
-                    i18n.language,
-                  )}
-                </td>
-                <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>
-                  {formatDateByLocale(c.endTime, { en: "DD MMM  YYYY HH:mm", ar: "DD MMM YYYY HH:mm" }, i18n.language)}
-                </td>
-                <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>
-                  {(c.violationTypes || []).map((vt: string) => (
-                    <Tag key={vt}>{getLabel(vt, "violationTypes")}</Tag>
-                  ))}
-                </td>
-                <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>
-                  {(c.assignedInspectors || []).map((id: number) => (
-                    <Tag key={id}>{getLabel(id, "inspectors")}</Tag>
-                  ))}
-                </td>
-                <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>
-                  <Tag color={c.status === "active" ? "green" : c.status === "draft" ? "orange" : "blue"}>
-                    {getLabel(c.status, "statuses")}
-                  </Tag>
-                </td>
-                <td style={{ padding: 12, borderBottom: "1px solid #f5f5f5" }}>
-                  <Dropdown
-                    menu={{
-                      items: [
-                        {
-                          key: "view",
-                          label: t("common.view"),
-                          icon: <EyeOutlined />,
-                          onClick: () => handleView(c),
-                        },
-                        {
-                          key: "edit",
-                          label: t("common.edit"),
-                          icon: <EditOutlined />,
-                          onClick: () => openModal("edit", c),
-                        },
-                      ],
-                    }}
-                    trigger={["click"]}
-                  >
-                    <Button icon={<MoreOutlined />} size="small" />
-                  </Dropdown>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {filtered.length === 0 && (
-          <div style={{ textAlign: "center", padding: 30 }}>
-            <FileTextOutlined style={{ fontSize: 36, color: "#bbb" }} />
-            <p>{t("common.noData")}</p>
-          </div>
-        )}
+      <Card bordered={false} bodyStyle={{ padding: 0 }}>
+        <Table
+          rowKey="id"
+          columns={tableColumns}
+          dataSource={filtered}
+          rowSelection={{
+            selectedRowKeys,
+            onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
+            getCheckboxProps: (record: any) => ({
+              name: record.id,
+            }),
+          }}
+          pagination={false}
+          size="small"
+          scroll={{ x: "max-content" }}
+          sticky={{ offsetHeader: 64 }}
+          locale={{
+            emptyText: (
+              <div style={{ textAlign: "center", padding: 30 }}>
+                <FileTextOutlined style={{ fontSize: 36, color: "#bbb" }} />
+                <p>{t("common.noData")}</p>
+              </div>
+            ),
+          }}
+        />
       </Card>
 
       {/* Modal: Create / Edit Campaign */}
@@ -447,6 +464,7 @@ const ProactiveCampaignsPage: React.FC = () => {
         })}
         onCancel={closeModal}
         style={{ top: 20 }}
+        bodyStyle={{ maxHeight: "70vh", overflowY: "auto", overflowX: "hidden" }}
         width={proactiveCampaignsConfig.formConfig?.modalWidth || 900}
         footer={[
           <Button key="back" onClick={closeModal}>
@@ -471,31 +489,12 @@ const ProactiveCampaignsPage: React.FC = () => {
             </Col>
 
             <Col span={12}>
-              <Form.Item name="location" label={t("form.location")} rules={[{ required: true }]}>
-                <Select
-                  placeholder={t("placeholders.selectLocation")}
-                  onChange={() => {
-                    /* reset polygon when location changes */ setCurrentPolygon([]);
-                    setAutoAssignedInspectors([]);
-                    form.setFieldsValue({ polygon: [], assignedInspectors: [] });
-                  }}
-                >
-                  {lookups.locations.map((l: any) => (
-                    <Option key={l.value} value={l.value}>
-                      {i18n.language === "ar" ? l.labelAr : l.labelEn}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
               <Form.Item name="timeInterval" label={t("form.timeInterval")} rules={[{ required: true }]}>
                 <RangePicker showTime style={{ width: "100%" }} />
               </Form.Item>
             </Col>
 
-            <Col span={24}>
+            <Col span={12}>
               <Form.Item name="violationTypes" label={t("form.violationTypes")} rules={[{ required: true }]}>
                 <Select mode="multiple" placeholder={t("placeholders.selectViolationTypes")}>
                   {lookups.violationTypes.map((v: any) => (
@@ -507,7 +506,7 @@ const ProactiveCampaignsPage: React.FC = () => {
               </Form.Item>
             </Col>
 
-            {/* Dummy Google Map + Draw Boundary */}
+            {/* ArcGIS Map + Draw Boundary */}
             <Col span={24}>
               <Divider orientation="left">
                 <EnvironmentOutlined /> {t("form.drawBoundary")}
@@ -515,109 +514,18 @@ const ProactiveCampaignsPage: React.FC = () => {
 
               <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                 <div style={{ flex: 1 }}>
-                  {/* Dummy Google Map iframe - visually realistic */}
                   <div style={{ border: "1px solid #eee", borderRadius: 4, overflow: "hidden" }}>
-                    <iframe
-                      title="dummy-google-map"
-                      src="https://maps.google.com/maps?q=dubai&t=&z=13&ie=UTF8&iwloc=&output=embed"
-                      style={{ width: "100%", height: 300, border: 0 }}
+                    <ArcGISMap
+                      inspectors={[]}
+                      center={[mapLng, mapLat]}
+                      zoom={currentPolygon.length > 0 ? 14 : 13}
+                      height="300px"
+                      clickable={false}
+                      legendEnabled={false}
                     />
                   </div>
                 </div>
-
-                <div style={{ width: 260 }}>
-                  <Space direction="vertical" style={{ width: "100%" }}>
-                    <Button
-                      block
-                      onClick={() => {
-                        const location = form.getFieldValue("location") || lookups.locations[0].value;
-                        handleDrawBoundary(location);
-                      }}
-                    >
-                      {t("form.drawBoundary")}
-                    </Button>
-
-                    <Button
-                      block
-                      onClick={() => {
-                        form.setFieldsValue({ polygon: currentPolygon, assignedInspectors: autoAssignedInspectors });
-                        message.info(t("messages.polygonSavedToForm"));
-                      }}
-                    >
-                      {t("form.saveBoundaryToForm")}
-                    </Button>
-
-                    <div style={{ padding: 8, border: "1px dashed #eee", borderRadius: 4 }}>
-                      <div style={{ fontWeight: 600, marginBottom: 6 }}>{t("form.currentPolygon")}</div>
-                      {currentPolygon.length === 0 && (
-                        <div style={{ color: "#888" }}>{t("placeholders.noPolygon")}</div>
-                      )}
-                      {currentPolygon.map((pt, idx) => (
-                        <div key={idx}>
-                          [{pt[0].toFixed(6)}, {pt[1].toFixed(6)}]
-                        </div>
-                      ))}
-                    </div>
-
-                    <Divider />
-
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{t("form.autoAssignedInspectors")}</div>
-                      <div style={{ marginTop: 8 }}>
-                        {(autoAssignedInspectors || []).map((id) => (
-                          <Tag key={id}>{getLabel(id, "inspectors")}</Tag>
-                        ))}
-                      </div>
-                      <Button
-                        style={{ marginTop: 8 }}
-                        block
-                        onClick={() => {
-                          // allow manual adjustment: open assignedInspectors field in form
-                          form.setFieldsValue({ assignedInspectors: autoAssignedInspectors });
-                          message.info(t("messages.editAssignedInspectors"));
-                        }}
-                      >
-                        {t("form.editAssigned")}
-                      </Button>
-                    </div>
-                  </Space>
-                </div>
               </div>
-            </Col>
-
-            <Col span={24}>
-              <Form.Item name="polygon" label={t("form.polygon")} rules={[{ required: true }]}>
-                {/* polygon stored in form as array; render read-only summary */}
-                <Input.TextArea
-                  rows={2}
-                  readOnly
-                  value={JSON.stringify(currentPolygon || form.getFieldValue("polygon") || [])}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item name="assignedInspectors" label={t("form.assignedInspectors")} rules={[{ required: true }]}>
-                <Select mode="multiple" placeholder={t("placeholders.selectInspectors")}>
-                  {lookups.inspectors.map((ins: any) => (
-                    <Option key={ins.value} value={ins.value}>
-                      {i18n.language === "ar" ? ins.labelAr : ins.labelEn}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item name="status" label={t("form.status")} rules={[{ required: true }]}>
-                <Select>
-                  {lookups.statuses.map((s: any) => (
-                    <Option key={s.value} value={s.value}>
-                      {i18n.language === "ar" ? s.labelAr : s.labelEn}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
             </Col>
 
             <Col span={12}>
@@ -637,12 +545,6 @@ const ProactiveCampaignsPage: React.FC = () => {
                 rules={[{ required: true }]}
               >
                 <Input.TextArea rows={2} placeholder={t("placeholders.notificationMessageAr")} dir="rtl" />
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item name="createdBy" label={t("form.createdBy")}>
-                <Input placeholder={t("placeholders.createdBy")} />
               </Form.Item>
             </Col>
           </Row>

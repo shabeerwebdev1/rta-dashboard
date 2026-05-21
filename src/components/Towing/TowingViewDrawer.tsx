@@ -415,6 +415,7 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
                       showTowingRoute={isCompleted && towingStart && towingEnd}
                       towingStartPoint={towingStart || undefined}
                       towingEndPoint={towingEnd || undefined}
+                      legendEnabled={false}
                     />
                   </Card>
 

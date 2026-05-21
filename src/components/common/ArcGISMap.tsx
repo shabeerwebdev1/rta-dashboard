@@ -80,6 +80,7 @@ interface ArcGISMapProps {
   center?: [number, number];
   zoom?: number;
   height?: string;
+  legendEnabled?: boolean;
   onInspectorClick?: (inspector: Inspector) => void;
   onlyInspector?: Inspector | null;
   clickable?: boolean;
@@ -463,6 +464,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   center = [55.2743, 25.1972],
   zoom = 15,
   height = "500px",
+  legendEnabled = true,
   onInspectorClick,
   onlyInspector = null,
   clickable = true,
@@ -784,115 +786,117 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
 
     // ── Layer Panel ─────────────────────────────────────────────────────
     view.when(() => {
-      const panel = document.createElement("div");
-      layerPanelContainerRef.current = panel;
-      renderLayerPanelRef.current();
+      if (legendEnabled) {
+        const panel = document.createElement("div");
+        layerPanelContainerRef.current = panel;
+        renderLayerPanelRef.current();
 
-      const expand = new Expand({
-        view,
-        content: panel,
-        expandIcon: "layers",
-        collapseIcon: "chevrons-right",
-        expandTooltip: currentLanguage === "ar" ? "قائمة الطبقات" : "Layer List",
-        expanded: false,
-        group: "bottom-right",
-      });
+        const expand = new Expand({
+          view,
+          content: panel,
+          expandIcon: "layers",
+          collapseIcon: "chevrons-right",
+          expandTooltip: currentLanguage === "ar" ? "قائمة الطبقات" : "Layer List",
+          expanded: false,
+          group: "bottom-right",
+        });
 
-      view.ui.add(expand, "bottom-right");
-      expandRef.current = expand;
+        view.ui.add(expand, "bottom-right");
+        expandRef.current = expand;
 
-      // CSS for always-visible toggles
-      const style = document.createElement("style");
-      style.textContent = `
-        .arcgis-custom-layer-panel {
-          min-width: 220px;
-          max-height: 300px;
-          overflow-y: auto;
-          background: #ffffff;
-        }
-        .arcgis-custom-layer-row {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 10px;
-          padding: 10px 12px;
-          border-bottom: 1px solid #e8e8e8;
-        }
-        .arcgis-custom-layer-left {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          min-width: 0;
-          flex: 1;
-        }
-        .arcgis-custom-layer-label {
-          color: #262626;
-          font-size: 13px;
-          line-height: 1.35;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .arcgis-custom-layer-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #667085;
-  cursor: pointer;
-  border-radius: 50%;
-  flex-shrink: 0;
-  line-height: 1;
-  box-shadow: none;
-}
-        
-       
-        .arcgis-custom-layer-toggle.is-hidden {
-          border-color: #d9d9d9;
-          background: #ffffff;
-          color: #595959;
-          box-shadow: none;
-        }
-        .arcgis-custom-layer-toggle-icon {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          line-height: 0;
-        }
-        .arcgis-custom-layer-toggle-icon svg {
-          width: 16px;
-          height: 16px;
-        }
-        .arcgis-custom-layer-section-title {
-          padding: 12px 12px 8px;
-          font-size: 11px;
-          font-weight: 700;
-          color: #8c8c8c;
-          letter-spacing: 0.04em;
-          text-transform: uppercase;
-          background: #fafafa;
-          border-top: 1px solid #e8e8e8;
-        }
-        .arcgis-custom-layer-cluster-row {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 10px 12px;
-          color: #262626;
-          font-size: 13px;
-          border-bottom: 1px solid #e8e8e8;
-          cursor: pointer;
-        }
-        .arcgis-custom-layer-cluster-row input {
-          margin: 0;
-          cursor: pointer;
-        }
-      `;
-      document.head.appendChild(style);
+        // CSS for always-visible toggles
+        const style = document.createElement("style");
+        style.textContent = `
+          .arcgis-custom-layer-panel {
+            min-width: 220px;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #ffffff;
+          }
+          .arcgis-custom-layer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            border-bottom: 1px solid #e8e8e8;
+          }
+          .arcgis-custom-layer-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            flex: 1;
+          }
+          .arcgis-custom-layer-label {
+            color: #262626;
+            font-size: 13px;
+            line-height: 1.35;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          .arcgis-custom-layer-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #667085;
+    cursor: pointer;
+    border-radius: 50%;
+    flex-shrink: 0;
+    line-height: 1;
+    box-shadow: none;
+  }
+          
+         
+          .arcgis-custom-layer-toggle.is-hidden {
+            border-color: #d9d9d9;
+            background: #ffffff;
+            color: #595959;
+            box-shadow: none;
+          }
+          .arcgis-custom-layer-toggle-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 0;
+          }
+          .arcgis-custom-layer-toggle-icon svg {
+            width: 16px;
+            height: 16px;
+          }
+          .arcgis-custom-layer-section-title {
+            padding: 12px 12px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #8c8c8c;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            background: #fafafa;
+            border-top: 1px solid #e8e8e8;
+          }
+          .arcgis-custom-layer-cluster-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            color: #262626;
+            font-size: 13px;
+            border-bottom: 1px solid #e8e8e8;
+            cursor: pointer;
+          }
+          .arcgis-custom-layer-cluster-row input {
+            margin: 0;
+            cursor: pointer;
+          }
+        `;
+        document.head.appendChild(style);
+      }
 
       Promise.all(featureServiceLayersRef.current.map((f) => f.when().catch(() => null))).then(() => {
         featureServiceLayersRef.current.forEach((fl) => view.whenLayerView(fl).catch(() => {}));
