@@ -13,7 +13,6 @@ import {
   Tag,
   Space,
   Image,
-  Divider,
   theme,
   Form,
   Select,
@@ -242,14 +241,14 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
     "https://media.istockphoto.com/id/1421938947/video/tow-truck-transportation-4k-resolution.mp4?s=mp4-640x640-is&k=20&c=ii_HinNEKIvDOaPHA8bb8a5Nojmb09HVOp3JDLyPDvI=";
   const videoUrl = record?.evidenceFileName ? getMobileFileUrl(record.evidenceFileName) : tempVideoUrl;
 
-  // ─── shared card head style (mirrors Parkonic) ────────────────────────────
+  // ─── shared card head style ───────────────────────────────────────────────
   const cardHeadStyle = {
     background: token.colorBgContainer,
     fontWeight: 600 as const,
     textAlign: (isRTL ? "right" : "left") as "right" | "left",
   };
 
-  // ─── label/value row helper identical to Parkonic's Col pattern ──────────
+  // ─── label/value row helpers ──────────────────────────────────────────────
   const LabelCol = ({ label }: { label: string }) => (
     <Col span={10} style={{ textAlign: isRTL ? "right" : "left" }}>
       <Text strong>{label}:</Text>
@@ -278,14 +277,13 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
           isLoading || loadingOptions || historyLoading || entityHistoryLoading || loadingAttachments || loadingEvidence
         }
       >
+        {/* Outer flex column — fills the modal body */}
         <div style={{ display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 120px)" }}>
-          {/* ── Fixed Header (identical structure to Parkonic) ───────────── */}
+          {/* ── Fixed Header ─────────────────────────────────────────────── */}
           <div
             style={{
               padding: 10,
-              position: "sticky",
-              top: 0,
-              zIndex: 10,
+              flexShrink: 0,
               background: token.colorBgContainer,
               borderBottom: "1px solid #f0f0f0",
             }}
@@ -306,15 +304,15 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
             </Row>
           </div>
 
-          {/* ── Scrollable Body ──────────────────────────────────────────── */}
-          <div style={{ padding: 24, overflowY: "auto", flex: 1 }}>
+          {/* ── Scrollable Body ───────────────────────────────────────────── */}
+          <div style={{ padding: 24, overflowY: "auto", flex: 1, minHeight: 0 }}>
             {!record ? (
               <Empty description={t("common.noData")} />
             ) : (
               <Row gutter={24} dir={isRTL ? "rtl" : "ltr"}>
                 {/* ── Left 18 cols – main content ───────────────────────── */}
                 <Col span={18}>
-                  {/* ① TOP ROW: Vehicle Details  |  Towing Details — side by side */}
+                  {/* ① TOP ROW: Vehicle Details  |  Towing Details */}
                   <Row gutter={16}>
                     {/* Vehicle Details card */}
                     <Col span={12}>
@@ -512,83 +510,6 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
                       </div>
                     </Card>
                   )}
-
-                  {/* ⑥ Approval Actions footer (Parkonic pattern) */}
-                  {!hideFooterActions && (
-                    <>
-                      <Divider />
-                      <Form form={form} layout="vertical" dir={isRTL ? "rtl" : "ltr"}>
-                        <Row gutter={16} align="middle" dir={isRTL ? "rtl" : "ltr"}>
-                          <Col span={6}>
-                            <Form.Item
-                              name="action"
-                              label={<Text strong>{L("Action", "الإجراء")}</Text>}
-                              rules={[
-                                {
-                                  required: true,
-                                  message: L("Please select an action", "الرجاء اختيار إجراء"),
-                                },
-                              ]}
-                            >
-                              <Select
-                                placeholder={L("Select action", "اختر إجراء")}
-                                onChange={handleActionChange}
-                                allowClear
-                                loading={loadingOptions}
-                                value={selectedAction?.ActivityOptionGUID}
-                              >
-                                {reviewOptions.map((opt: any) => (
-                                  <Select.Option key={opt.ActivityOptionGUID} value={opt.ActivityOptionGUID}>
-                                    {opt.ReviewStatus}
-                                  </Select.Option>
-                                ))}
-                              </Select>
-                            </Form.Item>
-                          </Col>
-
-                          <Col span={12}>
-                            <Form.Item
-                              name="review_comments"
-                              label={<Text strong>{L("Comments", "التعليقات")}</Text>}
-                              style={{ marginBottom: 0 }}
-                              rules={[
-                                {
-                                  required: selectedAction?.IsCommentMandatory || false,
-                                  message: L("Please enter comments", "الرجاء إدخال التعليقات"),
-                                },
-                              ]}
-                            >
-                              <TextArea
-                                placeholder={
-                                  selectedAction?.IsCommentMandatory
-                                    ? L("Enter comments (required)", "أدخل التعليقات (مطلوبة)")
-                                    : L("Enter comments (optional)", "أدخل التعليقات (اختياري)")
-                                }
-                                rows={2}
-                                dir={isRTL ? "rtl" : "ltr"}
-                                value={comments}
-                                onChange={(e) => setComments(e.target.value)}
-                              />
-                            </Form.Item>
-                          </Col>
-
-                          <Col span={6} style={{ textAlign: isRTL ? "left" : "right", paddingTop: 30 }}>
-                            <Space>
-                              <Button onClick={onClose}>{L("Cancel", "إلغاء")}</Button>
-                              <Button
-                                type="primary"
-                                loading={isLoading}
-                                onClick={handleSubmit}
-                                disabled={!selectedAction}
-                              >
-                                {L("Submit", "إرسال")}
-                              </Button>
-                            </Space>
-                          </Col>
-                        </Row>
-                      </Form>
-                    </>
-                  )}
                 </Col>
 
                 {/* ── Right 6 cols – Review Timeline ────────────────────── */}
@@ -598,6 +519,74 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
               </Row>
             )}
           </div>
+
+          {/* ── Fixed Footer — sibling to scroll div, never scrolls away ── */}
+          {!hideFooterActions && (
+            <div
+              style={{
+                padding: "16px 24px",
+                flexShrink: 0,
+                background: token.colorBgContainer,
+                borderTop: "1px solid #f0f0f0",
+              }}
+            >
+              <Form form={form} layout="vertical" dir={isRTL ? "rtl" : "ltr"}>
+                <Row gutter={[16, 16]} align="middle">
+                  <Col span={6}>
+                    <Form.Item
+                      name="action"
+                      label={<Text strong>{L("Action", "الإجراء")}</Text>}
+                      rules={[
+                        {
+                          required: true,
+                          message: L("Please select action", "الرجاء اختيار إجراء"),
+                        },
+                      ]}
+                    >
+                      <Select
+                        placeholder={L("Select action", "اختر إجراء")}
+                        onChange={handleActionChange}
+                        allowClear
+                        loading={loadingOptions}
+                        value={selectedAction?.ActivityOptionGUID}
+                      >
+                        {reviewOptions.map((opt: any) => (
+                          <Select.Option key={opt.ActivityOptionGUID} value={opt.ActivityOptionGUID}>
+                            {opt.ReviewStatus}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+
+                  <Col span={12}>
+                    <Form.Item
+                      name="review_comments"
+                      label={<Text strong>{L("Comments", "التعليقات")}</Text>}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <TextArea rows={2} value={comments} onChange={(e) => setComments(e.target.value)} />
+                    </Form.Item>
+                  </Col>
+
+                  <Col
+                    span={6}
+                    style={{
+                      textAlign: isRTL ? "left" : "right",
+                      paddingTop: 30,
+                    }}
+                  >
+                    <Space>
+                      <Button onClick={onClose}>{L("Cancel", "إلغاء")}</Button>
+                      <Button type="primary" loading={isLoading} onClick={handleSubmit} disabled={!selectedAction}>
+                        {L("Submit", "إرسال")}
+                      </Button>
+                    </Space>
+                  </Col>
+                </Row>
+              </Form>
+            </div>
+          )}
         </div>
       </Spin>
     </Modal>

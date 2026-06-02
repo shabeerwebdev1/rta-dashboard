@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
-import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Space, Image, Divider, theme } from "antd";
+import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Space, Image, theme } from "antd";
 import { CarOutlined, CheckCircleFilled, CloseCircleFilled, CloseOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import {
@@ -325,6 +325,7 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
               padding: 24,
               overflowY: "auto",
               flex: 1,
+              minHeight: 0,
             }}
           >
             {!mappedRecord ? (
@@ -695,83 +696,89 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
                 </Col>
               </Row>
             )}
-
-            {!hideFooterActions && (
-              <>
-                <Divider />
-                <Form form={form} layout="vertical" dir={isRTL ? "rtl" : "ltr"}>
-                  <Row gutter={16} align="middle" dir={isRTL ? "rtl" : "ltr"}>
-                    <Col span={6}>
-                      <Form.Item
-                        name="action"
-                        label={<Text strong>{isRTL ? "الإجراء" : "Action"}</Text>}
-                        rules={[{ required: true, message: isRTL ? "الرجاء اختيار إجراء" : "Please select an action" }]}
-                      >
-                        <Select
-                          placeholder={isRTL ? "اختر إجراء" : "Select action"}
-                          onChange={handleActionChange}
-                          allowClear
-                          loading={loadingOptions}
-                          value={selectedAction?.ActivityOptionGUID}
-                        >
-                          {reviewOptions.map((opt: any) => (
-                            <Select.Option key={opt.ActivityOptionGUID} value={opt.ActivityOptionGUID}>
-                              {opt.ReviewStatus}
-                            </Select.Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                    </Col>
-
-                    <Col span={12}>
-                      <Form.Item
-                        name="review_Comments"
-                        label={<Text strong>{t("form.comments")}</Text>}
-                        style={{ marginBottom: 0 }}
-                        rules={[
-                          {
-                            required: selectedAction?.IsCommentMandatory || false,
-                            message: isRTL ? "الرجاء إدخال التعليقات" : "Please enter comments",
-                          },
-                        ]}
-                      >
-                        <TextArea
-                          placeholder={
-                            selectedAction?.IsCommentMandatory
-                              ? isRTL
-                                ? "أدخل التعليقات (مطلوبة)"
-                                : "Enter comments (required)"
-                              : isRTL
-                                ? "أدخل التعليقات (اختياري)"
-                                : "Enter comments (optional)"
-                          }
-                          rows={2}
-                          dir={isRTL ? "rtl" : "ltr"}
-                          value={comments}
-                          onChange={(e) => setComments(e.target.value)}
-                        />
-                      </Form.Item>
-                    </Col>
-
-                    <Col
-                      span={6}
-                      style={{
-                        textAlign: isRTL ? "left" : "right",
-                        paddingTop: 30,
-                      }}
-                    >
-                      <Space>
-                        <Button onClick={onClose}>{isRTL ? "إلغاء" : "Cancel"}</Button>
-                        <Button type="primary" loading={isSubmitting} onClick={submitReview} disabled={!selectedAction}>
-                          {isRTL ? "إرسال" : "Submit"}
-                        </Button>
-                      </Space>
-                    </Col>
-                  </Row>
-                </Form>
-              </>
-            )}
           </div>
+
+          {!hideFooterActions && (
+            <div
+              style={{
+                padding: "16px 24px 24px",
+                background: token.colorBgContainer,
+                borderTop: "1px solid #f0f0f0",
+                flexShrink: 0,
+              }}
+            >
+              <Form form={form} layout="vertical" dir={isRTL ? "rtl" : "ltr"}>
+                <Row gutter={16} align="middle" dir={isRTL ? "rtl" : "ltr"}>
+                  <Col span={6}>
+                    <Form.Item
+                      name="action"
+                      label={<Text strong>{isRTL ? "الإجراء" : "Action"}</Text>}
+                      rules={[{ required: true, message: isRTL ? "الرجاء اختيار إجراء" : "Please select an action" }]}
+                    >
+                      <Select
+                        placeholder={isRTL ? "اختر إجراء" : "Select action"}
+                        onChange={handleActionChange}
+                        allowClear
+                        loading={loadingOptions}
+                        value={selectedAction?.ActivityOptionGUID}
+                      >
+                        {reviewOptions.map((opt: any) => (
+                          <Select.Option key={opt.ActivityOptionGUID} value={opt.ActivityOptionGUID}>
+                            {opt.ReviewStatus}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+
+                  <Col span={12}>
+                    <Form.Item
+                      name="review_Comments"
+                      label={<Text strong>{t("form.comments")}</Text>}
+                      style={{ marginBottom: 0 }}
+                      rules={[
+                        {
+                          required: selectedAction?.IsCommentMandatory || false,
+                          message: isRTL ? "الرجاء إدخال التعليقات" : "Please enter comments",
+                        },
+                      ]}
+                    >
+                      <TextArea
+                        placeholder={
+                          selectedAction?.IsCommentMandatory
+                            ? isRTL
+                              ? "أدخل التعليقات (مطلوبة)"
+                              : "Enter comments (required)"
+                            : isRTL
+                              ? "أدخل التعليقات (اختياري)"
+                              : "Enter comments (optional)"
+                        }
+                        rows={2}
+                        dir={isRTL ? "rtl" : "ltr"}
+                        value={comments}
+                        onChange={(e) => setComments(e.target.value)}
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  <Col
+                    span={6}
+                    style={{
+                      textAlign: isRTL ? "left" : "right",
+                      paddingTop: 30,
+                    }}
+                  >
+                    <Space>
+                      <Button onClick={onClose}>{isRTL ? "إلغاء" : "Cancel"}</Button>
+                      <Button type="primary" loading={isSubmitting} onClick={submitReview} disabled={!selectedAction}>
+                        {isRTL ? "إرسال" : "Submit"}
+                      </Button>
+                    </Space>
+                  </Col>
+                </Row>
+              </Form>
+            </div>
+          )}
         </div>
       </Spin>
     </Modal>
