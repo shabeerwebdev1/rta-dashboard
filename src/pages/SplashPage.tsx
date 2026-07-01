@@ -4,8 +4,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useValidatecodeQuery } from "../services/rtkApiFactory";
 import { useAuth } from "../contexts/AuthContext";
 import { EXTERNAL_LOGIN_URL } from "../config/envConfig";
+import { getDefaultAuthorizedPath } from "../utils/accessRoutes";
 
-const FALLBACK_CODE = "202605223F0F057DFAF04C2DB51CD958";
+const FALLBACK_CODE = "20260701EAA5AAEA9771454A820F3CE0";
 
 const SPLASH_DELAY = 1300;
 
@@ -50,8 +51,8 @@ export default function SplashPage() {
       //  Tell AuthContext "we're logged in"
       login(u);
 
-      //  Redirect to dashboard
-      navigate("/dashboard", { replace: true });
+      const defaultPath = getDefaultAuthorizedPath(u.rolePermissions ?? []);
+      navigate(defaultPath, { replace: true });
 
       setShowSplash(false);
     }, SPLASH_DELAY);

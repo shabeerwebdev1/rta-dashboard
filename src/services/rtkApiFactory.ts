@@ -1087,6 +1087,26 @@ export const dynamicApi = createApi({
       },
       providesTags: ["Inbox"], // 🔥 ADD THIS
     }),
+
+    //  Master Data of 7025
+    getParkingMasterData: builder.query<any, string | undefined>({
+      query: (version) => ({
+        url: "/api/CallIntegration/inboxNotifications",
+        method: "POST",
+        body: {
+          url: "/api/v3/mobi/master-data/parking",
+          method: "GET",
+          param: version ? `version=${version}` : "",
+          lag: getCurrentLang(),
+        },
+      }),
+
+      transformResponse: (response: any) => {
+        return response?.data || null;
+      },
+
+      providesTags: ["Inbox"],
+    }),
   }),
 });
 
@@ -1247,4 +1267,6 @@ export const {
   useLazyGetReviewOptionsQuery,
   useLazyGetReviewHistoryQuery,
   useLazyGetEntityHistoryQuery,
+  useGetParkingMasterDataQuery,
+  useLazyGetParkingMasterDataQuery,
 } = dynamicApi;

@@ -550,7 +550,10 @@ const InspectionObstaclesPage: React.FC = () => {
           return {
             ...column,
             render: (value: any) => {
-              const zoneOption = zoneOptions.find((opt) => opt.value.toString() === value.toString());
+              if (value == null) return value;
+              const zoneOption = zoneOptions.find(
+                (opt) => opt.value != null && opt.value.toString() === value.toString(),
+              );
               return zoneOption ? zoneOption.label : value;
             },
           };
@@ -569,7 +572,10 @@ const InspectionObstaclesPage: React.FC = () => {
           return {
             ...column,
             render: (value: any) => {
-              const sourceOption = sourceOptions.find((opt) => opt.value.toString() === value.toString());
+              if (value == null) return value;
+              const sourceOption = sourceOptions.find(
+                (opt) => opt.value != null && opt.value.toString() === value.toString(),
+              );
               return sourceOption ? sourceOption.label : value;
             },
           };
@@ -625,12 +631,14 @@ const InspectionObstaclesPage: React.FC = () => {
 
   // Enhanced custom label function for zones and areas
   const getCustomLabelFromValue = (value: number | string, options: any[], i18nInstance: any) => {
+    if (value == null) return String(value);
+
     // Handle Zone
-    const zone = zoneOptions.find((z) => z.value?.toString() === value.toString());
+    const zone = zoneOptions.find((z) => z.value != null && z.value.toString() === value.toString());
     if (zone) return zone.label;
 
     // Handle Area
-    const area = areaOptions.find((a) => a.value?.toString() === value.toString());
+    const area = areaOptions.find((a) => a.value != null && a.value.toString() === value.toString());
     if (area) return area.label;
 
     // Handle Area from map

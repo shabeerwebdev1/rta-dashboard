@@ -1,4 +1,3 @@
-// ArcGISMap.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useRef, useState } from "react";
 import Map from "@arcgis/core/Map";
@@ -6,15 +5,18 @@ import MapView from "@arcgis/core/views/MapView";
 import Graphic from "@arcgis/core/Graphic";
 import Point from "@arcgis/core/geometry/Point";
 import Polyline from "@arcgis/core/geometry/Polyline";
+import Polygon from "@arcgis/core/geometry/Polygon";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import GroupLayer from "@arcgis/core/layers/GroupLayer";
 import PictureMarkerSymbol from "@arcgis/core/symbols/PictureMarkerSymbol";
 import SimpleLineSymbol from "@arcgis/core/symbols/SimpleLineSymbol";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
+import SimpleFillSymbol from "@arcgis/core/symbols/SimpleFillSymbol";
 import Extent from "@arcgis/core/geometry/Extent";
 import PopupTemplate from "@arcgis/core/PopupTemplate";
 import Expand from "@arcgis/core/widgets/Expand";
+import Sketch from "@arcgis/core/widgets/Sketch";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 import { Dropdown, Menu } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
@@ -106,6 +108,11 @@ interface ArcGISMapProps {
   showParkingClusters?: boolean;
   clusterRadius?: string;
   onParkingClusterClick?: (points: ParkingPoint[]) => void;
+  // NEW PROPS FOR BOUNDARY DRAWING
+  enableBoundaryDrawing?: boolean;
+  onBoundaryDrawn?: (rings: number[][][]) => void;
+  boundaryPolygonRings?: number[][][];
+  onClearBoundary?: () => void;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────
@@ -490,6 +497,11 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   showParkingClusters = true,
   clusterRadius = DEFAULT_CLUSTER_RADIUS,
   onParkingClusterClick,
+  // NEW PROPS FOR BOUNDARY DRAWING
+  enableBoundaryDrawing = false,
+  onBoundaryDrawn,
+  boundaryPolygonRings,
+  onClearBoundary,
 }) => {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<__esri.MapView | null>(null);
@@ -510,6 +522,11 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   const parkingClusteringEnabledRef = useRef(parkingClusteringEnabled);
   const currentLanguageRef = useRef(currentLanguage);
   const onParkingClusterClickRef = useRef(onParkingClusterClick);
+
+  // NEW STATE FOR BOUNDARY DRAWING
+  const sketchWidgetRef = useRef<__esri.Sketch | null>(null);
+  const boundaryGraphicsLayerRef = useRef<__esri.GraphicsLayer | null>(null);
+  const currentSketchGraphicRef = useRef<__esri.Graphic | null>(null);
 
   useEffect(() => {
     parkingPointsRef.current = parkingPoints;
@@ -917,6 +934,166 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       locationMarkerRef.current = null;
     };
   }, []); // Only run on mount
+
+  // Initialize boundary graphics layer - FIXED VERSION
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+
+    // Create a dedicated graphics layer for boundary polygons if it doesn't exist
+    if (!boundaryGraphicsLayerRef.current) {
+      const boundaryLayer = new GraphicsLayer({
+        title: "Boundary",
+        listMode: "hide",
+        visible: true,
+      });
+      view.map.add(boundaryLayer);
+      boundaryGraphicsLayerRef.current = boundaryLayer;
+    }
+
+    return () => {
+      if (boundaryGraphicsLayerRef.current && viewRef.current?.map) {
+        const layer = boundaryGraphicsLayerRef.current;
+        if (viewRef.current.map.layers.includes(layer)) {
+          viewRef.current.map.remove(layer);
+        }
+        boundaryGraphicsLayerRef.current = null;
+      }
+    };
+  }, [viewRef.current]);
+
+  // Manage sketch widget for boundary drawing - FIXED VERSION
+  useEffect(() => {
+    const view = viewRef.current;
+    const boundaryLayer = boundaryGraphicsLayerRef.current;
+
+    if (!view || !boundaryLayer) return;
+
+    // Only create sketch widget once and only if enabled and not already created
+    if (enableBoundaryDrawing && !sketchWidgetRef.current) {
+      const sketch = new Sketch({
+        layer: boundaryLayer,
+        view: view,
+        creationMode: "single",
+        visibleElements: {
+          createTools: {
+            polygon: true,
+            rectangle: true,
+          },
+          selectionTools: false,
+          undoRedoMenu: false,
+        },
+        defaultCreateOptions: {
+          mode: "hybrid",
+        },
+      });
+
+      sketchWidgetRef.current = sketch;
+      view.ui.add(sketch, "top-right");
+
+      // Handle sketch creation completion - FIXED VERSION
+      const createHandle = sketch.on("create", (event) => {
+        if (event.state === "complete") {
+          const graphic = event.graphic;
+          if (graphic && graphic.geometry) {
+            // IMPORTANT: Don't call removeAll() here - let the sketch widget handle it
+            // Just store the reference and notify parent
+            currentSketchGraphicRef.current = graphic;
+
+            // Extract rings from polygon geometry
+            const geometry = graphic.geometry as __esri.Polygon;
+            if (geometry && geometry.rings) {
+              const rings = geometry.rings;
+              // Use setTimeout to avoid state update during sketch event
+              setTimeout(() => {
+                onBoundaryDrawn?.(rings);
+              }, 0);
+            }
+          }
+        }
+      });
+
+      // Store handle for cleanup
+      (sketchWidgetRef.current as any)._createHandle = createHandle;
+    } else if (!enableBoundaryDrawing && sketchWidgetRef.current) {
+      // Remove sketch widget when disabled
+      const sketch = sketchWidgetRef.current;
+      const createHandle = (sketch as any)._createHandle;
+      if (createHandle) createHandle.remove();
+      sketch.destroy();
+      sketchWidgetRef.current = null;
+    }
+
+    // Cleanup on component unmount
+    return () => {
+      if (sketchWidgetRef.current) {
+        const sketch = sketchWidgetRef.current;
+        const createHandle = (sketch as any)._createHandle;
+        if (createHandle) createHandle.remove();
+        sketch.destroy();
+        sketchWidgetRef.current = null;
+      }
+    };
+  }, [enableBoundaryDrawing]);
+
+  // Display existing boundary polygon when provided - FIXED VERSION
+  useEffect(() => {
+    const boundaryLayer = boundaryGraphicsLayerRef.current;
+    if (!boundaryLayer) return;
+
+    // IMPORTANT: Skip if this is being called due to our own drawing operation
+    // We can detect this by checking if the graphic already exists and matches
+    if (boundaryPolygonRings && boundaryPolygonRings.length > 0) {
+      // Check if we already have this exact polygon displayed
+      const existingGraphic = boundaryLayer.graphics.getItemAt(0);
+      if (existingGraphic && currentSketchGraphicRef.current === existingGraphic) {
+        // Already displayed, skip to prevent map flicker
+        return;
+      }
+
+      // Only clear if we're not in drawing mode or if it's a different polygon
+      boundaryLayer.removeAll();
+      currentSketchGraphicRef.current = null;
+
+      const polygonGeometry = new Polygon({
+        rings: boundaryPolygonRings,
+        spatialReference: { wkid: 4326 },
+      });
+
+      const graphic = new Graphic({
+        geometry: polygonGeometry,
+        symbol: new SimpleFillSymbol({
+          color: [33, 150, 243, 0.2],
+          outline: {
+            color: [33, 150, 243],
+            width: 2,
+          },
+        }),
+      });
+
+      boundaryLayer.add(graphic);
+      currentSketchGraphicRef.current = graphic;
+    } else if (!boundaryPolygonRings || boundaryPolygonRings.length === 0) {
+      // Only clear when explicitly clearing (no polygon)
+      boundaryLayer.removeAll();
+      currentSketchGraphicRef.current = null;
+    }
+  }, [boundaryPolygonRings]);
+
+  // Handle clear boundary action from parent
+  useEffect(() => {
+    const boundaryLayer = boundaryGraphicsLayerRef.current;
+    if (!boundaryLayer) return;
+
+    // When onClearBoundary is called from parent, we need to clear
+    if (onClearBoundary) {
+      // This effect runs whenever the prop changes
+      if (boundaryLayer.graphics.length > 0 && (!boundaryPolygonRings || boundaryPolygonRings.length === 0)) {
+        boundaryLayer.removeAll();
+        currentSketchGraphicRef.current = null;
+      }
+    }
+  }, [onClearBoundary, boundaryPolygonRings]);
 
   useEffect(() => {
     const map = viewRef.current?.map;

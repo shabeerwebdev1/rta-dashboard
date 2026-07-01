@@ -48,7 +48,8 @@ type RawItem = {
   key: string;
   icon?: React.ReactNode;
   labelText: React.ReactNode;
-  permission?: string;
+  permission?: string | string[];
+  alwaysVisible?: boolean;
   children?: RawItem[];
 };
 
@@ -85,6 +86,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
     {
       key: FULL_PATHS.INBOX,
       icon: <InboxOutlined />,
+      alwaysVisible: true,
       labelText: (
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", gap: 8 }}>
           <span style={{ flex: 1, minWidth: 0 }}>{t("sidebar.inbox")}</span>
@@ -123,7 +125,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       key: FULL_PATHS.DASHBOARD,
       icon: <DashboardOutlined />,
       labelText: t("sidebar.dashboard"),
-      permission: "WebDashboard",
+      permission: ["Dashboard", "WebDashboard"],
     },
     {
       key: "hrms",
@@ -172,7 +174,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
               key: FULL_PATHS.WHITELIST_TRADELICENSES,
               icon: <SolutionOutlined />,
               labelText: t("sidebar.whitelistTradeLicenses"),
-              permission: "WhitelistTradeLicense",
+              permission: ["WhitelistTradeLicense", "WhiteListTrade"],
             },
           ],
         },
@@ -224,7 +226,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           key: FULL_PATHS.PROACTIVECAMPAIGN,
           icon: <NotificationOutlined />,
           labelText: t("sidebar.proactivecampaigns"),
-          permission: "Inspection",
+          permission: "sTafteeshRequest",
         },
       ],
     },
@@ -309,12 +311,12 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       key: "reports",
       icon: <BarChartOutlined />,
       labelText: t("sidebar.reports"),
-      permission: "WebDashboard",
+      permission: ["Reports", "Report"],
       children: filteredReports.map((report) => ({
         key: `${FULL_PATHS.REPORTS}?report=${report.key}`,
         icon: <FileTextOutlined />,
         labelText: getTranslatedDescription(report),
-        permission: "WebDashboard",
+        permission: ["Reports", "Report"],
       })),
     },
     {
@@ -359,8 +361,10 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
 
           // Parent with no permission → allow if children exist
           if (!it.permission) {
-            if (visibleChildren.length > 0) return { ...it, children: visibleChildren };
-            return it;
+            if (it.alwaysVisible && visibleChildren.length === 0) {
+              return { ...it, children: undefined };
+            }
+            return visibleChildren.length > 0 ? { ...it, children: visibleChildren } : null;
           }
 
           const parentAllowed = hasRead ? hasRead(it.permission) : false;
@@ -439,7 +443,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       }
     }
 
-    return [bestMatch || FULL_PATHS.DASHBOARD];
+    return bestMatch ? [bestMatch] : flatItems.length > 0 ? [String(flatItems[0].key)] : [];
   };
   const getDefaultOpenKeys = () => {
     const path = location.pathname;

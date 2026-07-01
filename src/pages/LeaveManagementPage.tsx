@@ -66,23 +66,19 @@ const LeaveManagementPage: React.FC = () => {
   const leaveTypeMap = useMemo(() => {
     const map = new Map<number, { en: string; ar: string }>();
 
-    if (!lookupData?.data) {
+    if (!lookupData || !Array.isArray(lookupData)) {
       return map;
     }
 
-    const categories = lookupData.data;
-
-    categories.forEach((category: any) => {
-      if (category.ddiCatgId === 1900 && category.ddItems && Array.isArray(category.ddItems)) {
-        category.ddItems.forEach((item: any) => {
-          const code = Number(item.ddiCode);
-          if (!isNaN(code)) {
-            map.set(code, {
-              en: item.ddiDispText_En || `Leave Type ${code}`,
-              ar: item.ddiDispText_Ar || `Leave Type ${code}`,
-            });
-          }
-        });
+    lookupData.forEach((item: any) => {
+      if (item.categoryId === 1900) {
+        const code = Number(item.value);
+        if (!isNaN(code)) {
+          map.set(code, {
+            en: item.labelEn || `Leave Type ${code}`,
+            ar: item.labelAr || `Leave Type ${code}`,
+          });
+        }
       }
     });
 
@@ -272,7 +268,12 @@ const LeaveManagementPage: React.FC = () => {
         try {
           const leaveId = record?.leaveId || record?.id;
 
-          const result = await getLeaveById(leaveId).unwrap();
+          const [result] = await Promise.all([
+            getLeaveById(leaveId).unwrap(),
+            getLookups([1900])
+              .unwrap()
+              .catch(() => {}), // also call vlookup api
+          ]);
 
           setSelectedRecord(result?.data || result);
           setDrawerOpen(true);

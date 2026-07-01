@@ -1,5 +1,6 @@
 export const PATHS = {
   LOGIN: "login",
+  FORBIDDEN: "403",
   DASHBOARD: "dashboard",
   SPLASH: "splash",
   PERMITS: "permits",
@@ -51,6 +52,7 @@ export const PATHS = {
 export const FULL_PATHS = {
   ROOT: "/",
   LOGIN: "/login",
+  FORBIDDEN: "/403",
   DASHBOARD: "/dashboard",
   SPLASH: "/splash",
   PERMITS: "/permits",

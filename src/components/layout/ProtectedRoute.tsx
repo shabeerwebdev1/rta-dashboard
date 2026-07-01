@@ -3,10 +3,12 @@ import { Navigate, useLocation } from "react-router-dom";
 import { Spin } from "antd";
 import { useAuth } from "../../contexts/AuthContext";
 import { FULL_PATHS } from "../../constants/paths";
+import { getRequiredPermissionForPath } from "../../utils/accessRoutes";
+import { type MenuPermission } from "../../utils/permissionUtils";
 
 interface ProtectedRouteProps {
   children: React.ReactElement;
-  requiredPermission?: string;
+  requiredPermission?: MenuPermission;
   requiredAction?: "create" | "read" | "update" | "delete";
 }
 
@@ -15,8 +17,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredPermission,
   requiredAction = "read",
 }) => {
-  const { isAuthenticated, isLoading, hasPermission, validateToken } = useAuth();
+  const { isAuthenticated, isLoading, hasPermission, canAccessAny, validateToken } = useAuth();
   const location = useLocation();
+  const inferredPermission = requiredPermission ?? getRequiredPermissionForPath(location.pathname);
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -46,7 +49,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Logged in but doesn’t have permission → go to Forbidden
   if (requiredPermission && !hasPermission(requiredPermission, requiredAction)) {
-    return <Navigate to="/403" replace />;
+    return <Navigate to={FULL_PATHS.FORBIDDEN} replace />;
+  }
+
+  if (!requiredPermission && inferredPermission && !canAccessAny(inferredPermission)) {
+    return <Navigate to={FULL_PATHS.FORBIDDEN} replace />;
   }
 
   // Otherwise → allow route

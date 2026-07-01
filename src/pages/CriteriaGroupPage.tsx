@@ -22,7 +22,7 @@ import CriteriaGroupViewDrawer from "../components/criteriaGroup/CriteriaGroupVi
 import { criteriaGroupConfig } from "../config/pageConfigs/criteriaGroupConfig";
 
 const { Option } = Select;
-const menuName = "CriteriaWeight";
+const menuName = "CriteriaGroup";
 
 const CriteriaGroupPage: React.FC = () => {
   const { t, i18n } = useTranslation();

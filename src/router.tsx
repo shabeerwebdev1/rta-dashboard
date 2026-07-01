@@ -25,6 +25,7 @@ const InspectionManagementPage = lazy(() => import("./pages/InspectionManagement
 const RoleManagementPage = lazy(() => import("./pages/RoleManagementPage"));
 const LeaveManagementPage = lazy(() => import("./pages/LeaveManagementPage"));
 const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
+const ForbiddenPage = lazy(() => import("./pages/ForbiddenPage"));
 const TradeLicenseInspectionPage = lazy(() => import("./pages/TradeLicenseInspectionPage"));
 const TowingPage = lazy(() => import("./pages/TowingPage"));
 const ParkonicLocationPage = lazy(() => import("./pages/ParkonicLocationPage"));
@@ -42,7 +43,22 @@ const ParkingDisputePage = lazy(() => import("./pages/ParkingDisputePage"));
 
 const AppRoutes = () => (
   <Routes>
-    <Route path={PATHS.SPLASH} element={<SplashPage />} />
+    <Route
+      path={PATHS.SPLASH}
+      element={
+        <Suspense fallback={<PageLoader />}>
+          <SplashPage />
+        </Suspense>
+      }
+    />
+    <Route
+      path={PATHS.FORBIDDEN}
+      element={
+        <Suspense fallback={<PageLoader />}>
+          <ForbiddenPage />
+        </Suspense>
+      }
+    />
 
     <Route path="/" element={<MainLayout />}>
       <Route

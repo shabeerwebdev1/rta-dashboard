@@ -587,7 +587,8 @@
     "days": "أيام",
     "open": "مفتوح",
     "Inactive": "غير نشط",
-    "inspectorName": "اسم المفتش"
+    "inspectorName": "اسم المفتش",
+    "clear": "مسح"
   },
   "entity": {
     "plate": "لوحة",

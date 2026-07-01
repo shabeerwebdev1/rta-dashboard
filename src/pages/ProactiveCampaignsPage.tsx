@@ -54,19 +54,23 @@ const getCampaignLocationCenter = (location?: string): [number, number] => {
   return CAMPAIGN_LOCATION_CENTERS[location] || [25.2, 55.27];
 };
 
-const getPolygonCenter = (polygon?: [number, number][]): [number, number] | null => {
-  if (!polygon?.length) return null;
+const getPolygonCenterFromRings = (rings: number[][][]): [number, number] | null => {
+  if (!rings || rings.length === 0 || rings[0].length === 0) return null;
 
-  const [totalLat, totalLng] = polygon.reduce(
-    (acc, [lat, lng]) => {
-      acc[0] += lat;
-      acc[1] += lng;
+  // Take the first ring (outer boundary)
+  const points = rings[0];
+  if (points.length === 0) return null;
+
+  const [totalLat, totalLng] = points.reduce(
+    (acc, point) => {
+      acc[0] += point[1]; // point[1] is latitude, point[0] is longitude
+      acc[1] += point[0];
       return acc;
     },
     [0, 0],
   );
 
-  return [totalLat / polygon.length, totalLng / polygon.length];
+  return [totalLat / points.length, totalLng / points.length];
 };
 
 const ProactiveCampaignsPage: React.FC = () => {
@@ -93,8 +97,9 @@ const ProactiveCampaignsPage: React.FC = () => {
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
 
   // map/polygon state (in modal)
-  const [currentPolygon, setCurrentPolygon] = useState<[number, number][]>([]);
+  const [currentPolygon, setCurrentPolygon] = useState<number[][][]>([]);
   const [autoAssignedInspectors, setAutoAssignedInspectors] = useState<number[]>([]);
+  const [polygonCoordinates, setPolygonCoordinates] = useState<Array<{ lng: number; lat: number }>>([]);
 
   useEffect(() => {
     setPageTitle(t(proactiveCampaignsConfig.title));
@@ -160,8 +165,20 @@ const ProactiveCampaignsPage: React.FC = () => {
   const openModal = (mode: "add" | "edit", record?: any) => {
     setModalMode(mode);
     setSelectedRecord(record || null);
-    setCurrentPolygon(record?.polygon || []);
+    setCurrentPolygon(record?.polygon?.rings || record?.polygon || []);
     setAutoAssignedInspectors(record?.assignedInspectors || []);
+
+    // Extract coordinates for display if editing existing polygon
+    if (record?.polygon?.rings && record.polygon.rings[0]) {
+      const coords = record.polygon.rings[0].map((point: number[]) => ({
+        lng: point[0],
+        lat: point[1],
+      }));
+      setPolygonCoordinates(coords);
+    } else {
+      setPolygonCoordinates([]);
+    }
+
     setIsModalOpen(true);
 
     if (mode === "edit" && record) {
@@ -171,7 +188,7 @@ const ProactiveCampaignsPage: React.FC = () => {
         location: record.location,
         timeInterval: [dayjs(record.startTime), dayjs(record.endTime)],
         violationTypes: record.violationTypes,
-        polygon: record.polygon,
+        polygon: record.polygon?.rings || record.polygon,
         assignedInspectors: record.assignedInspectors,
         notificationMessageEn: record.notificationMessageEn,
         notificationMessageAr: record.notificationMessageAr,
@@ -181,6 +198,7 @@ const ProactiveCampaignsPage: React.FC = () => {
     } else {
       form.resetFields();
       setCurrentPolygon([]);
+      setPolygonCoordinates([]);
       setAutoAssignedInspectors([]);
       form.setFieldsValue({
         location: lookups.locations?.[0]?.value,
@@ -197,64 +215,42 @@ const ProactiveCampaignsPage: React.FC = () => {
     setSelectedRecord(null);
     form.resetFields();
     setCurrentPolygon([]);
+    setPolygonCoordinates([]);
     setAutoAssignedInspectors([]);
   };
 
-  // Dummy polygon generator (used when user clicks Draw Boundary)
-  const generateDummyPolygon = (location?: string) => {
-    // location-based seed for deterministic demo (simple hash)
-    const seed = (location || "seed").split("").reduce((s, ch) => s + ch.charCodeAt(0), 0);
-    const center = getCampaignLocationCenter(location);
-    const [cx, cy] = center;
-    // generate 4 points around center using seed
-    const poly: [number, number][] = [
-      [cx + ((seed % 10) - 5) * 0.0005, cy + ((seed % 7) - 3) * 0.0005],
-      [cx + ((seed % 13) - 6) * 0.0006, cy + ((seed % 11) - 5) * 0.0006],
-      [cx + ((seed % 17) - 8) * 0.0005, cy + ((seed % 19) - 9) * 0.0005],
-      [cx + ((seed % 23) - 11) * 0.0006, cy + ((seed % 29) - 14) * 0.0006],
-    ];
-    return poly;
-  };
+  // Handler for boundary drawing completion - FIXED
+  const handleBoundaryDrawn = (rings: number[][][]) => {
+    console.log("Polygon drawn with rings:", rings);
+    setCurrentPolygon(rings);
 
-  // Auto-assign inspectors based on polygon (demo logic: deterministic pick based on polygon centroid)
-  const autoAssignInspectorsByPolygon = (poly: [number, number][]) => {
-    if (!poly || poly.length === 0) return [];
-    // compute centroid
-    const centroid = poly.reduce(
-      (acc, p) => {
-        acc[0] += p[0];
-        acc[1] += p[1];
-        return acc;
-      },
-      [0, 0],
-    ) as [number, number];
-    centroid[0] /= poly.length;
-    centroid[1] /= poly.length;
-    // deterministic selection: pick inspectors whose id modulo 3 matches centroid lat rounded
-    const selector = Math.abs(Math.round(centroid[0] * 100)) % 3;
-    const inspectors = (lookups.inspectors || []).map((i: any) => i.value) as number[];
-    // pick first 2 inspectors where id % 3 === selector, fallback to first two
-    const matched = inspectors.filter((id) => id % 3 === selector);
-    const result = matched.length >= 2 ? matched.slice(0, 3) : inspectors.slice(0, 3);
-    return result;
-  };
+    // Extract coordinates for display
+    if (rings && rings[0]) {
+      const coords = rings[0].map((point) => ({
+        lng: point[0],
+        lat: point[1],
+      }));
+      setPolygonCoordinates(coords);
+    }
 
-  // Draw Boundary button handler
-  const handleDrawBoundary = (location?: string) => {
-    const poly = generateDummyPolygon(location);
-    setCurrentPolygon(poly);
-    const assigned = autoAssignInspectorsByPolygon(poly);
-    setAutoAssignedInspectors(assigned);
+    form.setFieldsValue({ polygon: rings });
     message.success(t("messages.boundaryDrawn"));
-    // fill form assignedInspectors if present
-    form.setFieldsValue({ polygon: poly, assignedInspectors: assigned });
+  };
+
+  // Handler for clearing boundary - FIXED
+  const handleClearBoundary = () => {
+    setCurrentPolygon([]);
+    setPolygonCoordinates([]);
+    form.setFieldsValue({ polygon: [] });
+    setAutoAssignedInspectors([]);
+    message.info(t("messages.boundaryCleared"));
   };
 
   const mapLocationValue = (selectedLocation || selectedRecord?.location || lookups.locations?.[0]?.value) as
     | string
     | undefined;
   const mapLocationLabel = mapLocationValue ? getLabel(mapLocationValue, "locations") : t("form.location");
-  const mapCenter = getPolygonCenter(currentPolygon) || getCampaignLocationCenter(mapLocationValue);
+  const mapCenter = getPolygonCenterFromRings(currentPolygon) || getCampaignLocationCenter(mapLocationValue);
   const [mapLat, mapLng] = mapCenter;
 
   // Create or update campaign
@@ -273,7 +269,8 @@ const ProactiveCampaignsPage: React.FC = () => {
       createdBy,
     } = values;
 
-    if (!polygon || polygon.length === 0) {
+    // Validate polygon exists
+    if (!polygon || polygon.length === 0 || polygon[0]?.length === 0) {
       message.error(t("validation.required", { field: t("form.polygon") }));
       return;
     }
@@ -287,7 +284,10 @@ const ProactiveCampaignsPage: React.FC = () => {
       endTime: timeInterval[1].toISOString(),
       violationTypes,
       assignedInspectors: assignedInspectors || [],
-      polygon,
+      polygon: {
+        rings: polygon, // Store as rings for ArcGIS format
+        type: "polygon",
+      },
       notificationMessageEn,
       notificationMessageAr,
       status,
@@ -506,26 +506,110 @@ const ProactiveCampaignsPage: React.FC = () => {
               </Form.Item>
             </Col>
 
-            {/* ArcGIS Map + Draw Boundary */}
+            {/* ArcGIS Map + Draw Boundary - WITH RIGHT SIDE COORDINATES */}
             <Col span={24}>
               <Divider orientation="left">
                 <EnvironmentOutlined /> {t("form.drawBoundary")}
               </Divider>
 
-              <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-                <div style={{ flex: 1 }}>
+              <Row gutter={16}>
+                {/* Map Column - 70% width */}
+                <Col xs={24} md={16} lg={17}>
                   <div style={{ border: "1px solid #eee", borderRadius: 4, overflow: "hidden" }}>
                     <ArcGISMap
                       inspectors={[]}
                       center={[mapLng, mapLat]}
                       zoom={currentPolygon.length > 0 ? 14 : 13}
-                      height="300px"
+                      height="400px"
                       clickable={false}
                       legendEnabled={false}
+                      enableBoundaryDrawing={true}
+                      onBoundaryDrawn={handleBoundaryDrawn}
+                      boundaryPolygonRings={currentPolygon}
+                      onClearBoundary={handleClearBoundary}
                     />
                   </div>
-                </div>
-              </div>
+                  <div style={{ marginTop: 12, textAlign: "right" }}>
+                    <Button onClick={handleClearBoundary} danger>
+                      {t("common.clear")}
+                    </Button>
+                  </div>
+                </Col>
+
+                {/* Coordinates Panel Column - 30% width */}
+                <Col xs={24} md={8} lg={7}>
+                  <div
+                    style={{
+                      border: "1px solid #e8e8e8",
+                      borderRadius: 4,
+                      background: "#fafafa",
+                      height: "400px",
+                      display: "flex",
+                      flexDirection: "column",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "12px",
+                        borderBottom: "1px solid #e8e8e8",
+                        background: "#fff",
+                        fontWeight: 500,
+                        fontSize: 14,
+                      }}
+                    >
+                      Boundary Coordinates
+                    </div>
+                    <div
+                      style={{
+                        flex: 1,
+                        overflowY: "auto",
+                        padding: "12px",
+                      }}
+                    >
+                      {polygonCoordinates.length > 0 ? (
+                        polygonCoordinates.map((coord, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              fontSize: 12,
+                              padding: "8px",
+                              marginBottom: "8px",
+                              background: "#fff",
+                              borderRadius: 4,
+                              border: "1px solid #e8e8e8",
+                              fontFamily: "monospace",
+                            }}
+                          >
+                            <div style={{ fontWeight: 500, marginBottom: 4, color: "#1890ff" }}>Point {idx + 1}</div>
+                            <div style={{ color: "#666", lineHeight: "1.5" }}>
+                              Longitude: {coord.lng.toFixed(6)}
+                              <br />
+                              Latitude: {coord.lat.toFixed(6)}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div
+                          style={{
+                            textAlign: "center",
+                            color: "#999",
+                            padding: "20px",
+                            fontSize: 13,
+                            position: "absolute",
+                            top: "50%",
+                            left: 0,
+                            right: 0,
+                            transform: "translateY(-50%)",
+                          }}
+                        >
+                          Draw a boundary to view coordinates.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Col>
+              </Row>
             </Col>
 
             <Col span={12}>

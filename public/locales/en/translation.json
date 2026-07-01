@@ -586,7 +586,8 @@
     "days": "Days",
     "open": "Open",
     "Inactive": "Inactive",
-    "inspectorName": "Inspector Name"
+    "inspectorName": "Inspector Name",
+    "clear" : "Clear"
   },
   "entity": {
     "plate": "Plate",

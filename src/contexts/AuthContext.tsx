@@ -5,7 +5,12 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  canAccessAnyPermission,
+  hasPermissionAccess,
+  type MenuPermission,
+  type PermissionAction,
+} from "../utils/permissionUtils";
 
 interface RolePermission {
   id: number;
@@ -40,11 +45,11 @@ interface AuthContextType {
   login: (userData: UserData) => void;
   logout: () => void;
   hasPermission: (
-    menuName: string,
-    permission: "create" | "read" | "update" | "delete"
+    menuName: MenuPermission,
+    permission: PermissionAction
   ) => boolean;
   validateToken: () => boolean;
-  canAccessAny: (menuName: string) => boolean; // 👈 new
+  canAccessAny: (menuName: MenuPermission) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,7 +69,6 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     // Check for existing token on app load
@@ -132,47 +136,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const hasPermission = (
-    menuName: string,
-    permission: "create" | "read" | "update" | "delete"
-  ): boolean => {
-    if (!user) return false;
+    menuName: MenuPermission,
+    permission: PermissionAction
+  ): boolean => hasPermissionAccess(user?.rolePermissions, menuName, permission);
 
-    const permissionObj = user.rolePermissions.find(
-      (perm) => perm.menuName.toLowerCase() === menuName.toLowerCase()
-    );
-
-    if (!permissionObj) return false;
-
-    switch (permission) {
-      case "create":
-        return permissionObj.canCreate === 1;
-      case "read":
-        return permissionObj.canRead === 1;
-      case "update":
-        return permissionObj.canUpdate === 1;
-      case "delete":
-        return permissionObj.canDelete === 1;
-      default:
-        return false;
-    }
-  };
-
-  const canAccessAny = (menuName: string): boolean => {
-    if (!user) return false;
-
-    const permissionObj = user.rolePermissions.find(
-      (perm) => perm.menuName.toLowerCase() === menuName.toLowerCase()
-    );
-
-    if (!permissionObj) return false;
-
-    return (
-      permissionObj.canCreate === 1 ||
-      permissionObj.canRead === 1 ||
-      permissionObj.canUpdate === 1 ||
-      permissionObj.canDelete === 1
-    );
-  };
+  const canAccessAny = (menuName: MenuPermission): boolean => canAccessAnyPermission(user?.rolePermissions, menuName);
 
   const value: AuthContextType = {
     user,
@@ -182,7 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     hasPermission,
     validateToken,
-    canAccessAny, // 👈 exposed here
+    canAccessAny,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

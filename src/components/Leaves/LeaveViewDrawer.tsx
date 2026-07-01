@@ -13,6 +13,7 @@ import {
   useLazyGetReviewHistoryQuery,
   useLazyGetReviewOptionsQuery,
   useUpdateLeaveStatusMutation,
+  useLazyGetLookupsQuery,
 } from "../../services/rtkApiFactory";
 import { useAppNotification } from "../../utils/notificationManager";
 import ReviewTimeline from "../ReviewTimeline";
@@ -40,6 +41,29 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
   const [getReviewHistory, { data: reviewHistory = [], isLoading: historyLoading }] = useLazyGetReviewHistoryQuery();
   const [getEntityHistory, { data: entityHistory = [], isLoading: entityHistoryLoading }] =
     useLazyGetEntityHistoryQuery();
+  const [getLookups, { data: lookupData, isLoading: lookupsLoading }] = useLazyGetLookupsQuery();
+
+  useEffect(() => {
+    if (open && !getLeaveTypeName) {
+      getLookups([1900]);
+    }
+  }, [open, getLeaveTypeName, getLookups]);
+
+  const internalGetLeaveTypeName = (code: number | string | undefined) => {
+    if (getLeaveTypeName) return getLeaveTypeName(code);
+
+    if (code === undefined || code === null) return "N/A";
+    const numericCode = typeof code === "string" ? parseInt(code, 10) : code;
+    if (isNaN(numericCode as number)) return String(code);
+
+    if (lookupData && Array.isArray(lookupData)) {
+      const match = lookupData.find((item: any) => item.categoryId === 1900 && Number(item.value) === numericCode);
+      if (match) {
+        return i18n.language.startsWith("ar") ? match.labelAr : match.labelEn;
+      }
+    }
+    return `Leave Type ${numericCode}`;
+  };
 
   const [selectedAction, setSelectedAction] = useState<any>(null);
   const [comments, setComments] = useState("");
@@ -199,7 +223,7 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
 
   return (
     <Modal open={open} onCancel={onClose} width={1400} footer={null} title={null} closable={false}>
-      <Spin spinning={isSubmitting || loadingOptions || historyLoading || entityHistoryLoading}>
+      <Spin spinning={isSubmitting || loadingOptions || historyLoading || entityHistoryLoading || lookupsLoading}>
         <div style={{ display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 120px)" }}>
           <div
             style={{
@@ -268,7 +292,7 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
                             <Text strong>{t("form.leaveType")}:</Text>
                           </Col>
                           <Col span={16}>
-                            {getLeaveTypeName ? getLeaveTypeName(record.leaveType) : record.leaveType}
+                            {internalGetLeaveTypeName(record.leaveType)}
                           </Col>
 
                           <Col span={8}>

@@ -46,7 +46,7 @@ const filterOptionsByCategory = (options: any[], categoryId: number) => {
 
 const WhitelistTradeLicensesPage: React.FC = () => {
   const { canCreate, canEdit } = usePermission();
-  const menuName = "WhiteListTrade";
+  const menuName = ["WhitelistTradeLicense", "WhiteListTrade"];
   const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();

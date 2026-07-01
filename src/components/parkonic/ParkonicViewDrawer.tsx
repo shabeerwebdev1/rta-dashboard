@@ -304,7 +304,10 @@ const ParkonicViewDrawer: React.FC<ParkonicViewDrawerProps> = ({ open, onClose, 
               <Col>
                 <Space size="middle" align="center">
                   <Title level={4} style={{ margin: 0 }}>
-                    {t("form.parkonicdetails")} <Text type="danger">#{mappedRecord?.fineId || "—"}</Text>
+                    {t("form.parkonicdetails")}{" "}
+                    <Text type="danger">
+                      #{mappedRecord?.reviewStatus === 1 ? mappedRecord?.fineId || "—" : record?.transcationId || "—"}
+                    </Text>
                   </Title>
 
                   {mappedRecord?.reviewStatus !== undefined && getStatusTag(mappedRecord.reviewStatus)}

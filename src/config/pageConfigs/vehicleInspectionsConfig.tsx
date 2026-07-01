@@ -29,31 +29,127 @@ export const plateSources: Record<number, { en: string; ar: string }> = {
   10: { en: "test", ar: "test" },
 };
 
+// export const PLATE_TYPE_SHORT: Record<number, string> = {
+//   1: "Private",
+//   2: "Taxi",
+//   3: "PubTra", // Public Transportation
+//   4: "Motorc", // Motorcycle
+//   5: "TaxiYel", // Taxi Yellow
+//   6: "Other", // Other (Specify)
+//   7: "Public",
+//   8: "Classic",
+//   9: "Consul", // Consulate
+//   10: "Customs",
+//   11: "Diplom", // Diplomat
+//   12: "EntMC", // Entertainment Motorcycle
+//   13: "Export",
+//   14: "Govern", // Government
+//   15: "Hospit", // Hospitality
+//   16: "IntOrg", // International Organization
+//   17: "Learn", // Learning
+//   18: "LocGua", // Local Guard
+//   19: "Munici", // Municipality
+//   20: "Police",
+//   21: "Probati", // Probation
+//   22: "Protoco", // Protocol
+//   23: "Trade", // Trade Plate
+//   24: "Test", // Under Test
+// };
+
+// export const PLATE_COLOR: Record<number, string> = {
+//   1: "A",
+//   2: "B",
+//   3: "C",
+//   4: "D",
+//   5: "E",
+//   6: "F",
+//   7: "G",
+//   8: "H",
+//   9: "I",
+//   10: "J",
+//   11: "K",
+//   12: "L",
+//   13: "M",
+//   14: "N",
+//   15: "O",
+//   16: "P",
+//   17: "Q",
+//   18: "R",
+//   19: "S",
+//   20: "T",
+//   21: "U",
+//   22: "V",
+//   23: "W",
+//   24: "X",
+//   25: "Y",
+//   26: "Z",
+//   27: "White",
+//   28: "Orange",
+//   29: "Red",
+//   30: "Gray",
+//   31: "Blue",
+//   32: "Green",
+//   33: "Black",
+//   34: "Yellow",
+//   35: "1",
+//   36: "2",
+//   37: "3",
+//   38: "4",
+//   39: "5",
+//   40: "6",
+//   41: "7",
+//   42: "8",
+//   43: "9",
+//   44: "RAK-Tower",
+//   45: "10",
+//   46: "11",
+//   47: "12",
+//   48: "13",
+//   49: "Other",
+//   50: "14",
+//   51: "15",
+// };
+
 export const PLATE_TYPE_SHORT: Record<number, string> = {
   1: "Private",
   2: "Taxi",
-  3: "PubTra", // Public Transportation
-  4: "Motorc", // Motorcycle
-  5: "TaxiYel", // Taxi Yellow
-  6: "Other", // Other (Specify)
+  3: "Public Transportation",
+  4: "Motorcycle",
+  5: "Taxi Yellow",
+  6: "Other (Specify)",
   7: "Public",
   8: "Classic",
-  9: "Consul", // Consulate
+  9: "Consulate",
   10: "Customs",
-  11: "Diplom", // Diplomat
-  12: "EntMC", // Entertainment Motorcycle
+  11: "Diplomat",
+  12: "Entertainment Motorcycle",
   13: "Export",
-  14: "Govern", // Government
-  15: "Hospit", // Hospitality
-  16: "IntOrg", // International Organization
-  17: "Learn", // Learning
-  18: "LocGua", // Local Guard
-  19: "Munici", // Municipality
+  14: "Government",
+  15: "Hospitality",
+  16: "International Organization",
+  17: "Learning",
+  18: "Local Guard",
+  19: "Municipality",
   20: "Police",
-  21: "Probati", // Probation
-  22: "Protoco", // Protocol
-  23: "Trade", // Trade Plate
-  24: "Test", // Under Test
+  21: "Probation",
+  22: "Protocol",
+  23: "Trade Plate",
+  24: "Under Test",
+  30: "Ceremonies",
+  31: "Classical",
+  32: "Commercial",
+  33: "Data Migration",
+  34: "Driving Learning",
+  35: "Dubai Flag",
+  36: "Dubai Police",
+  37: "Import",
+  38: "Political Authority",
+  39: "Private Transportation",
+  40: "Public 2",
+  41: "Self Driving Vehicle",
+  42: "Trade",
+  43: "Trailer",
+  44: "Works",
 };
 
 export const PLATE_COLOR: Record<number, string> = {
@@ -108,6 +204,56 @@ export const PLATE_COLOR: Record<number, string> = {
   49: "Other",
   50: "14",
   51: "15",
+  52: "16",
+  53: "17",
+  54: "18",
+  55: "19",
+  86: "50",
+  100: "AA",
+
+  150: "CeremWR",
+  151: "Classic",
+  152: "Classical",
+  153: "ClassicMC",
+  154: "Consulate",
+  155: "Customs",
+  156: "DataMig",
+  157: "Diplom",
+  158: "DubaiFlg",
+  159: "DubaiPol",
+  160: "EntMC",
+  161: "Govern",
+  162: "GovWhite",
+  163: "Green1",
+  164: "Hospit",
+  165: "HospBlue",
+  166: "HospYel",
+  167: "Import",
+  168: "IntOrg",
+  169: "Learn",
+  170: "Motorc",
+  171: "Motor1",
+  172: "Motor2",
+  173: "Motor3",
+  174: "Motor4",
+  200: "Munici",
+  210: "Police",
+  211: "Politic",
+  220: "PrivTra",
+  221: "Probati",
+  222: "Protoco",
+  223: "Public",
+  224: "Public1",
+  225: "Public2",
+  226: "Test",
+  227: "Taxi",
+  228: "Trade",
+  229: "TradeW",
+  230: "Trailer",
+  231: "Probati",
+  232: "WhiteGr",
+  233: "WhiteG",
+  234: "Works",
 };
 
 export const vehicleInspectionsConfig: PageConfig = {

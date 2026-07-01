@@ -91,6 +91,7 @@ export interface PageConfig<T = any> {
   };
   searchConfig?: SearchConfig;
   tableConfig: {
+    rowKey: string | undefined;
     columns: AppColumns<T>;
   };
   formConfig: FormConfig;

@@ -44,6 +44,16 @@ interface FineCancelRequestViewModalProps {
 
 const EMPTY_OBJECT: any = {};
 
+const getLabelFromValue = (value: number | string, options: any[], i18n: any) => {
+  if (!options || !Array.isArray(options)) return String(value);
+  const option = options.find((opt: any) => String(opt.value) === String(value) || String(opt.id) === String(value));
+  if (!option) return String(value);
+  return i18n.language === "ar" ? option.labelAr || option.label : option.labelEn || option.label;
+};
+
+const filterOptionsByCategory = (options: any[], categoryId: number) =>
+  options.filter((option: any) => option.categoryId === categoryId);
+
 const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
   open,
   onClose,
@@ -67,7 +77,16 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
   const [getEntityHistory, { data: entityHistory = [], isLoading: entityHistoryLoading }] =
     useLazyGetEntityHistoryQuery();
   const [updateFineCancelStatus, { isLoading: isUpdating }] = useUpdateFineCancelStatusMutation();
-  const [triggerGetLookups] = useLazyGetLookupsQuery();
+  const [triggerGetLookups, { isLoading: isLoadingLookups }] = useLazyGetLookupsQuery();
+
+  useEffect(() => {
+    if (open) {
+      triggerGetLookups([1400, 1300, 1500, 1100])
+        .unwrap()
+        .then(setLookupOptions)
+        .catch((error) => notification.error({ data: error }, ""));
+    }
+  }, [open, triggerGetLookups]);
 
   const base = record ?? EMPTY_OBJECT;
   const data = base.data ?? base;
@@ -152,6 +171,14 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
     const effectiveInspectionStatus = Number(base.inspectionStatus ?? inspection.inspectionStatus ?? 15003);
     const effectivePaymentType = base.paymentType ?? base.payment_Type ?? data.paymentType ?? data.payment_Type ?? 0;
 
+    const inspectionTypeOptions = filterOptionsByCategory(lookupOptions, 1400);
+    const inspectionCategoryOptions = filterOptionsByCategory(lookupOptions, 1300);
+    const inspectionStatusOptions = filterOptionsByCategory(lookupOptions, 1500);
+    const paymentTypeOptions = filterOptionsByCategory(lookupOptions, 1100);
+
+    const rawInspectionType = inspection.inspectionType ?? base.inspectionType ?? data.inspectionType;
+    const rawInspectionCategory = inspection.inspectionCategory ?? base.inspectionCategory ?? data.inspectionCategory;
+
     return {
       ...base,
       ...data,
@@ -181,15 +208,23 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
       totalFineAmount: inspection.totalFineAmount ?? fineDetails.fineAmount ?? base.totalFineAmount ?? data.fineAmount,
       paymentType: effectivePaymentType,
       isPaid: inspection.isPaid ?? false,
-      inspectionType: inspection.inspectionType ?? base.inspectionType ?? data.inspectionType,
-      inspectionCategory: inspection.inspectionCategory ?? base.inspectionCategory ?? data.inspectionCategory,
+      inspectionType: rawInspectionType,
+      inspectionCategory: rawInspectionCategory,
       inspectionStatus: effectiveInspectionStatus,
       fineType: data.fineType ?? base.fineType ?? "",
       fineStatus: fineDetails.fineStatus ?? inspection.inspectionStatus ?? effectiveInspectionStatus,
-      inspectionTypeLabel: getDisplay(inspection.inspectionType),
-      inspectionCategoryLabel: getDisplay(inspection.inspectionCategory),
-      inspectionStatusLabel: getStatusLabel(Boolean(inspection.isPaid), effectiveInspectionStatus),
-      paymentTypeLabel: getPaymentTypeLabel(effectivePaymentType),
+      inspectionTypeLabel: rawInspectionType
+        ? getLabelFromValue(rawInspectionType, inspectionTypeOptions, i18n)
+        : getDisplay(rawInspectionType),
+      inspectionCategoryLabel: rawInspectionCategory
+        ? getLabelFromValue(rawInspectionCategory, inspectionCategoryOptions, i18n)
+        : getDisplay(rawInspectionCategory),
+      inspectionStatusLabel: effectiveInspectionStatus
+        ? getLabelFromValue(effectiveInspectionStatus, inspectionStatusOptions, i18n)
+        : getStatusLabel(Boolean(inspection.isPaid), effectiveInspectionStatus),
+      paymentTypeLabel: effectivePaymentType
+        ? getLabelFromValue(effectivePaymentType, paymentTypeOptions, i18n)
+        : getPaymentTypeLabel(effectivePaymentType),
       statusLabel: getStatusLabel(Boolean(inspection.isPaid), effectiveInspectionStatus),
       statusColor: getStatusColor(Boolean(inspection.isPaid), effectiveInspectionStatus),
       fineAmountFormatted:
@@ -245,7 +280,7 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
       phone: base.phone || data.phone || "",
       address: base.address || data.address || "",
     };
-  }, [record, base, data, vehicle, fineDetails, inspection, inspectionGUID, entityId, entityCode, i18n.language]);
+  }, [record, base, data, vehicle, fineDetails, inspection, inspectionGUID, entityId, entityCode, i18n.language, lookupOptions]);
 
   const attachmentQueryArg = mappedFine
     ? { inspectionGUID: mappedFine.inspectionGUID, entityCode: inspection.entityCode || mappedFine.entityCode }
@@ -378,7 +413,7 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
       bodyStyle={{ padding: 0 }}
       dir={isRTLText ? "rtl" : "ltr"}
     >
-      <Spin spinning={isLoading || isUpdating || loadingOptions || historyLoading || entityHistoryLoading}>
+      <Spin spinning={isLoading || isUpdating || loadingOptions || historyLoading || entityHistoryLoading || isLoadingLookups}>
         <div style={{ display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 80px)" }}>
           {/* ── Sticky Header ── */}
           <div
@@ -774,9 +809,7 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                               <Col flex="1">
                                 <Text strong>{isRTLText ? value?.violationNameAr : value?.violationNameEn}</Text>
                               </Col>
-                              <Col>
-                                <Text strong>{t("form.amount", { defaultValue: "Amount" })}:</Text>
-                              </Col>
+
                               <Col style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
                                 <Text strong>{t("form.amount")} :</Text>
                                 <Text type="danger" strong>
@@ -883,92 +916,96 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                 </div>
                 {/* ── END TOP TWO-COLUMN SECTION ── */}
 
-                {/* ══════════════════════════════════════════════════════════
-                    BOTTOM — Approval Actions: full width across both columns
-                    ══════════════════════════════════════════════════════════ */}
-                {showInboxReviewWorkflow && (
-                  <Card
-                    title={t("form.approvalActions", { defaultValue: "Approval Actions" })}
-                    size="small"
-                    style={{ borderRadius: 12 }}
-                    headStyle={cardHeadStyle}
-                  >
-                    <Form form={form} layout="vertical" dir={isRTL ? "rtl" : "ltr"}>
-                      <Row gutter={16} align="middle">
-                        {/* Action Dropdown */}
-                        <Col span={6}>
-                          <Form.Item
-                            name="action"
-                            label={<Text strong>{isRTL ? "الإجراء" : "Action"}</Text>}
-                            rules={[
-                              {
-                                required: true,
-                                message: isRTL ? "الرجاء اختيار إجراء" : "Please select an action",
-                              },
-                            ]}
-                          >
-                            <Select
-                              placeholder={isRTL ? "اختر إجراء" : "Select action"}
-                              onChange={handleActionChange}
-                              allowClear
-                            >
-                              {reviewOptions.map((opt: any) => (
-                                <Select.Option key={opt.ActivityOptionGUID} value={opt.ActivityOptionGUID}>
-                                  {opt.ReviewStatus}
-                                </Select.Option>
-                              ))}
-                            </Select>
-                          </Form.Item>
-                        </Col>
-
-                        {/* Comments */}
-                        <Col span={12}>
-                          <Form.Item
-                            name="review_Comments"
-                            label={<Text strong>{t("form.comments")}</Text>}
-                            rules={[
-                              {
-                                required: !!selectedAction?.IsCommentMandatory,
-                                message: isRTL ? "الرجاء إدخال التعليقات" : "Please enter comments",
-                              },
-                            ]}
-                          >
-                            <TextArea
-                              rows={2}
-                              placeholder={isRTL ? "أدخل التعليقات" : "Enter comments"}
-                              value={comments}
-                              onChange={(e) => setComments(e.target.value)}
-                            />
-                          </Form.Item>
-                        </Col>
-
-                        {/* Buttons */}
-                        <Col
-                          span={6}
-                          style={{
-                            textAlign: isRTL ? "left" : "right",
-                            paddingTop: 30,
-                          }}
-                        >
-                          <Space>
-                            <Button onClick={onClose}>{isRTL ? "إلغاء" : "Cancel"}</Button>
-                            <Button
-                              type="primary"
-                              loading={isUpdating}
-                              onClick={handleSubmit}
-                              disabled={!selectedAction}
-                            >
-                              {isRTL ? "إرسال" : "Submit"}
-                            </Button>
-                          </Space>
-                        </Col>
-                      </Row>
-                    </Form>
-                  </Card>
-                )}
               </div>
             )}
           </div>
+
+          {/* ══════════════════════════════════════════════════════════
+              BOTTOM — Approval Actions (Fixed Footer)
+              ══════════════════════════════════════════════════════════ */}
+          {showInboxReviewWorkflow && (
+            <div
+              style={{
+                padding: "16px 24px 24px",
+                background: colorBgContainer,
+                borderTop: "1px solid #f0f0f0",
+                flexShrink: 0,
+              }}
+            >
+              <Form form={form} layout="vertical" dir={isRTL ? "rtl" : "ltr"}>
+                <Row gutter={16} align="middle">
+                  {/* Action Dropdown */}
+                  <Col span={6}>
+                    <Form.Item
+                      name="action"
+                      label={<Text strong>{isRTL ? "الإجراء" : "Action"}</Text>}
+                      rules={[
+                        {
+                          required: true,
+                          message: isRTL ? "الرجاء اختيار إجراء" : "Please select an action",
+                        },
+                      ]}
+                    >
+                      <Select
+                        placeholder={isRTL ? "اختر إجراء" : "Select action"}
+                        onChange={handleActionChange}
+                        allowClear
+                      >
+                        {reviewOptions.map((opt: any) => (
+                          <Select.Option key={opt.ActivityOptionGUID} value={opt.ActivityOptionGUID}>
+                            {opt.ReviewStatus}
+                          </Select.Option>
+                        ))}
+                      </Select>
+                    </Form.Item>
+                  </Col>
+
+                  {/* Comments */}
+                  <Col span={12}>
+                    <Form.Item
+                      name="review_Comments"
+                      label={<Text strong>{t("form.comments")}</Text>}
+                      style={{ marginBottom: 0 }}
+                      rules={[
+                        {
+                          required: !!selectedAction?.IsCommentMandatory,
+                          message: isRTL ? "الرجاء إدخال التعليقات" : "Please enter comments",
+                        },
+                      ]}
+                    >
+                      <TextArea
+                        rows={2}
+                        placeholder={isRTL ? "أدخل التعليقات" : "Enter comments"}
+                        value={comments}
+                        onChange={(e) => setComments(e.target.value)}
+                      />
+                    </Form.Item>
+                  </Col>
+
+                  {/* Buttons */}
+                  <Col
+                    span={6}
+                    style={{
+                      textAlign: isRTL ? "left" : "right",
+                      paddingTop: 30,
+                    }}
+                  >
+                    <Space>
+                      <Button onClick={onClose}>{isRTL ? "إلغاء" : "Cancel"}</Button>
+                      <Button
+                        type="primary"
+                        loading={isUpdating}
+                        onClick={handleSubmit}
+                        disabled={!selectedAction}
+                      >
+                        {isRTL ? "إرسال" : "Submit"}
+                      </Button>
+                    </Space>
+                  </Col>
+                </Row>
+              </Form>
+            </div>
+          )}
         </div>
       </Spin>
     </Modal>
