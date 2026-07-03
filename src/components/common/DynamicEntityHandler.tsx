@@ -16,6 +16,7 @@ import {
   useLazyGetLeaveDetailsByIdQuery,
   useLazyGetCarInspectionByIdQuery,
   useLazyGetTLInspectionByIdQuery,
+  useLazyGetTowingByIdQuery,
   useLazyGetParkonicByIdQuery,
   useLazyGetParkonicsLocationByIdQuery,
   useLazyGetDisputeByIdQuery,
@@ -122,8 +123,19 @@ const ENTITY_CONFIG: Record<string, any> = {
   "parking-towing": {
     component: TowingViewDrawer,
     type: "drawer",
-    fetchData: false,
-    mergeRecord: (_apiRes: any, original: any) => original,
+    fetchData: true,
+    fetcher: "getTowingById",
+    getFetchId: (record: any) => record?.EntityGUID || record?.entityGUID || record?.inspectionGUID || record?.id,
+    mergeRecord: (apiRes: any, original: any) => ({
+      ...(apiRes?.data || apiRes || {}),
+      ...original,
+      EntityCode: original.EntityCode || original.entityCode || apiRes?.data?.EntityCode || apiRes?.data?.entityCode || "parking-towing",
+      entityCode: original.entityCode || original.EntityCode || apiRes?.data?.entityCode || apiRes?.data?.EntityCode || "parking-towing",
+      EntityGUID: original.EntityGUID || original.entityGUID || apiRes?.data?.EntityGUID || apiRes?.data?.entityGUID || original.inspectionGUID || "",
+      inspectionGUID: original.inspectionGUID || apiRes?.data?.inspectionGUID || apiRes?.data?.InspectionGUID || original.EntityGUID || original.entityGUID || "",
+      $SKWorkItemData: original.$SKWorkItemData || apiRes?.data?.$SKWorkItemData,
+      ActivityCode: original.ActivityCode || original.nvarchar3 || apiRes?.data?.ActivityCode || apiRes?.data?.nvarchar3 || "",
+    }),
   },
 };
 
@@ -142,6 +154,7 @@ export const useEntityHandler = () => {
   const [getParkonicById] = useLazyGetParkonicByIdQuery();
   const [getLocationById] = useLazyGetParkonicsLocationByIdQuery();
   const [getDisputeById] = useLazyGetDisputeByIdQuery();
+  const [getTowingById] = useLazyGetTowingByIdQuery();
 
   // Map fetchers to their functions
   const fetchers: Record<string, any> = {
@@ -160,6 +173,7 @@ export const useEntityHandler = () => {
     getParkonicById,
     getLocationById,
     getDisputeById: (entityId: string | number) => getDisputeById(String(entityId)),
+    getTowingById: (entityId: string | number) => getTowingById(String(entityId)),
     // Add more fetchers here as needed
   };
 

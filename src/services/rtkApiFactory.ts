@@ -728,6 +728,14 @@ export const dynamicApi = createApi({
       providesTags: ["Towing"],
     }),
 
+    getTowingById: builder.query({
+      query: (inspectionGUID: string) => ({
+        url: `/api/Towing/${inspectionGUID}`,
+        method: "GET",
+      }),
+      providesTags: ["Towing"],
+    }),
+
     updateTowingStatus: builder.mutation({
       query: (body) => ({
         url: "/api/Towing/approval",
@@ -1224,6 +1232,7 @@ export const {
 
   // Towing Approvals
   useGetTowingDetailsQuery,
+  useLazyGetTowingByIdQuery,
   useUpdateTowingStatusMutation,
   useGetTowingEvidenceQuery,
 

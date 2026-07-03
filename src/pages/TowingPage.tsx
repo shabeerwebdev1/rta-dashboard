@@ -16,7 +16,7 @@ import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
 import { towingConfig } from "../config/pageConfigs/towingConfig";
-import { useGetTowingDetailsQuery } from "../services/rtkApiFactory";
+import { useGetTowingDetailsQuery, useLazyGetTowingByIdQuery } from "../services/rtkApiFactory";
 import TowingViewDrawer from "../components/Towing/TowingViewDrawer";
 
 const { Option } = Select;
@@ -43,6 +43,7 @@ const TowingPage: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [getTowingById] = useLazyGetTowingByIdQuery();
 
   const [searchValue, setSearchValue] = useState<string>(state.searchValue);
   const debouncedSearchValue = useDebounce(searchValue, 500);
@@ -93,6 +94,9 @@ const TowingPage: React.FC = () => {
     setSearchValue("");
     clearAll();
   };
+
+  const resolveTowingId = (record: any) =>
+    record?.inspectionGUID || record?.InspectionGUID || record?.EntityGUID || record?.entityGUID || record?.id || "";
 
   const handleDownloadCsv = () => {
     if (selectedRowKeys.length === 0) {
@@ -200,9 +204,29 @@ const TowingPage: React.FC = () => {
       key: "view",
       icon: <EyeOutlined />,
       label: t("common.view"),
-      onClick: () => {
-        setSelectedRecord(record);
-        setDrawerOpen(true);
+      onClick: async () => {
+        const towingId = resolveTowingId(record);
+        if (!towingId) {
+          setSelectedRecord(record);
+          setDrawerOpen(true);
+          return;
+        }
+
+        try {
+          const response = await getTowingById(String(towingId)).unwrap();
+          const fetched = response?.data || response || {};
+          setSelectedRecord({
+            ...record,
+            ...fetched,
+            inspectionGUID: record?.inspectionGUID || fetched.inspectionGUID || fetched.InspectionGUID || towingId,
+            EntityGUID: record?.EntityGUID || record?.entityGUID || fetched.EntityGUID || fetched.entityGUID || towingId,
+            EntityCode: record?.EntityCode || record?.entityCode || fetched.EntityCode || fetched.entityCode || "parking-towing",
+          });
+        } catch {
+          setSelectedRecord(record);
+        } finally {
+          setDrawerOpen(true);
+        }
       },
     },
   ];
