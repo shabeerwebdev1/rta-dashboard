@@ -12,6 +12,7 @@ import {
 } from "../../services/rtkApiFactory";
 import { skipToken } from "@reduxjs/toolkit/query";
 import ArcGISMap from "../../components/common/ArcGISMap";
+import { MAP_ICONS } from "../../components/common/mapIconUrls";
 
 // Static area coordinates (fallback)
 const AREA_COORDINATES = [
@@ -110,7 +111,6 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
     { key: "zone", title: "form.zone", type: "text" },
     { key: "area", title: "form.area", type: "text" },
     { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "text" },
-    { key: "closestPaymentDevice", title: "form.closestPD", type: "text" },
     { key: "comments", title: "form.comments", type: "text" },
     { key: "removeAction", title: "common.resolveObstacle", type: "action" },
   ];
@@ -185,6 +185,8 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
                 clickable={false}
                 pickedLat={recordLocation.lat}
                 pickedLng={recordLocation.lng}
+                pickedLocationIconUrl={MAP_ICONS.obstacle}
+                pickedLocationIconSize={36}
                 showPath={false}
                 showFineLocations={false}
               />

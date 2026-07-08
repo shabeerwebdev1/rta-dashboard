@@ -98,6 +98,8 @@ interface ArcGISMapProps {
   onLocationPick?: (lat: number, lng: number) => void;
   pickedLat?: number | null;
   pickedLng?: number | null;
+  pickedLocationIconUrl?: string;
+  pickedLocationIconSize?: number;
   showTowingRoute?: boolean;
   towingStartPoint?: { lat: number; lng: number };
   towingEndPoint?: { lat: number; lng: number };
@@ -487,6 +489,8 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   onLocationPick,
   pickedLat = null,
   pickedLng = null,
+  pickedLocationIconUrl,
+  pickedLocationIconSize = 30,
   showTowingRoute = false,
   towingStartPoint,
   towingEndPoint,
@@ -1717,15 +1721,23 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       locationMarkerRef.current = null;
     }
     if (pickedLat !== null && pickedLng !== null) {
+      const symbol = pickedLocationIconUrl
+        ? new PictureMarkerSymbol({
+            url: pickedLocationIconUrl,
+            width: pickedLocationIconSize,
+            height: pickedLocationIconSize,
+          })
+        : new SimpleMarkerSymbol({ color: [255, 0, 0], size: 12, outline: { color: [255, 255, 255], width: 2 } });
+
       const m = new Graphic({
         geometry: new Point({ longitude: pickedLng, latitude: pickedLat, spatialReference: { wkid: 4326 } }),
-        symbol: new SimpleMarkerSymbol({ color: [255, 0, 0], size: 12, outline: { color: [255, 255, 255], width: 2 } }),
+        symbol,
       });
       view.graphics.add(m);
       locationMarkerRef.current = m;
       view.goTo({ center: [pickedLng, pickedLat], zoom: 16 }).catch(console.warn);
     }
-  }, [pickedLat, pickedLng]);
+  }, [pickedLat, pickedLng, pickedLocationIconSize, pickedLocationIconUrl]);
 
   // ── Draw polyline graphics (Path + Towing Route) ─────────────────────
   useEffect(() => {

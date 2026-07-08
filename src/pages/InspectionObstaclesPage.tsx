@@ -326,9 +326,7 @@ const InspectionObstaclesPage: React.FC = () => {
         zone: values.Zone,
         area: values.Area,
         sourceOfObstacle: values.SourceOfObstacle,
-        closestPaymentDevice: values.ClosestPaymentDevice,
         comments: values.Comments || "",
-        requestFrom: "",
         latitude: pickedLatitude, // Add this
         longitude: pickedLongitude,
         // NOTE: lat/long are gathered in the form but not sent to backend yet (per requirement).
@@ -473,14 +471,13 @@ const InspectionObstaclesPage: React.FC = () => {
         } else if (column.key === "sourceOfObstacle") {
           const sourceOption = sourceOptions.find((opt) => opt.value.toString() === item.sourceOfObstacle.toString());
           csvRecord[t("form.sourceOfObstacle")] = sourceOption ? sourceOption.label : item.sourceOfObstacle;
-        } else if (column.key === "closestPaymentDevice") {
-          csvRecord[t("form.closestPD")] = item.closestPaymentDevice || "";
         } else if (column.key === "comments") {
           csvRecord[t("form.comments")] = item.comments || "";
         } else if (column.key === "status") {
           csvRecord[t("form.status")] = statusLabels[item.status] || item.status;
-        } else if (column.key === "createdDate") {
-          csvRecord[t("form.createdDate")] = item.createdDate ? dayjs(item.createdDate).format("DD MMM YYYY") : "";
+        } else if (column.key === "createdDateTime") {
+          const createdAt = item.createdDateTime || item.createdDate;
+          csvRecord[t("form.createdDate")] = createdAt ? dayjs(createdAt).format("DD MMM YYYY") : "";
         }
       });
 
@@ -964,17 +961,6 @@ const InspectionObstaclesPage: React.FC = () => {
                   ]}
                 >
                   <Select placeholder={t("placeholders.sourceOfObstacle")} options={sourceOptions} showSearch />
-                </Form.Item>
-              </Col>
-
-              {/* CLOSEST PD */}
-              <Col span={12}>
-                <Form.Item
-                  name="ClosestPaymentDevice"
-                  label={t("form.closestPD")}
-                  rules={[{ required: true, message: t("validation.required", { field: t("form.closestPD") }) }]}
-                >
-                  <Input placeholder={t("placeholders.closestPaymentDevice")} maxLength={20} />
                 </Form.Item>
               </Col>
 

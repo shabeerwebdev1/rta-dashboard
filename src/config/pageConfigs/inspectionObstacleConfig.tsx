@@ -42,12 +42,12 @@ export const inspectionObstacleConfig: PageConfig = {
       value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
       color: "#52c41a",
     },
-    {
-      title: "stats.resolvedObstacles",
-      icon: <CloseCircleOutlined />,
-      value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
-      color: "#faad14",
-    },
+    // {
+    //   title: "stats.resolvedObstacles",
+    //   icon: <CloseCircleOutlined />,
+    //   value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
+    //   color: "#faad14",
+    // },
   ],
 
   tableConfig: {
@@ -56,7 +56,6 @@ export const inspectionObstacleConfig: PageConfig = {
       { key: "area", title: "form.area", type: "string", sortable: true },
       { key: "sourceOfObstacle", title: "form.sourceOfObstacle", type: "string", filterable: true },
       { key: "createdDateTime", title: "form.createdDate", type: "date" , render: formatDate, sortable: true },
-      { key: "closestPaymentDevice", title: "form.closestPD", type: "string" },
     ],
     viewRecord: true,
     showEdit: false,
@@ -94,13 +93,6 @@ export const inspectionObstacleConfig: PageConfig = {
         required: true,
         span: 12,
         options: ["Construction", "Parked Vehicle", "Natural Obstacle", "Road Work"],
-      },
-      {
-        name: "ClosestPaymentDevice",
-        label: "form.closestPaymentDevice",
-        type: "text",
-        required: true,
-        span: 12,
       },
       {
         name: "ReportedBy",
