@@ -395,6 +395,7 @@
     "isActive": "Active",
     "objectiveType": "Objective Type",
     "titleEn": "Title (EN)",
+    "title": "Title",
     "titleAr": "Title (AR)",
     "timeInterval": "Time Interval",
     "violationTypes": "Violation Types",
@@ -587,7 +588,7 @@
     "open": "Open",
     "Inactive": "Inactive",
     "inspectorName": "Inspector Name",
-    "clear" : "Clear"
+    "clear": "Clear"
   },
   "entity": {
     "plate": "Plate",
@@ -722,6 +723,7 @@
     "totalInspectors": "Total Inspectors",
     "checkedIn": "Checked In",
     "missing": "Missing",
+    "PendingCheckIn": "Pending Check-In",
     "onLeave": "On Leave",
     "totalApprovals": "Total Approvals",
     "leave": "Leave",

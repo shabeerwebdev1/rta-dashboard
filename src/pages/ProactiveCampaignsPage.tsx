@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Space,
   Card,
@@ -16,6 +16,8 @@ import {
   message,
   Dropdown,
   Table,
+  Typography,
+  Tooltip,
 } from "antd";
 import {
   PlusOutlined,
@@ -24,6 +26,7 @@ import {
   FileTextOutlined,
   EnvironmentOutlined,
   MoreOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
@@ -40,6 +43,7 @@ import ArcGISMap from "../components/common/ArcGISMap";
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
+const { Text } = Typography;
 
 const CAMPAIGN_LOCATION_CENTERS: Record<string, [number, number]> = {
   downtown: [25.2048, 55.2708],
@@ -98,8 +102,6 @@ const ProactiveCampaignsPage: React.FC = () => {
 
   // map/polygon state (in modal)
   const [currentPolygon, setCurrentPolygon] = useState<number[][][]>([]);
-  const [autoAssignedInspectors, setAutoAssignedInspectors] = useState<number[]>([]);
-  const [polygonCoordinates, setPolygonCoordinates] = useState<Array<{ lng: number; lat: number }>>([]);
 
   useEffect(() => {
     setPageTitle(t(proactiveCampaignsConfig.title));
@@ -112,6 +114,8 @@ const ProactiveCampaignsPage: React.FC = () => {
     if (!found) return String(value);
     return i18n.language === "ar" ? found.labelAr : found.labelEn;
   };
+
+  const getLookupOptions = (category: keyof typeof lookups) => lookups[category] || [];
 
   // Filtering logic
   const filtered = useMemo(() => {
@@ -165,46 +169,31 @@ const ProactiveCampaignsPage: React.FC = () => {
   const openModal = (mode: "add" | "edit", record?: any) => {
     setModalMode(mode);
     setSelectedRecord(record || null);
-    setCurrentPolygon(record?.polygon?.rings || record?.polygon || []);
-    setAutoAssignedInspectors(record?.assignedInspectors || []);
 
-    // Extract coordinates for display if editing existing polygon
-    if (record?.polygon?.rings && record.polygon.rings[0]) {
-      const coords = record.polygon.rings[0].map((point: number[]) => ({
-        lng: point[0],
-        lat: point[1],
-      }));
-      setPolygonCoordinates(coords);
-    } else {
-      setPolygonCoordinates([]);
+    let rings = record?.polygon?.rings || record?.polygon || [];
+    if (rings.length > 0 && !Array.isArray(rings[0][0])) {
+      rings = [rings.map((p: number[]) => [p[1], p[0]])];
     }
+    setCurrentPolygon(rings);
 
     setIsModalOpen(true);
 
     if (mode === "edit" && record) {
       form.setFieldsValue({
         titleEn: record.titleEn,
-        titleAr: record.titleAr,
         location: record.location,
         timeInterval: [dayjs(record.startTime), dayjs(record.endTime)],
         violationTypes: record.violationTypes,
-        polygon: record.polygon?.rings || record.polygon,
         assignedInspectors: record.assignedInspectors,
         notificationMessageEn: record.notificationMessageEn,
-        notificationMessageAr: record.notificationMessageAr,
         status: record.status,
         createdBy: record.createdBy,
       });
     } else {
       form.resetFields();
       setCurrentPolygon([]);
-      setPolygonCoordinates([]);
-      setAutoAssignedInspectors([]);
       form.setFieldsValue({
-        location: lookups.locations?.[0]?.value,
-        polygon: [],
         assignedInspectors: [],
-        status: "draft",
         createdBy: "System User",
       });
     }
@@ -215,41 +204,24 @@ const ProactiveCampaignsPage: React.FC = () => {
     setSelectedRecord(null);
     form.resetFields();
     setCurrentPolygon([]);
-    setPolygonCoordinates([]);
-    setAutoAssignedInspectors([]);
   };
 
   // Handler for boundary drawing completion - FIXED
-  const handleBoundaryDrawn = (rings: number[][][]) => {
+  const handleBoundaryDrawn = useCallback((rings: number[][][]) => {
     console.log("Polygon drawn with rings:", rings);
     setCurrentPolygon(rings);
-
-    // Extract coordinates for display
-    if (rings && rings[0]) {
-      const coords = rings[0].map((point) => ({
-        lng: point[0],
-        lat: point[1],
-      }));
-      setPolygonCoordinates(coords);
-    }
-
     form.setFieldsValue({ polygon: rings });
     message.success(t("messages.boundaryDrawn"));
-  };
+  }, [form, t]);
 
   // Handler for clearing boundary - FIXED
-  const handleClearBoundary = () => {
+  const handleClearBoundary = useCallback(() => {
     setCurrentPolygon([]);
-    setPolygonCoordinates([]);
     form.setFieldsValue({ polygon: [] });
-    setAutoAssignedInspectors([]);
     message.info(t("messages.boundaryCleared"));
-  };
+  }, [form, t]);
 
-  const mapLocationValue = (selectedLocation || selectedRecord?.location || lookups.locations?.[0]?.value) as
-    | string
-    | undefined;
-  const mapLocationLabel = mapLocationValue ? getLabel(mapLocationValue, "locations") : t("form.location");
+  const mapLocationValue = (selectedLocation || selectedRecord?.location) as string | undefined;
   const mapCenter = getPolygonCenterFromRings(currentPolygon) || getCampaignLocationCenter(mapLocationValue);
   const [mapLat, mapLng] = mapCenter;
 
@@ -257,14 +229,12 @@ const ProactiveCampaignsPage: React.FC = () => {
   const onFinish = (values: any) => {
     const {
       titleEn,
-      titleAr,
       location,
       timeInterval,
       violationTypes,
       polygon,
       assignedInspectors,
       notificationMessageEn,
-      notificationMessageAr,
       status,
       createdBy,
     } = values;
@@ -278,7 +248,6 @@ const ProactiveCampaignsPage: React.FC = () => {
     const newCampaign = {
       id: modalMode === "add" ? Math.max(0, ...campaigns.map((c) => c.id)) + 1 : selectedRecord.id,
       titleEn,
-      titleAr,
       location,
       startTime: timeInterval[0].toISOString(),
       endTime: timeInterval[1].toISOString(),
@@ -289,7 +258,6 @@ const ProactiveCampaignsPage: React.FC = () => {
         type: "polygon",
       },
       notificationMessageEn,
-      notificationMessageAr,
       status,
       createdBy: createdBy || "System User",
       createdAt: selectedRecord?.createdAt || new Date().toISOString(),
@@ -470,21 +438,34 @@ const ProactiveCampaignsPage: React.FC = () => {
           <Button key="back" onClick={closeModal}>
             {t("common.cancel")}
           </Button>,
+          <Button key="draft" htmlType="button" onClick={() => {}}>
+            {t("common.saveAsDraft", { defaultValue: "Save as Draft" })}
+          </Button>,
           <Button key="submit" type="primary" onClick={() => form.submit()}>
             {t(modalMode === "add" ? "common.submit" : "common.update")}
           </Button>,
         ]}
       >
         <Form form={form} layout="vertical" onFinish={onFinish}>
+          <Form.Item name="polygon" hidden>
+            <Input />
+          </Form.Item>
+
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="titleEn" label={t("form.titleEn")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.titleEn")} />
+              <Form.Item name="titleEn" label={t("form.title")} rules={[{ required: true }]}>
+                <Input placeholder={t("placeholders.title", { defaultValue: "Enter Title" })} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="titleAr" label={t("form.titleAr")} rules={[{ required: true }]}>
-                <Input placeholder={t("placeholders.titleAr")} dir="rtl" />
+              <Form.Item name="location" label={t("form.location")} rules={[{ required: true }]}>
+                <Select placeholder={t("placeholders.selectLocation", { defaultValue: "Select location" })} allowClear>
+                  {getLookupOptions("locations").map((item: any) => (
+                    <Option key={item.value} value={item.value}>
+                      {i18n.language === "ar" ? item.labelAr : item.labelEn}
+                    </Option>
+                  ))}
+                </Select>
               </Form.Item>
             </Col>
 
@@ -497,8 +478,8 @@ const ProactiveCampaignsPage: React.FC = () => {
             <Col span={12}>
               <Form.Item name="violationTypes" label={t("form.violationTypes")} rules={[{ required: true }]}>
                 <Select mode="multiple" placeholder={t("placeholders.selectViolationTypes")}>
-                  {lookups.violationTypes.map((v: any) => (
-                    <Option key={v.value} value={v.value}>
+                  {getLookupOptions("violationTypes").map((v: any) => (
+                    <Option key={v.value} value={v.value} label={i18n.language === "ar" ? v.labelAr : v.labelEn}>
                       {i18n.language === "ar" ? v.labelAr : v.labelEn}
                     </Option>
                   ))}
@@ -506,130 +487,83 @@ const ProactiveCampaignsPage: React.FC = () => {
               </Form.Item>
             </Col>
 
-            {/* ArcGIS Map + Draw Boundary - WITH RIGHT SIDE COORDINATES */}
+            <Col span={12}>
+              <Form.Item name="assignedInspectors" label={t("form.assignedInspectors")} rules={[{ required: true }]}>
+                <Select
+                  mode="multiple"
+                  placeholder={t("placeholders.selectInspector", { defaultValue: "Select inspectors" })}
+                  allowClear
+                >
+                  {getLookupOptions("inspectors").map((item: any) => (
+                    <Option key={item.value} value={item.value}>
+                      {i18n.language === "ar" ? item.labelAr : item.labelEn}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item name="status" label={t("form.status")} rules={[{ required: true }]}>
+                <Select placeholder={t("placeholders.selectStatus", { defaultValue: "Select status" })} allowClear>
+                  {getLookupOptions("statuses").map((item: any) => (
+                    <Option key={item.value} value={item.value}>
+                      {i18n.language === "ar" ? item.labelAr : item.labelEn}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+
+            <Col span={24}>
+              <Form.Item
+                name="notificationMessageEn"
+                label={t("form.campaignMessage", { defaultValue: "Campaign Message" })}
+                rules={[{ required: true }]}
+              >
+                <Input.TextArea
+                  rows={3}
+                  placeholder={t("placeholders.campaignMessage", { defaultValue: "Enter campaign message" })}
+                />
+              </Form.Item>
+            </Col>
+
             <Col span={24}>
               <Divider orientation="left">
                 <EnvironmentOutlined /> {t("form.drawBoundary")}
               </Divider>
 
-              <Row gutter={16}>
-                {/* Map Column - 70% width */}
-                <Col xs={24} md={16} lg={17}>
-                  <div style={{ border: "1px solid #eee", borderRadius: 4, overflow: "hidden" }}>
-                    <ArcGISMap
-                      inspectors={[]}
-                      center={[mapLng, mapLat]}
-                      zoom={currentPolygon.length > 0 ? 14 : 13}
-                      height="400px"
-                      clickable={false}
-                      legendEnabled={false}
-                      enableBoundaryDrawing={true}
-                      onBoundaryDrawn={handleBoundaryDrawn}
-                      boundaryPolygonRings={currentPolygon}
-                      onClearBoundary={handleClearBoundary}
-                    />
-                  </div>
-                  <div style={{ marginTop: 12, textAlign: "right" }}>
-                    <Button onClick={handleClearBoundary} danger>
-                      {t("common.clear")}
-                    </Button>
-                  </div>
-                </Col>
-
-                {/* Coordinates Panel Column - 30% width */}
-                <Col xs={24} md={8} lg={7}>
-                  <div
+              <div style={{ position: "relative", border: "1px solid #eee", borderRadius: 4, overflow: "hidden" }}>
+                <Tooltip title={t("common.clear") as string}>
+                  <Button
                     style={{
-                      border: "1px solid #e8e8e8",
-                      borderRadius: 4,
-                      background: "#fafafa",
-                      height: "400px",
-                      display: "flex",
-                      flexDirection: "column",
-                      overflow: "hidden",
+                      position: "absolute",
+                      bottom: 12,
+                      left: 12,
+                      zIndex: 5,
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
                     }}
-                  >
-                    <div
-                      style={{
-                        padding: "12px",
-                        borderBottom: "1px solid #e8e8e8",
-                        background: "#fff",
-                        fontWeight: 500,
-                        fontSize: 14,
-                      }}
-                    >
-                      Boundary Coordinates
-                    </div>
-                    <div
-                      style={{
-                        flex: 1,
-                        overflowY: "auto",
-                        padding: "12px",
-                      }}
-                    >
-                      {polygonCoordinates.length > 0 ? (
-                        polygonCoordinates.map((coord, idx) => (
-                          <div
-                            key={idx}
-                            style={{
-                              fontSize: 12,
-                              padding: "8px",
-                              marginBottom: "8px",
-                              background: "#fff",
-                              borderRadius: 4,
-                              border: "1px solid #e8e8e8",
-                              fontFamily: "monospace",
-                            }}
-                          >
-                            <div style={{ fontWeight: 500, marginBottom: 4, color: "#1890ff" }}>Point {idx + 1}</div>
-                            <div style={{ color: "#666", lineHeight: "1.5" }}>
-                              Longitude: {coord.lng.toFixed(6)}
-                              <br />
-                              Latitude: {coord.lat.toFixed(6)}
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div
-                          style={{
-                            textAlign: "center",
-                            color: "#999",
-                            padding: "20px",
-                            fontSize: 13,
-                            position: "absolute",
-                            top: "50%",
-                            left: 0,
-                            right: 0,
-                            transform: "translateY(-50%)",
-                          }}
-                        >
-                          Draw a boundary to view coordinates.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Col>
-              </Row>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item
-                name="notificationMessageEn"
-                label={t("form.notificationMessageEn")}
-                rules={[{ required: true }]}
-              >
-                <Input.TextArea rows={2} placeholder={t("placeholders.notificationMessageEn")} />
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item
-                name="notificationMessageAr"
-                label={t("form.notificationMessageAr")}
-                rules={[{ required: true }]}
-              >
-                <Input.TextArea rows={2} placeholder={t("placeholders.notificationMessageAr")} dir="rtl" />
-              </Form.Item>
+                    danger
+                    shape="circle"
+                    onClick={handleClearBoundary}
+                    disabled={currentPolygon.length === 0}
+                    icon={<DeleteOutlined />}
+                  />
+                </Tooltip>
+                <ArcGISMap
+                  inspectors={[]}
+                  center={[mapLng, mapLat]}
+                  zoom={currentPolygon.length > 0 ? 14 : 13}
+                  height="400px"
+                  clickable={false}
+                  legendEnabled={false}
+                  enableBoundaryDrawing={true}
+                  onBoundaryDrawn={handleBoundaryDrawn}
+                  boundaryPolygonRings={currentPolygon}
+                  onClearBoundary={handleClearBoundary}
+                  showBasemapToggle={false}
+                />
+              </div>
             </Col>
           </Row>
         </Form>

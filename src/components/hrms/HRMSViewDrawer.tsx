@@ -460,6 +460,51 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
     icon: <TowingIcon color="#735fa9" size="3em" />,
   };
 
+  const summaryBar = (
+    <div
+      style={{
+        display: "flex",
+        borderTop: "1px solid #e8e8e8",
+        background: "white",
+        flexWrap: "nowrap",
+        overflowX: "auto",
+      }}
+    >
+      {/* Base stats (Obstacles, Total Inspections, Routine, Warning) */}
+      {baseStats.map((stat, i) => (
+        <StatCell key={i} stat={stat} index={i} total={baseStats.length + 1 + (finesExpanded ? 2 : 0) + 1} />
+      ))}
+
+      {/* Total Fines — clickable toggle */}
+      <StatCell
+        stat={totalFinesStat}
+        index={baseStats.length}
+        total={baseStats.length + 1 + (finesExpanded ? 2 : 0) + 1}
+        onClick={() => setFinesExpanded((v) => !v)}
+        isActive={finesExpanded}
+      />
+
+      {/* Expandable: Vehicle Fines + Parking Fines */}
+      <div
+        style={{
+          display: "flex",
+          overflow: "hidden",
+          maxWidth: finesExpanded ? 600 : 0,
+          opacity: finesExpanded ? 1 : 0,
+          transition: "max-width 0.3s ease, opacity 0.25s ease",
+          flexShrink: 0,
+        }}
+      >
+        {childFineStats.map((stat, i) => (
+          <StatCell key={i} stat={stat} index={i} total={childFineStats.length} isChild />
+        ))}
+      </div>
+
+      {/* Towing */}
+      <StatCell stat={towingStat} index={0} total={1} />
+    </div>
+  );
+
   const hasCheckedIn = Boolean(record.checkInTime);
   const formattedCheckInTime =
     record.checkInTime && dayjs(record.checkInTime).isValid()
@@ -511,6 +556,9 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
 
         {/* ── Body ── */}
         <div>
+          {/* ── Performance Bar ── */}
+          {summaryBar}
+
           {/* Map + Details side by side */}
           <div style={{ display: "flex", alignItems: "stretch" }}>
             {/* LEFT: Map */}
@@ -630,49 +678,6 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
             </div>
           </div>
 
-          {/* ── Performance Bar ── */}
-          <div
-            style={{
-              display: "flex",
-              borderTop: "1px solid #e8e8e8",
-              background: "white",
-              flexWrap: "nowrap",
-              overflowX: "auto",
-            }}
-          >
-            {/* Base stats (Obstacles, Total Inspections, Routine, Warning) */}
-            {baseStats.map((stat, i) => (
-              <StatCell key={i} stat={stat} index={i} total={baseStats.length + 1 + (finesExpanded ? 2 : 0) + 1} />
-            ))}
-
-            {/* Total Fines — clickable toggle */}
-            <StatCell
-              stat={totalFinesStat}
-              index={baseStats.length}
-              total={baseStats.length + 1 + (finesExpanded ? 2 : 0) + 1}
-              onClick={() => setFinesExpanded((v) => !v)}
-              isActive={finesExpanded}
-            />
-
-            {/* Expandable: Vehicle Fines + Parking Fines */}
-            <div
-              style={{
-                display: "flex",
-                overflow: "hidden",
-                maxWidth: finesExpanded ? 600 : 0,
-                opacity: finesExpanded ? 1 : 0,
-                transition: "max-width 0.3s ease, opacity 0.25s ease",
-                flexShrink: 0,
-              }}
-            >
-              {childFineStats.map((stat, i) => (
-                <StatCell key={i} stat={stat} index={i} total={childFineStats.length} isChild />
-              ))}
-            </div>
-
-            {/* Towing */}
-            <StatCell stat={towingStat} index={0} total={1} />
-          </div>
         </div>
       </Modal>
 

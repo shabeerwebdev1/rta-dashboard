@@ -110,11 +110,13 @@ interface ArcGISMapProps {
   showParkingClusters?: boolean;
   clusterRadius?: string;
   onParkingClusterClick?: (points: ParkingPoint[]) => void;
+  showBasemapToggle?: boolean;
   // NEW PROPS FOR BOUNDARY DRAWING
   enableBoundaryDrawing?: boolean;
   onBoundaryDrawn?: (rings: number[][][]) => void;
   boundaryPolygonRings?: number[][][];
   onClearBoundary?: () => void;
+  hiddenLegendItems?: string[]; // Prop to hide specific legend items
 }
 
 // ── Constants ────────────────────────────────────────────────────────────
@@ -501,11 +503,13 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   showParkingClusters = true,
   clusterRadius = DEFAULT_CLUSTER_RADIUS,
   onParkingClusterClick,
+  showBasemapToggle = true,
   // NEW PROPS FOR BOUNDARY DRAWING
   enableBoundaryDrawing = false,
   onBoundaryDrawn,
   boundaryPolygonRings,
   onClearBoundary,
+  hiddenLegendItems = [],
 }) => {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<__esri.MapView | null>(null);
@@ -618,22 +622,24 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       return row;
     };
 
-    const layerEntries = LAYER_PANEL_CONFIG.map((config) => {
-      const layer =
-        graphicsLayersRef.current.get(config.key) ?? markerFeatureLayersRef.current.get(config.key as string) ?? null;
-      if (!layer) return null;
+    const layerEntries = LAYER_PANEL_CONFIG.filter((c) => !hiddenLegendItems.includes(c.key))
+      .map((config) => {
+        const layer =
+          graphicsLayersRef.current.get(config.key) ?? markerFeatureLayersRef.current.get(config.key as string) ?? null;
+        if (!layer) return null;
 
-      return {
-        label: language === "ar" ? config.titleAr : config.titleEn,
-        iconUrl: config.iconUrl,
-        iconSize: config.iconSize,
-        lineColor: config.lineColor,
-        isVisible: layer.visible,
-        onToggle: () => {
-          layer.visible = !layer.visible;
-        },
-      };
-    }).filter(Boolean) as Array<{
+        return {
+          label: language === "ar" ? config.titleAr : config.titleEn,
+          iconUrl: config.iconUrl,
+          iconSize: config.iconSize,
+          lineColor: config.lineColor,
+          isVisible: layer.visible,
+          onToggle: () => {
+            layer.visible = !layer.visible;
+          },
+        };
+      })
+      .filter(Boolean) as Array<{
       label: string;
       iconUrl?: string;
       iconSize?: string;
@@ -1007,10 +1013,25 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
             // Extract rings from polygon geometry
             const geometry = graphic.geometry as __esri.Polygon;
             if (geometry && geometry.rings) {
-              const rings = geometry.rings;
+              let rings = geometry.rings;
+
+              // If coordinates are in Web Mercator (large values), convert them to WGS84 (lon/lat)
+              if (rings.length > 0 && rings[0].length > 0 && Math.abs(rings[0][0][0]) > 180) {
+                rings = rings.map((ring) =>
+                  ring.map((pt) => {
+                    const lon = (pt[0] / 20037508.34) * 180;
+                    let lat = (pt[1] / 20037508.34) * 180;
+                    lat = (180 / Math.PI) * (2 * Math.atan(Math.exp((lat * Math.PI) / 180)) - Math.PI / 2);
+                    return [lon, lat];
+                  }),
+                );
+              }
+
               // Use setTimeout to avoid state update during sketch event
               setTimeout(() => {
                 onBoundaryDrawn?.(rings);
+                // We DO NOT call sketch.cancel() here because it destroys the graphic
+                // that the sketch widget just successfully added to the GraphicsLayer.
               }, 0);
             }
           }
@@ -1081,6 +1102,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       // Only clear when explicitly clearing (no polygon)
       boundaryLayer.removeAll();
       currentSketchGraphicRef.current = null;
+      sketchWidgetRef.current?.cancel();
     }
   }, [boundaryPolygonRings]);
 
@@ -1095,6 +1117,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       if (boundaryLayer.graphics.length > 0 && (!boundaryPolygonRings || boundaryPolygonRings.length === 0)) {
         boundaryLayer.removeAll();
         currentSketchGraphicRef.current = null;
+        sketchWidgetRef.current?.cancel();
       }
     }
   }, [onClearBoundary, boundaryPolygonRings]);
@@ -1897,22 +1920,24 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   return (
     <div style={{ position: "relative" }}>
       <div ref={mapRef} style={{ width: "100%", height, minHeight: "400px" }} />
-      <Dropdown overlay={menu} trigger={["click"]}>
-        <MoreOutlined
-          style={{
-            position: "absolute",
-            top: 12,
-            right: 12,
-            fontSize: 22,
-            background: "#fff",
-            borderRadius: "4px",
-            padding: 8,
-            cursor: "pointer",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-            zIndex: 1000,
-          }}
-        />
-      </Dropdown>
+      {showBasemapToggle && (
+        <Dropdown overlay={menu} trigger={["click"]}>
+          <MoreOutlined
+            style={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              fontSize: 22,
+              background: "#fff",
+              borderRadius: "4px",
+              padding: 8,
+              cursor: "pointer",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+              zIndex: 1000,
+            }}
+          />
+        </Dropdown>
+      )}
     </div>
   );
 };

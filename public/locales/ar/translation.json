@@ -724,6 +724,7 @@
     "totalInspectors": "إجمالي المفتشين",
     "checkedIn": "تم تسجيل الحضور",
     "missing": "غائب / مفقود",
+    "PendingCheckIn": "بانتظار تسجيل الحضور",
     "onLeave": "في إجازة",
     "totalApprovals": "إجمالي الموافقات",
     "leave": "إجازة",

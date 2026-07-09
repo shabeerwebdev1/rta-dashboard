@@ -43,7 +43,6 @@ export const proactiveLookupData = {
     { value: 105, labelEn: "Omar Abdullah", labelAr: "عمر عبدالله" },
   ],
   statuses: [
-    { value: "draft", labelEn: "Draft", labelAr: "مسودة" },
     { value: "active", labelEn: "Active", labelAr: "نشط" },
     { value: "completed", labelEn: "Completed", labelAr: "مكتمل" },
     { value: "cancelled", labelEn: "Cancelled", labelAr: "ملغى" },
@@ -146,7 +145,7 @@ export const proactiveCampaignsConfig: PageConfig = {
     columns: [
       {
         key: "titleEn",
-        title: "form.titleEn",
+        title: "form.title",
         dataIndex: "titleEn",
         type: "string",
         sortable: true,
@@ -202,14 +201,7 @@ export const proactiveCampaignsConfig: PageConfig = {
     fields: [
       {
         name: "titleEn",
-        label: "form.titleEn",
-        type: "input",
-        required: true,
-        span: 24,
-      },
-      {
-        name: "titleAr",
-        label: "form.titleAr",
+        label: "form.title",
         type: "input",
         required: true,
         span: 24,
@@ -238,14 +230,6 @@ export const proactiveCampaignsConfig: PageConfig = {
         mode: "multiple",
       },
       {
-        name: "polygon",
-        label: "form.polygon",
-        type: "geojson",
-        required: true,
-        span: 24,
-        description: "Array of coordinate pairs (lat, lng). Created by Draw Boundary on dummy map.",
-      },
-      {
         name: "assignedInspectors",
         label: "form.assignedInspectors",
         type: "select",
@@ -255,25 +239,18 @@ export const proactiveCampaignsConfig: PageConfig = {
         description: "Inspectors auto-assigned based on polygon, editable by supervisor.",
       },
       {
-        name: "notificationMessageEn",
-        label: "form.notificationMessageEn",
-        type: "textarea",
-        required: true,
-        span: 24,
-      },
-      {
-        name: "notificationMessageAr",
-        label: "form.notificationMessageAr",
-        type: "textarea",
-        required: true,
-        span: 24,
-      },
-      {
         name: "status",
         label: "form.status",
         type: "select",
         required: true,
         span: 12,
+      },
+      {
+        name: "notificationMessageEn",
+        label: "form.campaignMessage",
+        type: "textarea",
+        required: true,
+        span: 24,
       },
       {
         name: "createdBy",

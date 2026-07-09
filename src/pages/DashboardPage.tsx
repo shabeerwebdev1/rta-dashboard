@@ -1,34 +1,17 @@
 import React, { useEffect, useState } from "react";
-import {
-  Card,
-  Col,
-  Row,
-  Select,
-  Table,
-  Tag,
-  Typography,
-  Button,
-  Avatar,
-  Statistic,
-  Spin,
-  message,
-  DatePicker,
-  Grid,
-  Radio,
-  Space,
-} from "antd";
+import { Card, Col, Row, Select, Tag, Button, Avatar, Statistic, Spin, message, DatePicker, Space } from "antd";
 import {
   UserOutlined,
   CheckCircleOutlined,
   WarningOutlined,
   SafetyCertificateOutlined,
   EyeOutlined,
+  EyeInvisibleOutlined,
   CarOutlined,
   AppstoreAddOutlined,
   EnvironmentOutlined,
   AimOutlined,
   DollarOutlined,
-  MobileOutlined,
   CreditCardOutlined,
 } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
@@ -40,9 +23,6 @@ import {
 } from "../services/rtkApiFactory";
 import { useTranslation } from "react-i18next";
 import ArcGISMap, { Inspector as ArcInspector } from "../components/common/ArcGISMap";
-import ApproveRejectController from "../components/common/ApproveRejectController";
-
-const { Text } = Typography;
 
 // Define map view types
 type MapViewType = "inspectors" | "supervisors" | "lastSeen" | "fineLocations" | "movementLocations" | "mobileShutdown";
@@ -50,7 +30,6 @@ type MapViewType = "inspectors" | "supervisors" | "lastSeen" | "fineLocations" |
 const SupervisorViewPage: React.FC = () => {
   const { setPageTitle } = usePage();
   const { t, i18n } = useTranslation();
-  const [activeTable, setActiveTable] = useState("checkInStatus");
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedInspector, setSelectedInspector] = useState<any>(null);
   const [selectedSupervisor, setSelectedSupervisor] = useState<string | null>(null);
@@ -61,11 +40,6 @@ const SupervisorViewPage: React.FC = () => {
 
   const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery({});
   const [triggerGetShifts, { isLoading: isLoadingShiftsDropdown }] = useLazyGetShiftsQuery();
-
-  const { useBreakpoint } = Grid;
-  const screens = useBreakpoint();
-  const isMobile = screens.xs && !screens.md;
-  const isTablet = screens.md && !screens.lg;
 
   useEffect(() => {
     const fetchShifts = async () => {
@@ -297,8 +271,8 @@ const SupervisorViewPage: React.FC = () => {
     setSelectedInspector(null);
   };
 
-  const handleMapViewChange = (e: any) => {
-    setMapViewType(e.target.value);
+  const handleMapViewChange = (value: MapViewType) => {
+    setMapViewType(value);
     setSelectedInspector(null); // Reset selected inspector when changing view
   };
 
@@ -343,12 +317,155 @@ const SupervisorViewPage: React.FC = () => {
     setPageTitle(t("sidebar.dashboard", "Dashboard"));
   }, [setPageTitle, t, i18n.language]);
 
+  const summaryCards = [
+    {
+      key: "totalInspectors",
+      title: t("dashboard.totalInspectors", "Total Inspectors"),
+      value: dashboardData?.data?.totalInspectors || 0,
+      borderColor: "#1890ff",
+      avatarBg: "#e6f7ff",
+      avatarColor: "#1890ff",
+      icon: <UserOutlined />,
+    },
+    {
+      key: "checkedIn",
+      title: t("dashboard.checkedIn", "Checked In"),
+      value: dashboardData?.data?.checkedIn || 0,
+      borderColor: "#52c41a",
+      avatarBg: "#f6ffed",
+      avatarColor: "#52c41a",
+      icon: <CheckCircleOutlined />,
+    },
+    {
+      key: "missing",
+      title: t("dashboard.PendingCheckIn", "Pending Check-In"),
+      value: dashboardData?.data?.missing || 0,
+      borderColor: "#faad14",
+      avatarBg: "#fffbe6",
+      avatarColor: "#faad14",
+      icon: <WarningOutlined />,
+    },
+    {
+      key: "onLeave",
+      title: t("dashboard.onLeave", "On Leave"),
+      value: dashboardData?.data?.onLeave || 0,
+      borderColor: "#ff4d4f",
+      avatarBg: "#fff1f0",
+      avatarColor: "#ff4d4f",
+      icon: <SafetyCertificateOutlined />,
+    },
+    // {
+    //   key: "totalApprovals",
+    //   title: t("dashboard.totalApprovals", "Total Approvals"),
+    //   value: dashboardData?.data?.totalApprovals || 0,
+    //   borderColor: "#52c41a",
+    //   avatarBg: "#f6ffed",
+    //   avatarColor: "#52c41a",
+    //   icon: <CheckCircleOutlined />,
+    // },
+    // {
+    //   key: "leave",
+    //   title: t("dashboard.leave", "Leave"),
+    //   value: dashboardData?.data?.leaveRequests || 0,
+    //   borderColor: "#13c2c2",
+    //   avatarBg: "#e6fffb",
+    //   avatarColor: "#13c2c2",
+    //   icon: <AppstoreAddOutlined />,
+    // },
+    {
+      key: "towing",
+      title: t("dashboard.towing", "Towing"),
+      value: dashboardData?.data?.towingRequests || 0,
+      borderColor: "#9254de",
+      avatarBg: "#f9f0ff",
+      avatarColor: "#9254de",
+      icon: <CarOutlined />,
+    },
+    {
+      key: "totalInspections",
+      title: t("dashboard.totalInspections", "Total Inspections"),
+      value: dashboardData?.data?.totalInspections || 0,
+      borderColor: "#096dd9",
+      avatarBg: "#e6f4ff",
+      avatarColor: "#096dd9",
+      icon: <EnvironmentOutlined />,
+    },
+    {
+      key: "fines",
+      title: t("dashboard.fines", "Fines"),
+      value: dashboardData?.data?.totalFines || 0,
+      borderColor: "#eb2f96",
+      avatarBg: "#fff0f6",
+      avatarColor: "#eb2f96",
+      icon: <CreditCardOutlined />,
+    },
+    {
+      key: "amount",
+      title: t("dashboard.amount", "Amount"),
+      value: dashboardData?.data?.fineAmount || 0,
+      prefix: "AED",
+      borderColor: "#faad14",
+      avatarBg: "#fffbe6",
+      avatarColor: "#faad14",
+      icon: <DollarOutlined />,
+    },
+    {
+      key: "totalObstacles",
+      title: t("dashboard.totalObstacles", "Total Obstacles"),
+      value: dashboardData?.data?.totalObstacles || 0,
+      borderColor: "#ff4d4f",
+      avatarBg: "#fff1f0",
+      avatarColor: "#ff4d4f",
+      icon: <WarningOutlined />,
+    },
+  ];
+
+  const mapLayerControls = [
+    { key: "inspectors", label: t("dashboard.inspectors", "Inspectors"), icon: <UserOutlined /> },
+    { key: "fineLocations", label: t("dashboard.fineLocations", "Fines"), icon: <CreditCardOutlined /> },
+  ] as const;
+
   if (error) {
     message.error(t("messages.errorLoading", "Error loading dashboard data"));
   }
 
   return (
     <div>
+      <div
+        style={{
+          display: "flex",
+          gap: 16,
+          overflowX: "auto",
+          paddingBottom: 4,
+          marginBottom: 20,
+        }}
+      >
+        {summaryCards.map((card) => (
+          <Card
+            key={card.key}
+            style={{
+              minWidth: 210,
+              flex: "0 0 210px",
+              borderColor: card.borderColor,
+            }}
+            bodyStyle={{ padding: 16 }}
+          >
+            <Row align="bottom" justify="space-between" wrap={true} gutter={[8, 8]}>
+              <Col>
+                <Statistic title={card.title} value={card.value} prefix={card.prefix} valueStyle={{ fontSize: 24 }} />
+              </Col>
+              <Col style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                <Avatar
+                  size={52}
+                  icon={card.icon}
+                  style={{ backgroundColor: card.avatarBg, color: card.avatarColor }}
+                />
+              </Col>
+            </Row>
+          </Card>
+        ))}
+      </div>
+
       <Card style={{ marginBottom: 20 }}>
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={6}>
@@ -406,242 +523,52 @@ const SupervisorViewPage: React.FC = () => {
               placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
             />
           </Col>
+          <Col span={24}>
+            <Space wrap size={8} style={{ width: "100%" }}>
+              {mapLayerControls.map((item) => {
+                const active = mapViewType === item.key;
+                return (
+                  <Button
+                    key={item.key}
+                    type={active ? "primary" : "default"}
+                    icon={active ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                    onClick={() => handleMapViewChange(item.key)}
+                  >
+                    {item.label}
+                  </Button>
+                );
+              })}
+            </Space>
+          </Col>
         </Row>
       </Card>
 
       {(isLoading || isLoadingShifts) && <Spin size="large" style={{ display: "block", margin: "50px auto" }} />}
 
       <Row gutter={16} style={{ marginBottom: 20, display: "flex", alignItems: "stretch" }}>
-        <Col xs={24} lg={14} style={{ display: "flex" }}>
+        <Col xs={24} style={{ display: "flex" }}>
           <Card
             style={{ width: "100%", display: "flex", flexDirection: "column" }}
             bodyStyle={{ padding: 0, flex: 1, display: "flex", flexDirection: "column" }}
-            title={
-              <div style={{ padding: "8px 0" }}>
-                <Radio.Group
-                  value={mapViewType}
-                  onChange={handleMapViewChange}
-                  buttonStyle="solid"
-                  size="middle"
-                  style={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: "8px",
-                    width: "100%",
-                  }}
-                >
-                  <Radio.Button
-                    value="inspectors"
-                    style={{
-                      flex: "0 0 calc(33.333% - 6px)",
-                      textAlign: "center",
-                      minWidth: isMobile ? "100px" : "auto",
-                    }}
-                  >
-                    <UserOutlined /> {t("dashboard.inspectors", "Inspectors")}
-                  </Radio.Button>
-                  <Radio.Button
-                    value="supervisors"
-                    style={{
-                      flex: "0 0 calc(33.333% - 6px)",
-                      textAlign: "center",
-                      minWidth: isMobile ? "100px" : "auto",
-                    }}
-                  >
-                    <SafetyCertificateOutlined /> {t("dashboard.supervisors", "Supervisors")}
-                  </Radio.Button>
-                  <Radio.Button
-                    value="lastSeen"
-                    style={{
-                      flex: "0 0 calc(33.333% - 6px)",
-                      textAlign: "center",
-                      minWidth: isMobile ? "100px" : "auto",
-                    }}
-                  >
-                    <AimOutlined /> {t("dashboard.lastSeen", "Last Seen")}
-                  </Radio.Button>
-                  <Radio.Button
-                    value="fineLocations"
-                    style={{
-                      flex: "0 0 calc(33.333% - 6px)",
-                      textAlign: "center",
-                      minWidth: isMobile ? "100px" : "auto",
-                    }}
-                  >
-                    <CreditCardOutlined /> {t("dashboard.fineLocations", "Fines")}
-                  </Radio.Button>
-                  <Radio.Button
-                    value="movementLocations"
-                    style={{
-                      flex: "0 0 calc(33.333% - 6px)",
-                      textAlign: "center",
-                      minWidth: isMobile ? "100px" : "auto",
-                    }}
-                  >
-                    <EnvironmentOutlined /> {t("dashboard.movement", "Movement")}
-                  </Radio.Button>
-                  <Radio.Button
-                    value="mobileShutdown"
-                    style={{
-                      flex: "0 0 calc(33.333% - 6px)",
-                      textAlign: "center",
-                      minWidth: isMobile ? "100px" : "auto",
-                    }}
-                  >
-                    <MobileOutlined /> {t("dashboard.mobileShutdown", "Mobile Shutdown")}
-                  </Radio.Button>
-                </Radio.Group>
-              </div>
-            }
+            title={t("dashboard.mapView", "Map View")}
           >
             <div style={{ flex: 1 }}>
               <ArcGISMap
                 inspectors={getMapData()}
                 center={[55.2743, 25.1972]}
                 zoom={12}
-                height="450px"
+                height="calc(100vh - 320px)"
                 clickable={true}
                 onInspectorClick={(inspector) => {
                   setSelectedInspector(inspector);
                   setDrawerVisible(true);
                 }}
                 onlyInspector={selectedInspector ?? null}
-                legendEnabled={false}
+                legendEnabled={true}
+                hiddenLegendItems={["startPoint", "inspectorPath"]}
               />
             </div>
           </Card>
-        </Col>
-
-        <Col xs={24} lg={10} style={{ display: "flex" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%", flex: 1 }}>
-            <Card style={{ borderColor: "#1890ff", flex: 1, display: "flex", flexDirection: "column" }}>
-              <Row align="bottom" justify="space-between" wrap={true} gutter={[8, 8]}>
-                <Col xs={11} sm={11} md={5}>
-                  <Statistic
-                    title={t("dashboard.totalInspectors", "Total Inspectors")}
-                    value={dashboardData?.data?.totalInspectors || 0}
-                    valueStyle={{ fontSize: isMobile ? "18px" : "24px" }}
-                  />
-                </Col>
-                <Col xs={11} sm={11} md={5}>
-                  <Statistic
-                    title={t("dashboard.checkedIn", "Checked In")}
-                    value={dashboardData?.data?.checkedIn || 0}
-                    valueStyle={{ fontSize: isMobile ? "18px" : "24px" }}
-                  />
-                </Col>
-                <Col xs={11} sm={11} md={5}>
-                  <Statistic
-                    title={t("dashboard.missing", "Missing")}
-                    value={dashboardData?.data?.missing || 0}
-                    valueStyle={{ fontSize: isMobile ? "18px" : "24px" }}
-                  />
-                </Col>
-                <Col xs={11} sm={11} md={5}>
-                  <Statistic
-                    title={t("dashboard.onLeave", "On Leave")}
-                    value={dashboardData?.data?.onLeave || 0}
-                    valueStyle={{ fontSize: isMobile ? "18px" : "24px" }}
-                  />
-                </Col>
-                <Col xs={24} sm={24} md={4} style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                  <Avatar
-                    size={isMobile ? 48 : 56}
-                    icon={<UserOutlined />}
-                    style={{ backgroundColor: "#e6f7ff", color: "#1890ff" }}
-                  />
-                </Col>
-              </Row>
-            </Card>
-
-            <Card style={{ borderColor: "#52c41a", flex: 1, display: "flex", flexDirection: "column" }}>
-              <Row align="bottom" justify="space-between" wrap={true} gutter={[8, 8]}>
-                <Col xs={11} sm={11} md={7}>
-                  <Statistic
-                    title={t("dashboard.totalApprovals", "Total Approvals")}
-                    value={dashboardData?.data?.totalApprovals || 0}
-                    valueStyle={{ fontSize: isMobile ? "18px" : "24px" }}
-                  />
-                </Col>
-                <Col xs={11} sm={11} md={7}>
-                  <Statistic
-                    title={t("dashboard.leave", "Leave")}
-                    value={dashboardData?.data?.leaveRequests || 0}
-                    valueStyle={{ fontSize: isMobile ? "18px" : "24px" }}
-                  />
-                </Col>
-                <Col xs={11} sm={11} md={6}>
-                  <Statistic
-                    title={t("dashboard.towing", "Towing")}
-                    value={dashboardData?.data?.towingRequests || 0}
-                    valueStyle={{ fontSize: isMobile ? "18px" : "24px" }}
-                  />
-                </Col>
-                <Col xs={11} sm={11} md={4} style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                  <Avatar
-                    size={isMobile ? 48 : 56}
-                    icon={<CheckCircleOutlined />}
-                    style={{ backgroundColor: "#f6ffed", color: "#52c41a" }}
-                  />
-                </Col>
-              </Row>
-            </Card>
-
-            <Card style={{ borderColor: "#faad14", flex: 1, display: "flex", flexDirection: "column" }}>
-              <Row align="bottom" justify="space-between" wrap={true} gutter={[8, 8]}>
-                <Col xs={11} sm={11} md={7}>
-                  <Statistic
-                    title={t("dashboard.totalInspections", "Total Inspections")}
-                    value={dashboardData?.data?.totalInspections || 0}
-                    valueStyle={{ fontSize: isMobile ? "18px" : "24px" }}
-                  />
-                </Col>
-                <Col xs={11} sm={11} md={7}>
-                  <Statistic
-                    title={t("dashboard.fines", "Fines")}
-                    value={dashboardData?.data?.totalFines || 0}
-                    valueStyle={{ fontSize: isMobile ? "18px" : "24px" }}
-                  />
-                </Col>
-                <Col xs={11} sm={11} md={6}>
-                  <Statistic
-                    title={t("dashboard.amount", "Amount")}
-                    value={dashboardData?.data?.fineAmount || 0}
-                    prefix="AED"
-                    valueStyle={{ fontSize: isMobile ? "18px" : "24px" }}
-                  />
-                </Col>
-                <Col xs={11} sm={11} md={4} style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                  <Avatar
-                    size={isMobile ? 48 : 56}
-                    icon={<SafetyCertificateOutlined />}
-                    style={{ backgroundColor: "#fffbe6", color: "#faad14" }}
-                  />
-                </Col>
-              </Row>
-            </Card>
-
-            <Card
-              style={{ borderColor: "#ff4d4f", cursor: "pointer", flex: 1, display: "flex", flexDirection: "column" }}
-            >
-              <Row align="bottom" justify="space-between" wrap={true} gutter={[8, 8]}>
-                <Col xs={18} sm={18} md={20}>
-                  <Statistic
-                    title={t("dashboard.totalObstacles", "Total Obstacles")}
-                    value={dashboardData?.data?.totalObstacles || 0}
-                    valueStyle={{ fontSize: isMobile ? "18px" : "24px" }}
-                  />
-                </Col>
-                <Col xs={6} sm={6} md={4} style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                  <Avatar
-                    size={isMobile ? 48 : 56}
-                    icon={<WarningOutlined />}
-                    style={{ backgroundColor: "#fff1f0", color: "#ff4d4f" }}
-                  />
-                </Col>
-              </Row>
-            </Card>
-          </div>
         </Col>
       </Row>
       {/* Old table data hidden */}
