@@ -113,8 +113,8 @@ interface ArcGISMapProps {
   showBasemapToggle?: boolean;
   // NEW PROPS FOR BOUNDARY DRAWING
   enableBoundaryDrawing?: boolean;
-  onBoundaryDrawn?: (rings: number[][][]) => void;
-  boundaryPolygonRings?: number[][][];
+  onBoundaryDrawn?: (shape: { type: "Polygon" | "LineString" | "Point"; coordinates: any }) => void;
+  boundaryShape?: { type: "Polygon" | "LineString" | "Point"; coordinates: any } | null;
   onClearBoundary?: () => void;
   hiddenLegendItems?: string[]; // Prop to hide specific legend items
 }
@@ -367,16 +367,11 @@ const createClusterLayer = (params: {
     fields,
     outFields: ["*"],
     visible,
-    // FIX 1: Ensure proper z-index by adding to map in correct order
-    // This is handled by the order we add layers to the map
-
-    // FIX 2: Use exact same picture-marker symbol with same dimensions
     renderer:
       title === "Inspector" || title === "المفتش"
         ? {
             type: "unique-value",
             field: "status",
-
             uniqueValueInfos: [
               {
                 value: "Checked Out",
@@ -397,7 +392,6 @@ const createClusterLayer = (params: {
                 },
               },
             ],
-
             defaultSymbol: {
               type: "picture-marker",
               url: "/images/icon1.png",
@@ -414,17 +408,11 @@ const createClusterLayer = (params: {
               height: iconHeight,
             },
           },
-
-    // FIX 3: Proper clustering configuration
     featureReduction: {
       type: "cluster",
       clusterRadius,
-      // FIX 4: Set clusterMinSize to ensure clusters form
       clusterMinSize: 2,
-      // FIX 5: CRITICAL - maxScale determines when clusters split
-      // 0 means always cluster, set to a large scale to ensure splitting
-      // When zoomed in past this scale, clusters break into individual points
-      maxScale: 0, // 0 = always show clusters when possible
+      maxScale: 0,
       popupTemplate: {
         title: `${title} Cluster`,
         content: [
@@ -447,7 +435,6 @@ const createClusterLayer = (params: {
           },
         ],
       },
-      // FIX 6: Proper cluster renderer with label
       clusterRenderer: {
         type: "simple",
         symbol: {
@@ -457,15 +444,13 @@ const createClusterLayer = (params: {
           size: "20px",
           outline: { color: "#ffffff", width: 1.5 },
         },
-        // Show count on cluster
         label: "{cluster_count}",
         labelPlacement: "center",
       },
     },
     popupTemplate,
-    // FIX 7: Set minScale/maxScale on layer level for visibility
-    minScale: 0, // Show at all scales
-    maxScale: 0, // Show at all scales
+    minScale: 0,
+    maxScale: 0,
   });
 };
 
@@ -504,10 +489,9 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   clusterRadius = DEFAULT_CLUSTER_RADIUS,
   onParkingClusterClick,
   showBasemapToggle = true,
-  // NEW PROPS FOR BOUNDARY DRAWING
   enableBoundaryDrawing = false,
   onBoundaryDrawn,
-  boundaryPolygonRings,
+  boundaryShape,
   onClearBoundary,
   hiddenLegendItems = [],
 }) => {
@@ -515,7 +499,6 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   const viewRef = useRef<__esri.MapView | null>(null);
   const featureServiceLayersRef = useRef<__esri.FeatureLayer[]>([]);
   const markerFeatureLayersRef = useRef<globalThis.Map<string, __esri.FeatureLayer>>(new globalThis.Map());
-
   const graphicsLayersRef = useRef<globalThis.Map<string, __esri.GraphicsLayer>>(new globalThis.Map());
   const parkingGroupLayerRef = useRef<GroupLayer | null>(null);
   const expandRef = useRef<__esri.Expand | null>(null);
@@ -525,16 +508,15 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   const hiddenStatusesRef = useRef<Set<string>>(new Set());
   const [basemap, setBasemap] = useState("streets-navigation-vector");
   const [parkingClusteringEnabled, setParkingClusteringEnabled] = useState(showParkingClusters);
+  const [isMapReady, setIsMapReady] = useState(false);
   const currentLanguage = document.documentElement.lang || localStorage.getItem("i18nextLng") || "en";
   const parkingPointsRef = useRef(parkingPoints);
   const parkingClusteringEnabledRef = useRef(parkingClusteringEnabled);
   const currentLanguageRef = useRef(currentLanguage);
   const onParkingClusterClickRef = useRef(onParkingClusterClick);
 
-  // NEW STATE FOR BOUNDARY DRAWING
   const sketchWidgetRef = useRef<__esri.Sketch | null>(null);
   const boundaryGraphicsLayerRef = useRef<__esri.GraphicsLayer | null>(null);
-  const currentSketchGraphicRef = useRef<__esri.Graphic | null>(null);
 
   useEffect(() => {
     parkingPointsRef.current = parkingPoints;
@@ -780,6 +762,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     const map = new Map({ basemap });
     const view = new MapView({ container: mapRef.current, map, center, zoom });
     viewRef.current = view;
+    setIsMapReady(false);
 
     // Auth interceptor
     esriConfig.request.interceptors.push({
@@ -800,7 +783,6 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     });
 
     // ── Graphics Layers (only for polylines and start points) ──────────
-    // Add graphics layers first so they're below feature layers
     GRAPHICS_LAYER_DEFS.forEach(({ key, titleEn, titleAr }) => {
       const gl = new GraphicsLayer({
         title: currentLanguage === "ar" ? titleAr : titleEn,
@@ -813,6 +795,8 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
 
     // ── Layer Panel ─────────────────────────────────────────────────────
     view.when(() => {
+      setIsMapReady(true);
+
       if (legendEnabled) {
         const panel = document.createElement("div");
         layerPanelContainerRef.current = panel;
@@ -864,23 +848,21 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
             text-overflow: ellipsis;
           }
           .arcgis-custom-layer-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    padding: 0;
-    border: none;
-    background: transparent;
-    color: #667085;
-    cursor: pointer;
-    border-radius: 50%;
-    flex-shrink: 0;
-    line-height: 1;
-    box-shadow: none;
-  }
-          
-         
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            color: #667085;
+            cursor: pointer;
+            border-radius: 50%;
+            flex-shrink: 0;
+            line-height: 1;
+            box-shadow: none;
+          }
           .arcgis-custom-layer-toggle.is-hidden {
             border-color: #d9d9d9;
             background: #ffffff;
@@ -936,6 +918,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       expandRef.current = null;
       viewRef.current?.destroy();
       viewRef.current = null;
+      setIsMapReady(false);
       featureServiceLayersRef.current = [];
       markerFeatureLayersRef.current.clear();
       graphicsLayersRef.current.clear();
@@ -943,14 +926,13 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       layerPanelContainerRef.current = null;
       locationMarkerRef.current = null;
     };
-  }, []); // Only run on mount
+  }, []);
 
-  // Initialize boundary graphics layer - FIXED VERSION
+  // Initialize boundary graphics layer
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
 
-    // Create a dedicated graphics layer for boundary polygons if it doesn't exist
     if (!boundaryGraphicsLayerRef.current) {
       const boundaryLayer = new GraphicsLayer({
         title: "Boundary",
@@ -972,14 +954,13 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     };
   }, [viewRef.current]);
 
-  // Manage sketch widget for boundary drawing - FIXED VERSION
+  // Manage sketch widget for boundary drawing
   useEffect(() => {
     const view = viewRef.current;
     const boundaryLayer = boundaryGraphicsLayerRef.current;
 
     if (!view || !boundaryLayer) return;
 
-    // Only create sketch widget once and only if enabled and not already created
     if (enableBoundaryDrawing && !sketchWidgetRef.current) {
       const sketch = new Sketch({
         layer: boundaryLayer,
@@ -987,8 +968,11 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         creationMode: "single",
         visibleElements: {
           createTools: {
+            point: true,
+            polyline: true,
             polygon: true,
             rectangle: true,
+            circle: true,
           },
           selectionTools: false,
           undoRedoMenu: false,
@@ -1001,23 +985,17 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       sketchWidgetRef.current = sketch;
       view.ui.add(sketch, "top-right");
 
-      // Handle sketch creation completion - FIXED VERSION
       const createHandle = sketch.on("create", (event) => {
         if (event.state === "complete") {
           const graphic = event.graphic;
           if (graphic && graphic.geometry) {
-            // IMPORTANT: Don't call removeAll() here - let the sketch widget handle it
-            // Just store the reference and notify parent
-            currentSketchGraphicRef.current = graphic;
+            const geometry: any = graphic.geometry;
+            let shapeData: { type: "Polygon" | "LineString" | "Point"; coordinates: any } | null = null;
 
-            // Extract rings from polygon geometry
-            const geometry = graphic.geometry as __esri.Polygon;
-            if (geometry && geometry.rings) {
+            if (geometry.type === "polygon") {
               let rings = geometry.rings;
-
-              // If coordinates are in Web Mercator (large values), convert them to WGS84 (lon/lat)
               if (rings.length > 0 && rings[0].length > 0 && Math.abs(rings[0][0][0]) > 180) {
-                rings = rings.map((ring) =>
+                rings = rings.map((ring: number[][]) =>
                   ring.map((pt) => {
                     const lon = (pt[0] / 20037508.34) * 180;
                     let lat = (pt[1] / 20037508.34) * 180;
@@ -1026,22 +1004,42 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
                   }),
                 );
               }
-
-              // Use setTimeout to avoid state update during sketch event
-              setTimeout(() => {
-                onBoundaryDrawn?.(rings);
-                // We DO NOT call sketch.cancel() here because it destroys the graphic
-                // that the sketch widget just successfully added to the GraphicsLayer.
-              }, 0);
+              shapeData = { type: "Polygon", coordinates: rings };
+            } else if (geometry.type === "polyline") {
+              let paths = geometry.paths;
+              if (paths.length > 0 && paths[0].length > 0 && Math.abs(paths[0][0][0]) > 180) {
+                paths = paths.map((path: number[][]) =>
+                  path.map((pt) => {
+                    const lon = (pt[0] / 20037508.34) * 180;
+                    let lat = (pt[1] / 20037508.34) * 180;
+                    lat = (180 / Math.PI) * (2 * Math.atan(Math.exp((lat * Math.PI) / 180)) - Math.PI / 2);
+                    return [lon, lat];
+                  }),
+                );
+              }
+              shapeData = { type: "LineString", coordinates: paths[0] || [] };
+            } else if (geometry.type === "point") {
+              let lon = geometry.longitude;
+              let lat = geometry.latitude;
+              if (Math.abs(lon) > 180) {
+                lon = (lon / 20037508.34) * 180;
+                lat = (lat / 20037508.34) * 180;
+                lat = (180 / Math.PI) * (2 * Math.atan(Math.exp((lat * Math.PI) / 180)) - Math.PI / 2);
+              }
+              shapeData = { type: "Point", coordinates: [lon, lat] };
             }
+
+            setTimeout(() => {
+              if (shapeData) {
+                onBoundaryDrawn?.(shapeData);
+              }
+            }, 0);
           }
         }
       });
 
-      // Store handle for cleanup
       (sketchWidgetRef.current as any)._createHandle = createHandle;
     } else if (!enableBoundaryDrawing && sketchWidgetRef.current) {
-      // Remove sketch widget when disabled
       const sketch = sketchWidgetRef.current;
       const createHandle = (sketch as any)._createHandle;
       if (createHandle) createHandle.remove();
@@ -1049,7 +1047,6 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       sketchWidgetRef.current = null;
     }
 
-    // Cleanup on component unmount
     return () => {
       if (sketchWidgetRef.current) {
         const sketch = sketchWidgetRef.current;
@@ -1061,66 +1058,93 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
     };
   }, [enableBoundaryDrawing]);
 
-  // Display existing boundary polygon when provided - FIXED VERSION
+  // Display existing boundary shape when provided - FIXED VERSION
   useEffect(() => {
     const boundaryLayer = boundaryGraphicsLayerRef.current;
-    if (!boundaryLayer) return;
+    const view = viewRef.current;
+    if (!boundaryLayer || !view) return;
 
-    // IMPORTANT: Skip if this is being called due to our own drawing operation
-    // We can detect this by checking if the graphic already exists and matches
-    if (boundaryPolygonRings && boundaryPolygonRings.length > 0) {
-      // Check if we already have this exact polygon displayed
-      const existingGraphic = boundaryLayer.graphics.getItemAt(0);
-      if (existingGraphic && currentSketchGraphicRef.current === existingGraphic) {
-        // Already displayed, skip to prevent map flicker
-        return;
-      }
-
-      // Only clear if we're not in drawing mode or if it's a different polygon
+    if (boundaryShape && boundaryShape.coordinates) {
       boundaryLayer.removeAll();
-      currentSketchGraphicRef.current = null;
 
-      const polygonGeometry = new Polygon({
-        rings: boundaryPolygonRings,
-        spatialReference: { wkid: 4326 },
-      });
+      if (boundaryShape.type === "Polygon") {
+        const polygonGeometry = new Polygon({
+          rings: boundaryShape.coordinates,
+          spatialReference: { wkid: 4326 },
+        });
 
-      const graphic = new Graphic({
-        geometry: polygonGeometry,
-        symbol: new SimpleFillSymbol({
-          color: [33, 150, 243, 0.2],
-          outline: {
+        const graphic = new Graphic({
+          geometry: polygonGeometry,
+          symbol: new SimpleFillSymbol({
+            color: [33, 150, 243, 0.2],
+            outline: {
+              color: [33, 150, 243],
+              width: 2,
+            },
+          }),
+        });
+
+        boundaryLayer.add(graphic);
+        view.goTo(polygonGeometry.extent.expand(1.5)).catch(() => {});
+      } else if (boundaryShape.type === "LineString") {
+        const lineGeometry = new Polyline({
+          paths: [boundaryShape.coordinates],
+          spatialReference: { wkid: 4326 },
+        });
+
+        const graphic = new Graphic({
+          geometry: lineGeometry,
+          symbol: new SimpleLineSymbol({
             color: [33, 150, 243],
-            width: 2,
-          },
-        }),
-      });
+            width: 3,
+          }),
+        });
 
-      boundaryLayer.add(graphic);
-      currentSketchGraphicRef.current = graphic;
-    } else if (!boundaryPolygonRings || boundaryPolygonRings.length === 0) {
-      // Only clear when explicitly clearing (no polygon)
+        boundaryLayer.add(graphic);
+        view.goTo(lineGeometry.extent.expand(1.5)).catch(() => {});
+      } else if (boundaryShape.type === "Point") {
+        const pointGeometry = new Point({
+          longitude: boundaryShape.coordinates[0],
+          latitude: boundaryShape.coordinates[1],
+          spatialReference: { wkid: 4326 },
+        });
+
+        const graphic = new Graphic({
+          geometry: pointGeometry,
+          symbol: new SimpleMarkerSymbol({
+            color: [33, 150, 243],
+            size: 12,
+            outline: {
+              color: [255, 255, 255],
+              width: 2,
+            },
+          }),
+        });
+
+        boundaryLayer.add(graphic);
+        view
+          .goTo({
+            center: [pointGeometry.longitude, pointGeometry.latitude],
+            zoom: 15,
+          })
+          .catch(() => {});
+      }
+    } else {
       boundaryLayer.removeAll();
-      currentSketchGraphicRef.current = null;
       sketchWidgetRef.current?.cancel();
     }
-  }, [boundaryPolygonRings]);
+  }, [boundaryShape, isMapReady]);
 
   // Handle clear boundary action from parent
   useEffect(() => {
     const boundaryLayer = boundaryGraphicsLayerRef.current;
     if (!boundaryLayer) return;
 
-    // When onClearBoundary is called from parent, we need to clear
-    if (onClearBoundary) {
-      // This effect runs whenever the prop changes
-      if (boundaryLayer.graphics.length > 0 && (!boundaryPolygonRings || boundaryPolygonRings.length === 0)) {
-        boundaryLayer.removeAll();
-        currentSketchGraphicRef.current = null;
-        sketchWidgetRef.current?.cancel();
-      }
+    if (!boundaryShape) {
+      boundaryLayer.removeAll();
+      sketchWidgetRef.current?.cancel();
     }
-  }, [onClearBoundary, boundaryPolygonRings]);
+  }, [boundaryShape]);
 
   useEffect(() => {
     const map = viewRef.current?.map;
@@ -1235,7 +1259,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       );
     }
 
-    // ─── Parking Fine Locations cluster block (identical to fine block) ──────
+    // ─── Parking Fine Locations cluster block ───
     if (showFineLocations && parkingFineLocations.length > 0) {
       addMarkerLayer(
         "parkingFine",
@@ -1709,11 +1733,9 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   useEffect(() => {
     if (!layerVisibility) return;
     Object.entries(layerVisibility).forEach(([key, isVisible]) => {
-      // Check graphics layers
       const gl = graphicsLayersRef.current.get(key);
       if (gl && typeof isVisible === "boolean") gl.visible = isVisible;
 
-      // FIX: Check feature layers using proper key
       const fl = markerFeatureLayersRef.current.get(key as LayerKey);
       if (fl && typeof isVisible === "boolean") fl.visible = isVisible;
     });

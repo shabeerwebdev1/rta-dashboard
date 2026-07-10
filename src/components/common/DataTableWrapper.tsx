@@ -363,7 +363,7 @@ import dayjs from "dayjs";
 import { STATUS_COLORS } from "../../constants/ui";
 import type { PageConfig } from "../../types/config";
 import { EditOutlined, MoreOutlined } from "@ant-design/icons";
-import { formatDateDisplay } from "../../utils/dateFormatter";
+import { formatDateDisplay, formatDateByLocale } from "../../utils/dateFormatter";
 
 interface DataTableWrapperProps {
   pageConfig: PageConfig;
@@ -556,6 +556,15 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
           switch (col.type) {
             case "date":
               return dayjs(text as string).isValid() ? formatDateDisplay(text as string, i18n.language) : String(text);
+
+            case "dateTime":
+              return dayjs(text as string).isValid()
+                ? formatDateByLocale(
+                    text as string,
+                    { en: "DD MMM YYYY hh:mm A", ar: "DD MMM YYYY hh:mm A" },
+                    i18n.language,
+                  )
+                : String(text);
 
             case "tag": {
               const statusKey = String(text).toLowerCase();

@@ -3,6 +3,7 @@ import { disputeManagementConfig } from "./DisputeManagementConfig";
 import { finesConfig } from "./finesConfig";
 import { inspectionObstacleConfig } from "./inspectionObstacleConfig";
 import { parkingDisputeConfig } from "./ParkingDisputeConfig";
+import { proactiveCampaignsConfig } from "./proactiveCampaignsConfig";
 import { pledgeConfig } from "./pledgeConfig";
 import { whitelistPlateConfig } from "./whitelistPlateConfig";
 import { whitelistTradeLicenseConfig } from "./whitelistTradeLicenseConfig";
@@ -19,5 +20,6 @@ export const pageConfigs: Record<string, PageConfig> = {
   [inspectionObstacleConfig.key]: inspectionObstacleConfig,
   [disputeManagementConfig.key]: disputeManagementConfig,
   [parkingDisputeConfig.key]: parkingDisputeConfig,
+  [proactiveCampaignsConfig.key]: proactiveCampaignsConfig,
   [finesConfig.key]: finesConfig,
 };

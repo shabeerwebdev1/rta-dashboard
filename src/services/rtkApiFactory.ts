@@ -626,6 +626,46 @@ export const dynamicApi = createApi({
       },
     }),
 
+    // Proactive Campaigns
+    getProactiveCampaigns: builder.query({
+      query: (params) => ({ url: "/api/ProactiveCampaign", params }),
+      providesTags: ["WebDashboard"],
+      transformResponse: (response: any) => ({
+        data: response?.data || [],
+        totalCount: response?.totalCount || response?.data?.length || 0,
+        pageNumber: response?.pageNumber,
+        pageSize: response?.pageSize,
+        statusCode: response?.statusCode,
+        successful: response?.successful,
+        en_Msg: response?.en_Msg,
+        ar_Msg: response?.ar_Msg,
+      }),
+    }),
+
+    getProactiveCampaignById: builder.query({
+      query: (id: string) => `/api/ProactiveCampaign/${id}`,
+      providesTags: ["WebDashboard"],
+      transformResponse: (response: any) => response?.data || response || null,
+    }),
+
+    addProactiveCampaign: builder.mutation({
+      query: (body) => ({
+        url: "/api/ProactiveCampaign",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["WebDashboard"],
+    }),
+
+    updateProactiveCampaign: builder.mutation({
+      query: (body) => ({
+        url: "/api/ProactiveCampaign",
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["WebDashboard"],
+    }),
+
     updateShiftManagement: builder.mutation({
       query: (body) => ({
         url: "/api/ShiftManagement",
@@ -1211,6 +1251,12 @@ export const {
   useGetActiveShiftsQuery,
   useUpdateShiftManagementMutation,
   useUpdateSpecialZoneMutation,
+
+  //proactive campaigns
+  useGetProactiveCampaignsQuery,
+  useLazyGetProactiveCampaignByIdQuery,
+  useAddProactiveCampaignMutation,
+  useUpdateProactiveCampaignMutation,
 
   // User code validation
   useValidatecodeQuery,

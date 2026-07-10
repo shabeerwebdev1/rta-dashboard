@@ -20,13 +20,36 @@ const getCampaignLocationCenter = (location?: string): [number, number] => {
   return CAMPAIGN_LOCATION_CENTERS[location] || [25.2, 55.27];
 };
 
-const getPolygonCenterFromRings = (rings?: number[][][]): [number, number] | null => {
-  if (!rings || rings.length === 0 || rings[0].length === 0) return null;
+const parseBoundaryGeometry = (value: any) => {
+  if (!value) return null;
+  try {
+    const parsed = typeof value === "string" ? JSON.parse(value) : value;
+    return parsed?.type && parsed?.coordinates ? parsed : null;
+  } catch {
+    return null;
+  }
+};
 
-  const points = rings[0];
+const getShapeCenter = (shape: { type: string; coordinates: any } | null): [number, number] | null => {
+  if (!shape || !shape.coordinates) return null;
+
+  if (shape.type === "Point") {
+    // coordinates is [lng, lat]
+    return [shape.coordinates[1], shape.coordinates[0]];
+  }
+
+  let points: number[][] = [];
+  if (shape.type === "Polygon") {
+    points = shape.coordinates[0] || [];
+  } else if (shape.type === "LineString") {
+    points = shape.coordinates || [];
+  }
+
+  if (points.length === 0) return null;
+
   const [totalLat, totalLng] = points.reduce(
     (acc, point) => {
-      acc[0] += point[1];
+      acc[0] += point[1]; // point[1] is latitude, point[0] is longitude
       acc[1] += point[0];
       return acc;
     },
@@ -36,17 +59,46 @@ const getPolygonCenterFromRings = (rings?: number[][][]): [number, number] | nul
   return [totalLat / points.length, totalLng / points.length];
 };
 
-const ProactiveCampaignViewDrawer = ({ open, onClose, record, getLabel }: any) => {
+const getCampaignTitle = (record: any, lang = "en") => {
+  const isArabic = String(lang).startsWith("ar");
+  return (
+    (isArabic
+      ? record?.titleAr || record?.title || record?.titleEn
+      : record?.titleEn || record?.title || record?.titleAr) || ""
+  );
+};
+const getCampaignMessage = (record: any, lang = "en") => {
+  const isArabic = String(lang).startsWith("ar");
+  return (
+    (isArabic
+      ? record?.notificationMessageAr ||
+        record?.campaignMessageAr ||
+        record?.campaignMessage ||
+        record?.notificationMessageEn
+      : record?.notificationMessageEn ||
+        record?.campaignMessage ||
+        record?.notificationMessageAr ||
+        record?.campaignMessageAr) || ""
+  );
+};
+const normalizeStatus = (status?: string) =>
+  String(status ?? "")
+    .trim()
+    .toLowerCase();
+
+const ProactiveCampaignViewDrawer = ({ open, onClose, record, boundaryShape: boundaryShapeProp, getLabel }: any) => {
   const { t, i18n } = useTranslation();
 
-  let polygonRings = record?.polygon?.rings || record?.polygon || [];
-  if (polygonRings.length > 0 && !Array.isArray(polygonRings[0][0])) {
-    polygonRings = [polygonRings.map((p: number[]) => [p[1], p[0]])];
-  }
+  const boundaryShape = useMemo(() => {
+    return (
+      boundaryShapeProp || parseBoundaryGeometry(record?.boundaryGeoJson) || parseBoundaryGeometry(record?.polygon)
+    );
+  }, [boundaryShapeProp, record?.boundaryGeoJson, record?.polygon]);
+
   const center = useMemo(() => {
-    const c = getPolygonCenterFromRings(polygonRings) || getCampaignLocationCenter(record?.location);
+    const c = getShapeCenter(boundaryShape) || getCampaignLocationCenter(record?.location);
     return c ? [c[1], c[0]] : [55.27, 25.2];
-  }, [polygonRings, record?.location]);
+  }, [boundaryShape, record?.location]);
 
   if (!record) return null;
 
@@ -66,21 +118,18 @@ const ProactiveCampaignViewDrawer = ({ open, onClose, record, getLabel }: any) =
           <Card bordered={false} style={{ borderRadius: 12, height: "100%" }} bodyStyle={{ padding: 0 }}>
             <Descriptions bordered column={1} size="small" style={{ marginBottom: 16 }}>
               <Descriptions.Item label={t("form.title", { defaultValue: "Title" })}>
-                {record.titleEn || t("common.noData")}
-              </Descriptions.Item>
-              <Descriptions.Item label={t("form.location")}>
-                {record.location ? getLabel(record.location, "locations") : t("common.noData")}
+                {getCampaignTitle(record, i18n.language) || t("common.noData")}
               </Descriptions.Item>
               <Descriptions.Item label={t("form.timeInterval")}>
                 {formatDateByLocale(
                   record.startTime,
-                  { en: "DD MMM YYYY HH:mm", ar: "DD MMM YYYY HH:mm" },
+                  { en: "DD MMM YYYY hh:mm A", ar: "DD MMM YYYY hh:mm A" },
                   i18n.language,
                 )}{" "}
                 -{" "}
                 {formatDateByLocale(
                   record.endTime,
-                  { en: "DD MMM YYYY HH:mm", ar: "DD MMM YYYY HH:mm" },
+                  { en: "DD MMM YYYY hh:mm A", ar: "DD MMM YYYY hh:mm A" },
                   i18n.language,
                 )}
               </Descriptions.Item>
@@ -100,17 +149,29 @@ const ProactiveCampaignViewDrawer = ({ open, onClose, record, getLabel }: any) =
                       <Tag key={id}>{getLabel(id, "inspectors")}</Tag>
                     ))
                   ) : (
-                    <span>{t("common.noData")}</span>
+                    <Tag>{t("common.all", { defaultValue: "All" })}</Tag>
                   )}
                 </Space>
               </Descriptions.Item>
               <Descriptions.Item label={t("form.status")}>
-                <Tag color={record.status === "active" ? "green" : record.status === "draft" ? "orange" : "blue"}>
-                  {getLabel(record.status, "statuses")}
+                <Tag
+                  color={
+                    normalizeStatus(record.status) === "active"
+                      ? "green"
+                      : normalizeStatus(record.status) === "cancelled"
+                        ? "red"
+                        : "blue"
+                  }
+                >
+                  {normalizeStatus(record.status)
+                    ? t(`status.${normalizeStatus(record.status)}`, {
+                        defaultValue: normalizeStatus(record.status).replace(/^./, (c) => c.toUpperCase()),
+                      })
+                    : t("common.draft", { defaultValue: "Draft" })}
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label={t("form.campaignMessage", { defaultValue: "Campaign Message" })}>
-                {record.notificationMessageEn || t("common.noData")}
+                {getCampaignMessage(record, i18n.language) || t("common.noData")}
               </Descriptions.Item>
             </Descriptions>
           </Card>
@@ -123,19 +184,16 @@ const ProactiveCampaignViewDrawer = ({ open, onClose, record, getLabel }: any) =
             style={{ borderRadius: 12 }}
             bodyStyle={{ padding: 0 }}
           >
-            <div style={{ padding: 16 }}>
-              <Text type="secondary">{t("form.boundaryOverlay", { defaultValue: "Boundary Overlay" })}</Text>
-            </div>
             <div style={{ borderTop: "1px solid #f0f0f0" }}>
               <ArcGISMap
                 inspectors={[]}
                 center={[center[1], center[0]]}
-                zoom={polygonRings.length > 0 ? 14 : 13}
+                zoom={boundaryShape ? 14 : 13}
                 height="480px"
                 clickable={false}
                 legendEnabled={false}
                 enableBoundaryDrawing={false}
-                boundaryPolygonRings={polygonRings}
+                boundaryShape={boundaryShape}
                 showPath={false}
                 showFineLocations={false}
                 showBasemapToggle={false}

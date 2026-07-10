@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Space,
   Card,
@@ -10,40 +10,55 @@ import {
   Col,
   Select,
   DatePicker,
-  App,
   Tag,
   Divider,
   message,
-  Dropdown,
-  Table,
-  Typography,
   Tooltip,
+  App,
 } from "antd";
 import {
   PlusOutlined,
   EyeOutlined,
   EditOutlined,
-  FileTextOutlined,
   EnvironmentOutlined,
-  MoreOutlined,
   DeleteOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
+import { useDebounce } from "../hooks/useDebounce";
+import { useTableParams } from "../hooks/useTableParams";
+import { useAppNotification } from "../utils/notificationManager";
+import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
-import { formatDateByLocale } from "../utils/dateFormatter";
-import {
-  proactiveCampaignsConfig,
-  staticProactiveCampaigns,
-  proactiveLookupData,
-} from "../config/pageConfigs/proactiveCampaignsConfig";
+import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
+import DataTableWrapper from "../components/common/DataTableWrapper";
+import { proactiveCampaignsConfig } from "../config/pageConfigs/proactiveCampaignsConfig";
 import ProactiveCampaignViewDrawer from "../components/ProactiveCampaigns/ProactiveCampaignViewDrawer";
 import ArcGISMap from "../components/common/ArcGISMap";
+import {
+  useAddProactiveCampaignMutation,
+  useGetActiveShiftsQuery,
+  useGetAllAreasQuery,
+  useGetProactiveCampaignsQuery,
+  useUpdateProactiveCampaignMutation,
+} from "../services/rtkApiFactory";
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
-const { Text } = Typography;
+
+interface AreaOption {
+  value: string;
+  label: string;
+  original: Record<string, any>;
+}
+
+interface InspectorOption {
+  value: string;
+  label: string;
+  original: Record<string, any>;
+}
 
 const CAMPAIGN_LOCATION_CENTERS: Record<string, [number, number]> = {
   downtown: [25.2048, 55.2708],
@@ -58,11 +73,31 @@ const getCampaignLocationCenter = (location?: string): [number, number] => {
   return CAMPAIGN_LOCATION_CENTERS[location] || [25.2, 55.27];
 };
 
-const getPolygonCenterFromRings = (rings: number[][][]): [number, number] | null => {
-  if (!rings || rings.length === 0 || rings[0].length === 0) return null;
+const parseBoundaryGeometry = (value: any) => {
+  if (!value) return null;
+  try {
+    const parsed = typeof value === "string" ? JSON.parse(value) : value;
+    return parsed?.type && parsed?.coordinates ? parsed : null;
+  } catch {
+    return null;
+  }
+};
 
-  // Take the first ring (outer boundary)
-  const points = rings[0];
+const getShapeCenter = (shape: { type: string; coordinates: any } | null): [number, number] | null => {
+  if (!shape || !shape.coordinates) return null;
+
+  if (shape.type === "Point") {
+    // coordinates is [lng, lat]
+    return [shape.coordinates[1], shape.coordinates[0]];
+  }
+
+  let points: number[][] = [];
+  if (shape.type === "Polygon") {
+    points = shape.coordinates[0] || [];
+  } else if (shape.type === "LineString") {
+    points = shape.coordinates || [];
+  }
+
   if (points.length === 0) return null;
 
   const [totalLat, totalLng] = points.reduce(
@@ -77,16 +112,71 @@ const getPolygonCenterFromRings = (rings: number[][][]): [number, number] | null
   return [totalLat / points.length, totalLng / points.length];
 };
 
+const getCampaignTitle = (record: any, lang = "en") => {
+  const isArabic = String(lang).startsWith("ar");
+  return (
+    (isArabic
+      ? record?.titleAr || record?.title || record?.titleEn
+      : record?.titleEn || record?.title || record?.titleAr) || ""
+  );
+};
+const getCampaignMessage = (record: any, lang = "en") => {
+  const isArabic = String(lang).startsWith("ar");
+  return (
+    (isArabic
+      ? record?.notificationMessageAr ||
+        record?.campaignMessageAr ||
+        record?.campaignMessage ||
+        record?.notificationMessageEn
+      : record?.notificationMessageEn ||
+        record?.campaignMessage ||
+        record?.notificationMessageAr ||
+        record?.campaignMessageAr) || ""
+  );
+};
+const normalizeStatus = (status?: string) =>
+  String(status ?? "")
+    .trim()
+    .toLowerCase();
+
+const normalizeInspectorSelection = (values?: string[]) => {
+  if (!values || values.length === 0) return [];
+  return values;
+};
+
 const ProactiveCampaignsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
-  const { modal } = App.useApp();
   const [form] = Form.useForm();
+  const { modal, notification } = App.useApp();
 
-  // Data (static)
-  const [campaigns, setCampaigns] = useState<any[]>(staticProactiveCampaigns);
-  const lookups = proactiveCampaignsConfig.lookups || proactiveLookupData;
-  const selectedLocation = Form.useWatch("location", form);
+  const config = proactiveCampaignsConfig;
+  const {
+    apiParams,
+    handleTableChange,
+    handlePaginationChange,
+    setGlobalSearch,
+    setDateRange,
+    clearFilter,
+    clearAll,
+    state,
+  } = useTableParams(config.searchConfig!);
+
+  const [searchValue, setSearchValue] = useState<string>(state.searchValue);
+  const debouncedSearchValue = useDebounce(searchValue, 500);
+
+  const selectedStatus = Form.useWatch("status", form);
+  const {
+    data: campaignsResponse,
+    isLoading: isLoadingCampaigns,
+    refetch,
+  } = useGetProactiveCampaignsQuery(apiParams, {
+    refetchOnMountOrArgChange: true,
+  });
+  const { data: allAreasResponse, isLoading: isLoadingAreas } = useGetAllAreasQuery(undefined);
+  const { data: activeShiftsResponse, isLoading: isLoadingInspectors } = useGetActiveShiftsQuery({});
+  const [addProactiveCampaign, { isLoading: isAddingCampaign }] = useAddProactiveCampaignMutation();
+  const [updateProactiveCampaign, { isLoading: isUpdatingCampaign }] = useUpdateProactiveCampaignMutation();
 
   // UI state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -94,107 +184,266 @@ const ProactiveCampaignsPage: React.FC = () => {
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [viewRecord, setViewRecord] = useState<any | null>(null);
+  const [viewBoundaryShape, setViewBoundaryShape] = useState<{ type: string; coordinates: any } | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
 
-  const [searchValue, setSearchValue] = useState("");
-  const [filters, setFilters] = useState<any>({});
-  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
+  // map/shape state (in modal)
+  const [currentShape, setCurrentShape] = useState<{ type: string; coordinates: any } | null>(null);
 
-  // map/polygon state (in modal)
-  const [currentPolygon, setCurrentPolygon] = useState<number[][][]>([]);
+  const campaigns = useMemo(() => campaignsResponse?.data || [], [campaignsResponse]);
+
+  const totalCount = useMemo(
+    () => campaignsResponse?.totalCount || campaigns.length || 0,
+    [campaignsResponse, campaigns.length],
+  );
 
   useEffect(() => {
-    setPageTitle(t(proactiveCampaignsConfig.title));
-  }, [setPageTitle, t]);
+    setPageTitle(t(config.title));
+  }, [setPageTitle, t, config.title]);
+
+  useEffect(() => {
+    setGlobalSearch(state.searchKey, debouncedSearchValue);
+  }, [debouncedSearchValue, state.searchKey, setGlobalSearch]);
+
+  useEffect(() => {
+    setSearchValue(state.searchValue);
+  }, [state.searchValue]);
+
+  const handleClearFilter = (type: "search" | "date" | "column" | "sorter", key?: string, value?: string | number) => {
+    if (type === "search") {
+      setSearchValue("");
+    }
+    clearFilter(type, key, value);
+  };
+
+  const handleClearAll = () => {
+    setSearchValue("");
+    clearAll();
+  };
+
+  const handleSearchKeyChange = (newKey: string) => {
+    const currentValue = searchValue;
+    setSearchValue("");
+    if (currentValue.trim()) {
+      setGlobalSearch(state.searchKey, currentValue);
+    }
+    setGlobalSearch(newKey, "");
+  };
+
+  const columnLabels = useMemo(
+    () => Object.fromEntries(config.tableConfig.columns.map((c) => [c.key, t(c.title)])),
+    [t, config.tableConfig.columns],
+  );
+
+  const searchAddon = (
+    <Select value={state.searchKey} onChange={handleSearchKeyChange} style={{ width: 150 }}>
+      {config.searchConfig?.globalSearchKeys.map((key) => (
+        <Option key={key} value={key}>
+          {columnLabels[key]}
+        </Option>
+      ))}
+    </Select>
+  );
 
   // Helper label
+  const areaOptions = useMemo<AreaOption[]>(() => {
+    const rawAreas = Array.isArray(allAreasResponse) ? allAreasResponse : (allAreasResponse as any)?.data || [];
+
+    return rawAreas
+      .map((area: any) => {
+        const value =
+          area.area_Id ?? area.areaId ?? area.id ?? area.areaGUID ?? area.areaCode ?? area.area ?? area.name;
+        const label =
+          i18n.language === "ar"
+            ? area.areaAr ||
+              area.areaNameAr ||
+              area.nameAr ||
+              area.area ||
+              area.areaName ||
+              area.name ||
+              String(value ?? "")
+            : area.area || area.areaName || area.name || String(value ?? "");
+
+        return {
+          value: String(value ?? ""),
+          label: String(label || value || ""),
+          original: area,
+        };
+      })
+      .filter((area) => area.value);
+  }, [allAreasResponse, i18n.language]);
+
+  const inspectorOptions = useMemo<InspectorOption[]>(() => {
+    const rawShifts = Array.isArray(activeShiftsResponse)
+      ? activeShiftsResponse
+      : (activeShiftsResponse as any)?.data || [];
+
+    const mapped = rawShifts
+      .filter((shift: any) => shift.roleCode === "PARINSP")
+      .map((shift: any) => ({
+        value: String(shift.employeeId ?? ""),
+        label:
+          i18n.language === "ar"
+            ? String(shift.employeeNameAr || shift.employeeName || shift.employeeNameEn || shift.employeeId || "")
+            : String(shift.employeeName || shift.employeeNameEn || shift.employeeNameAr || shift.employeeId || ""),
+        original: shift,
+      }))
+      .filter((shift) => shift.value && shift.label);
+
+    return mapped;
+  }, [activeShiftsResponse, i18n.language]);
+
   const getLabel = (value: string | number, category: string) => {
-    const arr = (proactiveCampaignsConfig.lookups || lookups)[category] || [];
+    if (category === "locations") {
+      const normalizedValue = String(value ?? "");
+      const found =
+        areaOptions.find((item) => item.value === normalizedValue) ||
+        areaOptions.find((item) => item.label === normalizedValue) ||
+        areaOptions.find((item) => String(item.original?.areaCode ?? "") === normalizedValue) ||
+        areaOptions.find((item) => String(item.original?.areaName ?? "") === normalizedValue) ||
+        areaOptions.find((item) => String(item.original?.area ?? "") === normalizedValue);
+
+      return found?.label || normalizedValue;
+    }
+
+    if (category === "inspectors") {
+      const normalizedValue = String(value ?? "");
+      if (!normalizedValue) return t("common.all", { defaultValue: "All" });
+      const found =
+        inspectorOptions.find((item) => item.value === normalizedValue) ||
+        inspectorOptions.find((item) => item.label === normalizedValue) ||
+        inspectorOptions.find((item) => String(item.original?.employeeName ?? "") === normalizedValue);
+
+      return found?.label || normalizedValue;
+    }
+
+    if (category === "statuses") {
+      const normalizedValue = normalizeStatus(String(value ?? ""));
+      const found = config.lookups?.statuses?.find((item: any) => normalizeStatus(item.value) === normalizedValue);
+      return found
+        ? i18n.language === "ar"
+          ? found.labelAr
+          : found.labelEn
+        : normalizedValue || t("common.draft", { defaultValue: "Draft" });
+    }
+
+    const arr = config.lookups?.[category] || [];
     const found = arr.find((i: any) => i.value === value);
     if (!found) return String(value);
     return i18n.language === "ar" ? found.labelAr : found.labelEn;
   };
 
-  const getLookupOptions = (category: keyof typeof lookups) => lookups[category] || [];
+  const getLookupOptions = (category: keyof typeof config.lookups) => config.lookups?.[category] || [];
 
-  // Filtering logic
-  const filtered = useMemo(() => {
-    let list = [...campaigns];
+  const isDraftMode = !selectedStatus;
 
-    if (searchValue) {
-      const q = searchValue.toLowerCase();
-      list = list.filter(
-        (c) =>
-          String(c.titleEn || "")
-            .toLowerCase()
-            .includes(q) ||
-          String(c.titleAr || "")
-            .toLowerCase()
-            .includes(q) ||
-          String(c.notificationMessageEn || "")
-            .toLowerCase()
-            .includes(q) ||
-          String(c.notificationMessageAr || "")
-            .toLowerCase()
-            .includes(q),
-      );
+  // CSV Export Functions
+  const transformDataForCSV = (data: any[]) => {
+    return data.map((item, index) => {
+      const csvRecord: Record<string, unknown> = {};
+      csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
+      csvRecord[t("form.title")] = getCampaignTitle(item, i18n.language);
+      csvRecord[t("form.campaignMessage")] = getCampaignMessage(item, i18n.language);
+      csvRecord[t("form.timeInterval")] = item.timeInterval ? `${item.timeInterval} mins` : "";
+      csvRecord[t("form.status")] = getLabel(item.status, "statuses");
+      csvRecord[i18n.language === "ar" ? "تاريخ الإنشاء" : "Created Date"] = item.createdOn
+        ? dayjs(item.createdOn).format("DD MMM YYYY")
+        : "";
+      return csvRecord;
+    });
+  };
+
+  const getCsvFilename = () => {
+    if (i18n.language === "ar") {
+      return `الحملات_الاستباقية.csv`;
+    } else {
+      return `Proactive_Campaigns.csv`;
+    }
+  };
+
+  const handleDownloadCsv = () => {
+    if (selectedRowKeys.length === 0) {
+      notification.error({ data: { en_Msg: t("messages.selectRows") } });
+      return;
     }
 
-    if (filters.location) list = list.filter((c) => c.location === filters.location);
-    if (filters.status) list = list.filter((c) => c.status === filters.status);
-    if (filters.violationType) list = list.filter((c) => (c.violationTypes || []).includes(filters.violationType));
+    modal.confirm({
+      title: t("messages.csvConfirmTitle"),
+      content: t("messages.csvConfirmContent"),
+      okText: t("common.ok"),
+      cancelText: t("common.cancel"),
+      onOk: () => {
+        try {
+          if (selectedRows.length === 0) {
+            notification.error({ data: { en_Msg: t("messages.noDataToExport") } });
+            return;
+          }
 
-    if (dateRange) {
-      const [start, end] = dateRange;
-      list = list.filter((c) => {
-        const s = dayjs(c.startTime);
-        return s.isSame(start, "day") || (s.isAfter(start) && s.isBefore(end)) || s.isSame(end, "day");
-      });
-    }
+          const transformedData = transformDataForCSV(selectedRows);
+          const filename = getCsvFilename();
+          exportToCsv(transformedData, filename);
 
-    return list;
-  }, [campaigns, searchValue, filters, dateRange]);
+          notification.success(
+            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedRows.length }) } },
+            t("messages.exportSuccess"),
+          );
+          setSelectedRowKeys([]);
+          setSelectedRows([]);
+        } catch (error) {
+          notification.error({ data: { en_Msg: t("messages.exportFailed") } });
+        }
+      },
+    });
+  };
 
   // Stats metadata
   const statsMetadata = useMemo(
     () => ({
-      total: campaigns.length,
-      active: campaigns.filter((c) => c.status === "active").length,
-      draft: campaigns.filter((c) => c.status === "draft").length,
+      total: totalCount,
+      active: campaigns.filter((c) => normalizeStatus(c.status) === "active").length,
+      draft: campaigns.filter((c) => !normalizeStatus(c.status) || normalizeStatus(c.status) === "draft").length,
     }),
-    [campaigns],
+    [campaigns, totalCount],
   );
 
   // Modal open
   const openModal = (mode: "add" | "edit", record?: any) => {
+    // Clear previous state FIRST to avoid showing old boundaries
+    setCurrentShape(null);
+
     setModalMode(mode);
     setSelectedRecord(record || null);
 
-    let rings = record?.polygon?.rings || record?.polygon || [];
-    if (rings.length > 0 && !Array.isArray(rings[0][0])) {
-      rings = [rings.map((p: number[]) => [p[1], p[0]])];
+    if (mode === "edit" && record) {
+      // Load specific record's boundary only
+      const shape = parseBoundaryGeometry(record?.boundaryGeoJson) || parseBoundaryGeometry(record?.polygon);
+      setCurrentShape(shape);
     }
-    setCurrentPolygon(rings);
 
     setIsModalOpen(true);
 
     if (mode === "edit" && record) {
+      const existingInspectors = Array.isArray(record.assignedInspectors) ? record.assignedInspectors : [];
       form.setFieldsValue({
-        titleEn: record.titleEn,
-        location: record.location,
+        title: getCampaignTitle(record, i18n.language),
         timeInterval: [dayjs(record.startTime), dayjs(record.endTime)],
         violationTypes: record.violationTypes,
-        assignedInspectors: record.assignedInspectors,
-        notificationMessageEn: record.notificationMessageEn,
-        status: record.status,
+        assignedInspectors: existingInspectors.map((inspectorId: string | number) => String(inspectorId)),
+        campaignMessage: getCampaignMessage(record, i18n.language),
+        status:
+          normalizeStatus(record.status) && normalizeStatus(record.status) !== "draft"
+            ? normalizeStatus(record.status)
+            : undefined,
         createdBy: record.createdBy,
+        boundaryGeoJson: record.boundaryGeoJson || "",
       });
     } else {
       form.resetFields();
-      setCurrentPolygon([]);
       form.setFieldsValue({
         assignedInspectors: [],
         createdBy: "System User",
+        boundaryGeoJson: "",
       });
     }
   };
@@ -203,164 +452,182 @@ const ProactiveCampaignsPage: React.FC = () => {
     setIsModalOpen(false);
     setSelectedRecord(null);
     form.resetFields();
-    setCurrentPolygon([]);
+    setCurrentShape(null);
   };
 
-  // Handler for boundary drawing completion - FIXED
-  const handleBoundaryDrawn = useCallback((rings: number[][][]) => {
-    console.log("Polygon drawn with rings:", rings);
-    setCurrentPolygon(rings);
-    form.setFieldsValue({ polygon: rings });
-    message.success(t("messages.boundaryDrawn"));
-  }, [form, t]);
+  // Handler for boundary drawing completion
+  const handleBoundaryDrawn = useCallback(
+    (shape: any) => {
+      console.log("Shape drawn:", shape);
+      setCurrentShape(shape);
+      form.setFieldsValue({ boundaryGeoJson: JSON.stringify(shape) });
+      message.success(t("messages.boundaryDrawn"));
+    },
+    [form, t],
+  );
 
-  // Handler for clearing boundary - FIXED
+  // Handler for clearing boundary
   const handleClearBoundary = useCallback(() => {
-    setCurrentPolygon([]);
-    form.setFieldsValue({ polygon: [] });
+    setCurrentShape(null);
+    form.setFieldsValue({ boundaryGeoJson: "" });
     message.info(t("messages.boundaryCleared"));
   }, [form, t]);
 
-  const mapLocationValue = (selectedLocation || selectedRecord?.location) as string | undefined;
-  const mapCenter = getPolygonCenterFromRings(currentPolygon) || getCampaignLocationCenter(mapLocationValue);
+  const mapCenter = getShapeCenter(currentShape) || getCampaignLocationCenter(selectedRecord?.location);
   const [mapLat, mapLng] = mapCenter;
 
-  // Create or update campaign
-  const onFinish = (values: any) => {
-    const {
-      titleEn,
-      location,
-      timeInterval,
-      violationTypes,
-      polygon,
-      assignedInspectors,
-      notificationMessageEn,
-      status,
-      createdBy,
-    } = values;
+  const handleFooterSave = async (draft: boolean) => {
+    try {
+      const values = await form.validateFields();
+      const payload = {
+        title: values.title,
+        startTime: values.timeInterval[0].toISOString(),
+        endTime: values.timeInterval[1].toISOString(),
+        campaignMessage: values.campaignMessage,
+        violationTypes: values.violationTypes,
+        assignedInspectors: normalizeInspectorSelection(values.assignedInspectors),
+        boundaryGeoJson: values.boundaryGeoJson,
+        status: draft ? "" : values.status || "",
+      };
 
-    // Validate polygon exists
-    if (!polygon || polygon.length === 0 || polygon[0]?.length === 0) {
-      message.error(t("validation.required", { field: t("form.polygon") }));
-      return;
+      if (draft) {
+        if (!payload.boundaryGeoJson) {
+          message.error(t("validation.required", { field: t("form.polygon") }));
+          return;
+        }
+        if (modalMode === "edit" && selectedRecord?.id) {
+          await updateProactiveCampaign({ ...payload, id: selectedRecord.id }).unwrap();
+        } else {
+          await addProactiveCampaign(payload).unwrap();
+        }
+      } else {
+        if (!payload.status) {
+          message.error(t("validation.required", { field: t("form.status") }));
+          return;
+        }
+        if (modalMode === "edit" && selectedRecord?.id) {
+          await updateProactiveCampaign({ ...payload, id: selectedRecord.id }).unwrap();
+        } else {
+          await addProactiveCampaign(payload).unwrap();
+        }
+      }
+
+      await refetch();
+      message.success(
+        t(modalMode === "add" ? "messages.addSuccess" : "messages.updateSuccess", {
+          entity: t(proactiveCampaignsConfig.name.singular),
+        }),
+      );
+      closeModal();
+    } catch {
+      message.error(t("messages.saveFailed", { defaultValue: "Unable to save campaign" }));
     }
-
-    const newCampaign = {
-      id: modalMode === "add" ? Math.max(0, ...campaigns.map((c) => c.id)) + 1 : selectedRecord.id,
-      titleEn,
-      location,
-      startTime: timeInterval[0].toISOString(),
-      endTime: timeInterval[1].toISOString(),
-      violationTypes,
-      assignedInspectors: assignedInspectors || [],
-      polygon: {
-        rings: polygon, // Store as rings for ArcGIS format
-        type: "polygon",
-      },
-      notificationMessageEn,
-      status,
-      createdBy: createdBy || "System User",
-      createdAt: selectedRecord?.createdAt || new Date().toISOString(),
-    };
-
-    if (modalMode === "add") {
-      setCampaigns((prev) => [newCampaign, ...prev]);
-      message.success(t("messages.addSuccess", { entity: t(proactiveCampaignsConfig.name.singular) }));
-    } else {
-      setCampaigns((prev) => prev.map((c) => (c.id === newCampaign.id ? newCampaign : c)));
-      message.success(t("messages.updateSuccess", { entity: t(proactiveCampaignsConfig.name.singular) }));
-    }
-    closeModal();
   };
 
   // View record
   const handleView = (record: any) => {
-    setViewRecord(record);
+    const boundaryShape = parseBoundaryGeometry(record?.boundaryGeoJson) || parseBoundaryGeometry(record?.polygon);
+    setViewRecord({
+      ...record,
+      boundaryGeoJson: record?.boundaryGeoJson || record?.polygon || "",
+      polygon: record?.polygon || "",
+    });
+    setViewBoundaryShape(boundaryShape);
     setIsViewOpen(true);
   };
 
-  // NOTE: no delete per requirement
+  const enhancedTableConfig = useMemo(
+    () => ({
+      ...proactiveCampaignsConfig.tableConfig,
+      columns: proactiveCampaignsConfig.tableConfig.columns.map((column) => {
+        if (column.key === "title") {
+          return { ...column, render: (_: any, record: any) => getCampaignTitle(record, i18n.language) };
+        }
 
-  const tableColumns = [
+        if (column.key === "assignedInspectors") {
+          return {
+            ...column,
+            render: (values: Array<string | number>) =>
+              values && values.length > 0 ? (
+                values.map((id) => <Tag key={String(id)}>{getLabel(id, "inspectors")}</Tag>)
+              ) : (
+                <Tag>{t("common.all", { defaultValue: "All" })}</Tag>
+              ),
+          };
+        }
+
+        if (column.key === "status") {
+          return {
+            ...column,
+            filterable: true,
+            render: (value: string) => {
+              const normalized = normalizeStatus(value);
+
+              const label = normalized
+                ? t(`status.${normalized}`, {
+                    defaultValue: normalized.charAt(0).toUpperCase() + normalized.slice(1),
+                  })
+                : t("common.draft", { defaultValue: "Draft" });
+
+              const color =
+                normalized === "active"
+                  ? "green"
+                  : normalized === "cancelled"
+                    ? "red"
+                    : normalized === "completed"
+                      ? "blue"
+                      : "orange"; // Draft (default)
+
+              return <Tag color={color}>{label}</Tag>;
+            },
+            onFilter: (value: any, record: any) =>
+              String(record.status ?? "").toLowerCase() === String(value ?? "").toLowerCase(),
+          } as any;
+        }
+
+        if (column.key === "violationTypes") {
+          return {
+            ...column,
+            filterable: true,
+            onFilter: (value: any, record: any) =>
+              (Array.isArray(record.violationTypes) ? record.violationTypes : []).includes(value),
+          };
+        }
+
+        return column;
+      }),
+    }),
+    [getLabel, t],
+  );
+
+  const actionMenuItems = (record: any) => [
     {
-      key: "titleEn",
-      title: t("form.titleEn"),
-      dataIndex: "titleEn",
+      key: "view",
+      label: t("common.view"),
+      icon: <EyeOutlined />,
+      onClick: () => handleView(record),
     },
     {
-      key: "location",
-      title: t("form.location"),
-      dataIndex: "location",
-      render: (value: string) => getLabel(value, "locations"),
-    },
-    {
-      key: "startTime",
-      title: t("form.startTime"),
-      dataIndex: "startTime",
-      render: (value: string) =>
-        formatDateByLocale(value, { en: "DD MMM  YYYY HH:mm", ar: "DD MMM YYYY HH:mm" }, i18n.language),
-    },
-    {
-      key: "endTime",
-      title: t("form.endTime"),
-      dataIndex: "endTime",
-      render: (value: string) =>
-        formatDateByLocale(value, { en: "DD MMM  YYYY HH:mm", ar: "DD MMM YYYY HH:mm" }, i18n.language),
-    },
-    {
-      key: "violationTypes",
-      title: t("form.violationTypes"),
-      dataIndex: "violationTypes",
-      render: (values: string[]) =>
-        (values || []).map((vt: string) => <Tag key={vt}>{getLabel(vt, "violationTypes")}</Tag>),
-    },
-    {
-      key: "assignedInspectors",
-      title: t("form.assignedInspectors"),
-      dataIndex: "assignedInspectors",
-      render: (values: number[]) =>
-        (values || []).map((id: number) => <Tag key={id}>{getLabel(id, "inspectors")}</Tag>),
-    },
-    {
-      key: "status",
-      title: t("form.status"),
-      dataIndex: "status",
-      render: (value: string) => (
-        <Tag color={value === "active" ? "green" : value === "draft" ? "orange" : "blue"}>
-          {getLabel(value, "statuses")}
-        </Tag>
-      ),
-    },
-    {
-      key: "actions",
-      title: t("common.actions"),
-      align: "center" as const,
-      width: 90,
-      render: (_: unknown, record: any) => (
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: "view",
-                label: t("common.view"),
-                icon: <EyeOutlined />,
-                onClick: () => handleView(record),
-              },
-              {
-                key: "edit",
-                label: t("common.edit"),
-                icon: <EditOutlined />,
-                onClick: () => openModal("edit", record),
-              },
-            ],
-          }}
-          trigger={["click"]}
-        >
-          <Button icon={<MoreOutlined />} size="small" />
-        </Dropdown>
-      ),
+      key: "edit",
+      label: t("common.edit"),
+      icon: <EditOutlined />,
+      onClick: () => openModal("edit", record),
     },
   ];
+
+  const filterOptions = useMemo(
+    () => ({
+      status: (config.lookups?.statuses || []).map((status: any) => ({
+        text: i18n.language === "ar" ? status.labelAr : status.labelEn,
+        value: status.value,
+      })),
+      violationTypes: (config.lookups?.violationTypes || []).map((item: any) => ({
+        text: i18n.language === "ar" ? item.labelAr : item.labelEn,
+        value: item.value,
+      })),
+    }),
+    [areaOptions, config.lookups?.statuses, config.lookups?.violationTypes, i18n.language],
+  );
 
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
@@ -368,7 +635,7 @@ const ProactiveCampaignsPage: React.FC = () => {
         statsConfig={proactiveCampaignsConfig.statsConfig}
         data={campaigns}
         metadata={statsMetadata}
-        loading={false}
+        loading={isLoadingCampaigns}
       />
 
       <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
@@ -376,53 +643,71 @@ const ProactiveCampaignsPage: React.FC = () => {
           <Col>
             <Space>
               <Input
+                addonBefore={searchAddon}
                 placeholder={t("common.searchPlaceholder")}
                 value={searchValue}
                 allowClear
                 onChange={(e) => setSearchValue(e.target.value)}
-                style={{ width: 320 }}
+                style={{ width: 450 }}
               />
-
-              <RangePicker showTime onChange={(vals) => setDateRange(vals as any)} />
             </Space>
           </Col>
 
           <Col>
             <Space>
+              <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
+                {t("common.downloadCsv")}
+              </Button>
+
               <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal("add")}>
                 {t("common.addNew")}
               </Button>
             </Space>
           </Col>
         </Row>
-      </Card>
 
-      <Card bordered={false} bodyStyle={{ padding: 0 }}>
-        <Table
-          rowKey="id"
-          columns={tableColumns}
-          dataSource={filtered}
-          rowSelection={{
-            selectedRowKeys,
-            onChange: (keys: React.Key[]) => setSelectedRowKeys(keys),
-            getCheckboxProps: (record: any) => ({
-              name: record.id,
-            }),
-          }}
-          pagination={false}
-          size="small"
-          scroll={{ x: "max-content" }}
-          sticky={{ offsetHeader: 64 }}
-          locale={{
-            emptyText: (
-              <div style={{ textAlign: "center", padding: 30 }}>
-                <FileTextOutlined style={{ fontSize: 36, color: "#bbb" }} />
-                <p>{t("common.noData")}</p>
-              </div>
-            ),
-          }}
+        <ActiveFiltersDisplay
+          state={state}
+          onClearFilter={handleClearFilter}
+          onClearAll={handleClearAll}
+          columnLabels={columnLabels}
+          areaOptions={areaOptions as any}
         />
       </Card>
+
+      <DataTableWrapper
+        pageConfig={{ ...proactiveCampaignsConfig, tableConfig: enhancedTableConfig }}
+        data={campaigns}
+        total={totalCount}
+        isLoading={isLoadingCampaigns}
+        apiParams={apiParams}
+        handleTableChange={handleTableChange}
+        handlePaginationChange={handlePaginationChange}
+        rowSelection={{
+          selectedRowKeys,
+          onChange: (keys: React.Key[]) => {
+            setSelectedRowKeys(keys);
+            const selected = campaigns.filter((campaign: any) => keys.includes(campaign.id));
+            setSelectedRows(selected);
+          },
+        }}
+        actionMenuItems={actionMenuItems}
+        tableSize="small"
+        state={state}
+        lookupOptions={[]}
+        getLabelFromValue={(value: number, options: any[], i18nValue: any) => {
+          if (!options || options.length === 0) return String(value);
+          const matched = options.find((item) => String(item.value) === String(value));
+          if (!matched) return String(value);
+          return i18nValue.language === "ar"
+            ? matched.labelAr || matched.label || matched.text
+            : matched.labelEn || matched.label || matched.text;
+        }}
+        filterOptions={filterOptions}
+        showPagination
+        rowKey="id"
+        scrollX="max-content"
+      />
 
       {/* Modal: Create / Edit Campaign */}
       <Modal
@@ -438,40 +723,45 @@ const ProactiveCampaignsPage: React.FC = () => {
           <Button key="back" onClick={closeModal}>
             {t("common.cancel")}
           </Button>,
-          <Button key="draft" htmlType="button" onClick={() => {}}>
+          <Button
+            key="draft"
+            htmlType="button"
+            onClick={() => handleFooterSave(true)}
+            disabled={!isDraftMode}
+            loading={isAddingCampaign || isUpdatingCampaign}
+          >
             {t("common.saveAsDraft", { defaultValue: "Save as Draft" })}
           </Button>,
-          <Button key="submit" type="primary" onClick={() => form.submit()}>
+          <Button
+            key="submit"
+            type="primary"
+            onClick={() => handleFooterSave(false)}
+            disabled={isDraftMode}
+            loading={isAddingCampaign || isUpdatingCampaign}
+          >
             {t(modalMode === "add" ? "common.submit" : "common.update")}
           </Button>,
         ]}
       >
-        <Form form={form} layout="vertical" onFinish={onFinish}>
-          <Form.Item name="polygon" hidden>
+        <Form form={form} layout="vertical">
+          <Form.Item name="boundaryGeoJson" hidden>
             <Input />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="titleEn" label={t("form.title")} rules={[{ required: true }]}>
+              <Form.Item name="title" label={t("form.title")} rules={[{ required: true }]}>
                 <Input placeholder={t("placeholders.title", { defaultValue: "Enter Title" })} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="location" label={t("form.location")} rules={[{ required: true }]}>
-                <Select placeholder={t("placeholders.selectLocation", { defaultValue: "Select location" })} allowClear>
-                  {getLookupOptions("locations").map((item: any) => (
-                    <Option key={item.value} value={item.value}>
-                      {i18n.language === "ar" ? item.labelAr : item.labelEn}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
               <Form.Item name="timeInterval" label={t("form.timeInterval")} rules={[{ required: true }]}>
-                <RangePicker showTime style={{ width: "100%" }} />
+                <RangePicker
+                  showTime={{ format: "hh:mm A" }}
+                  format="DD MMM YYYY hh:mm A"
+                  style={{ width: "100%" }}
+                  placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
+                />
               </Form.Item>
             </Col>
 
@@ -488,15 +778,18 @@ const ProactiveCampaignsPage: React.FC = () => {
             </Col>
 
             <Col span={12}>
-              <Form.Item name="assignedInspectors" label={t("form.assignedInspectors")} rules={[{ required: true }]}>
+              <Form.Item name="assignedInspectors" label={t("form.assignedInspectors")}>
                 <Select
                   mode="multiple"
                   placeholder={t("placeholders.selectInspector", { defaultValue: "Select inspectors" })}
                   allowClear
+                  showSearch
+                  loading={isLoadingInspectors}
+                  optionFilterProp="label"
                 >
-                  {getLookupOptions("inspectors").map((item: any) => (
-                    <Option key={item.value} value={item.value}>
-                      {i18n.language === "ar" ? item.labelAr : item.labelEn}
+                  {inspectorOptions.map((item) => (
+                    <Option key={item.value} value={item.value} label={item.label}>
+                      {item.label}
                     </Option>
                   ))}
                 </Select>
@@ -504,20 +797,18 @@ const ProactiveCampaignsPage: React.FC = () => {
             </Col>
 
             <Col span={12}>
-              <Form.Item name="status" label={t("form.status")} rules={[{ required: true }]}>
+              <Form.Item name="status" label={t("form.status")}>
                 <Select placeholder={t("placeholders.selectStatus", { defaultValue: "Select status" })} allowClear>
-                  {getLookupOptions("statuses").map((item: any) => (
-                    <Option key={item.value} value={item.value}>
-                      {i18n.language === "ar" ? item.labelAr : item.labelEn}
-                    </Option>
-                  ))}
+                  <Option value="active">{t("status.active", { defaultValue: "Active" })}</Option>
+                  <Option value="cancelled">{t("status.cancelled", { defaultValue: "Cancelled" })}</Option>
+                  <Option value="completed">{t("status.completed", { defaultValue: "Completed" })}</Option>
                 </Select>
               </Form.Item>
             </Col>
 
             <Col span={24}>
               <Form.Item
-                name="notificationMessageEn"
+                name="campaignMessage"
                 label={t("form.campaignMessage", { defaultValue: "Campaign Message" })}
                 rules={[{ required: true }]}
               >
@@ -546,20 +837,20 @@ const ProactiveCampaignsPage: React.FC = () => {
                     danger
                     shape="circle"
                     onClick={handleClearBoundary}
-                    disabled={currentPolygon.length === 0}
+                    disabled={!currentShape}
                     icon={<DeleteOutlined />}
                   />
                 </Tooltip>
                 <ArcGISMap
                   inspectors={[]}
                   center={[mapLng, mapLat]}
-                  zoom={currentPolygon.length > 0 ? 14 : 13}
+                  zoom={currentShape ? 14 : 13}
                   height="400px"
                   clickable={false}
                   legendEnabled={false}
                   enableBoundaryDrawing={true}
                   onBoundaryDrawn={handleBoundaryDrawn}
-                  boundaryPolygonRings={currentPolygon}
+                  boundaryShape={currentShape}
                   onClearBoundary={handleClearBoundary}
                   showBasemapToggle={false}
                 />
@@ -571,8 +862,13 @@ const ProactiveCampaignsPage: React.FC = () => {
 
       <ProactiveCampaignViewDrawer
         open={isViewOpen}
-        onClose={() => setIsViewOpen(false)}
+        onClose={() => {
+          setIsViewOpen(false);
+          setViewRecord(null);
+          setViewBoundaryShape(null);
+        }}
         record={viewRecord}
+        boundaryShape={viewBoundaryShape}
         getLabel={getLabel}
       />
     </Space>

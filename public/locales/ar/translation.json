@@ -394,6 +394,7 @@
     "ratingScale": "مقياس التقييم",
     "isActive": "نشط",
     "objectiveType": "نوع الهدف",
+    "title": "العنوان",
     "titleEn": "العنوان (إنجليزي)",
     "titleAr": "العنوان (عربي)",
     "timeInterval": "الفاصل الزمني",
@@ -406,6 +407,8 @@
     "notificationMessageEn": "رسالة الإشعار (إنجليزي)",
     "notificationMessageAr": "رسالة الإشعار (عربي)",
     "createdBy": "تم الإنشاء بواسطة",
+    "campaignMessage": "رسالة الحملة",
+    "campaignMap": "خريطة الحملة",
     "saveBoundaryToForm": "حفظ الحدود في النموذج",
     "editAssigned": "تعديل المفتشين المعينين",
     "startTime": "وقت البدء",
@@ -577,6 +580,7 @@
     "startDate": "تاريخ البدء",
     "endDate": "تاريخ الانتهاء",
     "all": "الكل",
+    "draft": "مسودة",
     "next": "التالي",
     "previous": "السابق",
     "showPendingDisputes": " إظهار الاعتراضات المعلقة ",
@@ -588,7 +592,8 @@
     "open": "مفتوح",
     "Inactive": "غير نشط",
     "inspectorName": "اسم المفتش",
-    "clear": "مسح"
+    "clear": "مسح",
+    "saveAsDraft": "حفظ كمسودة"
   },
   "entity": {
     "plate": "لوحة",
@@ -694,6 +699,8 @@
     "selectCriteria": "اختر المعايير الحالية",
     "selectObjective": "اختر نوع الهدف",
     "selectRatingScale": "اختر مقياس التقييم",
+    "title": "أدخل العنوان",
+    "campaignMessage": "أدخل رسالة الحملة",
     "titleEn": "أدخل عنوان الحملة بالإنجليزية",
     "titleAr": "أدخل عنوان الحملة بالعربية",
     "selectLocation": "اختر الموقع",

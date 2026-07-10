@@ -407,6 +407,8 @@
     "notificationMessageEn": "Notification Message (EN)",
     "notificationMessageAr": "Notification Message (AR)",
     "createdBy": "Created By",
+    "campaignMessage": "Campaign Message",
+    "campaignMap": "Campaign Map",
     "saveBoundaryToForm": "Save Boundary to Form",
     "editAssigned": "Edit Assigned Inspectors",
     "startTime": "Start Time",
@@ -577,6 +579,7 @@
     "startDate": "Start Date",
     "endDate": "End Date",
     "all": "All",
+    "draft": "Draft",
     "next": "Next",
     "previous": "Previous",
     "showPendingDisputes": " Show Pending Disputes",
@@ -588,7 +591,8 @@
     "open": "Open",
     "Inactive": "Inactive",
     "inspectorName": "Inspector Name",
-    "clear": "Clear"
+    "clear": "Clear",
+    "saveAsDraft": "Save as Draft"
   },
   "entity": {
     "plate": "Plate",
@@ -694,6 +698,8 @@
     "selectCriteria": "Select existing criteria",
     "selectObjective": "Select objective type",
     "selectRatingScale": "Select rating scale",
+    "title": "Enter Title",
+    "campaignMessage": "Enter campaign message",
     "titleEn": "Enter campaign title in English",
     "titleAr": "Enter campaign title in Arabic",
     "selectLocation": "Select location",

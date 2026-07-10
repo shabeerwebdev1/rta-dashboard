@@ -103,8 +103,8 @@ const ActiveFiltersDisplay: React.FC<ActiveFiltersDisplayProps> = ({
       return zone ? zone.label : String(value);
     }
 
-    // Handle Area filter - Try areaOptions first
-    if (columnKey === "area") {
+    // Handle Area / Location filter - Try areaOptions first
+    if (columnKey === "area" || columnKey === "location") {
       const area = areaOptions.find((a) => a.value?.toString() === value.toString());
       if (area) return area.label;
 
