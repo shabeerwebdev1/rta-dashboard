@@ -187,7 +187,7 @@ const ProactiveCampaignViewDrawer = ({ open, onClose, record, boundaryShape: bou
             <div style={{ borderTop: "1px solid #f0f0f0" }}>
               <ArcGISMap
                 inspectors={[]}
-                center={[center[1], center[0]]}
+                center={center}
                 zoom={boundaryShape ? 14 : 13}
                 height="480px"
                 clickable={false}
