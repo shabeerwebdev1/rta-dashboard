@@ -192,6 +192,7 @@
     "zone": "المنطقة",
     "area": "المنطقة الفرعية",
     "sourceOfObstacle": "مصدر العائق",
+    "obstacleDetails": "تفاصيل العائق",
     "closestPD": "أقرب جهاز دفع",
     "comments": "التعليقات",
     "photo": "الصورة (الصور)",

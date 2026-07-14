@@ -192,6 +192,7 @@
     "zone": "Zone",
     "area": "Area",
     "sourceOfObstacle": "Source Of Obstacle",
+    "obstacleDetails": "Obstacle Details",
     "closestPD": "Closest PD",
     "comments": "Comments",
     "photo": "Photo(s)",

@@ -22,6 +22,7 @@ import {
 } from "antd";
 import { PlusOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import dayjs from "dayjs";
 import { usePage } from "../contexts/PageContext";
 import { useTableParams } from "../hooks/useTableParams";
@@ -34,6 +35,7 @@ import {
   useLazyGetZonesQuery,
   useGetAllAreasQuery,
   useUploadInspectionFilesMutation,
+  useLazyGetInspectionObstacleByIdQuery,
 } from "../services/rtkApiFactory";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
@@ -104,6 +106,7 @@ const InspectionObstaclesPage: React.FC = () => {
   const { modal } = App.useApp();
   const notification = useAppNotification();
   const config = pageConfigs[pageKey];
+  const [searchParams] = useSearchParams();
   const {
     apiParams,
     handleTableChange,
@@ -132,6 +135,10 @@ const InspectionObstaclesPage: React.FC = () => {
   });
   const [addObstacle, { isLoading: isAddingObstacle }] = useAddInspectionObstacleMutation();
   const [triggerGetLookups] = useLazyGetLookupsQuery();
+  const [
+    triggerGetObstacle,
+    { data: singleRecordData, isSuccess: isSingleRecordSuccess, isFetching: isFetchingObstacle },
+  ] = useLazyGetInspectionObstacleByIdQuery();
   const [triggerGetZones, { data: zonesData, isLoading: isLoadingZones }] = useLazyGetZonesQuery();
   const menuName = "InspectionObstacle"; // backend permission name
   const { canCreate } = usePermission();
@@ -224,6 +231,20 @@ const InspectionObstaclesPage: React.FC = () => {
       })),
     [lookupOptions, i18n.language],
   );
+
+  useEffect(() => {
+    const recordId = state.viewRecordId;
+    if (recordId && !isDrawerOpen) {
+      triggerGetObstacle(recordId);
+    }
+  }, [state.viewRecordId, triggerGetObstacle, isDrawerOpen]);
+
+  useEffect(() => {
+    if (isSingleRecordSuccess && singleRecordData) {
+      setViewRecord(singleRecordData.data);
+      setIsDrawerOpen(true);
+    }
+  }, [isSingleRecordSuccess, singleRecordData]);
 
   useEffect(() => {
     setPageTitle(t(config.title));
@@ -385,12 +406,13 @@ const InspectionObstaclesPage: React.FC = () => {
 
   // Pass the original record to the drawer, the drawer will handle the mapping
   const handleView = (record: any) => {
-    setViewRecord(record);
-    setIsDrawerOpen(true);
+    triggerGetObstacle(record.inspectionGUID || record.id);
   };
 
   const handleShare = () => {
-    const shareUrl = window.location.href;
+    const params = new URLSearchParams(searchParams);
+    params.set("viewRecord", viewRecord.inspectionGUID || viewRecord.id);
+    const shareUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
 
     // Check for clipboard API support and secure context
     if (navigator?.clipboard && window.isSecureContext) {
@@ -797,7 +819,7 @@ const InspectionObstaclesPage: React.FC = () => {
         pageConfig={{ ...config, tableConfig: enhancedTableConfig }}
         data={platesData}
         total={totalCount}
-        isLoading={isLoading || isFetching || isLoadingAllAreas}
+        isLoading={isLoading || isFetching || isLoadingAllAreas || isFetchingObstacle}
         apiParams={apiParams}
         handleTableChange={handleTableChange}
         handlePaginationChange={handlePaginationChange}
