@@ -570,6 +570,11 @@ export const dynamicApi = createApi({
       providesTags: ["WebDashboard"],
     }),
 
+    getWebDashboardInspectors: builder.query({
+      query: (params) => ({ url: "/api/WebDashboard/inspectors", params }),
+      providesTags: ["WebDashboard"],
+    }),
+
     // User code validation
     validatecode: builder.query({
       query: (code: string) => ({
@@ -1193,6 +1198,7 @@ export const {
 
   // Inspection Obstacles
   useGetInspectionObstaclesQuery,
+  useGetInspectionObstacleByIdQuery,
   useLazyGetInspectionObstacleByIdQuery,
   useAddInspectionObstacleMutation,
   useUpdateInspectionObstacleMutation,
@@ -1240,6 +1246,7 @@ export const {
 
   // Web Dashboard
   useGetSupervisorDashboardQuery,
+  useGetWebDashboardInspectorsQuery,
 
   // Zones and Areas
   useLazyGetZonesQuery,
@@ -1278,6 +1285,7 @@ export const {
 
   // Towing Approvals
   useGetTowingDetailsQuery,
+  useGetTowingByIdQuery,
   useLazyGetTowingByIdQuery,
   useUpdateTowingStatusMutation,
   useGetTowingEvidenceQuery,

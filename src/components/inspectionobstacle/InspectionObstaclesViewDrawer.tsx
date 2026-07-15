@@ -269,7 +269,7 @@
 // export default InspectionObstaclesViewDrawer;
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Image, Empty, Space, Spin, theme } from "antd";
 import { DeleteOutlined, ShareAltOutlined, CloseOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
@@ -278,6 +278,9 @@ import { useAppNotification } from "../../utils/notificationManager";
 import {
   useUpdateInspectionObstacleMutation,
   useGetInspectionAttachmentsQuery,
+  useLazyGetLookupsQuery,
+  useLazyGetZonesQuery,
+  useGetAllAreasQuery,
   getMobileFileUrl,
 } from "../../services/rtkApiFactory";
 import { skipToken } from "@reduxjs/toolkit/query";
@@ -312,10 +315,10 @@ interface InspectionObstaclesViewDrawerProps {
   config: PageConfig;
   onShare: () => void;
   onStatusChange: () => void;
-  zoneOptions: any[];
-  sourceOptions: any[];
-  areaIdToNameMap: Map<number, string>;
-  statusLabels: Record<number, string>;
+  zoneOptions?: any[];
+  sourceOptions?: any[];
+  areaIdToNameMap?: Map<number, string>;
+  statusLabels?: Record<number, string>;
 }
 
 const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps> = ({
@@ -325,8 +328,8 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
   config,
   onShare,
   onStatusChange,
-  zoneOptions,
-  sourceOptions,
+  zoneOptions = [],
+  sourceOptions = [],
   areaIdToNameMap,
 }) => {
   const { t } = useTranslation();
@@ -338,6 +341,13 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
   const notification = useAppNotification();
 
   const [updateObstacle] = useUpdateInspectionObstacleMutation();
+  const [triggerGetLookups] = useLazyGetLookupsQuery();
+  const [triggerGetZones, { data: zonesData, isLoading: isLoadingZones }] = useLazyGetZonesQuery();
+  const { data: allAreasData, isLoading: isLoadingAreas } = useGetAllAreasQuery(
+    areaIdToNameMap && areaIdToNameMap.size > 0 ? skipToken : {},
+  );
+  const [internalLookupOptions, setInternalLookupOptions] = useState<any[]>([]);
+  const [isLoadingLookups, setIsLoadingLookups] = useState(false);
 
   const [modal, contextHolder] = Modal.useModal();
 
@@ -369,10 +379,109 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
       }
     }
 
-    return getAreaStaticLocation(areaIdToNameMap.get(record.area) || "");
+    const areaKey = record.area !== undefined && record.area !== null ? String(record.area) : "";
+    const areaName =
+      (areaIdToNameMap && (areaIdToNameMap.get(Number(record.area) as any) || areaIdToNameMap.get(areaKey as any))) ||
+      effectiveAreaIdToNameMap.get(areaKey) ||
+      (allAreasData || []).find((area: any) =>
+        [
+          area.areaId,
+          area.area_Id,
+          area.id,
+          area.areaGUID,
+          area.areaCode,
+          area.area,
+          area.areaName,
+          area.name,
+        ]
+          .filter((value) => value !== undefined && value !== null && value !== "")
+          .some((value) => String(value) === areaKey),
+      )?.area ||
+      "";
+
+    return getAreaStaticLocation(areaName);
   };
 
   const recordLocation = getRecordLocation();
+
+  const effectiveAreaIdToNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+
+    if (areaIdToNameMap && areaIdToNameMap.size > 0) {
+      areaIdToNameMap.forEach((value, key) => {
+        map.set(String(key), value);
+      });
+    }
+
+    (allAreasData || []).forEach((area: any) => {
+      const name = area.area || area.areaName || area.name || "";
+      const keys = [
+        area.areaId,
+        area.area_Id,
+        area.id,
+        area.areaGUID,
+        area.areaCode,
+        area.area,
+        area.areaName,
+        area.name,
+      ]
+        .filter((value) => value !== undefined && value !== null && value !== "")
+        .map((value) => String(value));
+
+      keys.forEach((key) => {
+        if (!map.has(key)) {
+          map.set(key, name);
+        }
+      });
+    });
+
+    return map;
+  }, [areaIdToNameMap, allAreasData]);
+
+  const effectiveZoneOptions = useMemo(() => {
+    if (zoneOptions.length > 0) return zoneOptions;
+
+    return (zonesData || []).map((zone: any) => ({
+      value: zone.zone_Id || zone.zoneId,
+      label: `${zone.zoneCode}-${zone.zone}`,
+      original: zone,
+    }));
+  }, [zoneOptions, zonesData]);
+
+  const effectiveSourceOptions = useMemo(() => {
+    if (sourceOptions.length > 0) return sourceOptions;
+
+    return internalLookupOptions
+      .filter((option) => option.categoryId === 800)
+      .map((option) => ({
+        ...option,
+        value: option.value,
+        label: option.labelEn,
+      }));
+  }, [sourceOptions, internalLookupOptions]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    if (!zoneOptions.length) {
+      triggerGetZones({});
+    }
+
+    if (!sourceOptions.length && internalLookupOptions.length === 0) {
+      setIsLoadingLookups(true);
+      triggerGetLookups([600, 700, 800])
+        .unwrap()
+        .then((result) => {
+          setInternalLookupOptions(result);
+        })
+        .catch(() => {
+          setInternalLookupOptions([]);
+        })
+        .finally(() => {
+          setIsLoadingLookups(false);
+        });
+    }
+  }, [open, zoneOptions.length, sourceOptions.length, internalLookupOptions.length, triggerGetLookups, triggerGetZones]);
 
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
     record
@@ -426,7 +535,7 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
       {contextHolder}
 
       <Modal open={open} onCancel={onClose} width={1000} footer={null} title={null} closable={false}>
-        <Spin spinning={isLoadingAttachments}>
+        <Spin spinning={isLoadingAttachments || isLoadingLookups || isLoadingZones || isLoadingAreas}>
           {/* Header */}
           <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
             <Col>
@@ -513,7 +622,7 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
 
                 <Col span={14}>
                   {(() => {
-                    const found = zoneOptions.find((z) => z.value === record.zone);
+                    const found = effectiveZoneOptions.find((z) => String(z.value) === String(record.zone));
                     return found ? found.label : record.zone || t("common.noData");
                   })()}
                 </Col>
@@ -524,7 +633,15 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
                   <Text strong>{t("form.area")}:</Text>
                 </Col>
 
-                <Col span={14}>{areaIdToNameMap.get(record.area) || t("common.noData")}</Col>
+                <Col span={14}>
+                  {(() => {
+                    const areaKey = record.area !== undefined && record.area !== null ? String(record.area) : "";
+                    const found =
+                      (areaIdToNameMap && (areaIdToNameMap.get(Number(record.area) as any) || areaIdToNameMap.get(areaKey as any))) ||
+                      effectiveAreaIdToNameMap.get(areaKey);
+                    return found || t("common.noData");
+                  })()}
+                </Col>
 
                 {/* Source */}
 
@@ -534,7 +651,7 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
 
                 <Col span={14}>
                   {(() => {
-                    const found = sourceOptions.find((x) => x.value === record.sourceOfObstacle);
+                    const found = effectiveSourceOptions.find((x) => String(x.value) === String(record.sourceOfObstacle));
 
                     return found ? found.label : record.sourceOfObstacle || t("common.noData");
                   })()}

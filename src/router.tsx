@@ -94,14 +94,7 @@ const AppRoutes = () => (
             </ProtectedRoute>
           }
         />
-        <Route
-          path={PATHS.FINES}
-          element={
-            <ProtectedRoute>
-              <FinesPage />
-            </ProtectedRoute>
-          }
-        />
+
         <Route
           path={PATHS.PROACTIVECAMPAIGN}
           element={
@@ -187,6 +180,7 @@ const AppRoutes = () => (
             </ProtectedRoute>
           }
         >
+          <Route index element={<FinesPage />} />
           <Route path={PATHS.FINES_VEHICLES} element={<VehicleInspectionsPage />} />
           <Route path={PATHS.FINES_PARKINGS} element={<ParkingsInspectionsPage />} />
         </Route>

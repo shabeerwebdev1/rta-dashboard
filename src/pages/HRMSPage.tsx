@@ -322,10 +322,13 @@ const HRMSPage: React.FC = () => {
           const lng = parseCoordinate(item.longitude);
           if (!hasValidCoordinates(lat, lng)) return null;
           return {
+            ...item,
             id: item.inspectionGUID || item.id || `${item.createdDateTime}-${lat}-${lng}`,
+            inspectionGUID: item.inspectionGUID || item.id,
             lat: lat as number,
             lng: lng as number,
             createdDateTime: item.createdDateTime,
+            status: "Obstacle",
           };
         })
         .filter(Boolean) || [];
@@ -401,12 +404,15 @@ const HRMSPage: React.FC = () => {
           const lng = parseCoordinate(item.longitude);
           if (!hasValidCoordinates(lat, lng)) return null;
           return {
+            ...item,
             id: item.inspectionGUID || item.iid,
+            inspectionGUID: item.inspectionGUID || item.iid,
             lat: lat as number,
             lng: lng as number,
             timestamp: item.createdDateTime,
             plateNumber: item.plateNumber,
             towingStatus: item.towing_Status,
+            status: "Towing",
           };
         })
         .filter(Boolean) || [];

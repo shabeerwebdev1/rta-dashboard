@@ -222,14 +222,20 @@ const EYE_CLOSED_ICON = `
 `;
 
 // ── Global State ─────────────────────────────────────────────────────────
-let globalOnFineClick: ((fine: any) => void) | undefined;
-let globalOnInspectionClick: ((inspection: any) => void) | undefined;
-let globalFineLocations: any[] = [];
-let globalParkingFineLocations: any[] = [];
-let globalWarningLocations: any[] = [];
-let globalRoutineLocations: any[] = [];
-let globalTowingLocations: any[] = [];
-let globalObstacleLocations: any[] = [];
+type ArcGISMapClickContext = {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  onFineClickRef: React.MutableRefObject<((fine: any) => void) | undefined>;
+  onInspectionClickRef: React.MutableRefObject<((inspection: any) => void) | undefined>;
+  fineLocationsRef: React.MutableRefObject<any[]>;
+  parkingFineLocationsRef: React.MutableRefObject<any[]>;
+  warningLocationsRef: React.MutableRefObject<any[]>;
+  routineLocationsRef: React.MutableRefObject<any[]>;
+  towingLocationsRef: React.MutableRefObject<any[]>;
+  obstacleLocationsRef: React.MutableRefObject<any[]>;
+  parkingPointsRef: React.MutableRefObject<ParkingPoint[]>;
+};
+
+const activeArcGISMapContexts = new Set<ArcGISMapClickContext>();
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 const formatDateTime = (dateString?: string) => {
@@ -293,6 +299,57 @@ const createPopupDOMElement = (
 };
 
 let globalClickHandlerRegistered = false;
+
+const handleArcGISMoreDetailsClick = (e: MouseEvent) => {
+  const button = (e.target as HTMLElement).closest(".arcgis-more-details-btn");
+  if (!button) return;
+
+  const itemId = button.getAttribute("data-id");
+  const type = button.getAttribute("data-type");
+  const inspectionGUID = button.getAttribute("data-inspection-guid");
+  const inspectionId = button.getAttribute("data-inspection-id");
+  const entityCode = button.getAttribute("data-entity-code");
+  const target = e.target as Node;
+
+  for (const ctx of activeArcGISMapContexts) {
+    const container = ctx.containerRef.current;
+    if (!container || !container.contains(target)) continue;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (type === "fine") {
+      const fine =
+        ctx.fineLocationsRef.current.find((f) => String(f.id) === itemId) ||
+        ctx.parkingFineLocationsRef.current.find((f) => String(f.id) === itemId) || {
+          id: itemId,
+          inspectionGUID: inspectionGUID || itemId,
+          inspectionId: inspectionId || inspectionGUID || itemId,
+          entityCode: entityCode || "parking-inspection",
+        };
+      if (fine && ctx.onFineClickRef.current) ctx.onFineClickRef.current(fine);
+    } else if (type === "parking") {
+      const allParking = ctx.parkingPointsRef.current.filter((p) => String(p.objectId) === itemId);
+      if (allParking.length > 0 && onParkingClusterClickRef.current) onParkingClusterClickRef.current(allParking);
+    } else {
+      const all = [
+        ...ctx.warningLocationsRef.current,
+        ...ctx.routineLocationsRef.current,
+        ...ctx.towingLocationsRef.current,
+        ...ctx.obstacleLocationsRef.current,
+      ];
+      const item = all.find((i) => String(i.id) === itemId) || {
+        id: itemId,
+        inspectionGUID: inspectionGUID || itemId,
+        inspectionId: inspectionId || inspectionGUID || itemId,
+        entityCode: entityCode || "parking-inspection",
+      };
+      if (item && ctx.onInspectionClickRef.current) ctx.onInspectionClickRef.current(item);
+    }
+
+    return;
+  }
+};
 
 const getPopupAttributes = (event: any) => event?.graphic?.attributes ?? event?.attributes ?? {};
 
@@ -514,6 +571,14 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   const parkingClusteringEnabledRef = useRef(parkingClusteringEnabled);
   const currentLanguageRef = useRef(currentLanguage);
   const onParkingClusterClickRef = useRef(onParkingClusterClick);
+  const onFineClickRef = useRef(onFineClick);
+  const onInspectionClickRef = useRef(onInspectionClick);
+  const fineLocationsRef = useRef(fineLocations);
+  const parkingFineLocationsRef = useRef(parkingFineLocations);
+  const warningLocationsRef = useRef(warningLocations);
+  const routineLocationsRef = useRef(routineLocations);
+  const towingLocationsRef = useRef(towingLocations);
+  const obstacleLocationsRef = useRef(obstacleLocations);
 
   const sketchWidgetRef = useRef<__esri.Sketch | null>(null);
   const boundaryGraphicsLayerRef = useRef<__esri.GraphicsLayer | null>(null);
@@ -533,6 +598,56 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   useEffect(() => {
     onParkingClusterClickRef.current = onParkingClusterClick;
   }, [onParkingClusterClick]);
+
+  useEffect(() => {
+    onFineClickRef.current = onFineClick;
+    onInspectionClickRef.current = onInspectionClick;
+    fineLocationsRef.current = [...fineLocations];
+    parkingFineLocationsRef.current = [...parkingFineLocations];
+    warningLocationsRef.current = [...warningLocations];
+    routineLocationsRef.current = [...routineLocations];
+    towingLocationsRef.current = [...towingLocations];
+    obstacleLocationsRef.current = [...obstacleLocations];
+  }, [
+    onFineClick,
+    onInspectionClick,
+    fineLocations,
+    parkingFineLocations,
+    warningLocations,
+    routineLocations,
+    towingLocations,
+    obstacleLocations,
+  ]);
+
+  useEffect(() => {
+    const context: ArcGISMapClickContext = {
+      containerRef: mapRef,
+      onFineClickRef,
+      onInspectionClickRef,
+      fineLocationsRef,
+      parkingFineLocationsRef,
+      warningLocationsRef,
+      routineLocationsRef,
+      towingLocationsRef,
+      obstacleLocationsRef,
+      parkingPointsRef,
+    };
+
+    activeArcGISMapContexts.add(context);
+
+    if (!globalClickHandlerRegistered) {
+      document.addEventListener("click", handleArcGISMoreDetailsClick);
+      globalClickHandlerRegistered = true;
+    }
+
+    return () => {
+      activeArcGISMapContexts.delete(context);
+      if (activeArcGISMapContexts.size === 0 && globalClickHandlerRegistered) {
+        document.removeEventListener("click", handleArcGISMoreDetailsClick);
+        globalClickHandlerRegistered = false;
+      }
+    };
+  }, []);
 
   renderLayerPanelRef.current = () => {
     const panel = layerPanelContainerRef.current;
@@ -683,77 +798,6 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
       panel.appendChild(clusterRow);
     }
   };
-
-  // Sync global callbacks and data
-  useEffect(() => {
-    globalOnFineClick = onFineClick;
-    globalOnInspectionClick = onInspectionClick;
-    globalFineLocations = [...fineLocations];
-    globalParkingFineLocations = [...parkingFineLocations];
-    globalWarningLocations = [...warningLocations];
-    globalRoutineLocations = [...routineLocations];
-    globalTowingLocations = [...towingLocations];
-    globalObstacleLocations = [...obstacleLocations];
-  }, [
-    onFineClick,
-    onInspectionClick,
-    fineLocations,
-    parkingFineLocations,
-    warningLocations,
-    routineLocations,
-    towingLocations,
-    obstacleLocations,
-  ]);
-
-  // Global popup button handler
-  useEffect(() => {
-    if (!globalClickHandlerRegistered) {
-      const handleGlobalClick = (e: MouseEvent) => {
-        const button = (e.target as HTMLElement).closest(".arcgis-more-details-btn");
-        if (!button) return;
-        e.preventDefault();
-        e.stopPropagation();
-        const itemId = button.getAttribute("data-id");
-        const type = button.getAttribute("data-type");
-        const inspectionGUID = button.getAttribute("data-inspection-guid");
-        const inspectionId = button.getAttribute("data-inspection-id");
-        const entityCode = button.getAttribute("data-entity-code");
-        if (type === "fine") {
-          const fine = globalFineLocations.find((f) => String(f.id) === itemId) ||
-            globalParkingFineLocations.find((f) => String(f.id) === itemId) || {
-              id: itemId,
-              inspectionGUID: inspectionGUID || itemId,
-              inspectionId: inspectionId || inspectionGUID || itemId,
-              entityCode: entityCode || "parking-inspection",
-            };
-          if (fine && globalOnFineClick) globalOnFineClick(fine);
-        } else if (type === "parking") {
-          const allParking = parkingPointsRef.current.filter((p) => String(p.objectId) === itemId);
-          if (allParking.length > 0 && onParkingClusterClickRef.current) onParkingClusterClickRef.current(allParking);
-        } else {
-          const all = [
-            ...globalWarningLocations,
-            ...globalRoutineLocations,
-            ...globalTowingLocations,
-            ...globalObstacleLocations,
-          ];
-          const item = all.find((i) => String(i.id) === itemId) || {
-            id: itemId,
-            inspectionGUID: inspectionGUID || itemId,
-            inspectionId: inspectionId || inspectionGUID || itemId,
-            entityCode: entityCode || "parking-inspection",
-          };
-          if (item && globalOnInspectionClick) globalOnInspectionClick(item);
-        }
-      };
-      document.addEventListener("click", handleGlobalClick);
-      globalClickHandlerRegistered = true;
-      return () => {
-        document.removeEventListener("click", handleGlobalClick);
-        globalClickHandlerRegistered = false;
-      };
-    }
-  }, []);
 
   // ── Map Initialization ─────────────────────────────────────────────────
   useEffect(() => {
@@ -1567,7 +1611,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
                 },
                 { icon: "", label: currentLanguage === "ar" ? "رقم اللوحة" : "Plate", value: attrs.plateNumber || "—" },
               ];
-              return createPopupDOMElement(itemId, rows, "inspection", false, currentLanguage, {
+              return createPopupDOMElement(itemId, rows, "towing", true, currentLanguage, {
                 "inspection-guid": String(attrs.inspectionGUID || attrs.id || ""),
                 "inspection-id": String(attrs.inspectionId || attrs.inspectionGUID || attrs.id || ""),
                 "entity-code": String(attrs.entityCode || "parking-inspection"),
@@ -1615,7 +1659,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
                   value: formatDateTime(attrs.createdDateTime),
                 },
               ];
-              return createPopupDOMElement(String(attrs.id), rows, "inspection", false, currentLanguage);
+              return createPopupDOMElement(String(attrs.id), rows, "obstacle", true, currentLanguage);
             },
           }),
         }),
@@ -1636,7 +1680,12 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
               id: inspector.id,
               name: inspector.name,
               status: inspector.status,
-              zone: inspector.zone || "N/A",
+              zone:
+                inspector.zone ||
+                inspector.details?.zone ||
+                (inspector.details as any)?.checkInZone ||
+                (inspector.details as any)?.checkInArea ||
+                "N/A",
               markerType: inspector.markerType || "default",
             },
             longitude: lastPathPoint?.lng ?? inspector.lng,

@@ -487,7 +487,7 @@ const ProactiveCampaignsPage: React.FC = () => {
         violationTypes: values.violationTypes,
         assignedInspectors: normalizeInspectorSelection(values.assignedInspectors),
         boundaryGeoJson: values.boundaryGeoJson,
-        status: draft ? "" : values.status || "",
+        status: draft ? "" : modalMode === "add" ? "active" : values.status || "",
       };
 
       if (draft) {
@@ -501,7 +501,7 @@ const ProactiveCampaignsPage: React.FC = () => {
           await addProactiveCampaign(payload).unwrap();
         }
       } else {
-        if (!payload.status) {
+        if (modalMode === "edit" && !payload.status) {
           message.error(t("validation.required", { field: t("form.status") }));
           return;
         }
@@ -727,7 +727,7 @@ const ProactiveCampaignsPage: React.FC = () => {
             key="draft"
             htmlType="button"
             onClick={() => handleFooterSave(true)}
-            disabled={!isDraftMode}
+            disabled={modalMode === "add" ? false : !isDraftMode}
             loading={isAddingCampaign || isUpdatingCampaign}
           >
             {t("common.saveAsDraft", { defaultValue: "Save as Draft" })}
@@ -736,7 +736,7 @@ const ProactiveCampaignsPage: React.FC = () => {
             key="submit"
             type="primary"
             onClick={() => handleFooterSave(false)}
-            disabled={isDraftMode}
+            disabled={modalMode === "add" ? false : isDraftMode}
             loading={isAddingCampaign || isUpdatingCampaign}
           >
             {t(modalMode === "add" ? "common.submit" : "common.update")}
@@ -796,15 +796,17 @@ const ProactiveCampaignsPage: React.FC = () => {
               </Form.Item>
             </Col>
 
-            <Col span={12}>
-              <Form.Item name="status" label={t("form.status")}>
-                <Select placeholder={t("placeholders.selectStatus", { defaultValue: "Select status" })} allowClear>
-                  <Option value="active">{t("status.active", { defaultValue: "Active" })}</Option>
-                  <Option value="cancelled">{t("status.cancelled", { defaultValue: "Cancelled" })}</Option>
-                  <Option value="completed">{t("status.completed", { defaultValue: "Completed" })}</Option>
-                </Select>
-              </Form.Item>
-            </Col>
+            {modalMode === "edit" && (
+              <Col span={12}>
+                <Form.Item name="status" label={t("form.status")}>
+                  <Select placeholder={t("placeholders.selectStatus", { defaultValue: "Select status" })} allowClear>
+                    <Option value="active">{t("status.active", { defaultValue: "Active" })}</Option>
+                    <Option value="cancelled">{t("status.cancelled", { defaultValue: "Cancelled" })}</Option>
+                    <Option value="completed">{t("status.completed", { defaultValue: "Completed" })}</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            )}
 
             <Col span={24}>
               <Form.Item

@@ -745,7 +745,9 @@
     "inspectorsStatus": "حالة المفتشين",
     "towingRequests": " طلبات القطر",
     "leaveRequests": "طلبات الإجازة",
-    "obstacle": "عائق"
+    "obstacle": "عائق",
+    "routine": "روتيني",
+    "warning": "تحذير"
   },
   "weekdays": {
     "Monday": "الإثنين",

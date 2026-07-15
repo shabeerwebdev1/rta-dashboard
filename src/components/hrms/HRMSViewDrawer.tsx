@@ -7,7 +7,13 @@ import { useTranslation } from "react-i18next";
 import type { PageConfig } from "../../types/config";
 import ArcGISMap from "../common/ArcGISMap";
 import FinesViewDrawer from "../fines/FinesViewDrawer";
-import { useGetInspectionByIdQuery, useGetViolationDetailsQuery } from "../../services/rtkApiFactory";
+import TowingViewDrawer from "../Towing/TowingViewDrawer";
+import InspectionObstaclesViewDrawer from "../inspectionobstacle/InspectionObstaclesViewDrawer";
+import {
+  useGetInspectionByIdQuery,
+  useGetViolationDetailsQuery,
+  useLazyGetInspectionObstacleByIdQuery,
+} from "../../services/rtkApiFactory";
 import dayjs from "dayjs";
 import { Button } from "antd";
 
@@ -194,8 +200,15 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
   const [selectedEntityCode, setSelectedEntityCode] = React.useState<string>("parking-inspection");
   const [fineData, setFineData] = React.useState<any>(null);
 
+  const [towingDrawerOpen, setTowingDrawerOpen] = useState(false);
+  const [selectedTowingRecord, setSelectedTowingRecord] = useState<any>(null);
+
+  const [obstacleDrawerOpen, setObstacleDrawerOpen] = useState(false);
+  const [selectedObstacleRecord, setSelectedObstacleRecord] = useState<any>(null);
+
   const fetchedIdRef = useRef<string | null>(null);
   const isFetchingRef = useRef(false);
+  const [triggerGetObstacle] = useLazyGetInspectionObstacleByIdQuery();
 
   const {
     data: inspectionData,
@@ -238,31 +251,68 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
     if (!open) setFinesExpanded(false);
   }, [open]);
 
-  const openDrawerWithNewData = (inspectionGUID: string, entityCode: string) => {
+  const openDrawerWithNewData = useCallback((inspectionGUID: string, entityCode: string) => {
     setFineData(null);
     setSelectedFineId(inspectionGUID);
     setSelectedEntityCode(entityCode || "parking-inspection");
     fetchedIdRef.current = inspectionGUID;
     isFetchingRef.current = true;
     setFineDrawerOpen(true);
-  };
+  }, []);
+
+  const openObstacleDrawerWithNewData = useCallback(async (item: any) => {
+    const obstacleId = item?.inspectionGUID || item?.id || item?.inspectionId;
+
+    if (!obstacleId) {
+      setSelectedObstacleRecord(item);
+      setObstacleDrawerOpen(true);
+      return;
+    }
+
+    try {
+      const response = await triggerGetObstacle(obstacleId).unwrap();
+      setSelectedObstacleRecord(response?.data?.data ?? response?.data ?? response);
+    } catch {
+      setSelectedObstacleRecord(item);
+    } finally {
+      setObstacleDrawerOpen(true);
+    }
+  }, [triggerGetObstacle]);
 
   const handleItemClick = useCallback(
     (item: any) => {
       if (!item) return;
       const inspectionGUID = item.inspectionGUID || item.id || item.inspectionId;
       if (!inspectionGUID) return;
-      if (fineDrawerOpen) {
-        setFineDrawerOpen(false);
-        setTimeout(() => openDrawerWithNewData(inspectionGUID, item.entityCode), 100);
+
+      if (item.status === "Obstacle") {
+        void openObstacleDrawerWithNewData(item);
+      } else if (item.status === "Towing") {
+        setSelectedTowingRecord(item);
+        setTowingDrawerOpen(true);
       } else {
-        openDrawerWithNewData(inspectionGUID, item.entityCode);
+        if (fineDrawerOpen) {
+          setFineDrawerOpen(false);
+          setTimeout(() => openDrawerWithNewData(inspectionGUID, item.entityCode), 100);
+        } else {
+          openDrawerWithNewData(inspectionGUID, item.entityCode);
+        }
       }
     },
-    [fineDrawerOpen],
+    [fineDrawerOpen, openDrawerWithNewData, openObstacleDrawerWithNewData],
   );
 
   const handleFineDrawerClose = useCallback(() => setFineDrawerOpen(false), []);
+
+  const inspectorZoneLabel =
+    record.zoneName ||
+    record.areaName ||
+    record.location?.zone ||
+    record.checkInZone ||
+    record.checkOutZone ||
+    record.checkInArea ||
+    record.checkOutArea ||
+    t("common.noData");
 
   if (!record) return null;
 
@@ -542,13 +592,9 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                 {record.inspectorName}
                 {record.displayNameAr && <Text style={{ fontWeight: 400, marginLeft: 8 }}>{record.displayNameAr}</Text>}
               </Title>
-              {(record.zoneName || record.areaName) && (
-                <div style={{ marginTop: 2 }}>
-                  <Text style={{ fontSize: 14, fontWeight: 600, color: "#0070ff" }}>
-                    {[record.zoneName, record.areaName].filter(Boolean).join(" - ")}
-                  </Text>
-                </div>
-              )}
+              <div style={{ marginTop: 2 }}>
+                <Text style={{ fontSize: 14, fontWeight: 600, color: "#0070ff" }}>{inspectorZoneLabel}</Text>
+              </div>
             </div>
             <Button type="text" icon={<CloseOutlined />} onClick={onClose} style={{ fontSize: 16 }} />
           </div>
@@ -579,7 +625,7 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
                     towingLocations={record.towingLocations || []}
                     showPath={true}
                     showFineLocations={true}
-                    clickable={false}
+                    clickable={true}
                     onFineClick={handleItemClick}
                     onInspectionClick={handleItemClick}
                   />
@@ -687,6 +733,31 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
         fine={fineData}
         isLoading={isDrawerLoading}
         readOnly
+      />
+
+      <TowingViewDrawer
+        open={towingDrawerOpen}
+        onClose={() => {
+          setTowingDrawerOpen(false);
+          setSelectedTowingRecord(null);
+        }}
+        record={selectedTowingRecord}
+      />
+
+      <InspectionObstaclesViewDrawer
+        open={obstacleDrawerOpen}
+        onClose={() => {
+          setObstacleDrawerOpen(false);
+          setSelectedObstacleRecord(null);
+        }}
+        record={selectedObstacleRecord}
+        config={{ name: { singular: "obstacle", plural: "obstacles" } } as any}
+        onShare={() => {}}
+        onStatusChange={() => {}}
+        zoneOptions={[]}
+        sourceOptions={[]}
+        areaIdToNameMap={new Map()}
+        statusLabels={{}}
       />
     </>
   );

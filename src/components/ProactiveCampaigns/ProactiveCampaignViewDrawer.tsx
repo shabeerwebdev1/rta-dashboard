@@ -160,7 +160,9 @@ const ProactiveCampaignViewDrawer = ({ open, onClose, record, boundaryShape: bou
                       ? "green"
                       : normalizeStatus(record.status) === "cancelled"
                         ? "red"
-                        : "blue"
+                        : normalizeStatus(record.status) === "completed"
+                          ? "blue"
+                          : "orange"
                   }
                 >
                   {normalizeStatus(record.status)

@@ -743,7 +743,9 @@
     "inspectorsStatus": "Inspectors Status",
     "towingRequests": "Towing Requests",
     "leaveRequests": "Leave Requests",
-    "obstacle": "Obstacle"
+    "obstacle": "Obstacle",
+    "routine": "Routine",
+    "warning": "Warning"
   },
   "weekdays": {
     "Monday": "Monday",
