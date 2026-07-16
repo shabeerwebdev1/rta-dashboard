@@ -14,6 +14,7 @@ import {
 } from "@ant-design/icons";
 import { usePage } from "../contexts/PageContext";
 import DashboardViewDrawer from "../components/dashboard/DashboardViewDrawer";
+import DashboardDataModal from "../components/dashboard/DashboardDataModal";
 import {
   useGetWebDashboardInspectorsQuery,
   useGetActiveShiftsQuery,
@@ -37,14 +38,18 @@ const SupervisorViewPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [selectedInspector, setSelectedInspector] = useState<any>(null);
-  const [selectedSupervisor, setSelectedSupervisor] = useState<string | null>(null);
-  const [selectedInspectorDropdown, setSelectedInspectorDropdown] = useState<string | null>(null);
+  const [selectedSupervisors, setSelectedSupervisors] = useState<string[]>([]);
+  const [selectedInspectors, setSelectedInspectors] = useState<string[]>([]);
   const [shifts, setShifts] = useState<any[]>([]);
   const [selectedShift, setSelectedShift] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<[any, any]>([null, null]);
   const [finesExpanded, setFinesExpanded] = useState(false);
+  const [dataModalType, setDataModalType] = useState<"onLeave" | "pendingCheckIn" | null>(null);
 
-  const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery({});
+  const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery(
+    {},
+    { refetchOnMountOrArgChange: true }
+  );
   const [triggerGetShifts, { isLoading: isLoadingShiftsDropdown }] = useLazyGetShiftsQuery();
 
   const [fineDrawerOpen, setFineDrawerOpen] = useState(false);
@@ -187,20 +192,23 @@ const SupervisorViewPage: React.FC = () => {
   const supervisors = activeShiftsData?.filter((shift: any) => shift.roleCode === "PARSUP") || [];
   const inspectors = activeShiftsData?.filter((shift: any) => shift.roleCode === "PARINSP") || [];
 
-  const selectedSupervisorData = useMemo(() => {
-    return supervisors.find((s: any) => s.employeeId === selectedSupervisor);
-  }, [supervisors, selectedSupervisor]);
+  const selectedSupervisorsData = useMemo(() => {
+    return supervisors.filter((s: any) => selectedSupervisors.includes(s.employeeId));
+  }, [supervisors, selectedSupervisors]);
 
-  const supervisorZoneIds = selectedSupervisorData?.zoneIds || undefined;
+  const supervisorZoneIds = useMemo(() => {
+    const allZoneIds = selectedSupervisorsData.flatMap((s: any) => s.zoneIds || []);
+    return allZoneIds.length > 0 ? allZoneIds.join(",") : undefined;
+  }, [selectedSupervisorsData]);
 
   const {
     data: dashboardData,
     isLoading,
     error,
   } = useGetWebDashboardInspectorsQuery({
+    ...(supervisorZoneIds ? { "Filters[ZoneId]": supervisorZoneIds } : {}),
     orFilters: {
-      ...(supervisorZoneIds && supervisorZoneIds.length > 0 ? { "USWMUZMID.ZoneId": supervisorZoneIds } : {}),
-      ...(selectedInspectorDropdown ? { UserId: selectedInspectorDropdown } : {}),
+      ...(selectedInspectors.length > 0 ? { UserId: selectedInspectors } : {}),
       ...(selectedShift ? { shiftId: selectedShift } : {}),
     },
     ...(dateRange && dateRange[0] && dateRange[1]
@@ -213,10 +221,34 @@ const SupervisorViewPage: React.FC = () => {
           },
         }
       : {}),
-  });
+  }, { refetchOnMountOrArgChange: true });
 
-  const handleSupervisorChange = (value: string) => {
-    setSelectedSupervisor(value);
+  // When supervisors are selected, show inspectors from API response's totalInspectorData
+  // When no supervisor is selected, show all inspectors from activeShiftsData
+  const inspectorOptions = useMemo(() => {
+    if (selectedSupervisors.length > 0 && dashboardData?.data?.totalInspectorData) {
+      return (dashboardData.data.totalInspectorData || []).map((insp: any) => ({
+        id: insp.inspectorGUID,
+        name: insp.inspectorName,
+      }));
+    }
+    return inspectors.map((insp: any) => ({
+      id: insp.employeeId,
+      name: insp.employeeName,
+    }));
+  }, [selectedSupervisors, dashboardData, inspectors]);
+
+  const handleSupervisorChange = (value: string[]) => {
+    setSelectedSupervisors(value);
+    // Clear selected inspectors that are no longer in the options
+    if (selectedInspectors.length > 0) {
+      const validIds = new Set(
+        value.length > 0 && dashboardData?.data?.totalInspectorData
+          ? (dashboardData.data.totalInspectorData || []).map((i: any) => i.inspectorGUID)
+          : inspectors.map((i: any) => i.employeeId),
+      );
+      setSelectedInspectors((prev) => prev.filter((id) => validIds.has(id)));
+    }
   };
 
   const apiUsersLocations = useMemo(() => {
@@ -352,8 +384,8 @@ const SupervisorViewPage: React.FC = () => {
       .filter((i: any) => !isNaN(i.lat) && !isNaN(i.lng));
   }, [dashboardData]);
 
-  const handleInspectorChange = (value: string) => {
-    setSelectedInspectorDropdown(value);
+  const handleInspectorChange = (value: string[]) => {
+    setSelectedInspectors(value);
   };
   const handleDrawerClose = () => {
     setDrawerVisible(false);
@@ -565,7 +597,15 @@ const SupervisorViewPage: React.FC = () => {
           alignItems: "stretch",
         }}
       >
-        {summaryCards.slice(0, 6).map((card) => renderSummaryCard(card))}
+        {summaryCards.slice(0, 6).map((card) => {
+          if (card.key === "missing") {
+            return renderSummaryCard(card, { onClick: () => setDataModalType("pendingCheckIn") });
+          }
+          if (card.key === "onLeave") {
+            return renderSummaryCard(card, { onClick: () => setDataModalType("onLeave") });
+          }
+          return renderSummaryCard(card);
+        })}
 
         <div style={{ display: "flex", alignItems: "stretch", flexShrink: 0 }}>
           {renderSummaryCard(fineSummaryCard, {
@@ -598,12 +638,18 @@ const SupervisorViewPage: React.FC = () => {
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={6}>
             <Select
+              mode="multiple"
               placeholder={t("common.selectSupervisor", "Select Supervisor")}
               style={{ width: "100%" }}
-              value={selectedSupervisor}
+              value={selectedSupervisors}
               onChange={handleSupervisorChange}
               allowClear
               loading={isLoadingShifts}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.children as unknown as string)?.toLowerCase()?.includes(input.toLowerCase()) ?? false
+              }
+              maxTagCount="responsive"
             >
               {supervisors.map((sup: any) => (
                 <Select.Option key={sup.employeeId} value={sup.employeeId}>
@@ -614,16 +660,22 @@ const SupervisorViewPage: React.FC = () => {
           </Col>
           <Col xs={24} sm={12} md={6}>
             <Select
+              mode="multiple"
               placeholder={t("common.selectInspector", "Select Inspector")}
               style={{ width: "100%" }}
-              value={selectedInspectorDropdown ?? undefined}
+              value={selectedInspectors}
               onChange={handleInspectorChange}
               allowClear
               loading={isLoadingShifts}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.children as unknown as string)?.toLowerCase()?.includes(input.toLowerCase()) ?? false
+              }
+              maxTagCount="responsive"
             >
-              {inspectors.map((insp: any) => (
-                <Select.Option key={insp.employeeId} value={insp.employeeId}>
-                  {insp.employeeName}
+              {inspectorOptions.map((insp: any) => (
+                <Select.Option key={insp.id} value={insp.id}>
+                  {insp.name}
                 </Select.Option>
               ))}
             </Select>
@@ -727,6 +779,18 @@ const SupervisorViewPage: React.FC = () => {
         sourceOptions={[]}
         areaIdToNameMap={new Map()}
         statusLabels={{}}
+      />
+
+      <DashboardDataModal
+        open={dataModalType !== null}
+        onClose={() => setDataModalType(null)}
+        type={dataModalType || "onLeave"}
+        data={
+          dataModalType === "onLeave"
+            ? dashboardData?.data?.onLeaveData || []
+            : dashboardData?.data?.pendingCheckInData || []
+        }
+        supervisors={activeShiftsData || []}
       />
     </div>
   );

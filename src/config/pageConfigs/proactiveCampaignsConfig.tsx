@@ -1,11 +1,5 @@
 import type { PageConfig } from "../../types/config";
-import {
-  EnvironmentOutlined,
-  ClockCircleOutlined,
-  ExclamationCircleOutlined,
-  CheckCircleOutlined,
-  FileTextOutlined,
-} from "@ant-design/icons";
+import { ClockCircleOutlined, CheckCircleOutlined, FileTextOutlined } from "@ant-design/icons";
 
 export const proactiveLookupData = {
   violationTypes: [
@@ -16,6 +10,7 @@ export const proactiveLookupData = {
     { value: "signage", labelEn: "Improper Signage", labelAr: "لافتات غير مناسبة" },
   ],
   statuses: [
+    { value: "draft", labelEn: "Draft", labelAr: "مسودة" },
     { value: "active", labelEn: "Active", labelAr: "نشط" },
     { value: "completed", labelEn: "Completed", labelAr: "مكتمل" },
     { value: "cancelled", labelEn: "Cancelled", labelAr: "ملغى" },
@@ -75,7 +70,6 @@ export const proactiveCampaignsConfig: PageConfig = {
         title: "form.title",
         dataIndex: "title",
         type: "string",
-        sortable: true,
       },
       {
         key: "startTime",

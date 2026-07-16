@@ -747,7 +747,29 @@
     "leaveRequests": "طلبات الإجازة",
     "obstacle": "عائق",
     "routine": "روتيني",
-    "warning": "تحذير"
+    "warning": "تحذير",
+    "modal": {
+      "sNo": "رقم",
+      "userName": "اسم المفتش",
+      "leaveReason": "سبب الإجازة",
+      "fromDate": "من تاريخ",
+      "toDate": "إلى تاريخ",
+      "totalDays": "إجمالي الأيام",
+      "status": "الحالة",
+      "supervisor": "المشرف",
+      "inspectorName": "اسم المفتش",
+      "empNumber": "الرقم الوظيفي",
+      "onLeaveTitle": "المفتشون في إجازة",
+      "pendingCheckInTitle": "المفتشون بانتظار تسجيل الحضور",
+      "searchPlaceholder": "بحث...",
+      "noData": "لا توجد بيانات متاحة"
+    }
+  },
+  "leave": {
+    "approved": "موافق عليه",
+    "pending": "قيد الانتظار",
+    "rejected": "مرفوض",
+    "submitted": "تم التقديم"
   },
   "weekdays": {
     "Monday": "الإثنين",

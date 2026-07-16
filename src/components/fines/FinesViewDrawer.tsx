@@ -418,7 +418,7 @@ const FinesViewDrawer: React.FC<FinesViewDrawerProps> = ({
         {!mappedFine ? (
           <Empty description="No Data" />
         ) : (
-          <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
+          <div style={{ maxHeight: "70vh", overflowY: "auto", overflowX: "hidden" }}>
             <Row gutter={16}>
               <Col span={24}>
                 <Row gutter={16}>

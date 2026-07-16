@@ -745,7 +745,29 @@
     "leaveRequests": "Leave Requests",
     "obstacle": "Obstacle",
     "routine": "Routine",
-    "warning": "Warning"
+    "warning": "Warning",
+    "modal": {
+      "sNo": "Sl.No",
+      "userName": "Inspector Name",
+      "leaveReason": "Leave Reason",
+      "fromDate": "From Date",
+      "toDate": "To Date",
+      "totalDays": "Total Days",
+      "status": "Status",
+      "supervisor": "Supervisor",
+      "inspectorName": "Inspector Name",
+      "empNumber": "Employee Number",
+      "onLeaveTitle": "On Leave Inspectors",
+      "pendingCheckInTitle": "Pending Check-In Inspectors",
+      "searchPlaceholder": "Search...",
+      "noData": "No data available"
+    }
+  },
+  "leave": {
+    "approved": "Approved",
+    "pending": "Pending",
+    "rejected": "Rejected",
+    "submitted": "Submitted"
   },
   "weekdays": {
     "Monday": "Monday",

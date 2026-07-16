@@ -798,7 +798,7 @@ const ProactiveCampaignsPage: React.FC = () => {
 
             {modalMode === "edit" && (
               <Col span={12}>
-                <Form.Item name="status" label={t("form.status")}>
+                <Form.Item name="status" label={t("form.status")} rules={[{ required: true }]}>
                   <Select placeholder={t("placeholders.selectStatus", { defaultValue: "Select status" })} allowClear>
                     <Option value="active">{t("status.active", { defaultValue: "Active" })}</Option>
                     <Option value="cancelled">{t("status.cancelled", { defaultValue: "Cancelled" })}</Option>
