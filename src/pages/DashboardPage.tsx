@@ -41,14 +41,18 @@ const SupervisorViewPage: React.FC = () => {
   const [selectedSupervisors, setSelectedSupervisors] = useState<string[]>([]);
   const [selectedInspectors, setSelectedInspectors] = useState<string[]>([]);
   const [shifts, setShifts] = useState<any[]>([]);
-  const [selectedShift, setSelectedShift] = useState<string | null>(null);
+  const [selectedShifts, setSelectedShifts] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<[any, any]>([null, null]);
   const [finesExpanded, setFinesExpanded] = useState(false);
   const [dataModalType, setDataModalType] = useState<"onLeave" | "pendingCheckIn" | null>(null);
 
+  const roleGUID = localStorage.getItem("roleGUID");
+  const userGUID = localStorage.getItem("userGUID");
+  const isSupervisorFieldHidden = roleGUID === "137db453-07cc-4218-9ef8-3aa236d9e951";
+
   const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery(
     {},
-    { refetchOnMountOrArgChange: true }
+    { refetchOnMountOrArgChange: true },
   );
   const [triggerGetShifts, { isLoading: isLoadingShiftsDropdown }] = useLazyGetShiftsQuery();
 
@@ -196,55 +200,81 @@ const SupervisorViewPage: React.FC = () => {
     return supervisors.filter((s: any) => selectedSupervisors.includes(s.employeeId));
   }, [supervisors, selectedSupervisors]);
 
+  const supervisorZoneIdsArray = useMemo(() => {
+    if (isSupervisorFieldHidden && userGUID && activeShiftsData) {
+      const currentUser = (activeShiftsData as any[]).find(
+        (u: any) => u.employeeId === userGUID || u.inspectorGUID === userGUID
+      );
+      if (currentUser && currentUser.zoneIds && currentUser.zoneIds.length > 0) {
+        return currentUser.zoneIds.map(String);
+      }
+    }
+    return selectedSupervisorsData.flatMap((s: any) => s.zoneIds || []).map(String);
+  }, [selectedSupervisorsData, isSupervisorFieldHidden, userGUID, activeShiftsData]);
+
   const supervisorZoneIds = useMemo(() => {
-    const allZoneIds = selectedSupervisorsData.flatMap((s: any) => s.zoneIds || []);
-    return allZoneIds.length > 0 ? allZoneIds.join(",") : undefined;
-  }, [selectedSupervisorsData]);
+    return supervisorZoneIdsArray.length > 0 ? supervisorZoneIdsArray.join(",") : undefined;
+  }, [supervisorZoneIdsArray]);
 
   const {
     data: dashboardData,
     isLoading,
     error,
-  } = useGetWebDashboardInspectorsQuery({
-    ...(supervisorZoneIds ? { "Filters[ZoneId]": supervisorZoneIds } : {}),
-    orFilters: {
-      ...(selectedInspectors.length > 0 ? { UserId: selectedInspectors } : {}),
-      ...(selectedShift ? { shiftId: selectedShift } : {}),
-    },
-    ...(dateRange && dateRange[0] && dateRange[1]
-      ? {
-          betweens: {
-            EntityDateTime: {
-              From: dateRange[0].format("YYYY-MM-DD"),
-              To: dateRange[1].format("YYYY-MM-DD"),
+  } = useGetWebDashboardInspectorsQuery(
+    {
+      ...(supervisorZoneIds ? { "Filters[ZoneId]": supervisorZoneIds } : {}),
+      orFilters: {
+        ...(selectedInspectors.length > 0 ? { UserId: selectedInspectors } : {}),
+        ...(selectedShifts.length > 0 ? { shiftId: selectedShifts } : {}),
+      },
+      ...(dateRange && dateRange[0] && dateRange[1]
+        ? {
+            betweens: {
+              EntityDateTime: {
+                From: dateRange[0].format("YYYY-MM-DD"),
+                To: dateRange[1].format("YYYY-MM-DD"),
+              },
             },
-          },
-        }
-      : {}),
-  }, { refetchOnMountOrArgChange: true });
+          }
+        : {}),
+    },
+    { refetchOnMountOrArgChange: true },
+  );
 
-  // When supervisors are selected, show inspectors from API response's totalInspectorData
-  // When no supervisor is selected, show all inspectors from activeShiftsData
+  // Show inspectors from activeShiftsData, filtered by the selected supervisors' zones (or logged in supervisor's zones) if any
   const inspectorOptions = useMemo(() => {
-    if (selectedSupervisors.length > 0 && dashboardData?.data?.totalInspectorData) {
-      return (dashboardData.data.totalInspectorData || []).map((insp: any) => ({
-        id: insp.inspectorGUID,
-        name: insp.inspectorName,
-      }));
+    if (supervisorZoneIdsArray.length > 0) {
+      return inspectors
+        .filter((insp: any) => {
+          const inspZones = (insp.zoneIds || []).map(String);
+          return inspZones.some((z: string) => supervisorZoneIdsArray.includes(z));
+        })
+        .map((insp: any) => ({
+          id: insp.employeeId,
+          name: insp.employeeName,
+        }));
     }
     return inspectors.map((insp: any) => ({
       id: insp.employeeId,
       name: insp.employeeName,
     }));
-  }, [selectedSupervisors, dashboardData, inspectors]);
+  }, [supervisorZoneIdsArray, inspectors]);
 
   const handleSupervisorChange = (value: string[]) => {
     setSelectedSupervisors(value);
     // Clear selected inspectors that are no longer in the options
     if (selectedInspectors.length > 0) {
+      const newSelectedSupervisorsData = supervisors.filter((s: any) => value.includes(s.employeeId));
+      const allZoneIds = newSelectedSupervisorsData.flatMap((s: any) => s.zoneIds || []).map(String);
+
       const validIds = new Set(
-        value.length > 0 && dashboardData?.data?.totalInspectorData
-          ? (dashboardData.data.totalInspectorData || []).map((i: any) => i.inspectorGUID)
+        value.length > 0 && allZoneIds.length > 0
+          ? inspectors
+              .filter((insp: any) => {
+                const inspZones = (insp.zoneIds || []).map(String);
+                return inspZones.some((z: string) => allZoneIds.includes(z));
+              })
+              .map((i: any) => i.employeeId)
           : inspectors.map((i: any) => i.employeeId),
       );
       setSelectedInspectors((prev) => prev.filter((id) => validIds.has(id)));
@@ -636,28 +666,30 @@ const SupervisorViewPage: React.FC = () => {
 
       <Card style={{ marginBottom: 20 }}>
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={6}>
-            <Select
-              mode="multiple"
-              placeholder={t("common.selectSupervisor", "Select Supervisor")}
-              style={{ width: "100%" }}
-              value={selectedSupervisors}
-              onChange={handleSupervisorChange}
-              allowClear
-              loading={isLoadingShifts}
-              showSearch
-              filterOption={(input, option) =>
-                (option?.children as unknown as string)?.toLowerCase()?.includes(input.toLowerCase()) ?? false
-              }
-              maxTagCount="responsive"
-            >
-              {supervisors.map((sup: any) => (
-                <Select.Option key={sup.employeeId} value={sup.employeeId}>
-                  {sup.employeeName}
-                </Select.Option>
-              ))}
-            </Select>
-          </Col>
+          {!isSupervisorFieldHidden && (
+            <Col xs={24} sm={12} md={6}>
+              <Select
+                mode="multiple"
+                placeholder={t("common.selectSupervisor", "Select Supervisor")}
+                style={{ width: "100%" }}
+                value={selectedSupervisors}
+                onChange={handleSupervisorChange}
+                allowClear
+                loading={isLoadingShifts}
+                showSearch
+                filterOption={(input, option) =>
+                  (option?.children as unknown as string)?.toLowerCase()?.includes(input.toLowerCase()) ?? false
+                }
+                maxTagCount="responsive"
+              >
+                {supervisors.map((sup: any) => (
+                  <Select.Option key={sup.employeeId} value={sup.employeeId}>
+                    {sup.employeeName}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Col>
+          )}
           <Col xs={24} sm={12} md={6}>
             <Select
               mode="multiple"
@@ -682,12 +714,14 @@ const SupervisorViewPage: React.FC = () => {
           </Col>
           <Col xs={24} sm={12} md={6}>
             <Select
+              mode="multiple"
               placeholder={t("common.selectShift", "Select Shift")}
               style={{ width: "100%" }}
-              value={selectedShift}
-              onChange={(val) => setSelectedShift(val)}
+              value={selectedShifts}
+              onChange={(val) => setSelectedShifts(val)}
               allowClear
               loading={isLoadingShiftsDropdown}
+              maxTagCount="responsive"
             >
               {shifts.map((shift) => (
                 <Select.Option key={shift.shiftTypeGUID} value={shift.shiftTypeGUID}>

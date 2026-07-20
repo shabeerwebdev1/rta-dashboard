@@ -160,6 +160,7 @@ const DashboardDataModal: React.FC<DashboardDataModalProps> = ({ open, onClose, 
       onCancel={onClose}
       footer={null}
       width={isOnLeave ? 950 : 600}
+      centered
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div
@@ -208,7 +209,7 @@ const DashboardDataModal: React.FC<DashboardDataModalProps> = ({ open, onClose, 
             />
           ),
         }}
-        scroll={{ x: isOnLeave ? 850 : undefined }}
+        scroll={{ x: isOnLeave ? 850 : undefined, y: "55vh" }}
       />
     </Modal>
   );
