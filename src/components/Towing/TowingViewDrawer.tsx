@@ -127,20 +127,15 @@ const TowingViewDrawer: React.FC<TowingViewDrawerProps> = ({ open, onClose, reco
       : [55.2743, 25.1972];
 
   const getStatusColor = (status: TowingStatus): string => {
-    switch (status) {
-      case TowingStatus.Approved:
-        return "green";
-      case TowingStatus.Rejected:
-        return "red";
-      case TowingStatus.Cancelled:
-        return "default";
-      case TowingStatus.InProgress:
-        return "blue";
-      case TowingStatus.Completed:
-        return "cyan";
-      default:
-        return "blue";
-    }
+    const colorMap: Record<string, string> = {
+      [TowingStatus.Pending]: "orange",
+      [TowingStatus.Approved]: "green",
+      [TowingStatus.Rejected]: "red",
+      [TowingStatus.Cancelled]: "default",
+      [TowingStatus.InProgress]: "blue",
+      [TowingStatus.Completed]: "cyan",
+    };
+    return colorMap[status] || "default";
   };
 
   const getStatusLabel = (status: TowingStatus): string => {

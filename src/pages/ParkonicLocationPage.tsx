@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
-import { Space, Card, Input, Button, Form, Row, Col, Select, App, Tag } from "antd";
+import { Space, Card, Input, Button, Form, Row, Col, Select, App, Tag, DatePicker } from "antd";
 import { DownloadOutlined, EyeOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
@@ -94,7 +94,9 @@ const ParkonicLocationPage: React.FC = () => {
   };
 
   const resolveLocationGuid = (record: any) => {
-    return record?.locationGUID || record?.LocationGuid || record?.locationGuid || record?.EntityGUID || record?.id || "";
+    return (
+      record?.locationGUID || record?.LocationGuid || record?.locationGuid || record?.EntityGUID || record?.id || ""
+    );
   };
 
   useEffect(() => {
@@ -144,11 +146,12 @@ const ParkonicLocationPage: React.FC = () => {
     clearAll();
   };
 
-  const transformDataForCSV = (data: any[]) => {
-    return data.map((item, index: number) => {
+  const transformDataForCSV = (dataToExport: any[]) => {
+    return dataToExport.map((item, index: number) => {
       const csvRecord: Record<string, unknown> = {};
 
       csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
+      csvRecord[t("form.parkonicsLocationId")] = item.parkonics_Location_Id ?? "";
 
       if (i18n.language === "ar") {
         csvRecord[t("form.parkingNameAr")] = item.parking_Name_Ar || "";
@@ -156,12 +159,10 @@ const ParkonicLocationPage: React.FC = () => {
         csvRecord[t("form.parkingNameEn")] = item.parking_Name_En || "";
       }
 
-      csvRecord[t("form.parkonicsLocationId")] = item.parkonics_Location_Id || "";
-      csvRecord[t("form.zone")] = item.zone || "";
-      csvRecord[t("form.area")] = item.area || "";
-      csvRecord[t("form.addedOn")] = item.created_At ? dayjs(item.created_At).format("DD MMM YYYY") : "";
-      csvRecord[t("form.approvedBy")] = item.updated_By || "";
-      csvRecord[t("form.isApproved")] = item.isUpdatedBack ? t("form.approved") : t("form.pending");
+      csvRecord[t("form.addedOn")] = item.created_At ? dayjs(item.created_At).format("DD MMM YYYY, hh:mm A") : "";
+      csvRecord[t("form.status")] = item.status === 1 || item.isUpdatedBack ? t("form.approved") : t("form.pending");
+      csvRecord[t("form.approvedBy")] = getEmployeeName(item.updated_By) || item.updated_By || "";
+      csvRecord[t("form.approvedDate")] = item.updated_At ? dayjs(item.updated_At).format("DD MMM YYYY, hh:mm A") : "";
 
       return csvRecord;
     });
@@ -347,6 +348,13 @@ const ParkonicLocationPage: React.FC = () => {
                 style={{ width: 450 }}
                 allowClear
               />
+              <span>{t("common.filterByaddedon")}</span>
+              <DatePicker.RangePicker
+                value={state.dateRange}
+                format={"DD MMM YYYY"}
+                placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
+                onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
+              />
             </Space>
           </Col>
           <Col>
@@ -376,15 +384,19 @@ const ParkonicLocationPage: React.FC = () => {
         handlePaginationChange={handlePaginationChange}
         rowSelection={{
           selectedRowKeys,
-          onChange: (keys: React.Key[], selectedRows: any[]) => {
+          onChange: (keys: React.Key[], selectedRowsList: any[]) => {
             setSelectedRowKeys(keys);
-            setSelectedRows((prev) => {
-              const remaining = prev.filter((p) => keys.includes(p.id));
-              const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
+            setSelectedRows((prev: any[]) => {
+              const getKey = (item: any) => item.parkonics_Location_Id ?? item.id ?? item.locationGUID;
+              const remaining = prev.filter((p: any) => keys.includes(getKey(p)));
+              const newSelected = selectedRowsList.filter(
+                (r: any) => !remaining.some((p: any) => getKey(p) === getKey(r)),
+              );
               return [...remaining, ...newSelected];
             });
           },
         }}
+        rowKey={(record: any) => record.parkonics_Location_Id ?? record.id ?? record.locationGUID}
         filterOptions={{
           status: [
             { text: t("status.approved"), value: 1 },

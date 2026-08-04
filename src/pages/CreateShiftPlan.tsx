@@ -193,6 +193,7 @@ export default function CreateShiftPlan() {
         content: t(
           "shiftPlanning.loadDraftMessage",
           `A saved draft with ${draftData.length} entries was found. Would you like to load it?`,
+          { count: draftData.length },
         ),
         okText: t("common.yes", "Yes"),
         cancelText: t("common.no", "No"),

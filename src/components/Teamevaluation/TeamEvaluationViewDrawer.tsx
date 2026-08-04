@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Collapse, Descriptions, Drawer, Empty, Progress, Space, Spin, Tag, Typography } from "antd";
+import { Button, Collapse, Descriptions, Empty, Modal, Progress, Space, Spin, Tag, Typography } from "antd";
 import { useTranslation } from "react-i18next";
 import { evaluationTypeOptions } from "../../config/pageConfigs/teamEvaluationConfig";
 import { formatDateByLocale } from "../../utils/dateFormatter";
@@ -53,6 +53,20 @@ const getGradeColor = (grade: unknown, score?: number) => {
   return "default";
 };
 
+const getGradeLabel = (grade: unknown, language: string) => {
+  if (grade === null || grade === undefined || grade === "") return "";
+  const gradeLabels: Record<string, { en: string; ar: string }> = {
+    excellent: { en: "Excellent", ar: "ممتاز" },
+    good: { en: "Good", ar: "جيد" },
+    fair: { en: "Fair", ar: "مقبول" },
+    unsatisfactory: { en: "Unsatisfactory", ar: "غير مُرضٍ" },
+  };
+  const key = String(grade).toLowerCase();
+  const found = gradeLabels[key];
+  if (!found) return String(grade);
+  return language === "ar" ? found.ar : found.en;
+};
+
 const getProgressStatus = (score: number): "success" | "normal" | "exception" => {
   if (score >= 80) return "success";
   if (score >= 60) return "normal";
@@ -76,7 +90,6 @@ const TeamEvaluationViewDrawer: React.FC<TeamEvaluationViewDrawerProps> = ({
   isLoading = false,
 }) => {
   const { t, i18n } = useTranslation();
-  const isRtl = i18n.dir() === "rtl";
 
   const getPersonName = (id: unknown, options: PersonOption[], fallbackEn?: string, fallbackAr?: string) => {
     if (i18n.language === "ar" && fallbackAr) return fallbackAr;
@@ -102,29 +115,33 @@ const TeamEvaluationViewDrawer: React.FC<TeamEvaluationViewDrawerProps> = ({
   const criteriaScoresList = useMemo(() => {
     if (!record) return [];
 
-    if (Array.isArray(record.criteriaDetails) && record.criteriaDetails.length > 0) {
-      return record.criteriaDetails.map((criteriaDetail: any) => ({
-        id: criteriaDetail.id,
-        criteriaName: criteriaDetail.criteriaName,
-        weight: criteriaDetail.weight,
-        scoreValue: criteriaDetail.score,
-        comments: criteriaDetail.comments || "",
-      }));
-    }
+    const rawScores =
+      (Array.isArray(record.criteriaDetails) && record.criteriaDetails.length > 0 && record.criteriaDetails) ||
+      (Array.isArray(record.criteriaScores) && record.criteriaScores.length > 0 && record.criteriaScores) ||
+      (Array.isArray(record.criteria) && record.criteria.length > 0 && record.criteria) ||
+      [];
 
-    if (Array.isArray(record.criteriaScores) && record.criteriaScores.length > 0) {
-      return record.criteriaScores.map((score: any) => {
-        const matchedCriteria = criteria.find((item) => String(item.id) === String(score.criteriaId));
+    if (rawScores.length > 0) {
+      return rawScores.map((scoreDetail: any) => {
+        const itemCriteriaId = scoreDetail.criteriaId || scoreDetail.id;
+        const matchedCriteria = criteria.find(
+          (item) => String(item.id).toLowerCase() === String(itemCriteriaId || "").toLowerCase(),
+        );
+
+        const scoreVal = scoreDetail.score !== undefined ? scoreDetail.score : (scoreDetail.scoreValue ?? 0);
+        const nameVal =
+          scoreDetail.criteriaName ||
+          (i18n.language === "ar"
+            ? matchedCriteria?.descriptionAr || scoreDetail.descriptionAr
+            : matchedCriteria?.descriptionEn || scoreDetail.descriptionEn) ||
+          "";
 
         return {
-          id: score.criteriaId,
-          criteriaName:
-            i18n.language === "ar"
-              ? matchedCriteria?.descriptionAr || score.criteriaName
-              : matchedCriteria?.descriptionEn || score.criteriaName,
-          weight: matchedCriteria?.weight || score.weight,
-          scoreValue: score.score,
-          comments: score.comments || "",
+          id: itemCriteriaId,
+          criteriaName: nameVal,
+          weight: matchedCriteria?.weight || scoreDetail.weight || 0,
+          scoreValue: scoreVal,
+          comments: scoreDetail.comments || "",
         };
       });
     }
@@ -141,13 +158,24 @@ const TeamEvaluationViewDrawer: React.FC<TeamEvaluationViewDrawerProps> = ({
       : t("common.noData");
 
   return (
-    <Drawer
+    <Modal
       open={open}
-      onClose={onClose}
-      width={560}
+      onCancel={onClose}
+      width={750}
       title={t("page.viewTitle", { entity: t("entity.evaluation") })}
-      placement={isRtl ? "left" : "right"}
-      className="team-evaluation-drawer"
+      footer={[
+        <Button key="close" type="primary" onClick={onClose}>
+          {t("common.close")}
+        </Button>,
+      ]}
+      styles={{
+        body: {
+          maxHeight: "70vh",
+          overflowY: "auto",
+          overflowX: "hidden",
+          paddingRight: 4,
+        },
+      }}
     >
       <Spin spinning={isLoading}>
         <Descriptions bordered column={1} size="small" style={{ marginBottom: 24 }}>
@@ -182,7 +210,7 @@ const TeamEvaluationViewDrawer: React.FC<TeamEvaluationViewDrawerProps> = ({
 
           <Descriptions.Item label={t("form.grade")}>
             {record.grade ? (
-              <Tag color={getGradeColor(record.grade, totalScore)}>{record.grade}</Tag>
+              <Tag color={getGradeColor(record.grade, totalScore)}>{getGradeLabel(record.grade, i18n.language)}</Tag>
             ) : (
               t("common.noData")
             )}
@@ -227,7 +255,7 @@ const TeamEvaluationViewDrawer: React.FC<TeamEvaluationViewDrawerProps> = ({
           <Empty description={t("common.noData")} />
         )}
       </Spin>
-    </Drawer>
+    </Modal>
   );
 };
 

@@ -27,7 +27,7 @@ export const whitelistTradeLicenseConfig: PageConfig = {
   searchConfig: {
     globalSearchKeys: ["tradeLicenseNumber", "tradeLicense_EN_Name", "plotNumber"],
     columnFilterKeys: ["plateStatus"],
-    dateRangeKey: "fromDate",
+    dateRangeKey: "FromDate",
   },
   statsConfig: [
     {

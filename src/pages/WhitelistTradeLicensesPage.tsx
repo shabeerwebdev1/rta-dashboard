@@ -54,7 +54,7 @@ const WhitelistTradeLicensesPage: React.FC = () => {
   const config = pageConfigs[pageKey];
   const [searchParams] = useSearchParams();
   const {
-    apiParams,
+    apiParams: rawApiParams,
     handleTableChange,
     handlePaginationChange,
     setGlobalSearch,
@@ -63,6 +63,12 @@ const WhitelistTradeLicensesPage: React.FC = () => {
     clearAll,
     state,
   } = useTableParams(config.searchConfig!);
+
+  const apiParams = {
+    PageNumber: rawApiParams.PageNumber || 1,
+    PageSize: rawApiParams.PageSize || 10,
+    ...rawApiParams,
+  };
   const [form] = Form.useForm();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -525,7 +531,7 @@ const WhitelistTradeLicensesPage: React.FC = () => {
 
   const totalCount = useMemo(() => {
     if (!data) return 0;
-    return Array.isArray(data) ? data.length : data.total || 0;
+    return Array.isArray(data) ? data.length : data.totalCount || 0;
   }, [data]);
 
   const metadata = useMemo(() => {

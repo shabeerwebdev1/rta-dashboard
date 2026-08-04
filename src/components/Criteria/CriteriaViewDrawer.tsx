@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, Descriptions, Button, Spin, Tag } from "antd";
+import { Modal, Descriptions, Button, Spin, Tag } from "antd";
 import { useTranslation } from "react-i18next";
 import { ShareAltOutlined } from "@ant-design/icons";
 
@@ -31,8 +31,6 @@ const DISPLAY_FIELDS = [
 
 const CriteriaViewDrawer: React.FC<CriteriaViewDrawerProps> = ({ open, onClose, record, onShare }) => {
   const { t, i18n } = useTranslation();
-
-  const isRtl = i18n.dir() === "rtl";
 
   // Mirrors WhitelistPlatesViewDrawer: mapped/resolved record + loading state
   const [mappedRecord, setMappedRecord] = useState<Record<string, unknown> | null>(null);
@@ -99,19 +97,29 @@ const CriteriaViewDrawer: React.FC<CriteriaViewDrawerProps> = ({ open, onClose, 
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
-    <Drawer
+    <Modal
       open={open}
-      onClose={onClose}
-      width={500}
+      onCancel={onClose}
+      width={600}
       title={t("page.viewTitle", { entity: t("entity.criteria") })}
-      placement={isRtl ? "left" : "right"}
-      extra={
+      footer={[
         onShare ? (
-          <Button icon={<ShareAltOutlined />} onClick={onShare}>
+          <Button key="share" icon={<ShareAltOutlined />} onClick={onShare}>
             {t("common.share")}
           </Button>
-        ) : null
-      }
+        ) : null,
+        <Button key="close" type="primary" onClick={onClose}>
+          {t("common.close")}
+        </Button>,
+      ].filter(Boolean)}
+      styles={{
+        body: {
+          maxHeight: "70vh",
+          overflowY: "auto",
+          overflowX: "hidden",
+          paddingRight: 4,
+        },
+      }}
     >
       {/* Spin wrapper — identical to WhitelistPlatesViewDrawer */}
       <Spin spinning={isMapping}>
@@ -129,7 +137,7 @@ const CriteriaViewDrawer: React.FC<CriteriaViewDrawerProps> = ({ open, onClose, 
           </Descriptions>
         )}
       </Spin>
-    </Drawer>
+    </Modal>
   );
 };
 

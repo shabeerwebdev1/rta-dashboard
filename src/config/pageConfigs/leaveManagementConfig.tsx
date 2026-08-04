@@ -1,9 +1,4 @@
-import {
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  CloseCircleOutlined,
-  IdcardOutlined,
-} from "@ant-design/icons";
+import { CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined, IdcardOutlined } from "@ant-design/icons";
 import { PageConfig } from "../../types/config";
 import { Tag } from "antd";
 import dayjs from "dayjs";
@@ -45,7 +40,7 @@ export const useLeaveManagementPageConfig = (): PageConfig => {
     searchConfig: {
       globalSearchKeys: ["userName"],
       columnFilterKeys: ["leaveType", "leave_status"],
-      dateRangeKey: "LeaveFromDate",
+      dateRangeKey: "Leave.LeaveFromDate",
       filterKeyMap: {
         status: "status",
       },
@@ -55,34 +50,27 @@ export const useLeaveManagementPageConfig = (): PageConfig => {
       {
         title: "stats.TotalLeaveRequests",
         icon: <IdcardOutlined />,
-        value: (data, metadata) =>
-          `${data.length} / ${metadata?.totalRecords || 0}`,
+        value: (data, metadata) => `${data.length} / ${metadata?.totalRecords || 0}`,
       },
       {
         title: "status.pending",
         icon: <ClockCircleOutlined />,
         value: (data, metadata) =>
-          `${
-            data.filter((d) => d.status === LeaveStatus.Pending).length
-          } / ${metadata?.pendingRecords || 0}`,
+          `${data.filter((d) => d.status === LeaveStatus.Pending).length} / ${metadata?.pendingRecords || 0}`,
         color: "orange",
       },
       {
         title: "status.approved",
         icon: <CheckCircleOutlined />,
         value: (data, metadata) =>
-          `${
-            data.filter((d) => d.status === LeaveStatus.Approved).length
-          } / ${metadata?.approvedRecords || 0}`,
+          `${data.filter((d) => d.status === LeaveStatus.Approved).length} / ${metadata?.approvedRecords || 0}`,
         color: "#52c41a",
       },
       {
         title: "status.rejected",
         icon: <CloseCircleOutlined />,
         value: (data, metadata) =>
-          `${
-            data.filter((d) => d.status === LeaveStatus.Rejected).length
-          } / ${metadata?.rejectedRecords || 0}`,
+          `${data.filter((d) => d.status === LeaveStatus.Rejected).length} / ${metadata?.rejectedRecords || 0}`,
         color: "red",
       },
     ],
@@ -123,10 +111,7 @@ export const useLeaveManagementPageConfig = (): PageConfig => {
           type: "custom",
           sortable: false,
           render: (value: number) => (
-            <Tag
-              color="default"
-              style={{ borderRadius: "10px", padding: "4px 8px" }}
-            >
+            <Tag color="default" style={{ borderRadius: "10px", padding: "4px 8px" }}>
               {value} {value === 1 ? t("common.day") : t("common.days")}
             </Tag>
           ),
@@ -139,11 +124,10 @@ export const useLeaveManagementPageConfig = (): PageConfig => {
           filterable: true,
           align: "center",
           render: (status: LeaveStatus) => {
-            const { text, color } =
-              statusMap[status] || {
-                text: "status.unknown",
-                color: "default",
-              };
+            const { text, color } = statusMap[status] || {
+              text: "status.unknown",
+              color: "default",
+            };
 
             return <Tag color={color}>{t(text)}</Tag>;
           },

@@ -21,13 +21,13 @@ import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import dayjs from "dayjs";
 import DataTableWrapper from "../components/common/DataTableWrapper";
-import { parkonicPageConfig } from "../config/pageConfigs/parkonicConfig";
+import { parkonicPageConfig, plateSources, PLATE_COLOR } from "../config/pageConfigs/parkonicConfig";
 import ParkonicAttachmentsModal from "../components/parkonic/ParkonicAttachmentsModal";
 
 const { Option } = Select;
 
 const ParkonicPage: React.FC = () => {
-  const { t , i18n} = useTranslation();
+  const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
   const notification = useAppNotification();
@@ -101,25 +101,58 @@ const ParkonicPage: React.FC = () => {
   };
 
   const transformDataForCSV = (data: any[]) => {
+    const isArabic = i18n.language === "ar";
     return data.map((item, index: number) => {
       const csvRecord: Record<string, unknown> = {};
 
-      csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
+      csvRecord[isArabic ? "التسلسل" : "Sl.No"] = index + 1;
 
       config.tableConfig.columns.forEach((column: any) => {
-        if (column.key === "plateNumber") {
-          csvRecord[t("form.plateNumber")] = item.plateNumber || "";
+        const headerTitle = t(column.title);
+
+        if (column.key === "entityNo") {
+          // Grid shows entityNo if approved (reviewStatus === 1), otherwise transcationId
+          csvRecord[headerTitle] = item.reviewStatus === 1 ? item.entityNo || "" : item.transcationId || "";
+        } else if (column.key === "plateNumber") {
+          const source = plateSources[item.plateSource]?.[isArabic ? "ar" : "en"] || "";
+          const code = PLATE_COLOR[item.plateCode] || "";
+          const num = item.plateNumber || "";
+          csvRecord[headerTitle] = [source, code, num].filter(Boolean).join(" ");
+        } else if (column.key === "categoryId") {
+          const catName = isArabic
+            ? item.violationNameAr || item.violationNameEn
+            : item.violationNameEn || item.violationNameAr;
+          csvRecord[headerTitle] = catName ? `${item.categoryId ?? ""} (${catName})` : (item.categoryId ?? "");
+        } else if (column.key === "violationAmount") {
+          csvRecord[headerTitle] = item.violationAmount != null ? `AED ${item.violationAmount}` : "";
         } else if (column.key === "reviewStatus") {
-          csvRecord[t("form.status")] =
+          csvRecord[headerTitle] =
             item.reviewStatus === 1
               ? t("status.approved")
               : item.reviewStatus === 2
                 ? t("status.rejected")
                 : t("status.pending");
-        } else if (column.key === "entryDate") {
-          csvRecord[t("form.entryDate")] = item.entryDate ? dayjs(item.entryDate).format("DD MMM YYYY") : "";
+        } else if (column.key === "createdDateTime") {
+          csvRecord[headerTitle] = item.createdDateTime
+            ? dayjs(item.createdDateTime).format("DD MMM YYYY, hh:mm A")
+            : "";
+        } else if (column.key === "reviewerName") {
+          csvRecord[headerTitle] = item.reviewerName || "";
+        } else if (column.key === "reviewedDtTm") {
+          csvRecord[headerTitle] = item.reviewedDtTm ? dayjs(item.reviewedDtTm).format("DD MMM YYYY, hh:mm A") : "";
+        } else if (column.key === "review_updateback_status") {
+          csvRecord[headerTitle] =
+            item.review_updateback_status === 1
+              ? isArabic
+                ? "ناجح"
+                : "Success"
+              : item.review_updateback_status === 2
+                ? isArabic
+                  ? "فشل"
+                  : "Failed"
+                : "";
         } else {
-          csvRecord[t(column.title)] = item[column.key] ?? "";
+          csvRecord[headerTitle] = item[column.key] ?? "";
         }
       });
 
@@ -287,7 +320,7 @@ const ParkonicPage: React.FC = () => {
                 style={{ width: 450 }}
                 allowClear
               />
-              <span>{t("common.filterByEntryDate")}</span>
+              <span>{t("common.filterByaddedon")}</span>
               <DatePicker.RangePicker
                 value={state.dateRange}
                 format={"DD MMM YYYY"}
@@ -323,21 +356,22 @@ const ParkonicPage: React.FC = () => {
         handlePaginationChange={handlePaginationChange}
         rowSelection={{
           selectedRowKeys,
-          onChange: (keys: React.Key[], selectedRows: any[]) => {
+          onChange: (keys: React.Key[], selectedRowsList: any[]) => {
             setSelectedRowKeys(keys);
 
-            setSelectedRows((prev) => {
-              const remaining = prev.filter((p) => keys.includes(p.id));
-
-              const newSelected = selectedRows.filter((r) => !remaining.some((p) => p.id === r.id));
-
+            setSelectedRows((prev: any[]) => {
+              const getRecordKey = (r: any) => r?.iid ?? r?.fineId ?? r?.transcationId ?? r?.id ?? r?.key;
+              const remaining = prev.filter((p) => keys.includes(getRecordKey(p)));
+              const newSelected = selectedRowsList.filter(
+                (r) => !remaining.some((p) => getRecordKey(p) === getRecordKey(r)),
+              );
               return [...remaining, ...newSelected];
             });
           },
         }}
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
-        rowKey={config.tableConfig.rowKey}
+        rowKey={(record: any) => record?.iid ?? record?.fineId ?? record?.transcationId ?? record?.id ?? record?.key}
         state={state}
         tableLayout="fixed"
         filterOptions={{

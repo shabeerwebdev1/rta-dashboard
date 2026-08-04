@@ -33,7 +33,7 @@ export const parkonicLocationPageConfig: PageConfig = {
   searchConfig: {
     globalSearchKeys: ["parking_Name_En", "parking_Name_Ar", "parkonics_Location_Id"],
     columnFilterKeys: ["zone", "area", "status"],
-    dateRangeKey: "created_At",
+    dateRangeKey: "CreatedDateTime",
     filterKeyMap: {
       status: "status",
     },
@@ -61,6 +61,7 @@ export const parkonicLocationPageConfig: PageConfig = {
   ],
 
   tableConfig: {
+    rowKey: "parkonics_Location_Id",
     columns: [
       { key: "parkonics_Location_Id", title: "form.parkonicsLocationId", type: "string", align: "center" },
       { key: "parking_Name_En", title: "form.parkingNameEn", type: "string" },

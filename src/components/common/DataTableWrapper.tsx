@@ -376,7 +376,7 @@ interface DataTableWrapperProps {
   rowSelection?: any;
   actionMenuItems?: (record: any) => any[];
   tableSize: "middle" | "small";
-  rowKey?: string;
+  rowKey?: string | ((record: any, index?: number) => React.Key);
   state: {
     columnFilters: Record<string, (string | number)[] | null>;
     sortBy?: string;
@@ -435,10 +435,24 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
 
   const getRowKey = React.useCallback(
     (record: any, index: number) => {
-      if (rowKey && record[rowKey] !== undefined && record[rowKey] !== null) {
+      if (typeof rowKey === "function") {
+        return rowKey(record, index);
+      }
+      if (typeof rowKey === "string" && record[rowKey] !== undefined && record[rowKey] !== null) {
         return record[rowKey];
       }
-      const commonKeys = ["id", "key", "ID", "Key", "uuid", "UUID"];
+      const commonKeys = [
+        "iid",
+        "parkonics_Location_Id",
+        "fineId",
+        "transcationId",
+        "id",
+        "key",
+        "ID",
+        "Key",
+        "uuid",
+        "UUID",
+      ];
       for (const key of commonKeys) {
         if (record[key] !== undefined && record[key] !== null) {
           return record[key];

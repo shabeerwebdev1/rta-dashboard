@@ -64,9 +64,22 @@ interface ShiftType {
   fontColor: string;
 }
 
-// Helpers
-const monthNameByIndex = (i: number) =>
-  [
+const monthNameByIndex = (i: number, lang = "en") => {
+  const arMonths = [
+    "يناير",
+    "فبراير",
+    "مارس",
+    "أبريل",
+    "مايو",
+    "يونيو",
+    "يوليو",
+    "أغسطس",
+    "سبتمبر",
+    "أكتوبر",
+    "نوفمبر",
+    "ديسمبر",
+  ];
+  const enMonths = [
     "January",
     "February",
     "March",
@@ -79,18 +92,32 @@ const monthNameByIndex = (i: number) =>
     "October",
     "November",
     "December",
-  ][i];
+  ];
+  return lang.startsWith("ar") ? arMonths[i] : enMonths[i];
+};
 
-const getDayNamesForMonth = (year: number, monthIndex: number) => {
+const getDayNamesForMonth = (year: number, monthIndex: number, lang = "en") => {
   const start = startOfMonth(new Date(year, monthIndex, 1));
   const end = endOfMonth(start);
   const days = eachDayOfInterval({ start, end });
-  return days.map((d) => ({
-    dayOfMonth: format(d, "d"),
-    dayOfWeek: format(d, "EEE"),
-    isSunday: isSunday(d),
-    fullDate: d,
-  }));
+  const arDays: Record<string, string> = {
+    Sun: "الأحد",
+    Mon: "الاثنين",
+    Tue: "الثلاثاء",
+    Wed: "الأربعاء",
+    Thu: "الخميس",
+    Fri: "الجمعة",
+    Sat: "السبت",
+  };
+  return days.map((d) => {
+    const enDay = format(d, "EEE");
+    return {
+      dayOfMonth: format(d, "d"),
+      dayOfWeek: lang.startsWith("ar") ? arDays[enDay] || enDay : enDay,
+      isSunday: isSunday(d),
+      fullDate: d,
+    };
+  });
 };
 
 const toLocalISOString = (date: Date) => {
@@ -159,7 +186,7 @@ export default function AdhocShiftPlan() {
   const [calYear, setCalYear] = useState(getYear(today));
   const [calMonthIdx, setCalMonthIdx] = useState(getMonth(today));
 
-  const dayNames = useMemo(() => getDayNamesForMonth(calYear, calMonthIdx), [calYear, calMonthIdx]);
+  const dayNames = useMemo(() => getDayNamesForMonth(calYear, calMonthIdx, i18n.language), [calYear, calMonthIdx, i18n.language]);
 
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionStart, setSelectionStart] = useState<number | null>(null);
@@ -280,7 +307,7 @@ export default function AdhocShiftPlan() {
             key,
             inspector: item.inspectorName,
             inspectorId: item.inspectorId,
-            month: monthNameByIndex(date.month()),
+            month: monthNameByIndex(date.month(), i18n.language),
             shift: shiftInfo
               ? i18n.language === "ar"
                 ? shiftInfo.shiftTypeNameAr
@@ -752,33 +779,33 @@ export default function AdhocShiftPlan() {
             value?.includes("-") ? (
               <div style={{ maxWidth: 250 }}>
                 <p style={{ marginBottom: 4 }}>
-                  <b>Inspector:</b> {row.inspector}
+                  <b>{t("form.inspector", "Inspector")}:</b> {row.inspector}
                 </p>
                 <p style={{ marginBottom: 4 }}>
-                  <b>Date:</b> {day.dayOfMonth} {monthNameByIndex(calMonthIdx)} ({day.dayOfWeek})
+                  <b>{t("form.date", "Date")}:</b> {day.dayOfMonth} {monthNameByIndex(calMonthIdx, i18n.language)} ({day.dayOfWeek})
                 </p>
                 <p style={{ marginBottom: 4 }}>
-                  <b>Shift:</b> {row.shift}
+                  <b>{t("form.shift", "Shift")}:</b> {row.shift}
                 </p>
                 <p style={{ marginBottom: 4 }}>
-                  <b>Zone:</b> {rawData?.zoneId ? getZoneName(rawData.zoneId) : "NA"}
+                  <b>{t("form.zone", "Zone")}:</b> {rawData?.zoneId ? getZoneName(rawData.zoneId) : "NA"}
                 </p>
                 <p style={{ marginBottom: 8 }}>
-                  <b>Area:</b>{" "}
+                  <b>{t("form.area", "Area")}:</b>{" "}
                   {rawData?.areasIds
                     ? rawData.areasIds.map((id: string) => getAreaName(id)).join(", ")
                     : getAreaName(rawData?.areaId) || "NA"}
                 </p>
                 <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEditForSelection(row, i)}>
-                  Edit
+                  {t("common.edit", "Edit")}
                 </Button>
               </div>
             ) : value === "LV" ? (
-              "Leave"
+              t("adhocShiftPlan.leave", "Leave (LV)")
             ) : value === "WO" ? (
-              "Week Off"
+              t("adhocShiftPlan.weekOff", "Week Off (WO)")
             ) : (
-              "Not Assigned"
+              t("common.noData", "Not Assigned")
             )
           }
         >
@@ -807,7 +834,7 @@ export default function AdhocShiftPlan() {
 
   const columns = [
     {
-      title: "Inspector",
+      title: t("form.inspector", "Inspector"),
       dataIndex: "inspector",
       key: "inspector",
       fixed: "left" as const,
@@ -817,7 +844,7 @@ export default function AdhocShiftPlan() {
       sorter: (a: any, b: any) => a.inspector.localeCompare(b.inspector),
     },
     {
-      title: "Month",
+      title: t("common.month", "Month"),
       dataIndex: "month",
       key: "month",
       fixed: "left" as const,
@@ -827,7 +854,7 @@ export default function AdhocShiftPlan() {
       sorter: (a: any, b: any) => a.month.localeCompare(b.month),
     },
     {
-      title: "Shift",
+      title: t("form.shift", "Shift"),
       dataIndex: "shift",
       key: "shift",
       fixed: "left" as const,
@@ -930,7 +957,7 @@ export default function AdhocShiftPlan() {
   const calendarHeaderRender = ({ value, onChange }: any) => {
     const curYear = getYear(new Date());
     const years = Array.from({ length: 6 }).map((_, i) => curYear + i);
-    const months = Array.from({ length: 12 }).map((_, i) => ({ label: monthNameByIndex(i), value: i }));
+    const months = Array.from({ length: 12 }).map((_, i) => ({ label: monthNameByIndex(i, i18n.language), value: i }));
 
     return (
       <div style={{ padding: 8, display: "flex", gap: 8, alignItems: "center", justifyContent: "space-between" }}>
@@ -964,7 +991,7 @@ export default function AdhocShiftPlan() {
             value={calSelectedInspector}
             onChange={(v) => setCalSelectedInspector(v)}
             options={inspectorOptions.map((x) => ({ label: x, value: x }))}
-            placeholder="Select Inspector"
+            placeholder={t("adhocShiftPlan.selectInspector", "Select Inspector")}
             style={{ width: 220 }}
           />
         </div>
@@ -1006,7 +1033,7 @@ export default function AdhocShiftPlan() {
   const loadingGlobal = isShiftsLoading || isPublishing || isLoadingShifts || loadingLocal;
 
   return (
-    <Spin spinning={loadingGlobal} tip="Loading..." size="large">
+    <Spin spinning={loadingGlobal} tip={t("common.loading", "Loading...")} size="large">
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
         <Card style={{ marginBottom: 20 }}>
           <Row gutter={12} align="middle">

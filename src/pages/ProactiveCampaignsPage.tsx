@@ -339,17 +339,31 @@ const ProactiveCampaignsPage: React.FC = () => {
   const isDraftMode = !selectedStatus;
 
   // CSV Export Functions
-  const transformDataForCSV = (data: any[]) => {
-    return data.map((item, index) => {
+  const transformDataForCSV = (dataToExport: any[]) => {
+    return dataToExport.map((item, index) => {
       const csvRecord: Record<string, unknown> = {};
       csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
-      csvRecord[t("form.title")] = getCampaignTitle(item, i18n.language);
-      csvRecord[t("form.campaignMessage")] = getCampaignMessage(item, i18n.language);
-      csvRecord[t("form.timeInterval")] = item.timeInterval ? `${item.timeInterval} mins` : "";
+      csvRecord[t("form.title")] = getCampaignTitle(item, i18n.language) || item.title || "";
+      csvRecord[t("form.startTime")] = item.startTime ? dayjs(item.startTime).format("DD MMM YYYY, hh:mm A") : "";
+      csvRecord[t("form.endTime")] = item.endTime ? dayjs(item.endTime).format("DD MMM YYYY, hh:mm A") : "";
+
+      const rawViolations = item.violationTypes;
+      const violationItems = Array.isArray(rawViolations)
+        ? rawViolations
+        : typeof rawViolations === "string"
+          ? rawViolations.split(",").map((v: string) => v.trim())
+          : [];
+      csvRecord[t("form.violationTypes")] = violationItems.map((v: any) => getLabel(v, "violationTypes")).join(", ");
+
+      const rawInspectors = item.assignedInspectors;
+      if (Array.isArray(rawInspectors) && rawInspectors.length > 0) {
+        csvRecord[t("form.assignedInspectors")] = rawInspectors.map((id: any) => getLabel(id, "inspectors")).join(", ");
+      } else {
+        csvRecord[t("form.assignedInspectors")] = t("common.all", { defaultValue: "All" });
+      }
+
       csvRecord[t("form.status")] = getLabel(item.status, "statuses");
-      csvRecord[i18n.language === "ar" ? "تاريخ الإنشاء" : "Created Date"] = item.createdOn
-        ? dayjs(item.createdOn).format("DD MMM YYYY")
-        : "";
+
       return csvRecord;
     });
   };
@@ -363,8 +377,10 @@ const ProactiveCampaignsPage: React.FC = () => {
   };
 
   const handleDownloadCsv = () => {
-    if (selectedRowKeys.length === 0) {
-      notification.error({ data: { en_Msg: t("messages.selectRows") } });
+    const dataToExport = selectedRows.length > 0 ? selectedRows : campaigns;
+
+    if (!dataToExport || dataToExport.length === 0) {
+      notification.error({ data: { en_Msg: t("messages.noDataToExport") } });
       return;
     }
 
@@ -375,17 +391,12 @@ const ProactiveCampaignsPage: React.FC = () => {
       cancelText: t("common.cancel"),
       onOk: () => {
         try {
-          if (selectedRows.length === 0) {
-            notification.error({ data: { en_Msg: t("messages.noDataToExport") } });
-            return;
-          }
-
-          const transformedData = transformDataForCSV(selectedRows);
+          const transformedData = transformDataForCSV(dataToExport);
           const filename = getCsvFilename();
           exportToCsv(transformedData, filename);
 
           notification.success(
-            { data: { en_Msg: t("messages.csvDownloaded", { count: selectedRows.length }) } },
+            { data: { en_Msg: t("messages.csvDownloaded", { count: dataToExport.length }) } },
             t("messages.exportSuccess"),
           );
           setSelectedRowKeys([]);
@@ -589,6 +600,12 @@ const ProactiveCampaignsPage: React.FC = () => {
           return {
             ...column,
             filterable: true,
+            render: (values: string | string[]) => {
+              const items = Array.isArray(values) ? values : typeof values === "string" ? values.split(",").map((v) => v.trim()) : [];
+              return items
+                .map((v) => getLabel(v, "violationTypes"))
+                .join(", ");
+            },
             onFilter: (value: any, record: any) =>
               (Array.isArray(record.violationTypes) ? record.violationTypes : []).includes(value),
           };
@@ -639,7 +656,7 @@ const ProactiveCampaignsPage: React.FC = () => {
       />
 
       <Card bordered={false} bodyStyle={{ padding: "16px 16px 0 16px" }}>
-        <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Row justify="space-between" align="middle" style={{ marginBottom: 16, rowGap: 10 }}>
           <Col>
             <Space>
               <Input
@@ -650,12 +667,20 @@ const ProactiveCampaignsPage: React.FC = () => {
                 onChange={(e) => setSearchValue(e.target.value)}
                 style={{ width: 450 }}
               />
+              <span>{t("common.filterByStartTime", "Filter by Start Time")}</span>
+
+              <DatePicker.RangePicker
+                value={state.dateRange}
+                format={"DD MMM YYYY"}
+                placeholder={[t("placeholders.startDate"), t("placeholders.endDate")]}
+                onChange={(dates) => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
+              />
             </Space>
           </Col>
 
           <Col>
             <Space>
-              <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
+              <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={isLoadingCampaigns || campaigns.length === 0}>
                 {t("common.downloadCsv")}
               </Button>
 
@@ -685,10 +710,16 @@ const ProactiveCampaignsPage: React.FC = () => {
         handlePaginationChange={handlePaginationChange}
         rowSelection={{
           selectedRowKeys,
-          onChange: (keys: React.Key[]) => {
+          onChange: (keys: React.Key[], selectedRowsList: any[]) => {
             setSelectedRowKeys(keys);
-            const selected = campaigns.filter((campaign: any) => keys.includes(campaign.id));
-            setSelectedRows(selected);
+            setSelectedRows((prev: any[]) => {
+              const getRecordKey = (item: any) => item?.id ?? item?.campaignGUID ?? item?.campaignId ?? item?.key;
+              const remaining = prev.filter((p: any) => keys.includes(getRecordKey(p)));
+              const newSelected = selectedRowsList.filter(
+                (r: any) => !remaining.some((p: any) => getRecordKey(p) === getRecordKey(r)),
+              );
+              return [...remaining, ...newSelected];
+            });
           },
         }}
         actionMenuItems={actionMenuItems}
@@ -705,7 +736,7 @@ const ProactiveCampaignsPage: React.FC = () => {
         }}
         filterOptions={filterOptions}
         showPagination
-        rowKey="id"
+        rowKey={(record: any) => record?.id ?? record?.campaignGUID ?? record?.campaignId ?? record?.key}
         scrollX="max-content"
       />
 

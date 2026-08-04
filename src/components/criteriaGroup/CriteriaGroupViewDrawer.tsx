@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
-import { Drawer, Descriptions, Button, Spin, Tag, Table, Typography, Space } from "antd";
+import { Modal, Descriptions, Button, Spin, Tag, Table, Typography, Space } from "antd";
 import { useTranslation } from "react-i18next";
 import { ShareAltOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";
@@ -43,8 +43,6 @@ const CriteriaGroupViewDrawer: React.FC<CriteriaGroupViewDrawerProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [mappedRecord, setMappedRecord] = useState<any>(null);
-
-  const isRtl = i18n.dir() === "rtl";
 
   // ── Map record to display shape (same pattern as WhitelistPlatesViewDrawer) ─
   useEffect(() => {
@@ -105,20 +103,29 @@ const CriteriaGroupViewDrawer: React.FC<CriteriaGroupViewDrawerProps> = ({
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <Drawer
+    <Modal
       open={open}
-      onClose={onClose}
-      width={500}
+      onCancel={onClose}
+      width={650}
       title={t("page.viewTitle", { entity: t(config.name.singular) })}
-      className="criteria-group-drawer"
-      placement={isRtl ? "left" : "right"}
-      extra={
-        onShare && (
-          <Button icon={<ShareAltOutlined />} onClick={onShare}>
+      footer={[
+        onShare ? (
+          <Button key="share" icon={<ShareAltOutlined />} onClick={onShare}>
             {t("common.share")}
           </Button>
-        )
-      }
+        ) : null,
+        <Button key="close" type="primary" onClick={onClose}>
+          {t("common.close")}
+        </Button>,
+      ].filter(Boolean)}
+      styles={{
+        body: {
+          maxHeight: "70vh",
+          overflowY: "auto",
+          overflowX: "hidden",
+          paddingRight: 4,
+        },
+      }}
     >
       <Spin spinning={!mappedRecord}>
         {mappedRecord && (
@@ -174,7 +181,7 @@ const CriteriaGroupViewDrawer: React.FC<CriteriaGroupViewDrawerProps> = ({
           </Space>
         )}
       </Spin>
-    </Drawer>
+    </Modal>
   );
 };
 

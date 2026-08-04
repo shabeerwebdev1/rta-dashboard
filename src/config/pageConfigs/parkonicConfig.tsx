@@ -268,7 +268,7 @@ export const parkonicPageConfig: PageConfig = {
     // globalSearchKeys: ["entityNo", "plateNumber"],
     globalSearchKeys: ["plateNumber"],
     columnFilterKeys: ["reviewStatus"],
-    dateRangeKey: "Entry_DateTime",
+    dateRangeKey: "entityDateTime",
   },
   statsConfig: [
     {

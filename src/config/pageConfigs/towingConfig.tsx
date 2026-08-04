@@ -42,13 +42,22 @@ export const mapTowingStatus = (statusString: string): TowingStatus => {
   }
 };
 
-const statusMap: Record<string, { text: string; color: string }> = {
-  [TowingStatus.Pending]: { text: "Pending", color: "orange" },
-  [TowingStatus.Approved]: { text: "Approved", color: "green" },
-  [TowingStatus.Cancelled]: { text: "Cancelled", color: "default" },
-  [TowingStatus.Rejected]: { text: "Rejected", color: "red" },
-  [TowingStatus.InProgress]: { text: "In Progress", color: "blue" },
-  [TowingStatus.Completed]: { text: "Completed", color: "cyan" },
+export const statusColorMap: Record<string, string> = {
+  [TowingStatus.Pending]: "orange",
+  [TowingStatus.Approved]: "green",
+  [TowingStatus.Cancelled]: "default",
+  [TowingStatus.Rejected]: "red",
+  [TowingStatus.InProgress]: "blue",
+  [TowingStatus.Completed]: "cyan",
+};
+
+const statusTranslationKeyMap: Record<string, string> = {
+  [TowingStatus.Pending]: "status.pending",
+  [TowingStatus.Approved]: "status.approved",
+  [TowingStatus.Cancelled]: "status.cancelled",
+  [TowingStatus.Rejected]: "status.rejected",
+  [TowingStatus.InProgress]: "status.inProgress",
+  [TowingStatus.Completed]: "status.completed",
 };
 
 export const towingConfig: PageConfig = {
@@ -154,9 +163,19 @@ export const towingConfig: PageConfig = {
         align: "center",
         render: (status: string) => {
           const statusEnum = mapTowingStatus(status);
-
-          const { text, color } = statusMap[statusEnum] || { text: "Unknown", color: "default" };
-          return <Tag color={color}>{text}</Tag>;
+          const color = statusColorMap[statusEnum] || "default";
+          const lang = localStorage.getItem("i18nextLng") || (document.documentElement.dir === "rtl" ? "ar" : "en");
+          const isArabic = lang.startsWith("ar");
+          const labelMap: Record<string, { en: string; ar: string }> = {
+            [TowingStatus.Pending]: { en: "Pending", ar: "قيد الانتظار" },
+            [TowingStatus.Approved]: { en: "Approved", ar: "موافق عليه" },
+            [TowingStatus.Cancelled]: { en: "Cancelled", ar: "ملغى" },
+            [TowingStatus.Rejected]: { en: "Rejected", ar: "مرفوض" },
+            [TowingStatus.InProgress]: { en: "In Progress", ar: "قيد التنفيذ" },
+            [TowingStatus.Completed]: { en: "Completed", ar: "مكتمل" },
+          };
+          const label = labelMap[statusEnum] ? (isArabic ? labelMap[statusEnum].ar : labelMap[statusEnum].en) : status;
+          return <Tag color={color}>{label}</Tag>;
         },
       },
       {

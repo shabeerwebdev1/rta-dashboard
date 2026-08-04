@@ -6,7 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { EXTERNAL_LOGIN_URL } from "../config/envConfig";
 import { getDefaultAuthorizedPath } from "../utils/accessRoutes";
 
-const FALLBACK_CODE = "2026072086832DD05E854B819F795282";
+const FALLBACK_CODE = "202608046A228D83984340BC81C27DEC";
 
 const SPLASH_DELAY = 1300;
 

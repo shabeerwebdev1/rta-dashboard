@@ -43,6 +43,7 @@ import {
   useUpdateTeamEvaluationMutation,
   useGetCriteriaGroupsQuery,
   useLazyGetCriteriaGroupByIdQuery,
+  useLazyGetTeamEvaluationByIdQuery,
 } from "../services/rtkApiFactory";
 
 const { Option } = Select;
@@ -137,6 +138,7 @@ const TeamEvaluationPage: React.FC = () => {
 
   // Lazy get-by-id for selected group
   const [triggerGetGroupById] = useLazyGetCriteriaGroupByIdQuery();
+  const [triggerGetTeamEvaluationById] = useLazyGetTeamEvaluationByIdQuery();
 
   const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery({});
 
@@ -155,13 +157,14 @@ const TeamEvaluationPage: React.FC = () => {
   // ── Derived: inspectors ─────────────────────────────────────────────────────
   const inspectors = useMemo(() => {
     if (!activeShiftsData) return [];
-    return (activeShiftsData as any[])
-      .filter((s) => s.roleCode === "PARINSP")
-      .map((s) => ({
-        value: s.employeeId,
-        labelEn: s.employeeName,
-        labelAr: s.employeeNameAr || s.employeeName,
-      }));
+    const shifts = Array.isArray(activeShiftsData) ? activeShiftsData : (activeShiftsData as any).data || [];
+    return shifts
+      .map((s: any) => ({
+        value: String(s.employeeId || s.employeeGuid || s.inspectorGuid || s.id || "").trim(),
+        labelEn: s.employeeName || s.employeeNameEn || s.employeeId,
+        labelAr: s.employeeNameAr || s.employeeName || s.employeeId,
+      }))
+      .filter((s: any) => s.value);
   }, [activeShiftsData]);
 
   const supervisors = useMemo(() => {
@@ -245,12 +248,27 @@ const TeamEvaluationPage: React.FC = () => {
 
   const statsMetadata = useMemo(() => ({ totalRecords: totalCount }), [totalCount]);
 
+  const isGuid = (val: string) =>
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(String(val || "").trim());
+
   const getInspectorName = (inspectorId: string, fallbackEn?: string, fallbackAr?: string) => {
-    if (i18n.language === "ar" && fallbackAr) return fallbackAr;
-    if (fallbackEn) return fallbackEn;
-    const inspector = inspectors.find((item) => String(item.value) === String(inspectorId));
-    if (!inspector) return inspectorId || t("common.noData");
-    return i18n.language === "ar" ? inspector.labelAr : inspector.labelEn;
+    if (i18n.language === "ar" && fallbackAr && !isGuid(fallbackAr)) return fallbackAr;
+    if (i18n.language !== "ar" && fallbackEn && !isGuid(fallbackEn)) return fallbackEn;
+
+    const candidateId = inspectorId || (isGuid(fallbackEn || "") ? fallbackEn : "") || (isGuid(fallbackAr || "") ? fallbackAr : "");
+    const normalizedId = String(candidateId || "").toLowerCase().trim();
+
+    if (normalizedId) {
+      const found = inspectors.find((item: any) => String(item.value || "").toLowerCase().trim() === normalizedId);
+      if (found) {
+        return i18n.language === "ar" ? found.labelAr : found.labelEn;
+      }
+    }
+
+    if (fallbackEn && !isGuid(fallbackEn)) return fallbackEn;
+    if (fallbackAr && !isGuid(fallbackAr)) return fallbackAr;
+
+    return candidateId || fallbackEn || fallbackAr || t("common.noData");
   };
 
   // ── Modal open/close ─────────────────────────────────────────────────────────
@@ -260,12 +278,40 @@ const TeamEvaluationPage: React.FC = () => {
     setIsModalOpen(true);
 
     if (mode === "edit" && record) {
-      // If record has a criteriaGroupId, pre-load that group's criteria
-      if (record.criteriaGroupId) {
+      let evalRecord = record;
+      try {
+        if (record.id) {
+          const res = await triggerGetTeamEvaluationById(record.id).unwrap();
+          if (res?.data || res) {
+            evalRecord = res.data || res;
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch full evaluation record", e);
+      }
+
+      let groupId =
+        evalRecord.criteriaGroupId || evalRecord.groupId || evalRecord.criteriaGroup_Id || evalRecord.group_Id;
+
+      if (!groupId && (evalRecord.groupName || evalRecord.groupName_EN || evalRecord.groupName_AR)) {
+        const targetName = String(evalRecord.groupName_EN || evalRecord.groupName || evalRecord.groupName_AR || "")
+          .trim()
+          .toLowerCase();
+        const matchedOption = criteriaGroupOptions.find(
+          (opt: any) =>
+            String(opt.label).trim().toLowerCase() === targetName ||
+            String(opt.value).trim().toLowerCase() === targetName,
+        );
+        if (matchedOption) {
+          groupId = matchedOption.value;
+        }
+      }
+
+      if (groupId) {
         setIsGroupCriteriaLoading(true);
         try {
-          const result = await triggerGetGroupById(record.criteriaGroupId).unwrap();
-          const details = result?.data?.details ?? [];
+          const result = await triggerGetGroupById(groupId).unwrap();
+          const details = result?.data?.details ?? result?.details ?? [];
           const loadedCriteria = details.map((d: any) => ({
             id: d.id,
             descriptionEn: d.descriptionEn,
@@ -275,39 +321,68 @@ const TeamEvaluationPage: React.FC = () => {
           }));
           setGroupCriteria(loadedCriteria);
 
-          // Build criteria field values
-          const criteriaFields = (record.criteriaDetails || []).reduce((acc: any, cd: any) => {
+          const rawCriteriaList = evalRecord.criteriaDetails || evalRecord.criteriaScores || evalRecord.criteria || [];
+
+          const criteriaFields = rawCriteriaList.reduce((acc: any, cd: any) => {
+            const cdName = String(cd.criteriaName || cd.descriptionEn || cd.descriptionAr || "")
+              .trim()
+              .toLowerCase();
+            const cdId = String(cd.criteriaId || cd.id || "")
+              .trim()
+              .toLowerCase();
+
             const matched = loadedCriteria.find(
-              (c: any) => c.descriptionEn.toLowerCase() === String(cd.criteriaName || "").toLowerCase(),
+              (c: any) =>
+                (cdId && String(c.id).trim().toLowerCase() === cdId) ||
+                (cdName &&
+                  String(c.descriptionEn || "")
+                    .trim()
+                    .toLowerCase() === cdName) ||
+                (cdName &&
+                  String(c.descriptionAr || "")
+                    .trim()
+                    .toLowerCase() === cdName),
             );
+
             if (matched) {
-              acc[`criteria_${matched.id}`] = cd.score;
-              acc[`comments_${matched.id}`] = cd.comments;
+              acc[`criteria_${matched.id}`] = cd.score !== undefined ? cd.score : cd.scoreValue;
+              acc[`comments_${matched.id}`] = cd.comments || "";
             }
             return acc;
           }, {});
 
           form.setFieldsValue({
-            inspectorIds: [record.inspectorId],
-            criteriaGroupId: record.criteriaGroupId,
-            evaluationDate: dayjs(record.evaluationDate),
-            evaluationType: String(record.evaluationType || "").toLowerCase(),
-            evaluationPeriod: [dayjs(record.fromDate), dayjs(record.toDate)],
-            supervisorNotes: record.supervisorNotes,
+            inspectorIds: Array.isArray(evalRecord.inspectorIds)
+              ? evalRecord.inspectorIds
+              : evalRecord.inspectorId
+                ? [evalRecord.inspectorId]
+                : [],
+            criteriaGroupId: groupId,
+            evaluationDate: evalRecord.evaluationDate ? dayjs(evalRecord.evaluationDate) : dayjs(),
+            evaluationType: String(evalRecord.evaluationType || "").toLowerCase(),
+            evaluationPeriod:
+              evalRecord.fromDate && evalRecord.toDate ? [dayjs(evalRecord.fromDate), dayjs(evalRecord.toDate)] : null,
+            supervisorNotes: evalRecord.supervisorNotes || "",
             ...criteriaFields,
           });
-        } catch {
+        } catch (e) {
+          console.error("Failed to load group criteria", e);
           notification.error({ data: { en_Msg: "Failed to load group criteria" } }, "Error");
         } finally {
           setIsGroupCriteriaLoading(false);
         }
       } else {
         form.setFieldsValue({
-          inspectorIds: [record.inspectorId],
-          evaluationDate: dayjs(record.evaluationDate),
-          evaluationType: String(record.evaluationType || "").toLowerCase(),
-          evaluationPeriod: [dayjs(record.fromDate), dayjs(record.toDate)],
-          supervisorNotes: record.supervisorNotes,
+          inspectorIds: Array.isArray(evalRecord.inspectorIds)
+            ? evalRecord.inspectorIds
+            : evalRecord.inspectorId
+              ? [evalRecord.inspectorId]
+              : [],
+          evaluationDate: evalRecord.evaluationDate ? dayjs(evalRecord.evaluationDate) : dayjs(),
+          evaluationType: String(evalRecord.evaluationType || "").toLowerCase(),
+          evaluationPeriod:
+            evalRecord.fromDate && evalRecord.toDate ? [dayjs(evalRecord.fromDate), dayjs(evalRecord.toDate)] : null,
+          supervisorNotes: evalRecord.supervisorNotes || "",
         });
       }
     } else {
@@ -368,28 +443,70 @@ const TeamEvaluationPage: React.FC = () => {
   };
 
   // ── CSV export ───────────────────────────────────────────────────────────────
+  const transformDataForCSV = (dataToExport: any[]) => {
+    return dataToExport.map((ev, index: number) => {
+      const csvRecord: Record<string, unknown> = {};
+
+      const groupName =
+        i18n.language === "ar"
+          ? ev.groupName_AR || ev.groupName_EN || ev.groupName || ""
+          : ev.groupName_EN || ev.groupName_AR || ev.groupName || "";
+
+      csvRecord[i18n.language === "ar" ? "التسلسل" : "Sl.No"] = index + 1;
+      csvRecord[t("form.InspectorName") || t("form.inspectorName") || "Inspector Name"] = getInspectorName(
+        ev.inspectorId || ev.inspectorName,
+        ev.inspectorName,
+        ev.inspectorNameAr,
+      );
+      csvRecord[t("form.evaluationDate")] = ev.evaluationDate
+        ? formatDateByLocale(ev.evaluationDate, { en: "DD MMM YYYY", ar: "DD MMM YYYY" }, i18n.language)
+        : "";
+
+      const evalTypeOpt = evaluationTypeOptions.find((opt) => opt.value === String(ev.evaluationType).toLowerCase());
+      csvRecord[t("form.evaluationType")] = evalTypeOpt
+        ? i18n.language === "ar"
+          ? evalTypeOpt.labelAr
+          : evalTypeOpt.labelEn
+        : ev.evaluationType || "";
+
+      csvRecord[t("form.criteriaGroup")] = groupName || t("common.noData");
+      csvRecord[t("form.totalScore")] = ev.totalScore != null ? `${ev.totalScore}%` : "";
+      csvRecord[t("form.grade")] = ev.grade || "";
+      csvRecord[t("form.notes") || "Supervisor Notes"] = ev.supervisorNotes || "";
+
+      return csvRecord;
+    });
+  };
+
   const handleDownloadCsv = () => {
-    if (selectedRowKeys.length === 0) {
-      notification.error({ data: { en_Msg: t("messages.selectRows") } }, t("messages.selectRows"));
+    const dataToExport = selectedRows.length > 0 ? selectedRows : evaluationsData;
+
+    if (!dataToExport || dataToExport.length === 0) {
+      notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
       return;
     }
+
     modal.confirm({
       title: t("messages.csvConfirmTitle"),
       content: t("messages.csvConfirmContent"),
       okText: t("common.ok"),
       cancelText: t("common.cancel"),
       onOk: () => {
-        const csvData = selectedRows.map((ev) => ({
-          [t("form.evaluationDate")]: ev.evaluationDate,
-          [t("form.evaluationType")]: ev.evaluationType,
-          [t("form.totalScore")]: ev.totalScore,
-          [t("form.grade")]: ev.grade,
-          [t("form.supervisorNotes")]: ev.supervisorNotes,
-        }));
-        exportToCsv(csvData, `team-evaluations-${dayjs().format("YYYY-MM-DD")}.csv`);
-        setSelectedRowKeys([]);
-        setSelectedRows([]);
-        notification.success({ data: { en_Msg: t("messages.exportSuccess") } }, t("messages.exportSuccess"));
+        try {
+          const transformedData = transformDataForCSV(dataToExport);
+          const filename = i18n.language === "ar" ? "تقييم_الفريق.csv" : "Team_Evaluations.csv";
+
+          exportToCsv(transformedData, filename);
+
+          notification.success(
+            { data: { en_Msg: t("messages.csvDownloaded", { count: dataToExport.length }) } },
+            t("messages.exportSuccess"),
+          );
+          setSelectedRowKeys([]);
+          setSelectedRows([]);
+        } catch (error) {
+          notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
+        }
       },
     });
   };
@@ -512,15 +629,39 @@ const TeamEvaluationPage: React.FC = () => {
               formatDateByLocale(value, { en: "DD MMM YYYY", ar: "DD MMM YYYY" }, i18n.language),
           };
         }
+        if (column.key === "evaluationType") {
+          return {
+            ...column,
+            render: (value: string) => {
+              const option = evaluationTypeOptions.find((opt) => opt.value === String(value).toLowerCase());
+              const label = option ? (i18n.language === "ar" ? option.labelAr : option.labelEn) : value;
+              return <Tag>{label}</Tag>;
+            },
+          };
+        }
         if (column.key === "totalScore") {
           return { ...column, render: (value: number) => <strong>{value}%</strong> };
         }
         if (column.key === "grade") {
           return {
             ...column,
-            render: (value: string, record: any) => (
-              <Tag color={getGradeTagColor(value, Number(record.totalScore))}>{value || t("common.noData")}</Tag>
-            ),
+            render: (value: string, record: any) => {
+              const gradeLabels: Record<string, { en: string; ar: string }> = {
+                excellent: { en: "Excellent", ar: "ممتاز" },
+                good: { en: "Good", ar: "جيد" },
+                fair: { en: "Fair", ar: "مقبول" },
+                unsatisfactory: { en: "Unsatisfactory", ar: "غير مُرضٍ" },
+              };
+              const key = String(value || "").toLowerCase();
+              const gradeLabel = gradeLabels[key]
+                ? i18n.language === "ar"
+                  ? gradeLabels[key].ar
+                  : gradeLabels[key].en
+                : value;
+              return (
+                <Tag color={getGradeTagColor(value, Number(record.totalScore))}>{gradeLabel || t("common.noData")}</Tag>
+              );
+            },
           };
         }
         return column;
@@ -598,7 +739,11 @@ const TeamEvaluationPage: React.FC = () => {
           </Col>
           <Col>
             <Space>
-              <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
+              <Button
+                icon={<DownloadOutlined />}
+                onClick={handleDownloadCsv}
+                disabled={isLoadingEvaluations || isFetchingEvaluations || evaluationsData.length === 0}
+              >
                 {t("common.downloadCsv")}
               </Button>
               <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal("add")}>
@@ -629,13 +774,15 @@ const TeamEvaluationPage: React.FC = () => {
           selectedRowKeys,
           onChange: (keys: React.Key[], rows: any[]) => {
             setSelectedRowKeys(keys);
-            setSelectedRows((prev) => {
-              const remaining = prev.filter((p) => keys.includes(p.id));
-              const added = rows.filter((r) => !remaining.some((p) => p.id === r.id));
+            setSelectedRows((prev: any[]) => {
+              const getRecordKey = (p: any) => p.id || p.evaluationId || p.key;
+              const remaining = prev.filter((p: any) => keys.includes(getRecordKey(p)));
+              const added = rows.filter((r: any) => !remaining.some((p: any) => getRecordKey(p) === getRecordKey(r)));
               return [...remaining, ...added];
             });
           },
         }}
+        rowKey={(record: any) => record.id || record.evaluationId || record.key}
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
         state={state}

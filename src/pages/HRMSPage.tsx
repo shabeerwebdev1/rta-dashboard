@@ -634,29 +634,33 @@ const HRMSPage: React.FC = () => {
     });
 
   const handleDownloadCsv = () => {
-    if (selectedRowKeys.length === 0) {
-      notification.error({ data: { en_Msg: "Please select at least one row to export" } }, "No Selection");
+    const dataToExport = selectedRows.length > 0 ? selectedRows : hrmsData;
+
+    if (!dataToExport || dataToExport.length === 0) {
+      notification.error({ data: { en_Msg: t("messages.noDataToExport") } }, t("messages.exportFailed"));
       return;
     }
+
     modal.confirm({
-      title: "Export to CSV",
-      content: `Export ${selectedRows.length} selected records?`,
-      okText: "Export",
-      cancelText: "Cancel",
+      title: t("messages.csvConfirmTitle"),
+      content: t("messages.csvConfirmContent"),
+      okText: t("common.ok"),
+      cancelText: t("common.cancel"),
       onOk: () => {
         try {
-          exportToCsv(
-            transformDataForCSV(selectedRows),
-            i18n.language === "ar" ? "سجلات_الحضور.csv" : "HRMS_Attendance_Records.csv",
-          );
+          const transformedData = transformDataForCSV(dataToExport);
+          const filename = i18n.language === "ar" ? "سجلات_الحضور.csv" : "HRMS_Attendance_Records.csv";
+
+          exportToCsv(transformedData, filename);
+
           notification.success(
-            { data: { en_Msg: `${selectedRows.length} records exported successfully` } },
-            "Export Success",
+            { data: { en_Msg: t("messages.csvDownloaded", { count: dataToExport.length }) } },
+            t("messages.exportSuccess"),
           );
           setSelectedRowKeys([]);
           setSelectedRows([]);
-        } catch {
-          notification.error({ data: { en_Msg: "Failed to export data" } }, "Export Failed");
+        } catch (error) {
+          notification.error({ data: { en_Msg: t("messages.exportError") } }, t("messages.exportFailed"));
         }
       },
     });
@@ -758,7 +762,11 @@ const HRMSPage: React.FC = () => {
             </Space>
           </Col>
           <Col>
-            <Button icon={<DownloadOutlined />} onClick={handleDownloadCsv} disabled={selectedRowKeys.length === 0}>
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={handleDownloadCsv}
+              disabled={isLoading || isFetching || hrmsData.length === 0}
+            >
               {t("common.downloadCsv") || "Download CSV"}
             </Button>
           </Col>
@@ -783,15 +791,17 @@ const HRMSPage: React.FC = () => {
           selectedRowKeys,
           onChange: (keys: React.Key[], nextSelectedRows: any[]) => {
             setSelectedRowKeys(keys);
-            setSelectedRows((prev) => {
-              const remaining = prev.filter((item) => keys.includes(item.id));
+            setSelectedRows((prev: any[]) => {
+              const getRecordKey = (item: any) => item.id || item.attendance_Id || item.attendanceId;
+              const remaining = prev.filter((item: any) => keys.includes(getRecordKey(item)));
               const newSelected = nextSelectedRows.filter(
-                (item) => !remaining.some((existing) => existing.id === item.id),
+                (item: any) => !remaining.some((existing: any) => getRecordKey(existing) === getRecordKey(item)),
               );
               return [...remaining, ...newSelected];
             });
           },
         }}
+        rowKey={(record: any) => record.id || record.attendance_Id || record.attendanceId}
         actionMenuItems={actionMenuItems}
         tableSize={tableSize}
         state={activeFilterState}
