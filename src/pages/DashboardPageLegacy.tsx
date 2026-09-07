@@ -28,7 +28,7 @@ import { usePage } from "../contexts/PageContext";
 import DashboardViewDrawer from "../components/dashboard/DashboardViewDrawer";
 import {
   useGetSupervisorDashboardQuery,
-  useGetActiveShiftsQuery,
+  useGetActiveUsersQuery,
   useLazyGetShiftsQuery,
 } from "../services/rtkApiFactory";
 import { useTranslation } from "react-i18next";
@@ -47,7 +47,7 @@ const SupervisorViewPage: React.FC = () => {
   const [shifts, setShifts] = useState<any[]>([]);
   const [selectedShift, setSelectedShift] = useState<string | null>(null);
   const [mapUrlIndex, setMapUrlIndex] = useState(2);
-  const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery({});
+  const { data: activeUsersData, isLoading: isLoadingShifts } = useGetActiveUsersQuery({});
   const [triggerGetShifts, { isLoading: isLoadingShiftsDropdown }] = useLazyGetShiftsQuery();
 
   const { useBreakpoint } = Grid;
@@ -75,8 +75,8 @@ const SupervisorViewPage: React.FC = () => {
     skip: !selectedSupervisor,
   });
 
-  const supervisors = activeShiftsData?.filter((shift: any) => shift.roleCode === "PARSUP") || [];
-  const inspectors = activeShiftsData?.filter((shift: any) => shift.roleCode === "PARINSP") || [];
+  const supervisors = activeUsersData?.filter((shift: any) => shift.roleCode === "PARSUP") || [];
+  const inspectors = activeUsersData?.filter((shift: any) => shift.roleCode === "PARINSP") || [];
 
   const getLocalizedText = (englishText: string, arabicText: string) => {
     return i18n.language === "ar" ? arabicText : englishText;

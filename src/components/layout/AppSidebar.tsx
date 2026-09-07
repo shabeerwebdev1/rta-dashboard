@@ -359,6 +359,13 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
         if (it.children && it.children.length > 0) {
           const visibleChildren = applyPermissions(it.children);
 
+          // Reports should only show when the Reports/Report permission itself exists.
+          // We do not want child access to reveal the parent group by itself.
+          if (it.key === "reports") {
+            const reportsAllowed = hasRead ? hasRead(it.permission || []) : false;
+            return reportsAllowed ? { ...it, children: visibleChildren } : null;
+          }
+
           // Parent with no permission → allow if children exist
           if (!it.permission) {
             if (it.alwaysVisible && visibleChildren.length === 0) {

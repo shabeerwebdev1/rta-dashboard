@@ -17,7 +17,7 @@ import DashboardViewDrawer from "../components/dashboard/DashboardViewDrawer";
 import DashboardDataModal from "../components/dashboard/DashboardDataModal";
 import {
   useGetWebDashboardInspectorsQuery,
-  useGetActiveShiftsQuery,
+  useGetActiveUsersQuery,
   useLazyGetShiftsQuery,
   useGetInspectionByIdQuery,
   useGetViolationDetailsQuery,
@@ -50,7 +50,7 @@ const SupervisorViewPage: React.FC = () => {
   const userGUID = localStorage.getItem("userGUID");
   const isSupervisorFieldHidden = roleGUID === "137db453-07cc-4218-9ef8-3aa236d9e951";
 
-  const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery(
+  const { data: activeUsersData, isLoading: isLoadingShifts } = useGetActiveUsersQuery(
     {},
     { refetchOnMountOrArgChange: true },
   );
@@ -193,16 +193,16 @@ const SupervisorViewPage: React.FC = () => {
     fetchShifts();
   }, [triggerGetShifts, t]);
 
-  const supervisors = activeShiftsData?.filter((shift: any) => shift.roleCode === "PARSUP") || [];
-  const inspectors = activeShiftsData?.filter((shift: any) => shift.roleCode === "PARINSP") || [];
+  const supervisors = activeUsersData?.filter((shift: any) => shift.roleCode === "PARSUP") || [];
+  const inspectors = activeUsersData?.filter((shift: any) => shift.roleCode === "PARINSP") || [];
 
   const selectedSupervisorsData = useMemo(() => {
     return supervisors.filter((s: any) => selectedSupervisors.includes(s.employeeId));
   }, [supervisors, selectedSupervisors]);
 
   const supervisorZoneIdsArray = useMemo(() => {
-    if (isSupervisorFieldHidden && userGUID && activeShiftsData) {
-      const currentUser = (activeShiftsData as any[]).find(
+    if (isSupervisorFieldHidden && userGUID && activeUsersData) {
+      const currentUser = (activeUsersData as any[]).find(
         (u: any) => u.employeeId === userGUID || u.inspectorGUID === userGUID
       );
       if (currentUser && currentUser.zoneIds && currentUser.zoneIds.length > 0) {
@@ -210,7 +210,7 @@ const SupervisorViewPage: React.FC = () => {
       }
     }
     return selectedSupervisorsData.flatMap((s: any) => s.zoneIds || []).map(String);
-  }, [selectedSupervisorsData, isSupervisorFieldHidden, userGUID, activeShiftsData]);
+  }, [selectedSupervisorsData, isSupervisorFieldHidden, userGUID, activeUsersData]);
 
   const supervisorZoneIds = useMemo(() => {
     return supervisorZoneIdsArray.length > 0 ? supervisorZoneIdsArray.join(",") : undefined;
@@ -241,7 +241,7 @@ const SupervisorViewPage: React.FC = () => {
     { refetchOnMountOrArgChange: true },
   );
 
-  // Show inspectors from activeShiftsData, filtered by the selected supervisors' zones (or logged in supervisor's zones) if any
+  // Show inspectors from activeUsersData, filtered by the selected supervisors' zones (or logged in supervisor's zones) if any
   const inspectorOptions = useMemo(() => {
     if (supervisorZoneIdsArray.length > 0) {
       return inspectors
@@ -824,7 +824,7 @@ const SupervisorViewPage: React.FC = () => {
             ? dashboardData?.data?.onLeaveData || []
             : dashboardData?.data?.pendingCheckInData || []
         }
-        supervisors={activeShiftsData || []}
+        supervisors={activeUsersData || []}
       />
     </div>
   );

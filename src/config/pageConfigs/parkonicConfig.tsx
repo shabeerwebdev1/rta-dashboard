@@ -448,57 +448,26 @@ export const parkonicPageConfig: PageConfig = {
         sortable: true,
         render: (value) => (value ? formatDateTimeDisplay(value) : ""),
       },
-      {
-        key: "review_updateback_status",
-        title: "form.integrationStatus",
-        type: "custom",
-        sortable: true,
-        render: (status?: number) => {
-          if (status === null || status === undefined) {
-            return null;
-          }
-
-          const getCurrentLanguage = () => {
-            const storedLang = localStorage.getItem("i18nextLng");
-            if (storedLang) return storedLang;
-            if (document.documentElement.dir === "rtl") return "ar";
-            if (document.body.classList.contains("rtl")) return "ar";
-            return "en";
-          };
-
-          const language = getCurrentLanguage();
-          const isArabic = language.startsWith("ar");
-
-          const statusMap: Record<number, { en: string; ar: string; color: string }> = {
-            1: { en: "Success", ar: "ناجح", color: "green" },
-            2: { en: "Failed", ar: "فشل", color: "red" },
-          };
-
-          const statusItem = statusMap[status];
-          if (!statusItem) {
-            return null;
-          }
-
-          const text = isArabic ? statusItem.ar : statusItem.en;
-          return <Tag color={statusItem.color}>{text}</Tag>;
-        },
-      },
       // {
       //   key: "review_updateback_status",
       //   title: "form.integrationStatus",
       //   type: "custom",
       //   sortable: true,
       //   render: (status?: number) => {
-      //     if (status === null || status === undefined) return null;
+      //     if (status === null || status === undefined) {
+      //       return null;
+      //     }
 
       //     const getCurrentLanguage = () => {
       //       const storedLang = localStorage.getItem("i18nextLng");
       //       if (storedLang) return storedLang;
       //       if (document.documentElement.dir === "rtl") return "ar";
+      //       if (document.body.classList.contains("rtl")) return "ar";
       //       return "en";
       //     };
 
-      //     const isArabic = getCurrentLanguage().startsWith("ar");
+      //     const language = getCurrentLanguage();
+      //     const isArabic = language.startsWith("ar");
 
       //     const statusMap: Record<number, { en: string; ar: string; color: string }> = {
       //       1: { en: "Success", ar: "ناجح", color: "green" },
@@ -506,25 +475,56 @@ export const parkonicPageConfig: PageConfig = {
       //     };
 
       //     const statusItem = statusMap[status];
-      //     if (!statusItem) return null;
+      //     if (!statusItem) {
+      //       return null;
+      //     }
 
       //     const text = isArabic ? statusItem.ar : statusItem.en;
-
-      //     const StatusRow = ({ label }: { label: string }) => (
-      //       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-      //         <span style={{ fontSize: 12, color: "black", minWidth: 70 }}>{label}</span>
-      //         <Tag color={statusItem.color}>{text}</Tag>
-      //       </div>
-      //     );
-
-      //     return (
-      //       <Space direction="vertical" size={10}>
-      //         <StatusRow label="Parkonic" />
-      //         <StatusRow label="eTraffic" />
-      //       </Space>
-      //     );
+      //     return <Tag color={statusItem.color}>{text}</Tag>;
       //   },
       // },
+      {
+        key: "review_updateback_status",
+        title: "form.integrationStatus",
+        type: "custom",
+        sortable: true,
+        render: (status?: number) => {
+          if (status === null || status === undefined) return null;
+
+          const getCurrentLanguage = () => {
+            const storedLang = localStorage.getItem("i18nextLng");
+            if (storedLang) return storedLang;
+            if (document.documentElement.dir === "rtl") return "ar";
+            return "en";
+          };
+
+          const isArabic = getCurrentLanguage().startsWith("ar");
+
+          const statusMap: Record<number, { en: string; ar: string; color: string }> = {
+            1: { en: "Success", ar: "ناجح", color: "green" },
+            2: { en: "Failed", ar: "فشل", color: "red" },
+          };
+
+          const statusItem = statusMap[status];
+          if (!statusItem) return null;
+
+          const text = isArabic ? statusItem.ar : statusItem.en;
+
+          const StatusRow = ({ label }: { label: string }) => (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 12, color: "black", minWidth: 70 }}>{label}</span>
+              <Tag color={statusItem.color}>{text}</Tag>
+            </div>
+          );
+
+          return (
+            <Space direction="vertical" size={10}>
+              <StatusRow label="Parkonic" />
+              <StatusRow label="eTraffic" />
+            </Space>
+          );
+        },
+      },
     ],
     viewRecord: true,
   },

@@ -12,7 +12,7 @@ import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
 import {
-  useGetActiveShiftsQuery,
+  useGetActiveUsersQuery,
   useGetParkonicsLocationQuery,
   useLazyGetParkonicsLocationByIdQuery,
 } from "../services/rtkApiFactory";
@@ -67,7 +67,7 @@ const ParkonicLocationPage: React.FC = () => {
   const [triggerGetLocation, { data: singleRecordData, isSuccess: isSingleRecordSuccess }] =
     useLazyGetParkonicsLocationByIdQuery();
 
-  const { data: activeShiftsData } = useGetActiveShiftsQuery({});
+  const { data: activeUsersData } = useGetActiveUsersQuery({});
 
   const normalizeGuid = (guid?: string) => {
     if (!guid) return "";
@@ -75,9 +75,9 @@ const ParkonicLocationPage: React.FC = () => {
   };
 
   const getEmployeeName = (guid?: string) => {
-    if (!guid || !activeShiftsData) return "";
+    if (!guid || !activeUsersData) return "";
 
-    const employee = activeShiftsData.find((emp: any) => normalizeGuid(emp.employeeId) === normalizeGuid(guid));
+    const employee = activeUsersData.find((emp: any) => normalizeGuid(emp.employeeId) === normalizeGuid(guid));
 
     return employee?.employeeName || "";
   };
@@ -254,7 +254,7 @@ const ParkonicLocationPage: React.FC = () => {
         return column;
       }),
     }),
-    [config.tableConfig, t, activeShiftsData],
+    [config.tableConfig, t, activeUsersData],
   );
 
   const actionMenuItems = (record: any) => [

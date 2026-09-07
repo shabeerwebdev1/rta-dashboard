@@ -22,7 +22,7 @@ import "@arcgis/core/assets/esri/themes/light/main.css";
 import Map from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView";
 import {
-  useGetActiveShiftsQuery,
+  useGetActiveUsersQuery,
   useGetInspectionAttachmentsQuery,
   getMobileFileUrl,
 } from "../../services/rtkApiFactory";
@@ -65,7 +65,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
   const [storedDisputeId, setStoredDisputeId] = useState<string>("");
   const [lookupOptions, setLookupOptions] = useState<any[]>([]);
   const [isLoadingLookups, setIsLoadingLookups] = useState(false);
-  const { data: activeShiftsData, isLoading: isLoadingSupervisors } = useGetActiveShiftsQuery({});
+  const { data: activeUsersData, isLoading: isLoadingSupervisors } = useGetActiveUsersQuery({});
   const [getReviewOptions, { data: reviewResponse, isLoading: loadingOptions }] = useLazyGetReviewOptionsQuery();
   const [getEntityHistory, { data: entityHistory = [], isLoading: entityHistoryLoading }] =
     useLazyGetEntityHistoryQuery();
@@ -172,8 +172,8 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
       }
     }
 
-    if (activeShiftsData) {
-      const employee = activeShiftsData.find(
+    if (activeUsersData) {
+      const employee = activeUsersData.find(
         (emp: any) =>
           normalizeGuid(emp.employeeId) === normalizedGuid || normalizeGuid(emp.roleGUID) === normalizedGuid,
       );
@@ -201,8 +201,8 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
   );
 
   const getSupervisorName = (id: string) => {
-    if (!activeShiftsData || !id) return isRTL ? "النظام" : "System";
-    const sup = activeShiftsData.find((s: any) => normalizeGuid(s.employeeId) === normalizeGuid(id));
+    if (!activeUsersData || !id) return isRTL ? "النظام" : "System";
+    const sup = activeUsersData.find((s: any) => normalizeGuid(s.employeeId) === normalizeGuid(id));
     return sup ? sup.employeeName : isRTL ? "النظام" : "System";
   };
 
@@ -217,9 +217,9 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
   );
 
   const getAllSupervisors = useMemo(() => {
-    if (!activeShiftsData) return [];
+    if (!activeUsersData) return [];
 
-    return activeShiftsData
+    return activeUsersData
       .filter((emp: any) => {
         const roleGUID = normalizeGuid(emp.roleGUID);
         return roleGUID === supervisorRoleGUID || roleGUID === seniorSupervisorRoleGUID;
@@ -237,10 +237,10 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
               : "Senior Supervisor",
         roleGUID: emp.roleGUID,
       }));
-  }, [activeShiftsData, isRTL]);
+  }, [activeUsersData, isRTL]);
 
   const seniorSupervisorOptions = useMemo(() => {
-    if (!activeShiftsData) return [];
+    if (!activeUsersData) return [];
 
     const allOption = {
       value: "all",
@@ -249,7 +249,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
       roleGUID: seniorSupervisorRoleGUID,
     };
 
-    const seniors = activeShiftsData
+    const seniors = activeUsersData
       .filter((emp: any) => normalizeGuid(emp.roleGUID) === seniorSupervisorRoleGUID)
       .map((emp: any) => ({
         value: emp.employeeId,
@@ -259,7 +259,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
       }));
 
     return [allOption, ...seniors];
-  }, [activeShiftsData, isRTL]);
+  }, [activeUsersData, isRTL]);
 
   const showSupervisorDropdown = useMemo(() => {
     if (!isDCRole || !selectedAction) return false;
@@ -317,11 +317,11 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
   };
 
   const getDefaultSeniorSupervisor = () => {
-    if (!activeShiftsData || !dispute?.fineDetails?.reviewerName) return null;
+    if (!activeUsersData || !dispute?.fineDetails?.reviewerName) return null;
 
     const reviewerName = dispute.fineDetails.reviewerName.trim().toLowerCase();
 
-    const match = activeShiftsData.find((emp: any) => {
+    const match = activeUsersData.find((emp: any) => {
       const empName = emp.employeeName?.trim().toLowerCase();
       return empName && empName.includes(reviewerName) && normalizeGuid(emp.roleGUID) === seniorSupervisorRoleGUID;
     });
@@ -541,7 +541,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
     if (currentValue) return;
     const defaultSupervisor = getDefaultSeniorSupervisor();
     form.setFieldsValue({ assignedSeniorSupervisor: defaultSupervisor || "all" });
-  }, [showSeniorSupervisorDropdown, activeShiftsData, dispute]);
+  }, [showSeniorSupervisorDropdown, activeUsersData, dispute]);
 
   useEffect(() => {
     if (open && rcwuri) getReviewOptions(rcwuri);

@@ -631,6 +631,14 @@ export const dynamicApi = createApi({
       },
     }),
 
+    getActiveUsers: builder.query({
+      query: () => "/api/VLookups/active",
+      providesTags: ["VLookups"],
+      transformResponse: (response: any) => {
+        return response?.data || response || [];
+      },
+    }),
+
     // Proactive Campaigns
     getProactiveCampaigns: builder.query({
       query: (params) => ({ url: "/api/ProactiveCampaign", params }),
@@ -1256,6 +1264,7 @@ export const {
   // Shifts
   useLazyGetShiftsQuery,
   useGetActiveShiftsQuery,
+  useGetActiveUsersQuery,
   useUpdateShiftManagementMutation,
   useUpdateSpecialZoneMutation,
 

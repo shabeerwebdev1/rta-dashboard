@@ -11,7 +11,7 @@ import { useTableParams } from "../hooks/useTableParams";
 import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
 import {
-  useGetActiveShiftsQuery,
+  useGetActiveUsersQuery,
   useGetHRMSAttendanceQuery,
   useGetHRMSTrackingQuery,
   useGetInspectionObstaclesQuery,
@@ -234,7 +234,7 @@ const HRMSPage: React.FC = () => {
     skip: !towingParams,
     refetchOnMountOrArgChange: true,
   });
-  const { data: activeShiftsData } = useGetActiveShiftsQuery();
+  const { data: activeUsersData } = useGetActiveUsersQuery();
   const { currentData: obstacleResponse } = useGetInspectionObstaclesQuery(obstacleParams, {
     skip: !obstacleParams,
     refetchOnMountOrArgChange: true,
@@ -297,14 +297,14 @@ const HRMSPage: React.FC = () => {
   );
 
   const inspectorNameMap = useMemo(() => {
-    const shifts = Array.isArray(activeShiftsData) ? activeShiftsData : activeShiftsData?.data || [];
+    const shifts = Array.isArray(activeUsersData) ? activeUsersData : activeUsersData?.data || [];
     const nameMap = new Map<string, string>();
     shifts.forEach((shift: any) => {
       const guid = normalizeGuid(shift.employeeId);
       if (guid) nameMap.set(guid, shift.employeeName || shift.employeeNameAr || shift.employeeId);
     });
     return nameMap;
-  }, [activeShiftsData]);
+  }, [activeUsersData]);
 
   useEffect(() => {
     setPageTitle(t(config.title));

@@ -37,7 +37,7 @@ import { formatDateByLocale } from "../utils/dateFormatter";
 import { evaluationTypeOptions, teamEvaluationConfig } from "../config/pageConfigs/teamEvaluationConfig";
 import TeamEvaluationViewDrawer from "../components/Teamevaluation/TeamEvaluationViewDrawer";
 import {
-  useGetActiveShiftsQuery,
+  useGetActiveUsersQuery,
   useGetTeamEvaluationsQuery,
   useCreateTeamEvaluationMutation,
   useUpdateTeamEvaluationMutation,
@@ -140,7 +140,7 @@ const TeamEvaluationPage: React.FC = () => {
   const [triggerGetGroupById] = useLazyGetCriteriaGroupByIdQuery();
   const [triggerGetTeamEvaluationById] = useLazyGetTeamEvaluationByIdQuery();
 
-  const { data: activeShiftsData, isLoading: isLoadingShifts } = useGetActiveShiftsQuery({});
+  const { data: activeUsersData, isLoading: isLoadingShifts } = useGetActiveUsersQuery({});
 
   // ── Derived: group options ──────────────────────────────────────────────────
   const criteriaGroupOptions = useMemo(() => {
@@ -156,8 +156,8 @@ const TeamEvaluationPage: React.FC = () => {
 
   // ── Derived: inspectors ─────────────────────────────────────────────────────
   const inspectors = useMemo(() => {
-    if (!activeShiftsData) return [];
-    const shifts = Array.isArray(activeShiftsData) ? activeShiftsData : (activeShiftsData as any).data || [];
+    if (!activeUsersData) return [];
+    const shifts = Array.isArray(activeUsersData) ? activeUsersData : (activeUsersData as any).data || [];
     return shifts
       .map((s: any) => ({
         value: String(s.employeeId || s.employeeGuid || s.inspectorGuid || s.id || "").trim(),
@@ -165,18 +165,18 @@ const TeamEvaluationPage: React.FC = () => {
         labelAr: s.employeeNameAr || s.employeeName || s.employeeId,
       }))
       .filter((s: any) => s.value);
-  }, [activeShiftsData]);
+  }, [activeUsersData]);
 
   const supervisors = useMemo(() => {
-    if (!activeShiftsData) return [];
-    return (activeShiftsData as any[])
+    if (!activeUsersData) return [];
+    return (activeUsersData as any[])
       .filter((s) => s.roleCode === "PARSUP")
       .map((s) => ({
         value: s.employeeId,
         labelEn: s.employeeName,
         labelAr: s.employeeNameAr || s.employeeName,
       }));
-  }, [activeShiftsData]);
+  }, [activeUsersData]);
 
   // ── Effects ─────────────────────────────────────────────────────────────────
   useEffect(() => {
