@@ -151,7 +151,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       key: FULL_PATHS.GENERAL,
       icon: <SearchOutlined />,
       labelText: t("sidebar.general"),
-      permission: "Vlookups",
+      permission: "GeneralSearch",
     },
     {
       key: "configuration",
@@ -226,7 +226,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           key: FULL_PATHS.PROACTIVECAMPAIGN,
           icon: <NotificationOutlined />,
           labelText: t("sidebar.proactivecampaigns"),
-          permission: "sTafteeshRequest",
+          permission: "ProactiveCampaign",
         },
       ],
     },

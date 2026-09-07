@@ -34,6 +34,7 @@ import { exportToCsv } from "../utils/csvExporter";
 import StatsDisplay from "../components/common/StatsDisplay";
 import ActiveFiltersDisplay from "../components/common/ActiveFiltersDisplay";
 import DataTableWrapper from "../components/common/DataTableWrapper";
+import { usePermission } from "../hooks/usePermission";
 import { proactiveCampaignsConfig } from "../config/pageConfigs/proactiveCampaignsConfig";
 import ProactiveCampaignViewDrawer from "../components/ProactiveCampaigns/ProactiveCampaignViewDrawer";
 import ArcGISMap from "../components/common/ArcGISMap";
@@ -147,10 +148,12 @@ const normalizeInspectorSelection = (values?: string[]) => {
 const ProactiveCampaignsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
+  const { canCreate, canEdit } = usePermission();
   const [form] = Form.useForm();
   const { modal, notification } = App.useApp();
 
   const config = proactiveCampaignsConfig;
+  const menuName = "ProactiveCampaign";
   const {
     apiParams,
     handleTableChange,
@@ -488,6 +491,9 @@ const ProactiveCampaignsPage: React.FC = () => {
   const [mapLat, mapLng] = mapCenter;
 
   const handleFooterSave = async (draft: boolean) => {
+    const canSave = modalMode === "add" ? canCreate(menuName) : canEdit(menuName);
+    if (!canSave) return;
+
     try {
       const values = await form.validateFields();
       const payload = {
@@ -629,6 +635,7 @@ const ProactiveCampaignsPage: React.FC = () => {
       label: t("common.edit"),
       icon: <EditOutlined />,
       onClick: () => openModal("edit", record),
+      disabled: !canEdit(menuName),
     },
   ];
 
@@ -684,7 +691,12 @@ const ProactiveCampaignsPage: React.FC = () => {
                 {t("common.downloadCsv")}
               </Button>
 
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => openModal("add")}>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => openModal("add")}
+                disabled={!canCreate(menuName)}
+              >
                 {t("common.addNew")}
               </Button>
             </Space>
@@ -758,7 +770,7 @@ const ProactiveCampaignsPage: React.FC = () => {
             key="draft"
             htmlType="button"
             onClick={() => handleFooterSave(true)}
-            disabled={modalMode === "add" ? false : !isDraftMode}
+            disabled={modalMode === "add" ? !canCreate(menuName) : !canEdit(menuName) || !isDraftMode}
             loading={isAddingCampaign || isUpdatingCampaign}
           >
             {t("common.saveAsDraft", { defaultValue: "Save as Draft" })}
@@ -767,7 +779,7 @@ const ProactiveCampaignsPage: React.FC = () => {
             key="submit"
             type="primary"
             onClick={() => handleFooterSave(false)}
-            disabled={modalMode === "add" ? false : isDraftMode}
+            disabled={modalMode === "add" ? !canCreate(menuName) : !canEdit(menuName) || isDraftMode}
             loading={isAddingCampaign || isUpdatingCampaign}
           >
             {t(modalMode === "add" ? "common.submit" : "common.update")}

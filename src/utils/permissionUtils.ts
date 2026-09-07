@@ -14,12 +14,15 @@ const permissionAliases: Record<string, string[]> = {
   webdashboard: ["WebDashboard", "Dashboard"],
   report: ["Report", "Reports"],
   reports: ["Reports", "Report"],
+  vlookups: ["Vlookups", "GeneralSearch"],
+  generalsearch: ["GeneralSearch"],
   whitelisttrade: ["WhiteListTrade", "WhitelistTradeLicense"],
   whitelisttradelicense: ["WhitelistTradeLicense", "WhiteListTrade"],
   parkonic: ["Parkonic", "trParkonics"],
   trparkonics: ["trParkonics", "Parkonic"],
   parkoniclocation: ["ParkonicLocation", "ParkonicsLocation"],
   parkonicslocation: ["ParkonicsLocation", "ParkonicLocation"],
+  proactivecampaign: ["ProactiveCampaign"],
 };
 
 export const resolvePermissionNames = (menuName: MenuPermission): string[] => {
