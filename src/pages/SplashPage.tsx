@@ -6,8 +6,6 @@ import { useAuth } from "../contexts/AuthContext";
 import { EXTERNAL_LOGIN_URL } from "../config/envConfig";
 import { getDefaultAuthorizedPath } from "../utils/accessRoutes";
 
-const FALLBACK_CODE = "202608046A228D83984340BC81C27DEC";
-
 const SPLASH_DELAY = 1300;
 
 export default function SplashPage() {
@@ -15,9 +13,7 @@ export default function SplashPage() {
   const location = useLocation();
   const [showSplash, setShowSplash] = useState(true);
 
-  // Read code from URL or fallback
-  const codeFromUrl = new URLSearchParams(location.search).get("code") || "";
-  const code = codeFromUrl || FALLBACK_CODE;
+  const code = new URLSearchParams(location.search).get("code")?.trim() || "";
 
   // API call
   const { data, isLoading, isError } = useValidatecodeQuery(code);
@@ -27,38 +23,22 @@ export default function SplashPage() {
     if (isLoading) return;
 
     const timer = setTimeout(() => {
-      if (isError || !data?.data?.sTafteeshToken) {
+      if (!code || isError || !data?.data?.sTafteeshToken) {
         localStorage.clear();
         window.location.href = EXTERNAL_LOGIN_URL;
         return;
       }
 
-      // Successful validation
-      const u = data.data;
+      login(data.data);
 
-      localStorage.setItem("sTafteeshToken", u.sTafteeshToken);
-      if (u.tokenExpiry) localStorage.setItem("tokenExpiry", u.tokenExpiry);
-
-      localStorage.setItem("displayNameEn", u.displayNameEn ?? "");
-      localStorage.setItem("displayNameAr", u.displayNameAr ?? "");
-      localStorage.setItem("userImage", u.userImage ?? "");
-      localStorage.setItem("userGUID", u.userGUID ?? "");
-
-      //  Store role info
-      localStorage.setItem("roleGUID", u.roleGUID ?? "");
-      localStorage.setItem("rolePermissions", JSON.stringify(u.rolePermissions ?? []));
-
-      //  Tell AuthContext "we're logged in"
-      login(u);
-
-      const defaultPath = getDefaultAuthorizedPath(u.rolePermissions ?? []);
+      const defaultPath = getDefaultAuthorizedPath(data.data.rolePermissions ?? []);
       navigate(defaultPath, { replace: true });
 
       setShowSplash(false);
     }, SPLASH_DELAY);
 
     return () => clearTimeout(timer);
-  }, [isLoading, isError, data, navigate, login]);
+  }, [code, isLoading, isError, data, navigate, login]);
 
   return (
     <Row style={{ height: "100vh", width: "100%" }} justify="center" align="middle">

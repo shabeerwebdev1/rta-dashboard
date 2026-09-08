@@ -12,8 +12,8 @@ import {
 } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import {
-  useLazyGetDisputeByIdQuery,
-  useUpdateDisputeStatusMutation,
+  useLazyGetDisputeByTypeQuery,
+  useUpdateDisputeStatusByTypeMutation,
   useLazyGetLookupsQuery,
   useLazyGetReviewHistoryQuery,
 } from "../../services/rtkApiFactory";
@@ -45,10 +45,18 @@ interface DisputeViewModalProps {
   open: boolean;
   onClose: () => void;
   record?: any;
+  disputeId?: string;
+  disputeType: "parking" | "vehicle";
   onStatusUpdate?: () => void;
 }
 
-const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, record, onStatusUpdate }) => {
+const DisputeViewModal: React.FC<DisputeViewModalProps> = ({
+  open,
+  onClose,
+  record,
+  disputeType,
+  onStatusUpdate,
+}) => {
   const { t, i18n } = useTranslation();
   const { token } = theme.useToken();
   const { modal } = App.useApp();
@@ -57,8 +65,8 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
   const mapRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<__esri.MapView | null>(null);
 
-  const [triggerGetDisputeById, { data: disputeData, isLoading }] = useLazyGetDisputeByIdQuery();
-  const [updateDisputeStatus, { isLoading: isUpdating }] = useUpdateDisputeStatusMutation();
+  const [triggerGetDisputeById, { data: disputeData, isLoading }] = useLazyGetDisputeByTypeQuery();
+  const [updateDisputeStatus, { isLoading: isUpdating }] = useUpdateDisputeStatusByTypeMutation();
   const [triggerGetLookups] = useLazyGetLookupsQuery();
 
   const [selectedAction, setSelectedAction] = useState<any>(null);
@@ -122,7 +130,7 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
     const idToLoad = rcwuri ? record?.EntityGUID : disputeId;
     if (!idToLoad) return;
 
-    triggerGetDisputeById(idToLoad).then((result) => {
+    triggerGetDisputeById({ type: disputeType, id: idToLoad }).then((result) => {
       const disputeCode = result.data?.data?.disputeCode;
       const entityCode = result.data?.data?.entityCode || "parking-parkonic-fine-dispute";
 
@@ -378,11 +386,11 @@ const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, reco
         assignedTo: assignedToValue,
       };
 
-      const response = await updateDisputeStatus(payload).unwrap();
+      const response = await updateDisputeStatus({ type: disputeType, body: payload }).unwrap();
 
       notification.success(response, t("messages.updateSuccess", { entity: t("sidebar.dispute") }));
 
-      triggerGetDisputeById(storedDisputeId);
+      triggerGetDisputeById({ type: disputeType, id: storedDisputeId });
       form.resetFields();
       setSelectedAction(null);
       onStatusUpdate?.();

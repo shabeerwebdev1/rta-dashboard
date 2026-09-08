@@ -111,6 +111,7 @@ interface ArcGISMapProps {
   clusterRadius?: string;
   onParkingClusterClick?: (points: ParkingPoint[]) => void;
   showBasemapToggle?: boolean;
+  disablePopup?: boolean;
   // NEW PROPS FOR BOUNDARY DRAWING
   enableBoundaryDrawing?: boolean;
   onBoundaryDrawn?: (shape: { type: "Polygon" | "LineString" | "Point"; coordinates: any }) => void;
@@ -379,6 +380,7 @@ const createClusterLayer = (params: {
   listMode?: "show" | "hide" | "hide-children";
   iconWidth?: string; // NEW: Custom icon width
   iconHeight?: string; // NEW: Custom icon height
+  disablePopup?: boolean;
 }) => {
   const {
     title,
@@ -396,6 +398,7 @@ const createClusterLayer = (params: {
     listMode = "show",
     iconWidth = PIN_W, // Default to same size as before
     iconHeight = PIN_H, // Default to same size as before
+    disablePopup = false,
   } = params;
 
   if (points.length === 0) return null;
@@ -414,6 +417,50 @@ const createClusterLayer = (params: {
         },
       }),
   );
+
+  const featureReduction: Record<string, any> = {
+    type: "cluster",
+    clusterRadius,
+    clusterMinSize: 2,
+    maxScale: 0,
+    clusterRenderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-marker",
+        style: "circle",
+        color,
+        size: "20px",
+        outline: { color: "#ffffff", width: 1.5 },
+      },
+      label: "{cluster_count}",
+      labelPlacement: "center",
+    },
+  };
+
+  if (!disablePopup) {
+    featureReduction.popupTemplate = {
+      title: `${title} Cluster`,
+      content: [
+        {
+          type: "text",
+          text: `This cluster contains {cluster_count} ${title.toLowerCase()} locations.`,
+        },
+        {
+          type: "fields",
+          fieldInfos: [
+            {
+              fieldName: "cluster_count",
+              label: "Count",
+              format: {
+                places: 0,
+                digitSeparator: true,
+              },
+            },
+          ],
+        },
+      ],
+    };
+  }
 
   return new FeatureLayer({
     title,
@@ -465,47 +512,9 @@ const createClusterLayer = (params: {
               height: iconHeight,
             },
           },
-    featureReduction: {
-      type: "cluster",
-      clusterRadius,
-      clusterMinSize: 2,
-      maxScale: 0,
-      popupTemplate: {
-        title: `${title} Cluster`,
-        content: [
-          {
-            type: "text",
-            text: `This cluster contains {cluster_count} ${title.toLowerCase()} locations.`,
-          },
-          {
-            type: "fields",
-            fieldInfos: [
-              {
-                fieldName: "cluster_count",
-                label: "Count",
-                format: {
-                  places: 0,
-                  digitSeparator: true,
-                },
-              },
-            ],
-          },
-        ],
-      },
-      clusterRenderer: {
-        type: "simple",
-        symbol: {
-          type: "simple-marker",
-          style: "circle",
-          color,
-          size: "20px",
-          outline: { color: "#ffffff", width: 1.5 },
-        },
-        label: "{cluster_count}",
-        labelPlacement: "center",
-      },
-    },
-    popupTemplate,
+    featureReduction,
+    popupEnabled: !disablePopup,
+    popupTemplate: disablePopup ? undefined : popupTemplate,
     minScale: 0,
     maxScale: 0,
   });
@@ -546,6 +555,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
   clusterRadius = DEFAULT_CLUSTER_RADIUS,
   onParkingClusterClick,
   showBasemapToggle = true,
+  disablePopup = false,
   enableBoundaryDrawing = false,
   onBoundaryDrawn,
   boundaryShape,
@@ -1259,6 +1269,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
             { name: "plateNumber", type: "string" },
           ],
           clusterRadius,
+          disablePopup,
           popupTemplate: new PopupTemplate({
             title: (feature: any) => {
               const attrs = getPopupAttributes(feature);
@@ -1344,6 +1355,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
             { name: "plateNumber", type: "string" },
           ],
           clusterRadius,
+          disablePopup,
           popupTemplate: new PopupTemplate({
             title: (feature: any) => {
               const attrs = getPopupAttributes(feature);
@@ -1426,6 +1438,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
             { name: "plateNumber", type: "string" },
           ],
           clusterRadius,
+          disablePopup,
           popupTemplate: new PopupTemplate({
             title: (feature: any) => {
               const attrs = getPopupAttributes(feature);
@@ -1507,6 +1520,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
             { name: "plateNumber", type: "string" },
           ],
           clusterRadius,
+          disablePopup,
           popupTemplate: new PopupTemplate({
             title: (feature: any) => {
               const attrs = getPopupAttributes(feature);
@@ -1588,6 +1602,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
             { name: "plateNumber", type: "string" },
           ],
           clusterRadius,
+          disablePopup,
           popupTemplate: new PopupTemplate({
             title: (feature: any) => {
               const attrs = getPopupAttributes(feature);
@@ -1648,6 +1663,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
             { name: "createdDateTime", type: "string" },
           ],
           clusterRadius,
+          disablePopup,
           popupTemplate: new PopupTemplate({
             title: currentLanguage === "ar" ? "عائق" : "Obstacle",
             content: (feature: any) => {
@@ -1703,6 +1719,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
             { name: "markerType", type: "string" },
           ],
           clusterRadius,
+          disablePopup,
           popupTemplate: new PopupTemplate({
             title: "{name}",
             content: `<b>${currentLanguage === "ar" ? "الحالة:" : "Status:"}</b> {status}<br><b>${currentLanguage === "ar" ? "المنطقة:" : "Zone:"}</b> {zone}`,
@@ -1734,6 +1751,7 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
         ],
         clusterRadius,
         listMode: "hide",
+        disablePopup,
         popupTemplate: new PopupTemplate({
           title: "{name}",
           content: `Status: ${config.label}`,
@@ -1865,10 +1883,12 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
           geometry: new Point({ longitude: first.lng, latitude: first.lat, spatialReference: { wkid: 4326 } }),
           symbol: new PictureMarkerSymbol({ url: MAP_ICONS.start, width: START_SIZE, height: START_SIZE }),
           attributes: { type: "start" },
-          popupTemplate: new PopupTemplate({
-            title: currentLanguage === "ar" ? "نقطة البداية" : "Start Point",
-            content: `<b>${currentLanguage === "ar" ? "الوقت:" : "Time:"}</b> ${first.timestamp}`,
-          }),
+          popupTemplate: disablePopup
+            ? undefined
+            : new PopupTemplate({
+                title: currentLanguage === "ar" ? "نقطة البداية" : "Start Point",
+                content: `<b>${currentLanguage === "ar" ? "الوقت:" : "Time:"}</b> ${first.timestamp}`,
+              }),
         }),
       );
     }
@@ -1899,10 +1919,12 @@ const ArcGISMap: React.FC<ArcGISMapProps> = ({
           }),
           symbol: new PictureMarkerSymbol({ url: MAP_ICONS.start, width: START_SIZE, height: START_SIZE }),
           attributes: { type: "towingStart" },
-          popupTemplate: new PopupTemplate({
-            title: currentLanguage === "ar" ? "بداية السحب" : "Towing Start",
-            content: currentLanguage === "ar" ? "موقع استلام المركبة" : "Vehicle pickup location",
-          }),
+          popupTemplate: disablePopup
+            ? undefined
+            : new PopupTemplate({
+                title: currentLanguage === "ar" ? "بداية السحب" : "Towing Start",
+                content: currentLanguage === "ar" ? "موقع استلام المركبة" : "Vehicle pickup location",
+              }),
         }),
       );
     }

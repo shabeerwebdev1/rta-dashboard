@@ -28,10 +28,10 @@ import { useDebounce } from "../hooks/useDebounce";
 import { useAppNotification } from "../utils/notificationManager";
 import {
   useGetDisputesQuery,
-  useAddDisputeMutation,
+  useCreateDisputeByTypeMutation,
   useUpdateDisputeMutation,
   useLazyGetLookupsQuery,
-  useLazyGetDisputeByIdQuery,
+  useLazyGetDisputeByTypeQuery,
   useLazyGetParkonicByIdQuery,
   useLazySearchFinesQuery,
   useLazySearchTradeQuery,
@@ -68,7 +68,7 @@ const columnToCategoryMap: Record<string, number> = {
 
 const DisputeManagementPage: React.FC = () => {
   const { canCreate, canEdit } = usePermission();
-  const menuName = "Dispute";
+  const menuName = "DisputeParking";
   const { t, i18n } = useTranslation();
   const { setPageTitle } = usePage();
   const { modal } = App.useApp();
@@ -160,10 +160,10 @@ const DisputeManagementPage: React.FC = () => {
     refetchOnMountOrArgChange: true,
   });
 
-  const [addDispute, { isLoading: isAdding }] = useAddDisputeMutation();
+  const [addDispute, { isLoading: isAdding }] = useCreateDisputeByTypeMutation();
   const [updateDispute, { isLoading: isUpdating }] = useUpdateDisputeMutation();
   const [triggerGetLookups] = useLazyGetLookupsQuery();
-  const [triggerGetDisputeById] = useLazyGetDisputeByIdQuery();
+  const [triggerGetDisputeById] = useLazyGetDisputeByTypeQuery();
   const [triggerGetParkonicById] = useLazyGetParkonicByIdQuery();
   const [triggerSearchFines] = useLazySearchFinesQuery();
   const [triggerSearchTrade] = useLazySearchTradeQuery();
@@ -245,7 +245,7 @@ const DisputeManagementPage: React.FC = () => {
         const controller = new AbortController();
         abortControllers.current.set(disputeCode, controller);
 
-        const result = await triggerGetDisputeById(disputeCode).unwrap();
+        const result = await triggerGetDisputeById({ type: "parking", id: disputeCode }).unwrap();
 
         // Only update if not aborted
         if (!controller.signal.aborted && result?.data) {
@@ -394,7 +394,7 @@ const DisputeManagementPage: React.FC = () => {
       const results = await Promise.all(
         unresolvedCodes.map(async (code: string) => {
           try {
-            const result = await triggerGetDisputeById(code).unwrap();
+            const result = await triggerGetDisputeById({ type: "parking", id: code }).unwrap();
             return { code, data: result?.data || null };
           } catch {
             return { code, data: null };
@@ -626,7 +626,7 @@ const DisputeManagementPage: React.FC = () => {
 
     if (mode === "edit" && record) {
       try {
-        const result = await triggerGetDisputeById(record.disputeCode).unwrap();
+        const result = await triggerGetDisputeById({ type: "parking", id: record.disputeCode }).unwrap();
         if (result.data) {
           let fileList: any[] = [];
           if (result.data.evidencePath) {
@@ -723,7 +723,7 @@ const DisputeManagementPage: React.FC = () => {
       let response;
 
       if (modalMode === "add") {
-        response = await addDispute(formData).unwrap();
+        response = await addDispute({ type: "parking", body: formData }).unwrap();
       } else {
         formData.append("dispute_Id", selectedRecord.dispute_Id);
         response = await updateDispute(formData).unwrap();
@@ -748,7 +748,7 @@ const DisputeManagementPage: React.FC = () => {
 
   const handleOpenFineView = async (record: any) => {
     try {
-      const result = await triggerGetDisputeById(record.disputeCode).unwrap();
+      const result = await triggerGetDisputeById({ type: "parking", id: record.disputeCode }).unwrap();
       const dispute = result?.data;
       const details = dispute?.fineDetails;
       const vehicle = dispute?.vehicle;
@@ -1548,6 +1548,7 @@ const DisputeManagementPage: React.FC = () => {
               setViewRecord(null);
             }}
             disputeId={viewRecord.disputeCode}
+            disputeType="parking"
             record={viewRecord}
             onStatusUpdate={refetch}
           />

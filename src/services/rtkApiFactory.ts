@@ -56,6 +56,29 @@ const transformListResponse = (response: any) => ({
   total: response.totalCount || 0,
 });
 
+const transformDisputeListResponse = (response: any) => ({
+  data: response?.data ?? [],
+  total: response?.totalCount ?? 0,
+  totalCount: response?.totalCount ?? 0,
+  pageNumber: response?.pageNumber,
+  pageSize: response?.pageSize,
+  pending: response?.pending ?? 0,
+  approved: response?.approved ?? 0,
+  rejected: response?.rejected ?? 0,
+  inReview: response?.inReview ?? 0,
+  statusCode: response?.statusCode,
+  successful: response?.successful,
+  en_Msg: response?.en_Msg,
+  ar_Msg: response?.ar_Msg,
+});
+
+type DisputeType = "parking" | "vehicle";
+
+const disputeEndpointPrefix: Record<DisputeType, string> = {
+  parking: "/api/DisputeParking",
+  vehicle: "/api/DisputeVehicle",
+};
+
 export const dynamicApi = createApi({
   reducerPath: "dynamicApi",
   baseQuery: baseQuery,
@@ -294,42 +317,34 @@ export const dynamicApi = createApi({
       providesTags: ["Dispute"],
     }),
     getParkingDisputes: builder.query({
-      query: (params) => ({ url: "/api/Dispute/ParkingDisputes", params }),
-      transformResponse: (response: any) => ({
-        data: response?.data ?? [],
-        total: response?.totalCount ?? 0,
-        totalCount: response?.totalCount ?? 0,
-        pageNumber: response?.pageNumber,
-        pageSize: response?.pageSize,
-        pending: response?.pending ?? 0,
-        approved: response?.approved ?? 0,
-        rejected: response?.rejected ?? 0,
-        inReview: response?.inReview ?? 0,
-        statusCode: response?.statusCode,
-        successful: response?.successful,
-        en_Msg: response?.en_Msg,
-        ar_Msg: response?.ar_Msg,
-      }),
+      query: (params) => ({ url: "/api/DisputeParking/ParkingDisputes", params }),
+      transformResponse: transformDisputeListResponse,
       providesTags: ["Dispute"],
     }),
     getVehicleDisputes: builder.query({
-      query: (params) => ({ url: "/api/Dispute/VehicleDisputes", params }),
-      transformResponse: (response: any) => ({
-        data: response?.data ?? [],
-        total: response?.totalCount ?? 0,
-        totalCount: response?.totalCount ?? 0,
-        pageNumber: response?.pageNumber,
-        pageSize: response?.pageSize,
-        pending: response?.pending ?? 0,
-        approved: response?.approved ?? 0,
-        rejected: response?.rejected ?? 0,
-        inReview: response?.inReview ?? 0,
-        statusCode: response?.statusCode,
-        successful: response?.successful,
-        en_Msg: response?.en_Msg,
-        ar_Msg: response?.ar_Msg,
-      }),
+      query: (params) => ({ url: "/api/DisputeVehicle/VehicleDisputes", params }),
+      transformResponse: transformDisputeListResponse,
       providesTags: ["Dispute"],
+    }),
+    getDisputeByType: builder.query({
+      query: ({ type, id }: { type: DisputeType; id: string | number }) =>
+        `${disputeEndpointPrefix[type]}/GetById/${id}`,
+    }),
+    createDisputeByType: builder.mutation({
+      query: ({ type, body }: { type: DisputeType; body: BodyInit }) => ({
+        url: `${disputeEndpointPrefix[type]}/${type === "parking" ? "CreateParking" : "CreateVehicle"}`,
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["Dispute"],
+    }),
+    updateDisputeStatusByType: builder.mutation({
+      query: ({ type, body }: { type: DisputeType; body: unknown }) => ({
+        url: `${disputeEndpointPrefix[type]}/UpdateStatusFields`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["Dispute", "InboxSummary", "InboxSummaryMenu"],
     }),
 
     getDisputeById: builder.query({
@@ -1247,6 +1262,9 @@ export const {
   useGetDisputesQuery,
   useGetParkingDisputesQuery,
   useGetVehicleDisputesQuery,
+  useLazyGetDisputeByTypeQuery,
+  useCreateDisputeByTypeMutation,
+  useUpdateDisputeStatusByTypeMutation,
   useLazyGetDisputeByIdQuery,
   useAddDisputeMutation,
   useUpdateDisputeMutation,
