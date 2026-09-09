@@ -8,6 +8,7 @@ import "./config/i18n";
 import "./styles/global.css";
 import "./styles/main.css";
 import { AuthProvider } from "./contexts/AuthContext";
+import AppErrorBoundary from "./components/common/AppErrorBoundary";
 
 const AppContent = () => {
   const { themeName } = useTheme();
@@ -26,13 +27,15 @@ const AppContent = () => {
 
 function AppContainer() {
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <PageProvider>
-          <AppContent />
-        </PageProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <AppErrorBoundary>
+      <AuthProvider>
+        <ThemeProvider>
+          <PageProvider>
+            <AppContent />
+          </PageProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </AppErrorBoundary>
   );
 }
 

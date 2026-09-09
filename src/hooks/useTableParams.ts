@@ -1,5 +1,5 @@
 /* eslint-disable no-prototype-builtins */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { TableProps } from "antd";
@@ -56,8 +56,14 @@ const serializeParams = (params: Record<string, any>): string => {
   return parts.join("&");
 };
 
-const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: string ;     filterKeyMap?: Record<string, string>;   // add this
-}, initialPageSize = 10) => {
+const useTableParams = (
+  pageConfig: {
+    globalSearchKeys: string[];
+    dateRangeKey: string;
+    filterKeyMap?: Record<string, string>; // add this
+  },
+  initialPageSize = 10,
+) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const getBlankState = useCallback(
@@ -257,7 +263,6 @@ const useTableParams = (pageConfig: { globalSearchKeys: string[]; dateRangeKey: 
         // Convert 'status' (frontend) to 'leave_status' (backend)
         const backendKey = pageConfig.filterKeyMap?.[key] || key;
         orFilters[backendKey] = value;
-        
       }
     }
     if (state.searchKey && state.searchValue) {

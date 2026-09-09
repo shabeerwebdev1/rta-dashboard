@@ -198,8 +198,6 @@
 
 // export default PledgesViewDrawer;
 
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Space, Image, Empty, Spin, theme } from "antd";
 import { ShareAltOutlined, CloseOutlined } from "@ant-design/icons";

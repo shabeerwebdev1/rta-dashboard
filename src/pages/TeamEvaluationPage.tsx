@@ -1,7 +1,3 @@
-/* eslint-disable no-shadow-restricted-names */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import React, { useEffect, useMemo, useState } from "react";
 import {
   Space,
@@ -255,11 +251,19 @@ const TeamEvaluationPage: React.FC = () => {
     if (i18n.language === "ar" && fallbackAr && !isGuid(fallbackAr)) return fallbackAr;
     if (i18n.language !== "ar" && fallbackEn && !isGuid(fallbackEn)) return fallbackEn;
 
-    const candidateId = inspectorId || (isGuid(fallbackEn || "") ? fallbackEn : "") || (isGuid(fallbackAr || "") ? fallbackAr : "");
-    const normalizedId = String(candidateId || "").toLowerCase().trim();
+    const candidateId =
+      inspectorId || (isGuid(fallbackEn || "") ? fallbackEn : "") || (isGuid(fallbackAr || "") ? fallbackAr : "");
+    const normalizedId = String(candidateId || "")
+      .toLowerCase()
+      .trim();
 
     if (normalizedId) {
-      const found = inspectors.find((item: any) => String(item.value || "").toLowerCase().trim() === normalizedId);
+      const found = inspectors.find(
+        (item: any) =>
+          String(item.value || "")
+            .toLowerCase()
+            .trim() === normalizedId,
+      );
       if (found) {
         return i18n.language === "ar" ? found.labelAr : found.labelEn;
       }

@@ -268,7 +268,6 @@
 
 // export default InspectionObstaclesViewDrawer;
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, useState } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Image, Empty, Space, Spin, theme } from "antd";
 import { DeleteOutlined, ShareAltOutlined, CloseOutlined } from "@ant-design/icons";
@@ -384,16 +383,7 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
       (areaIdToNameMap && (areaIdToNameMap.get(Number(record.area) as any) || areaIdToNameMap.get(areaKey as any))) ||
       effectiveAreaIdToNameMap.get(areaKey) ||
       (allAreasData || []).find((area: any) =>
-        [
-          area.areaId,
-          area.area_Id,
-          area.id,
-          area.areaGUID,
-          area.areaCode,
-          area.area,
-          area.areaName,
-          area.name,
-        ]
+        [area.areaId, area.area_Id, area.id, area.areaGUID, area.areaCode, area.area, area.areaName, area.name]
           .filter((value) => value !== undefined && value !== null && value !== "")
           .some((value) => String(value) === areaKey),
       )?.area ||
@@ -481,7 +471,14 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
           setIsLoadingLookups(false);
         });
     }
-  }, [open, zoneOptions.length, sourceOptions.length, internalLookupOptions.length, triggerGetLookups, triggerGetZones]);
+  }, [
+    open,
+    zoneOptions.length,
+    sourceOptions.length,
+    internalLookupOptions.length,
+    triggerGetLookups,
+    triggerGetZones,
+  ]);
 
   const { data: attachments = [], isLoading: isLoadingAttachments } = useGetInspectionAttachmentsQuery(
     record
@@ -637,7 +634,8 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
                   {(() => {
                     const areaKey = record.area !== undefined && record.area !== null ? String(record.area) : "";
                     const found =
-                      (areaIdToNameMap && (areaIdToNameMap.get(Number(record.area) as any) || areaIdToNameMap.get(areaKey as any))) ||
+                      (areaIdToNameMap &&
+                        (areaIdToNameMap.get(Number(record.area) as any) || areaIdToNameMap.get(areaKey as any))) ||
                       effectiveAreaIdToNameMap.get(areaKey);
                     return found || t("common.noData");
                   })()}
@@ -651,7 +649,9 @@ const InspectionObstaclesViewDrawer: React.FC<InspectionObstaclesViewDrawerProps
 
                 <Col span={14}>
                   {(() => {
-                    const found = effectiveSourceOptions.find((x) => String(x.value) === String(record.sourceOfObstacle));
+                    const found = effectiveSourceOptions.find(
+                      (x) => String(x.value) === String(record.sourceOfObstacle),
+                    );
 
                     return found ? found.label : record.sourceOfObstacle || t("common.noData");
                   })()}

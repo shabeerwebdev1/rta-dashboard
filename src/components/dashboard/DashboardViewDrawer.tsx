@@ -83,7 +83,7 @@ const DashboardViewDrawer: React.FC<DashboardViewDrawerProps> = ({ open, onClose
 
         <Divider />
 
-        <h3>Today's Performance</h3>
+        <h3>Today&apos;s Performance</h3>
         <Row gutter={16}>
           <Col span={12}>
             <Card size="small">

@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useMemo, useState, useRef } from "react";
 import {
   Table,
@@ -585,7 +582,7 @@ export default function CreateShiftPlan() {
         grouped[key].days[idx] = item.offType === "weekOff" ? "WO" : "LV";
       } else {
         const zoneIdRaw = item.zoneId ?? item.zone_Id ?? item.zoneGUID ?? item.zoneCode ?? "";
-        let areaRaw: any = item.areasIds ?? item.areaId ?? item.area_Id ?? item.areaGUID ?? "";
+        const areaRaw: any = item.areasIds ?? item.areaId ?? item.area_Id ?? item.areaGUID ?? "";
 
         let areasArray: any[] = [];
         if (Array.isArray(areaRaw)) {
@@ -604,7 +601,7 @@ export default function CreateShiftPlan() {
       }
 
       const normalizedZone = item.zoneId ?? item.zone_Id ?? item.zoneGUID ?? item.zoneCode ?? "";
-      let normalizedAreas: any = item.areasIds ?? item.areaId ?? item.area_Id ?? item.areaGUID ?? "";
+      const normalizedAreas: any = item.areasIds ?? item.areaId ?? item.area_Id ?? item.areaGUID ?? "";
 
       let normalizedAreasArray: any[] = [];
       if (Array.isArray(normalizedAreas)) {

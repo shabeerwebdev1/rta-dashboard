@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 interface AppConfig {
   RTA_API_TARGET: string;
   EXTERNAL_FILES_URL: string;
@@ -7,13 +6,12 @@ interface AppConfig {
 
 export const getAppConfig = (): AppConfig => {
   const config = (window as any).APP_CONFIG;
-  if (!config) {
-    const errorMessage = `
-`;
-    console.error(errorMessage);
-    // 🚫 Stop execution immediately
-    alert("Runtime config (config.js) missing. Application cannot start.");
+  const requiredKeys: Array<keyof AppConfig> = ["RTA_API_TARGET", "EXTERNAL_FILES_URL", "EXTERNAL_LOGIN_URL"];
+
+  if (!config || requiredKeys.some((key) => typeof config[key] !== "string" || !config[key].trim())) {
+    throw new Error("Runtime configuration is missing or incomplete. Check public/config.js.");
   }
+
   return config;
 };
 

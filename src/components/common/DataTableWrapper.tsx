@@ -353,8 +353,6 @@
 
 // export default DataTableWrapper;
 
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Table, Pagination, Card, Tag, Button, Dropdown, theme } from "antd";
 import type { TableProps } from "antd";
@@ -521,13 +519,13 @@ const DataTableWrapper: React.FC<DataTableWrapperProps> = ({
   const columns = React.useMemo(() => {
     const generatedColumns = pageConfig.tableConfig.columns.map((col: any) => {
       const antdCol: any = {
-  ...col,
-  key: col.key,
-  title: t(col.title),
-  dataIndex: col.key,
-  filteredValue: state.columnFilters[col.key] || null,
-  width: col.key === "plateUI" ? "250px" : col.width ?? undefined,
-};
+        ...col,
+        key: col.key,
+        title: t(col.title),
+        dataIndex: col.key,
+        filteredValue: state.columnFilters[col.key] || null,
+        width: col.key === "plateUI" ? "250px" : (col.width ?? undefined),
+      };
 
       if (col.sortable) {
         antdCol.sorter = true;

@@ -1,6 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Modal, Card, Row, Col, Typography, Divider, Button, Input, Select, Empty, Spin, Tag, Form, App } from "antd";
 import {
@@ -50,13 +47,7 @@ interface DisputeViewModalProps {
   onStatusUpdate?: () => void;
 }
 
-const DisputeViewModal: React.FC<DisputeViewModalProps> = ({
-  open,
-  onClose,
-  record,
-  disputeType,
-  onStatusUpdate,
-}) => {
+const DisputeViewModal: React.FC<DisputeViewModalProps> = ({ open, onClose, record, disputeType, onStatusUpdate }) => {
   const { t, i18n } = useTranslation();
   const { token } = theme.useToken();
   const { modal } = App.useApp();

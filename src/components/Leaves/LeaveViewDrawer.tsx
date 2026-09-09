@@ -1,6 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import React, { useEffect, useMemo, useState } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Space, Form, theme, Select } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
@@ -291,9 +288,7 @@ const LeaveViewDrawer: React.FC<LeaveViewDrawerProps> = ({ open, onClose, record
                           <Col span={8}>
                             <Text strong>{t("form.leaveType")}:</Text>
                           </Col>
-                          <Col span={16}>
-                            {internalGetLeaveTypeName(record.leaveType)}
-                          </Col>
+                          <Col span={16}>{internalGetLeaveTypeName(record.leaveType)}</Col>
 
                           <Col span={8}>
                             <Text strong>{t("form.comments")}:</Text>

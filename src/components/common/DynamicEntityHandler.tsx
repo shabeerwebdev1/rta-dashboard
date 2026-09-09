@@ -1,6 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useCallback } from "react";
 import { FolderOpenFilled } from "@ant-design/icons";
 
@@ -93,11 +90,14 @@ const ENTITY_CONFIG: Record<string, any> = {
       ...original,
       data: apiRes?.data || apiRes?.data?.data || apiRes,
       disputeCode: original.disputeCode || apiRes?.data?.disputeCode || original.EntityGUID || original.entityGUID,
-      entityCode: original.entityCode || original.EntityCode || apiRes?.data?.entityCode || "parking-fine-cancel-request",
-      EntityCode: original.EntityCode || original.entityCode || apiRes?.data?.entityCode || "parking-fine-cancel-request",
+      entityCode:
+        original.entityCode || original.EntityCode || apiRes?.data?.entityCode || "parking-fine-cancel-request",
+      EntityCode:
+        original.EntityCode || original.entityCode || apiRes?.data?.entityCode || "parking-fine-cancel-request",
       EntityGUID: original.EntityGUID || original.entityGUID || apiRes?.data?.disputeCode || original.disputeCode,
       $SKWorkItemData: original.$SKWorkItemData || apiRes?.data?.$SKWorkItemData,
-      ActivityCode: original.ActivityCode || original.nvarchar3 || apiRes?.data?.ActivityCode || apiRes?.data?.nvarchar3 || "",
+      ActivityCode:
+        original.ActivityCode || original.nvarchar3 || apiRes?.data?.ActivityCode || apiRes?.data?.nvarchar3 || "",
     }),
   },
 
@@ -106,18 +106,21 @@ const ENTITY_CONFIG: Record<string, any> = {
     component: DisputeViewModal,
     type: "modal",
     fetchData: false,
+    extraProps: { disputeType: "vehicle" },
     mergeRecord: (_apiRes: any, original: any) => original,
   },
   "parking-vehicle-fine-dispute": {
     component: DisputeViewModal,
     type: "modal",
     fetchData: false,
+    extraProps: { disputeType: "vehicle" },
     mergeRecord: (_apiRes: any, original: any) => original,
   },
   "parking-parking-fine-dispute": {
     component: DisputeViewModal,
     type: "modal",
     fetchData: false,
+    extraProps: { disputeType: "parking" },
     mergeRecord: (_apiRes: any, original: any) => original,
   },
   "parking-towing": {
@@ -129,12 +132,35 @@ const ENTITY_CONFIG: Record<string, any> = {
     mergeRecord: (apiRes: any, original: any) => ({
       ...(apiRes?.data || apiRes || {}),
       ...original,
-      EntityCode: original.EntityCode || original.entityCode || apiRes?.data?.EntityCode || apiRes?.data?.entityCode || "parking-towing",
-      entityCode: original.entityCode || original.EntityCode || apiRes?.data?.entityCode || apiRes?.data?.EntityCode || "parking-towing",
-      EntityGUID: original.EntityGUID || original.entityGUID || apiRes?.data?.EntityGUID || apiRes?.data?.entityGUID || original.inspectionGUID || "",
-      inspectionGUID: original.inspectionGUID || apiRes?.data?.inspectionGUID || apiRes?.data?.InspectionGUID || original.EntityGUID || original.entityGUID || "",
+      EntityCode:
+        original.EntityCode ||
+        original.entityCode ||
+        apiRes?.data?.EntityCode ||
+        apiRes?.data?.entityCode ||
+        "parking-towing",
+      entityCode:
+        original.entityCode ||
+        original.EntityCode ||
+        apiRes?.data?.entityCode ||
+        apiRes?.data?.EntityCode ||
+        "parking-towing",
+      EntityGUID:
+        original.EntityGUID ||
+        original.entityGUID ||
+        apiRes?.data?.EntityGUID ||
+        apiRes?.data?.entityGUID ||
+        original.inspectionGUID ||
+        "",
+      inspectionGUID:
+        original.inspectionGUID ||
+        apiRes?.data?.inspectionGUID ||
+        apiRes?.data?.InspectionGUID ||
+        original.EntityGUID ||
+        original.entityGUID ||
+        "",
       $SKWorkItemData: original.$SKWorkItemData || apiRes?.data?.$SKWorkItemData,
-      ActivityCode: original.ActivityCode || original.nvarchar3 || apiRes?.data?.ActivityCode || apiRes?.data?.nvarchar3 || "",
+      ActivityCode:
+        original.ActivityCode || original.nvarchar3 || apiRes?.data?.ActivityCode || apiRes?.data?.nvarchar3 || "",
     }),
   },
 };

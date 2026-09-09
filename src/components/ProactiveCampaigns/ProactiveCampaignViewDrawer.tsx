@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import React, { useMemo } from "react";
 import { Modal, Descriptions, Tag, Row, Col, Card, Typography, Space } from "antd";
 import { useTranslation } from "react-i18next";

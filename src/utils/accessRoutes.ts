@@ -9,11 +9,16 @@ type RouteAccessConfig = {
 
 const routeAccessConfigs: RouteAccessConfig[] = [
   { path: FULL_PATHS.DASHBOARD, permission: ["Dashboard", "WebDashboard"], landingEligible: true },
+  { path: FULL_PATHS.PERMITS, permission: "Permit", landingEligible: true },
   { path: FULL_PATHS.HRMS, permission: "HRMS", landingEligible: true },
   { path: FULL_PATHS.LEAVE_MANGEMENT, permission: "Leave", landingEligible: true },
   { path: FULL_PATHS.GENERAL, permission: "GeneralSearch", landingEligible: true },
   { path: FULL_PATHS.WHITELIST_PLATES, permission: "WhiteListPlate", landingEligible: true },
-  { path: FULL_PATHS.WHITELIST_TRADELICENSES, permission: ["WhitelistTradeLicense", "WhiteListTrade"], landingEligible: true },
+  {
+    path: FULL_PATHS.WHITELIST_TRADELICENSES,
+    permission: ["WhitelistTradeLicense", "WhiteListTrade"],
+    landingEligible: true,
+  },
   { path: FULL_PATHS.INSPECTIONS_OBSTACLES, permission: "InspectionObstacle", landingEligible: true },
   { path: FULL_PATHS.PLEDGES, permission: "Pledge", landingEligible: true },
   { path: FULL_PATHS.ROLE_MANAGEMENT, permission: "RolePermission", landingEligible: true },
@@ -30,11 +35,11 @@ const routeAccessConfigs: RouteAccessConfig[] = [
   { path: FULL_PATHS.CRITERIA, permission: "CriteriaWeight", landingEligible: true },
   { path: FULL_PATHS.CRITERIA_GROUP, permission: "CriteriaGroup", landingEligible: true },
   { path: FULL_PATHS.TEAM_EVALUATION, permission: "TeamEvaluation", landingEligible: true },
-  { path: FULL_PATHS.REPORTS, permission: ["Reports", "Report"], landingEligible: true },
+  { path: FULL_PATHS.REPORTS, permission: "Reports", landingEligible: true },
   { path: FULL_PATHS.CREATESHIFTPLAN, permission: "CreateShift", landingEligible: true },
   { path: FULL_PATHS.ADHOCSHIFTPLAN, permission: "AdhocShift", landingEligible: true },
   { path: FULL_PATHS.SHIFT_MANAGEMENT, permission: "ShiftManagement", landingEligible: true },
-  { path: FULL_PATHS.INSPECTION_MANAGEMENT, permission: "ShiftManagement", landingEligible: true },
+  { path: FULL_PATHS.INSPECTION_MANAGEMENT, permission: "InspectionsManagement", landingEligible: true },
   { path: FULL_PATHS.SHIFT_PLAN, permission: "ShiftPlanMaster", landingEligible: true },
   { path: FULL_PATHS.INBOX, landingEligible: true },
 ];
@@ -49,7 +54,9 @@ export const getRequiredPermissionForPath = (pathname: string): MenuPermission |
   const normalizedPath = normalizePath(pathname);
 
   return routeAccessConfigs
-    .filter((route) => route.permission && (normalizedPath === route.path || normalizedPath.startsWith(`${route.path}/`)))
+    .filter(
+      (route) => route.permission && (normalizedPath === route.path || normalizedPath.startsWith(`${route.path}/`)),
+    )
     .sort((a, b) => b.path.length - a.path.length)[0]?.permission;
 };
 

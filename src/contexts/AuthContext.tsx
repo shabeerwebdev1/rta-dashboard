@@ -1,17 +1,11 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  ReactNode,
-} from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import {
   canAccessAnyPermission,
   hasPermissionAccess,
   type MenuPermission,
   type PermissionAction,
 } from "../utils/permissionUtils";
+import { EXTERNAL_LOGIN_URL } from "../config/envConfig";
 
 interface RolePermission {
   id: number;
@@ -33,7 +27,7 @@ interface UserData {
   userGUID: string;
   roleGUID: string;
   sTafteeshToken: string;
-  tokenExpiry: string | null;
+  tokenExpiry: string | number | null;
   rolePermissions: RolePermission[];
   departmentId?: string;
   empNumber?: string;
@@ -45,10 +39,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (userData: UserData) => void;
   logout: () => void;
-  hasPermission: (
-    menuName: MenuPermission,
-    permission: PermissionAction
-  ) => boolean;
+  hasPermission: (menuName: MenuPermission, permission: PermissionAction) => boolean;
   validateToken: () => boolean;
   canAccessAny: (menuName: MenuPermission) => boolean;
   hasRead: (menuName: MenuPermission) => boolean;
@@ -72,19 +63,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const parseTokenExpiry = useCallback((expiry: string | null | undefined): number | null => {
+  const parseTokenExpiry = useCallback((expiry: string | number | null | undefined): number | null => {
     if (!expiry) return null;
+
+    if (typeof expiry === "number") {
+      return expiry < 1_000_000_000_000 ? expiry * 1000 : expiry;
+    }
+
+    if (/^\d+$/.test(expiry)) {
+      const numericExpiry = Number(expiry);
+      return numericExpiry < 1_000_000_000_000 ? numericExpiry * 1000 : numericExpiry;
+    }
 
     const parsedExpiry = Date.parse(expiry);
     return Number.isNaN(parsedExpiry) ? null : parsedExpiry;
   }, []);
 
   const isTokenExpired = useCallback(
-    (expiry: string | null | undefined): boolean => {
+    (expiry: string | number | null | undefined): boolean => {
       const expiryTimestamp = parseTokenExpiry(expiry);
       return expiryTimestamp === null || expiryTimestamp <= Date.now();
     },
     [parseTokenExpiry],
+  );
+
+  const getTokenExpiry = useCallback(
+    (token: string, explicitExpiry: string | number | null | undefined): string | number | null => {
+      if (explicitExpiry) return explicitExpiry;
+
+      try {
+        const payload = token.split(".")[1];
+        if (!payload) return null;
+        const base64Payload = payload.replace(/-/g, "+").replace(/_/g, "/");
+        const paddedPayload = base64Payload.padEnd(Math.ceil(base64Payload.length / 4) * 4, "=");
+        const decodedPayload = JSON.parse(atob(paddedPayload)) as {
+          exp?: number;
+        };
+        return decodedPayload.exp ?? null;
+      } catch {
+        return null;
+      }
+    },
+    [],
   );
 
   const logout = useCallback(() => {
@@ -99,8 +119,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem("displayNameAr");
     localStorage.removeItem("userImage");
 
-    window.location.href =
-      "https://sso.kandaprojects.live/webapp/ui/common/login.aspx";
+    window.location.href = EXTERNAL_LOGIN_URL;
   }, []);
 
   useEffect(() => {
@@ -110,13 +129,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (token && userDataStr) {
       try {
         const userData = JSON.parse(userDataStr) as UserData;
-        const storedExpiry = localStorage.getItem("tokenExpiry") ?? userData.tokenExpiry;
+        const storedExpiry = getTokenExpiry(token, localStorage.getItem("tokenExpiry") ?? userData.tokenExpiry);
 
-        if (
-          userData.sTafteeshToken === token &&
-          storedExpiry &&
-          !isTokenExpired(storedExpiry)
-        ) {
+        if (userData.sTafteeshToken === token && storedExpiry && !isTokenExpired(storedExpiry)) {
           setUser(userData);
         } else {
           logout();
@@ -127,24 +142,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     }
     setIsLoading(false);
-  }, [isTokenExpired, logout]);
+  }, [getTokenExpiry, isTokenExpired, logout]);
 
-  const login = useCallback((userData: UserData) => {
-    setUser(userData);
-    localStorage.setItem("sTafteeshToken", userData.sTafteeshToken);
-    localStorage.setItem("userData", JSON.stringify(userData));
-    if (userData.tokenExpiry) {
-      localStorage.setItem("tokenExpiry", userData.tokenExpiry);
-    } else {
-      localStorage.removeItem("tokenExpiry");
+  useEffect(() => {
+    if (!user) return;
+
+    const expiry = getTokenExpiry(user.sTafteeshToken, user.tokenExpiry);
+    const expiryTimestamp = parseTokenExpiry(expiry);
+    if (expiryTimestamp === null) {
+      logout();
+      return;
     }
-    localStorage.setItem("userGUID", userData.userGUID ?? "");
-    localStorage.setItem("roleGUID", userData.roleGUID ?? "");
-    localStorage.setItem("rolePermissions", JSON.stringify(userData.rolePermissions ?? []));
-    localStorage.setItem("displayNameEn", userData.displayNameEn ?? "");
-    localStorage.setItem("displayNameAr", userData.displayNameAr ?? "");
-    localStorage.setItem("userImage", userData.userImage ?? "");
-  }, []);
+
+    const remainingMilliseconds = expiryTimestamp - Date.now();
+    if (remainingMilliseconds <= 0) {
+      logout();
+      return;
+    }
+
+    const timeoutId = window.setTimeout(logout, remainingMilliseconds);
+    return () => window.clearTimeout(timeoutId);
+  }, [getTokenExpiry, logout, parseTokenExpiry, user]);
+
+  const login = useCallback(
+    (userData: UserData) => {
+      setUser(userData);
+      localStorage.setItem("sTafteeshToken", userData.sTafteeshToken);
+      localStorage.setItem("userData", JSON.stringify(userData));
+      const tokenExpiry = getTokenExpiry(userData.sTafteeshToken, userData.tokenExpiry);
+      if (tokenExpiry) {
+        localStorage.setItem("tokenExpiry", String(tokenExpiry));
+      } else {
+        localStorage.removeItem("tokenExpiry");
+      }
+      localStorage.setItem("userGUID", userData.userGUID ?? "");
+      localStorage.setItem("roleGUID", userData.roleGUID ?? "");
+      localStorage.setItem("rolePermissions", JSON.stringify(userData.rolePermissions ?? []));
+      localStorage.setItem("displayNameEn", userData.displayNameEn ?? "");
+      localStorage.setItem("displayNameAr", userData.displayNameAr ?? "");
+      localStorage.setItem("userImage", userData.userImage ?? "");
+    },
+    [getTokenExpiry],
+  );
 
   const validateToken = useCallback((): boolean => {
     const token = localStorage.getItem("sTafteeshToken");
@@ -157,7 +196,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       const userData = JSON.parse(userDataStr) as UserData;
-      const storedExpiry = localStorage.getItem("tokenExpiry") ?? userData.tokenExpiry;
+      const storedExpiry = getTokenExpiry(token, localStorage.getItem("tokenExpiry") ?? userData.tokenExpiry);
 
       if (userData.sTafteeshToken !== token || !storedExpiry || isTokenExpired(storedExpiry)) {
         logout();
@@ -170,17 +209,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       logout();
       return false;
     }
-  }, [isTokenExpired, logout]);
+  }, [getTokenExpiry, isTokenExpired, logout]);
 
-  const hasPermission = (
-    menuName: MenuPermission,
-    permission: PermissionAction
-  ): boolean => hasPermissionAccess(user?.rolePermissions, menuName, permission);
+  const hasPermission = (menuName: MenuPermission, permission: PermissionAction): boolean =>
+    hasPermissionAccess(user?.rolePermissions, menuName, permission);
 
   const hasRead = (menuName: MenuPermission): boolean => hasPermission(menuName, "read");
 
-  const canAccessAny = (menuName: MenuPermission): boolean =>
-    canAccessAnyPermission(user?.rolePermissions, menuName);
+  const canAccessAny = (menuName: MenuPermission): boolean => canAccessAnyPermission(user?.rolePermissions, menuName);
 
   const value: AuthContextType = {
     user,

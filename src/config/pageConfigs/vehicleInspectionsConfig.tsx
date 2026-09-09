@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { PageConfig } from "../../types/config";
 import UAEPlate from "../../components/UAEPlate";
 

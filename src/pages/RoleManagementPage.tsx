@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState, useMemo } from "react";
 import { Card, Select, Checkbox, Space, Spin, Alert, Button, Col, Row } from "antd";
 import { roleManagementConfig } from "../config/pageConfigs/roleManagementConfig";

@@ -1,6 +1,5 @@
 /* eslint-disable react/prop-types */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
+
 import { useMemo, useState } from "react";
 import { Image, Layout, Menu, MenuProps } from "antd";
 import {
@@ -311,12 +310,12 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
       key: "reports",
       icon: <BarChartOutlined />,
       labelText: t("sidebar.reports"),
-      permission: ["Reports", "Report"],
+      permission: "Reports",
       children: filteredReports.map((report) => ({
         key: `${FULL_PATHS.REPORTS}?report=${report.key}`,
         icon: <FileTextOutlined />,
         labelText: getTranslatedDescription(report),
-        permission: ["Reports", "Report"],
+        permission: "Reports",
       })),
     },
     {
@@ -346,7 +345,7 @@ const AppSidebar: React.FC<{ currentTheme?: string }> = ({ currentTheme = "corpo
           key: FULL_PATHS.INSPECTION_MANAGEMENT,
           icon: <AuditOutlined />,
           labelText: t("sidebar.inspectionmanagement"),
-          permission: "ShiftManagement",
+          permission: "InspectionsManagement",
         },
       ],
     },

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useMemo } from "react";
 import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, Switch, Tag, Typography } from "antd";
 import { PlusOutlined, EyeOutlined, EditOutlined } from "@ant-design/icons";

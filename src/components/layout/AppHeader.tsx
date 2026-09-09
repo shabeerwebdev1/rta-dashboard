@@ -5,9 +5,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ThemeSwitcher from "../ThemeSwitcher";
 import LanguageSwitcher from "../LanguageSwitcher";
 import { usePage } from "../../contexts/PageContext";
-import { EXTERNAL_LOGIN_URL } from "../../config/envConfig";
 import { FULL_PATHS } from "../../constants/paths";
 import { useGetInboxSummaryQuery } from "../../services/rtkApiFactory";
+import { useAuth } from "../../contexts/AuthContext";
 
 const { Header } = Layout;
 const { Title } = Typography;
@@ -17,6 +17,7 @@ const AppHeader = () => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const isReportsPage = location.pathname === FULL_PATHS.REPORTS;
 
@@ -32,8 +33,7 @@ const AppHeader = () => {
 
   const handleMenuClick: MenuProps["onClick"] = (e) => {
     if (e.key === "2") {
-      localStorage.clear();
-      window.location.href = EXTERNAL_LOGIN_URL;
+      logout();
     }
   };
 

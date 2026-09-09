@@ -1,7 +1,7 @@
 /* eslint-disable no-self-assign */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 /* eslint-disable no-case-declarations */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import React, { useEffect, useState, useMemo } from "react";
 import { Card, Space, Button, Input, DatePicker, Row, Col, Select, App, Tag } from "antd";
 import { EyeOutlined, DownloadOutlined, EditOutlined } from "@ant-design/icons";
@@ -219,8 +219,10 @@ const TowingPage: React.FC = () => {
             ...record,
             ...fetched,
             inspectionGUID: record?.inspectionGUID || fetched.inspectionGUID || fetched.InspectionGUID || towingId,
-            EntityGUID: record?.EntityGUID || record?.entityGUID || fetched.EntityGUID || fetched.entityGUID || towingId,
-            EntityCode: record?.EntityCode || record?.entityCode || fetched.EntityCode || fetched.entityCode || "parking-towing",
+            EntityGUID:
+              record?.EntityGUID || record?.entityGUID || fetched.EntityGUID || fetched.entityGUID || towingId,
+            EntityCode:
+              record?.EntityCode || record?.entityCode || fetched.EntityCode || fetched.entityCode || "parking-towing",
           });
         } catch {
           setSelectedRecord(record);

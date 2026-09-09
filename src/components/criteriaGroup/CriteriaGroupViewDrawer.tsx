@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { Modal, Descriptions, Button, Spin, Tag, Table, Typography, Space } from "antd";
 import { useTranslation } from "react-i18next";

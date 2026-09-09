@@ -3,7 +3,6 @@ import { Image, Spin, Row, Col } from "antd";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useValidatecodeQuery } from "../services/rtkApiFactory";
 import { useAuth } from "../contexts/AuthContext";
-import { EXTERNAL_LOGIN_URL } from "../config/envConfig";
 import { getDefaultAuthorizedPath } from "../utils/accessRoutes";
 
 const SPLASH_DELAY = 1300;
@@ -17,15 +16,14 @@ export default function SplashPage() {
 
   // API call
   const { data, isLoading, isError } = useValidatecodeQuery(code);
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
 
   useEffect(() => {
     if (isLoading) return;
 
     const timer = setTimeout(() => {
       if (!code || isError || !data?.data?.sTafteeshToken) {
-        localStorage.clear();
-        window.location.href = EXTERNAL_LOGIN_URL;
+        logout();
         return;
       }
 
@@ -38,7 +36,7 @@ export default function SplashPage() {
     }, SPLASH_DELAY);
 
     return () => clearTimeout(timer);
-  }, [code, isLoading, isError, data, navigate, login]);
+  }, [code, isLoading, isError, data, navigate, login, logout]);
 
   return (
     <Row style={{ height: "100vh", width: "100%" }} justify="center" align="middle">

@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, useState } from "react";
 import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, App, Switch, Tag } from "antd";
 import { PlusOutlined, EditOutlined, EyeOutlined, DownloadOutlined } from "@ant-design/icons";

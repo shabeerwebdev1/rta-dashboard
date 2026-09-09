@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useMemo, useState } from "react";
 import { Space, Card, Input, Button, Modal, Form, Row, Col, Select, DatePicker, Table, Tooltip, message } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
@@ -130,7 +128,6 @@ export default function ShiftPlanPage() {
         return { ...r, days: newDays };
       }),
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [calYear, calMonthIdx]);
 
   useEffect(() => {

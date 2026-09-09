@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Define the PageConfig interface if not already defined
 import { CheckCircleOutlined, EnvironmentOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import type { PageConfig } from "../../types/config";

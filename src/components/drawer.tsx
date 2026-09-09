@@ -73,7 +73,7 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, re
                   case "badge":
                     return String(text);
 
-                  case "select":
+                  case "select": {
                     // 🔹 First check if mapped label exists
                     const mappedKey = field.key.replace(/_id$/i, ""); // remove '_Id' suffix
                     if (record[mappedKey]) return String(record[mappedKey]);
@@ -90,6 +90,7 @@ const DynamicViewDrawer: React.FC<DynamicViewDrawerProps> = ({ open, onClose, re
                         return typeof selectedOption === "object" ? selectedOption.label : selectedOption;
                     }
                     return String(text);
+                  }
 
                   default:
                     return String(text);

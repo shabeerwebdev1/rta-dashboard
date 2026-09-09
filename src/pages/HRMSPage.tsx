@@ -1,6 +1,5 @@
 // HRMSPage.tsx
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React, { useEffect, useMemo, useState } from "react";
 import { App, Button, Card, Col, DatePicker, Form, Input, Modal, Row, Select, Space, Spin, Tag } from "antd";
 import { DownloadOutlined, EyeOutlined } from "@ant-design/icons";

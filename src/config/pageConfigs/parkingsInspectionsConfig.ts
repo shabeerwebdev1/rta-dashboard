@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { PageConfig } from "../../types/config";
 import dayjs from "dayjs";
 import "dayjs/locale/ar";
@@ -28,7 +27,7 @@ export const parkingsInspectionsConfig: PageConfig = {
   },
 
   searchConfig: {
-    globalSearchKeys: ["entityNo", "tradeLicenseNumber" ,"inspectorNameEn"],
+    globalSearchKeys: ["entityNo", "tradeLicenseNumber", "inspectorNameEn"],
     columnFilterKeys: ["inspectionStatus", "inspectionType"],
     dateRangeKey: "entityDateTime",
   },

@@ -5,7 +5,7 @@ import { SyncOutlined, SearchOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { usePage } from "../contexts/PageContext";
 import { useAppNotification } from "../utils/notificationManager";
-import { useGetActiveShiftsQuery, useUpdateSpecialZoneMutation } from "../services/rtkApiFactory";
+import { useGetInspectionsManagementActiveQuery, useUpdateSpecialZoneMutation } from "../services/rtkApiFactory";
 import { inspectionManagementConfig } from "../config/pageConfigs/inspectionManagementConfig";
 
 const { Search } = Input;
@@ -86,7 +86,7 @@ const InspectionManagementPage: React.FC = () => {
   const [rows, setRows] = useState<InspectionManagementRow[]>([]);
   const isArabic = i18n.language === "ar" || i18n.language === "ar-SA";
 
-  const { data: activeUsersResponse, isLoading } = useGetActiveShiftsQuery();
+  const { data: activeUsersResponse, isLoading } = useGetInspectionsManagementActiveQuery();
   const [updateSpecialZone, { isLoading: isUpdating }] = useUpdateSpecialZoneMutation();
 
   useEffect(() => {

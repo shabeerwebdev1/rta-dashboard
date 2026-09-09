@@ -1,5 +1,5 @@
 // HRMSViewDrawer.tsx
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import React, { useEffect, useCallback, useRef, useState } from "react";
 import { Modal, Descriptions, Badge, Typography, theme } from "antd";
 import { CheckCircleOutlined, ClockCircleOutlined, CloseOutlined, CaretRightOutlined } from "@ant-design/icons";
@@ -260,24 +260,27 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
     setFineDrawerOpen(true);
   }, []);
 
-  const openObstacleDrawerWithNewData = useCallback(async (item: any) => {
-    const obstacleId = item?.inspectionGUID || item?.id || item?.inspectionId;
+  const openObstacleDrawerWithNewData = useCallback(
+    async (item: any) => {
+      const obstacleId = item?.inspectionGUID || item?.id || item?.inspectionId;
 
-    if (!obstacleId) {
-      setSelectedObstacleRecord(item);
-      setObstacleDrawerOpen(true);
-      return;
-    }
+      if (!obstacleId) {
+        setSelectedObstacleRecord(item);
+        setObstacleDrawerOpen(true);
+        return;
+      }
 
-    try {
-      const response = await triggerGetObstacle(obstacleId).unwrap();
-      setSelectedObstacleRecord(response?.data?.data ?? response?.data ?? response);
-    } catch {
-      setSelectedObstacleRecord(item);
-    } finally {
-      setObstacleDrawerOpen(true);
-    }
-  }, [triggerGetObstacle]);
+      try {
+        const response = await triggerGetObstacle(obstacleId).unwrap();
+        setSelectedObstacleRecord(response?.data?.data ?? response?.data ?? response);
+      } catch {
+        setSelectedObstacleRecord(item);
+      } finally {
+        setObstacleDrawerOpen(true);
+      }
+    },
+    [triggerGetObstacle],
+  );
 
   const handleItemClick = useCallback(
     (item: any) => {
@@ -723,7 +726,6 @@ const HRMSViewDrawer: React.FC<HRMSViewDrawerProps> = ({ open, onClose, record, 
               </div>
             </div>
           </div>
-
         </div>
       </Modal>
 

@@ -12,8 +12,8 @@ export type PermissionAction = "create" | "read" | "update" | "delete";
 const permissionAliases: Record<string, string[]> = {
   dashboard: ["Dashboard", "WebDashboard"],
   webdashboard: ["WebDashboard", "Dashboard"],
-  report: ["Report", "Reports"],
-  reports: ["Reports", "Report"],
+  report: ["Report"],
+  reports: ["Reports"],
   vlookups: ["Vlookups", "GeneralSearch"],
   generalsearch: ["GeneralSearch"],
   whitelisttrade: ["WhiteListTrade", "WhitelistTradeLicense"],
@@ -23,6 +23,9 @@ const permissionAliases: Record<string, string[]> = {
   parkoniclocation: ["ParkonicLocation", "ParkonicsLocation"],
   parkonicslocation: ["ParkonicsLocation", "ParkonicLocation"],
   proactivecampaign: ["ProactiveCampaign"],
+  permit: ["Permit", "Permits", "PermitSearch"],
+  permits: ["Permit", "Permits", "PermitSearch"],
+  permitsearch: ["PermitSearch", "Permit", "Permits"],
 };
 
 export const resolvePermissionNames = (menuName: MenuPermission): string[] => {

@@ -1,8 +1,5 @@
 /* eslint-disable no-useless-catch */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable react/prop-types */
+
 import React, { useEffect, useState, useRef } from "react";
 import { Card, Space, Button, Row, Col, Select, DatePicker, Form, Input, Modal, Spin } from "antd";
 import { DownloadOutlined, EyeOutlined } from "@ant-design/icons";

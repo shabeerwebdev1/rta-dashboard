@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { serializeParams } from "../hooks/useTableParams";
 import { RTA_API_TARGET, EXTERNAL_FILES_URL } from "../config/envConfig";
@@ -98,6 +96,7 @@ export const dynamicApi = createApi({
     "Shifts",
     "Roles",
     "ShiftManagement",
+    "InspectionManagement",
     "LeaveDetails",
     "CallIntegration",
     "Towing",
@@ -641,6 +640,14 @@ export const dynamicApi = createApi({
     getActiveShifts: builder.query({
       query: () => "/api/ShiftManagement/active",
       providesTags: ["ShiftManagement"],
+      transformResponse: (response: any) => {
+        return response?.data || response || [];
+      },
+    }),
+
+    getInspectionsManagementActive: builder.query({
+      query: () => "/api/InspectionsManagement/active",
+      providesTags: ["InspectionManagement"],
       transformResponse: (response: any) => {
         return response?.data || response || [];
       },
@@ -1282,6 +1289,7 @@ export const {
   // Shifts
   useLazyGetShiftsQuery,
   useGetActiveShiftsQuery,
+  useGetInspectionsManagementActiveQuery,
   useGetActiveUsersQuery,
   useUpdateShiftManagementMutation,
   useUpdateSpecialZoneMutation,

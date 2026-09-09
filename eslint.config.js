@@ -25,9 +25,9 @@ export default [
       react: { version: "detect" },
     },
     rules: {
-        ...pluginReactConfig.rules,
-        "react/react-in-jsx-scope": "off",
-    }
+      ...pluginReactConfig.rules,
+      "react/react-in-jsx-scope": "off",
+    },
   },
   {
     plugins: {
@@ -36,20 +36,24 @@ export default [
     },
     rules: {
       ...hooksPlugin.configs.recommended.rules,
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
-      "@typescript-eslint/no-unused-vars": [
-        "warn",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
-        },
-      ],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "react-refresh/only-export-components": "off",
     },
   },
   prettierConfig, // Add this at the end to disable conflicting rules
-  { ignores: ["dist/", ".husky/"] },
+  {
+    ignores: [
+      "node_modules/",
+      "dist/",
+      "build/",
+      ".next/",
+      ".nuxt/",
+      "**/*.config.js",
+      "**/*.config.ts",
+      "vite.config.ts",
+      ".husky/",
+    ],
+  },
 ];

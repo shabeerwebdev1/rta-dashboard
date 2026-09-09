@@ -1,6 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useMemo, useState } from "react";
 import { Modal, Card, Row, Col, Typography, Button, Input, Empty, Spin, Tag, Form, Space, Select, Image } from "antd";
 import {
@@ -280,7 +277,19 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
       phone: base.phone || data.phone || "",
       address: base.address || data.address || "",
     };
-  }, [record, base, data, vehicle, fineDetails, inspection, inspectionGUID, entityId, entityCode, i18n.language, lookupOptions]);
+  }, [
+    record,
+    base,
+    data,
+    vehicle,
+    fineDetails,
+    inspection,
+    inspectionGUID,
+    entityId,
+    entityCode,
+    i18n.language,
+    lookupOptions,
+  ]);
 
   const attachmentQueryArg = mappedFine
     ? { inspectionGUID: mappedFine.inspectionGUID, entityCode: inspection.entityCode || mappedFine.entityCode }
@@ -413,7 +422,11 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
       bodyStyle={{ padding: 0 }}
       dir={isRTLText ? "rtl" : "ltr"}
     >
-      <Spin spinning={isLoading || isUpdating || loadingOptions || historyLoading || entityHistoryLoading || isLoadingLookups}>
+      <Spin
+        spinning={
+          isLoading || isUpdating || loadingOptions || historyLoading || entityHistoryLoading || isLoadingLookups
+        }
+      >
         <div style={{ display: "flex", flexDirection: "column", maxHeight: "calc(100vh - 80px)" }}>
           {/* ── Sticky Header ── */}
           <div
@@ -915,7 +928,6 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                   {/* ── END RIGHT COLUMN ── */}
                 </div>
                 {/* ── END TOP TWO-COLUMN SECTION ── */}
-
               </div>
             )}
           </div>
@@ -992,12 +1004,7 @@ const FineCancelRequestViewModal: React.FC<FineCancelRequestViewModalProps> = ({
                   >
                     <Space>
                       <Button onClick={onClose}>{isRTL ? "إلغاء" : "Cancel"}</Button>
-                      <Button
-                        type="primary"
-                        loading={isUpdating}
-                        onClick={handleSubmit}
-                        disabled={!selectedAction}
-                      >
+                      <Button type="primary" loading={isUpdating} onClick={handleSubmit} disabled={!selectedAction}>
                         {isRTL ? "إرسال" : "Submit"}
                       </Button>
                     </Space>
