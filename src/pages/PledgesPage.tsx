@@ -913,13 +913,7 @@ const PledgesPage: React.FC = () => {
                 <Form.Item
                   name="businessEmail"
                   label={t("form.businessEmail") || "Business Email"}
-                  rules={[
-                    {
-                      required: true,
-                      message: t("validation.required", { field: t("form.businessEmail") || "Business Email" }),
-                    },
-                    { type: "email", message: t("validation.invalidEmail") || "Please enter a valid email address" },
-                  ]}
+                  rules={[{ type: "email", message: t("validation.invalidEmail") || "Please enter a valid email address" }]}
                 >
                   <Input
                     type="email"

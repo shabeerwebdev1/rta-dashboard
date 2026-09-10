@@ -99,8 +99,9 @@ const ParkonicLocationViewDrawer: React.FC<ParkonicLocationViewDrawerProps> = ({
       .format(i18n.language === "ar" ? "DD MMMM YYYY، hh:mm A" : "DD MMM YYYY, hh:mm A");
   };
 
-  const renderStatus = (status: boolean) => {
-    return status ? <Tag color="green">{t("status.approved")}</Tag> : <Tag color="orange">{t("status.pending")}</Tag>;
+  const renderStatus = (status: number | boolean | undefined) => {
+    const isApproved = status === 1 || status === true;
+    return isApproved ? <Tag color="green">{t("status.approved")}</Tag> : <Tag color="orange">{t("status.pending")}</Tag>;
   };
 
   const hideFooterActions = !record?.$SKWorkItemData;
@@ -201,7 +202,7 @@ const ParkonicLocationViewDrawer: React.FC<ParkonicLocationViewDrawerProps> = ({
                     <Col span={8}>
                       <Text strong>{t("form.status")}:</Text>
                     </Col>
-                    <Col span={16}>{renderStatus(record.isUpdatedBack)}</Col>
+                    <Col span={16}>{renderStatus(record.status ?? record.isUpdatedBack)}</Col>
                   </Row>
                 </Card>
 
